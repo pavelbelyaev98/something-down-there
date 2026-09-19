@@ -113,7 +113,7 @@ namespace SomethingDownThere.Editor
             Scene scene = SceneManager.GetActiveScene();
             if (scene.path != ScenePath && scene.name != "MainGame")
                 scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            var terrain = UnityEngine.Object.FindFirstObjectByType<TerrainVolume>();
+            var terrain = UnityEngine.Object.FindAnyObjectByType<TerrainVolume>();
             if (terrain == null || terrain.gameObject.scene != scene) throw new InvalidOperationException("MainGame terrain is missing.");
             var root = terrain.transform.parent;
             var settings = new SerializedObject(terrain);

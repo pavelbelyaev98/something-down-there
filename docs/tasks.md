@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Active Task:** None — `056` complete.
+- **Active Task:** None — `057` complete.
 - **Build:** `builds/windows/SomethingDownThere.exe` (Working prototype baseline)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
@@ -15,6 +15,7 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`057` — Drained Reservoir Surroundings:** composed cliffs, forest, a dry gorge and distant mountains around the existing worksite.
 - [x] **`056` — Pure Nature Integration:** configured the purchased pack, replaced prototype grass and documented asset/Git workflow. (`docs/tasks/completed/056-pure-nature-grass.md`)
 - [x] **`055` — Graphics Settings:** expose persistent rendering and shadow performance controls in the existing menu. (`docs/tasks/completed/055-graphics-settings.md`)
 - [x] **`054` — Render Resolution Defaults:** native rendering by default and supported high-resolution display choices. (`docs/tasks/completed/054-render-resolution-defaults.md`)
@@ -102,6 +103,8 @@
 ---
 
 ## Completed
+
+- **[057] Drained Reservoir Surroundings:** authored BK cliffs, forest, dry rockfall gorge, edge stones and distant peaks with shared materials, LODs, a former-waterline shader and clouded mountain daylight. Safety colliders sit behind visible banks on supported permanent rims; 254 checks passed, native rendering cost measured, and Windows player rebuilt.
 
 > Format: `- [ID] Title: 1-2 sentences on what was implemented and how.`
 

@@ -43,6 +43,8 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 - Keep vendor paths/GUIDs stable. Use material copies or prefab variants in `Assets/Content` for game tuning; apply publisher updates separately and check the local `art/pure-nature-mountains/README.md` patch note after reimporting.
 - `Tools > Something Down There > Configure Approved Surface Grass` rebinds grass and required URP settings. The existing renderer owns soil support/culling; BK's environment manager owns wind globals with all lighting overrides disabled. Validate excavation, restored terrain, shaders and the Windows player after updates.
 - Keep demo scenes available as references; the build includes MainGame and its dependencies. Purchased surface shaders need explicit integration before use as underground finds with excavation darkness.
+- `Compose Reservoir Surroundings` rebuilds only the named scenery subtree from the approved library. Placements live in `ReservoirEnvironmentSetup`; LODs and prefab links remain editable in the scene. Project rock materials add the old waterline and local distance haze; global fog stays off. Save MainGame after recomposing. The digging footprint, surface services and saves retain their existing ownership.
+- The surface performance fixture accepts `--environment-report <absolute-json-path>` for native scenery/peaks on-off comparisons and four view captures, using an additive scene without player saves.
 
 ## Source map
 

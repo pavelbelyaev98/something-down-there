@@ -4,15 +4,16 @@
 
 Stylized painted low-poly: strong silhouettes, restrained texture detail, painted gradients,
 cohesive art direction across custom and licensed assets. Bright and readable, never realistic mud, never asset-store clutter.
-Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid grass,
-warm soil and a clear cyan sky. Increase color richness without washing out texture detail
+Surface daylight reads as high mountain daylight: a high sun, short shadows, vivid grass,
+warm soil and a blue sky with soft clouds. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
 
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - **Objects read by silhouette**, because recognition is the core reward.
-- Purchased Pure Nature 2: Mountains supplies surface vegetation and an approved environment library;
-  select and tune assets to the reservoir's style. Grass follows excavation and clears from removed soil.
+- Purchased Pure Nature 2: Mountains supplies grass, layered rocky banks, conifer forest and distant
+  peaks. The dry reservoir has warm exposed stone below its old waterline and greener ridges above;
+  clustered silhouettes and an open working floor keep it composed. Grass follows excavation.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.
  AI-assisted modeling with real references is allowed.
 

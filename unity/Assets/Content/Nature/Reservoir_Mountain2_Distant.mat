@@ -7,14 +7,14 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: SunnySun
-  m_Shader: {fileID: 4800000, guid: 0b6cd47b4bd138648b520a0d68b821e2, type: 3}
+  m_Name: Reservoir_Mountain2_Distant
+  m_Shader: {fileID: 4800000, guid: 4c29b02c5185ffb45b1e68ad65c67920, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
@@ -23,21 +23,24 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _CloudMap:
-        m_Texture: {fileID: 2800000, guid: 481582ad8c4a41fcb673b5c171c56d41, type: 3}
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 2fbff86d9dad42419160d1202e98520f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _SunMap:
-        m_Texture: {fileID: 2800000, guid: 5ba34a46ba0641243bbc2aae6932f753, type: 3}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: ec069effca5743468dd9efe6263882e7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CloudAmount: 0.85
-    - _SunTangentRadius: 0.08748866
+    - _BumpScale: 0.3
+    - _HazeEnd: 380
+    - _HazeStart: 55
+    - _StainStrength: 0
+    - _Waterline: 5.2
     m_Colors:
-    - _HorizonColor: {r: 0.62, g: 0.77, b: 0.83, a: 1}
-    - _SkyColor: {r: 0.16, g: 0.48, b: 0.72, a: 1}
-    - _SunDirection: {r: 0.21486557, g: 0.927184, b: -0.30685964, a: 0}
+    - _BaseColor: {r: 0.8, g: 0.9, b: 1, a: 1}
+    - _HazeColor: {r: 0.54999995, g: 0.7, b: 0.78, a: 1}
+    - _StainColor: {r: 0.76, g: 0.71, b: 0.56999993, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -45,7 +45,10 @@ namespace SomethingDownThere.Tests
                 Assert.That(ShaderUtil.ShaderHasError(sky.material.shader), Is.False);
                 Assert.That(sky.material.GetTexture("_SunMap"), Is.Not.Null);
                 Assert.That(root.Find("Clouds"), Is.Null);
-                Assert.That(root.Find("Scenery"), Is.Null, "The requested clear site has no decorative trees, river or rocks.");
+                var surroundings = root.Find("Reservoir Surroundings");
+                Assert.That(surroundings, Is.Not.Null);
+                Assert.That(surroundings.GetComponentsInChildren<TerrainVolume>(), Is.Empty,
+                    "Decorative banks must not create a second excavation owner.");
                 Assert.That(Vector4.Distance(sky.material.GetColor("_SkyColor"), camera.backgroundColor), Is.LessThan(.00001f),
                     "The authored sky must preserve the accepted camera background color.");
                 var sunDirection = (Vector3)sky.material.GetVector("_SunDirection");
@@ -112,6 +115,14 @@ namespace SomethingDownThere.Tests
                     bool isGround = renderer.transform.parent == root.Find("Excavation")
                         || renderer.transform.parent == root.Find("Surface") && renderer.name.EndsWith(" rim");
                     if (isGround) Assert.That(renderer.sharedMaterial, Is.SameAs(ground), renderer.name);
+                    else if (renderer.transform.IsChildOf(surroundings))
+                    {
+                        foreach (var material in renderer.sharedMaterials)
+                        {
+                            Assert.That(material, Is.Not.Null, renderer.name);
+                            Assert.That(ShaderUtil.ShaderHasError(material.shader), Is.False, material.name);
+                        }
+                    }
                     else Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"), renderer.name);
                 }
                 foreach (string name in new[] { "SellStation", "UpgradeStation", "RechargeZone", "ReturnAnchor" })

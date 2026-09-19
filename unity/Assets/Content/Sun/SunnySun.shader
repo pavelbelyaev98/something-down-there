@@ -3,6 +3,8 @@ Shader "Something Down There/Sunny Sun Sky"
     Properties
     {
         _SunMap("Approved sun", 2D) = "black" {}
+        _CloudMap("Purchased cloud noise", 2D) = "black" {}
+        _CloudAmount("Cloud coverage", Range(0,1)) = 0
         _SkyColor("Bright cyan sky", Color) = (.12,.77,.85,1)
         _HorizonColor("Light cyan horizon", Color) = (.42,.88,.9,1)
         _SunDirection("Direction toward sun", Vector) = (0,1,0,0)
@@ -20,10 +22,12 @@ Shader "Something Down There/Sunny Sun Sky"
             #pragma target 3.0
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             TEXTURE2D(_SunMap); SAMPLER(sampler_SunMap);
+            TEXTURE2D(_CloudMap); SAMPLER(sampler_CloudMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _SkyColor, _HorizonColor;
             float4 _SunDirection;
             float _SunTangentRadius;
+            float _CloudAmount;
             CBUFFER_END
             struct Attributes { float4 positionOS : POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct Varyings { float4 positionCS : SV_POSITION; float3 direction : TEXCOORD0; UNITY_VERTEX_OUTPUT_STEREO };
@@ -50,6 +54,11 @@ Shader "Something Down There/Sunny Sun Sky"
                 float4 disc = SAMPLE_TEXTURE2D_GRAD(_SunMap,sampler_SunMap,saturate(sunUv),ddx(sunUv),ddy(sunUv));
                 float sunCoverage = step(0,forward) * step(0,sunUv.x) * step(sunUv.x,1) * step(0,sunUv.y) * step(sunUv.y,1);
                 sky = lerp(sky,disc.rgb,disc.a * sunCoverage);
+                float2 cloudUv = view.xz / max(view.y + .22,.08) * .3 + float2(.32,.71);
+                half cloud = SAMPLE_TEXTURE2D(_CloudMap,sampler_CloudMap,cloudUv).r;
+                half detail = SAMPLE_TEXTURE2D(_CloudMap,sampler_CloudMap,cloudUv*2.7+.17).r;
+                half coverage = smoothstep(.32,.56,cloud*.75+detail*.25) * smoothstep(.015,.18,view.y) * _CloudAmount;
+                sky = lerp(sky,lerp(float3(.65,.75,.83),float3(1,.98,.92),cloud),coverage);
 
                 return float4(sky,1);
             }
