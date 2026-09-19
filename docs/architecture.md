@@ -13,6 +13,7 @@
 - `FpsPlayer` owns `CameraPreferences`, `InputPreferences` and `GamePreferences` (separate `Preferences/camera-v1.ini`, `input-v1.ini`, `game-v1.json`; `EditorPreferences` in the Editor). `GamePreferences` is the sole runtime display owner; `DesktopWindow` supplies native defaults.
 - `FpsHud` owns the single UI Toolkit document with `GameHudView`/`GameMenuView`; one retained EventSystem routes menu input; no Canvas HUD.
 - `TerrainVolume`/`ExcavationGrid` own removed volume and synchronously rebuild matching render/collision meshes; `ExcavationDaylight`, `SurfaceGrassRenderer` and `SunPresentationSetup` derive presentation without excavation authority and save no lighting state.
+- Approved vendor content stays under `Assets/BK`; game material overrides live under `Assets/Content/Nature`. `SurfaceGrassSetup` wires purchased grass into the existing renderer; BK's environment manager supplies wind globals while project systems retain lighting ownership.
 - `DiscoveryCatalog`/`StarterFindSetup`/`PhotoRockSetup` keep stable item identities separate from replaceable prefab art; `DiscoveryField` owns seeded placement and `BuriedFind` transfers records.
 - `SellStation`/`UpgradeStation`/`StationTrade` bind trades to inventory/wallet/battery revisions; `EquipmentProgression` owns authored capacity increments and prices.
 

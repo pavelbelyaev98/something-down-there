@@ -35,6 +35,15 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 - Run `./tools/setup-blender-mcp-for-codex.ps1 -Install` to reproduce the installation (omit `-Install` to register an existing one); `tools/blender-mcp-server.cmd` launches the same executable. Keep the Blender add-on running and restart the Codex extension after registration. [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
 - Removal: close clients, delete `.tools/blender-mcp/` (excluded by `.gitignore`), and remove only `[mcp_servers.blender]` from `C:/Users/pavel/.codex/config.toml` (`codex mcp remove blender`) and `servers.blender` from `.vscode/mcp.json`. The user's pre-existing Blender add-on was used, not modified. Verification evidence: `Logs/Task19/`.
 
+## Purchased assets and Git
+
+- Keep the complete approved `Assets/BK` import and `Assets/BK.meta` in the private project repository for reproducible clones and future use. The initial import is approximately 1.65 GB; account for Git LFS storage/transfer quotas before pushing.
+- `.gitattributes` sends BK textures, models and binary terrain/lighting data to Git LFS. Keep all `.meta`, shader, script, material, prefab and scene files in ordinary Git. Never ignore metadata or commit `Library`, `Temp`, `Logs` or `builds`.
+- On a new workstation, install Git LFS, run `git lfs install`, clone, then `git lfs pull` before opening Unity. For this first import, include `.gitattributes`, the complete BK folder and its parent metadata alongside the integration changes; inspect `git lfs status` before committing.
+- Keep vendor paths/GUIDs stable. Use material copies or prefab variants in `Assets/Content` for game tuning; apply publisher updates separately and check the local `art/pure-nature-mountains/README.md` patch note after reimporting.
+- `Tools > Something Down There > Configure Approved Surface Grass` rebinds grass and required URP settings. The existing renderer owns soil support/culling; BK's environment manager owns wind globals with all lighting overrides disabled. Validate excavation, restored terrain, shaders and the Windows player after updates.
+- Keep demo scenes available as references; the build includes MainGame and its dependencies. Purchased surface shaders need explicit integration before use as underground finds with excavation darkness.
+
 ## Source map
 
 - `Assets/Runtime/Player` — movement, input, camera, battery, preferences, wallet, save.

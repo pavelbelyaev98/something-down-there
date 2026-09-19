@@ -22,12 +22,12 @@ namespace SomethingDownThere.Tests
             var terrain = root.AddComponent<TerrainVolume>();
             terrain.Configure(new Vector3Int(64, 24, 64), .125f, 16, .4f, soil);
             var grass = root.AddComponent<SurfaceGrassRenderer>();
-            var assets = AssetDatabase.LoadAllAssetsAtPath("Assets/Content/GroundGrass/GrassClumps.fbx").OfType<Mesh>().ToArray();
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BK/PureNature_Mountains/Prefabs/Plants/Grass1.prefab");
             var flags = BindingFlags.Instance | BindingFlags.NonPublic;
-            typeof(SurfaceGrassRenderer).GetField("nearMesh", flags).SetValue(grass, assets.Single(m => m.name == "GrassClump"));
-            typeof(SurfaceGrassRenderer).GetField("farMesh", flags).SetValue(grass, assets.Single(m => m.name == "GrassClump_LOD1"));
+            typeof(SurfaceGrassRenderer).GetField("nearMesh", flags).SetValue(grass, prefab.GetComponentInChildren<MeshFilter>().sharedMesh);
+            typeof(SurfaceGrassRenderer).GetField("cellsPerPatch", flags).SetValue(grass, 6);
             typeof(SurfaceGrassRenderer).GetField("material", flags).SetValue(grass,
-                AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/GroundGrass/SunnyGrass.mat"));
+                AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Nature/MountainGrass.mat"));
             var cameraObject = new GameObject("Grass fixture camera");
             var camera = cameraObject.AddComponent<Camera>();
             camera.enabled = false;
@@ -39,7 +39,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(grass.PatchCount, Is.EqualTo(16));
                 int initial = grass.SupportedClumps;
                 ulong originalHash = grass.PlacementHash;
-                Assert.That(initial, Is.InRange(750, 1000), "Grass must cover the whole supported surface at the optimized density.");
+                Assert.That(initial, Is.InRange(350, 550), "Wide vendor cards cover the surface at a lower root density.");
                 var patches = (System.Collections.IList)typeof(SurfaceGrassRenderer).GetField("patches", flags).GetValue(grass);
                 var supportedPatch = patches.Cast<object>().First(p => (int)p.GetType().GetField("NearCount").GetValue(p) > 0);
                 var matrices = (Matrix4x4[])supportedPatch.GetType().GetField("Near").GetValue(supportedPatch);
@@ -47,7 +47,7 @@ namespace SomethingDownThere.Tests
                 foreach (object patch in patches)
                 {
                     int count = (int)patch.GetType().GetField("NearCount").GetValue(patch);
-                    Assert.That(count, Is.GreaterThan(35), "Every supported spatial patch must retain grass, with no authored bare strips.");
+                    Assert.That(count, Is.GreaterThan(10), "Every supported spatial patch must retain grass, including boundary patches.");
                 }
                 int colliderCount = root.GetComponentsInChildren<Collider>().Length;
                 Assert.That(Physics.Raycast(supportedRoot + Vector3.up * 2, Vector3.down, out var hit, 4), Is.True);
@@ -89,8 +89,7 @@ namespace SomethingDownThere.Tests
                 camera.transform.LookAt(new Vector3(104, 3, 104));
                 render.Invoke(grass, new object[] { default(ScriptableRenderContext), camera });
                 Assert.That(grass.LastVisibleClumps, Is.EqualTo(near), "Full-site coverage must not change across the old distance threshold.");
-                Assert.That(grass.LastTriangles, Is.LessThan(nearTriangles), "Distant blades retain coverage with fewer intermediate bend segments.");
-                Assert.That(grass.LastFarClumps, Is.GreaterThan(0));
+                Assert.That(grass.LastTriangles, Is.EqualTo(nearTriangles), "Lightweight vendor cards retain their silhouette at distance.");
                 Assert.That(grass.LastDrawCalls, Is.LessThan(4), "Visible spatial patches should share submission batches.");
                 // Look across only the tall tips, above the former short-grass
                 // bounds. Root-level bounds alone would wrongly cull this view.

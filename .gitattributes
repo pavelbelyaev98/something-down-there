@@ -3,3 +3,11 @@
 *.psd filter=lfs diff=lfs merge=lfs -text
 *.psb filter=lfs diff=lfs merge=lfs -text
 *.kra filter=lfs diff=lfs merge=lfs -text
+
+# Purchased BK pack: binary payloads in LFS; Unity metadata and text stay diffable.
+unity/Assets/BK/**/*.png filter=lfs diff=lfs merge=lfs -text
+unity/Assets/BK/**/*.tga filter=lfs diff=lfs merge=lfs -text
+unity/Assets/BK/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+unity/Assets/BK/**/*.exr filter=lfs diff=lfs merge=lfs -text
+unity/Assets/BK/PureNature_Mountains/Models/TerrainMountain.asset filter=lfs diff=lfs merge=lfs -text
+unity/Assets/BK/PureNature_Mountains/Scenes/Mountain_Demo/LightingData.asset filter=lfs diff=lfs merge=lfs -text

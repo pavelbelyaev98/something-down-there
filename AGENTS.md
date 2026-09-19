@@ -32,6 +32,7 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
   - Tool upgrade parameters and the shared tier price ladder live in `EquipmentProgression.cs`; every track pays the same for a tier, and none of it is serialized into the scene.
 - **Decentralized Asset Tracking:** Do **not** maintain a centralized asset ledger. Document assets minimally in their local folder: `art/<name>/README.md` (5–8 line card stating: Item, Purpose, Source/License, Unity Path, Status).
 - **Asset Approvals:** New external assets or audio require user approval before entering the project. Visuals/audio must be commercially licensed (e.g. CC0, MIT) or created via Blender MCP.
+- **Purchased Asset Workflow:** Pure Nature 2: Mountains (`unity/Assets/BK/`) is approved. Preserve vendor paths and `.meta` GUIDs; use project-owned materials/prefab variants under `Assets/Content` for tuning. Record publisher patches in the local `art/pure-nature-mountains/README.md` card. Keep the full import and metadata in private version control, with vendor binaries in Git LFS; see `unity/readme.md`. Reuse assets through existing gameplay systems; demo scenes and lighting must not replace MainGame ownership.
 - **Preserve User Data:** Never delete, overwrite, or commit the user recovery scene `unity/Assets/_Recovery/0.unity` or existing player saves in `persistentDataPath/Save`.
 
 ## 4. Post-Playtest Design Iteration Protocol

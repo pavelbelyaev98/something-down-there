@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2dc01f3dbcdf4fa6bd0f56c4bd0cd11e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8574412962073106934
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 269088
+  packageName: 'Pure Nature 2 : Mountains'
+  packageVersion: 2.2
+  assetPath: Assets/BK/PureNature_Mountains/Textures/Surfaces/Layers/Gravel1.terrainlayer
+  uploadId: 960986

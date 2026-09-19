@@ -16,6 +16,9 @@ namespace SomethingDownThere
         [SerializeField] private Material material;
         [SerializeField, Min(1)] private float patchSize = 2f;
         [SerializeField, Range(4, 20)] private int cellsPerPatch = 8;
+        [SerializeField] private Vector2 scaleRange = new Vector2(.95f, 1.35f);
+        [SerializeField] private Vector3 meshScale = new Vector3(.35f, 1.8f, .35f);
+        [SerializeField, Min(0)] private float windPadding = .12f;
         private const int Seed = 127;
         private sealed class Patch
         {
@@ -26,11 +29,12 @@ namespace SomethingDownThere
             public bool Dirty = true;
         }
         private TerrainVolume terrain;
+        private float rootRadius;
         private readonly List<Patch> patches = new List<Patch>();
         private readonly Plane[] planes = new Plane[6];
-        // The shader uses uniform scaling, so the documented 1023-instance limit
-        // applies. Compact already-culled patches into reusable submission arrays.
-        private readonly Matrix4x4[] nearBatch = new Matrix4x4[1023], farBatch = new Matrix4x4[1023];
+        // Vendor shaders also upload inverse matrices: retain the conservative
+        // 511-instance limit without changing their instancing declarations.
+        private readonly Matrix4x4[] nearBatch = new Matrix4x4[511], farBatch = new Matrix4x4[511];
         public int PatchCount => patches.Count;
         public int SupportedClumps { get; private set; }
         public int LastRebuiltPatches { get; private set; }
@@ -72,7 +76,9 @@ namespace SomethingDownThere
                 patch.NearCount = 0;
                 for (int i = 0; i < patch.Roots.Length; i++)
                 {
-                    if (!RootSupported(patch.Roots[i], patch.Candidates[i].GetColumn(0).magnitude)) continue;
+                    float footprintScale = Mathf.Max(patch.Candidates[i].GetColumn(0).magnitude,
+                        patch.Candidates[i].GetColumn(2).magnitude);
+                    if (!RootSupported(patch.Roots[i], footprintScale)) continue;
                     patch.Near[patch.NearCount++] = patch.Candidates[i];
                 }
                 SupportedClumps += patch.NearCount;
@@ -89,10 +95,18 @@ namespace SomethingDownThere
             int cells = Mathf.Clamp(cellsPerPatch, 4, 20);
             float size = Mathf.Max(1, patchSize);
             var extent = (Vector3)terrain.Dimensions * terrain.CellSize;
-            // A sphere around the authored mesh covers every seeded rotation and
-            // scale. The shader's combined breeze/flutter stays below 1.5 amplitudes.
-            float bladePadding = (nearMesh.bounds.center.magnitude + nearMesh.bounds.extents.magnitude) * 1.65f
-                + material.GetFloat("_WindAmplitude") * 1.5f + .02f;
+            // Include the imported card footprint, all rotations, and wind.
+            Bounds meshBounds = nearMesh.bounds;
+            if (farMesh != null) meshBounds.Encapsulate(farMesh.bounds);
+            var reach = new Vector2(Mathf.Max(Mathf.Abs(meshBounds.min.x), Mathf.Abs(meshBounds.max.x)),
+                Mathf.Max(Mathf.Abs(meshBounds.min.z), Mathf.Abs(meshBounds.max.z)));
+            rootRadius = reach.magnitude;
+            Vector3 shape = Vector3.Max(Vector3.one * .01f, meshScale);
+            float minScale = Mathf.Max(.01f, Mathf.Min(scaleRange.x, scaleRange.y));
+            float maxScale = Mathf.Max(minScale, Mathf.Max(scaleRange.x, scaleRange.y));
+            float bladePadding = (Vector3.Scale(meshBounds.center, shape).magnitude
+                + Vector3.Scale(meshBounds.extents, shape).magnitude) * maxScale
+                + windPadding + .02f;
             var random = new System.Random(Seed);
             for (float z = 0; z < extent.z; z += size)
             for (float x = 0; x < extent.x; x += size)
@@ -112,10 +126,10 @@ namespace SomethingDownThere
                     // Even whole-site growth, with seeded spacing and height
                     // variation. Camera distance only simplifies blade geometry.
                     if (keep >= .88f) continue;
-                    float scale = Mathf.Lerp(.95f, 1.5f, scaleRandom);
+                    float scale = Mathf.Lerp(minScale, maxScale, scaleRandom);
                     roots.Add(root);
                     matrices.Add(Matrix4x4.TRS(root, terrain.transform.rotation *
-                        Quaternion.Euler(0, rotation, 0), Vector3.one * scale));
+                        Quaternion.Euler(0, rotation, 0), shape * scale));
                 }
                 var bounds = new Bounds(terrain.transform.TransformPoint(new Vector3(x, extent.y, z)), Vector3.zero);
                 bounds.Encapsulate(terrain.transform.TransformPoint(new Vector3(Mathf.Min(x + size, extent.x), extent.y, z)));
@@ -132,10 +146,13 @@ namespace SomethingDownThere
             // Test the clump footprint at the original turf, not a lower wall or
             // nearby floor. A conservative skirt prevents roots hovering at lips.
             Vector3 down = -terrain.transform.up * .018f;
-            Vector3 a = terrain.transform.right * (.085f * scale), b = terrain.transform.forward * (.085f * scale);
+            Vector3 a = terrain.transform.right * (rootRadius * scale), b = terrain.transform.forward * (rootRadius * scale);
+            Vector3 diagonalA = (a + b) * .7071068f, diagonalB = (a - b) * .7071068f;
             return terrain.IsSolid(root + down) && terrain.IsSolid(root + down + a)
                 && terrain.IsSolid(root + down - a) && terrain.IsSolid(root + down + b)
-                && terrain.IsSolid(root + down - b);
+                && terrain.IsSolid(root + down - b) && terrain.IsSolid(root + down + diagonalA)
+                && terrain.IsSolid(root + down - diagonalA) && terrain.IsSolid(root + down + diagonalB)
+                && terrain.IsSolid(root + down - diagonalB);
         }
 
         private void SoilChanged(Bounds changed)
@@ -173,9 +190,8 @@ namespace SomethingDownThere
             foreach (var patch in patches)
             {
                 if (patch.NearCount == 0 || !GeometryUtility.TestPlanesAABB(planes, patch.Bounds)) continue;
-                // The distant authored mesh preserves every root/blade/tip and
-                // palette; only small intermediate bends are simplified. Never
-                // change coverage or blade count when the camera approaches.
+                // Low-poly vendor cards need no far mesh. Optional authored LODs
+                // must retain the same footprint and coverage as the near mesh.
                 bool distant = farMesh != null && patch.Bounds.SqrDistance(camera.transform.position) > 16f * 16f;
                 if (distant) {
                     Append(camera, farMesh, patch, farBatch, ref farCount, ref farBounds);

@@ -3,7 +3,7 @@
 ## 1. Visual style
 
 Stylized painted low-poly: strong silhouettes, restrained texture detail, painted gradients,
-cohesive custom art. Bright and readable, never realistic mud, never asset-store clutter.
+cohesive art direction across custom and licensed assets. Bright and readable, never realistic mud, never asset-store clutter.
 Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid grass,
 warm soil and a clear cyan sky. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
@@ -11,7 +11,9 @@ or lifting the black level in deep tunnels.
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - **Objects read by silhouette**, because recognition is the core reward.
-- No AI-generated images or textures; custom Blender models, art direction owned by one style guide.
+- Purchased Pure Nature 2: Mountains supplies surface vegetation and an approved environment library;
+  select and tune assets to the reservoir's style. Grass follows excavation and clears from removed soil.
+- No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.
  AI-assisted modeling with real references is allowed.
 
 ## 2. Zone palettes and mood

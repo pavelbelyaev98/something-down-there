@@ -23,7 +23,13 @@ namespace SomethingDownThere.Editor
             string directory = Path.GetDirectoryName(output) ?? throw new InvalidOperationException();
             // A build is a clean artifact: nothing from an earlier run, a review pass or a
             // dev shell may survive into the folder that gets zipped and shipped.
-            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            // Explorer or a terminal can hold the output directory itself open.
+            // Keep that directory handle valid while still clearing every artifact.
+            if (Directory.Exists(directory))
+            {
+                foreach (string file in Directory.GetFiles(directory)) File.Delete(file);
+                foreach (string child in Directory.GetDirectories(directory)) Directory.Delete(child, true);
+            }
             Directory.CreateDirectory(directory);
 
             BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions

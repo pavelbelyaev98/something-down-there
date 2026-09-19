@@ -82,18 +82,20 @@ namespace SomethingDownThere.Tests
                 var grass = root.GetComponentInChildren<SurfaceGrassRenderer>();
                 Assert.That(grass, Is.Not.Null, "The main game must retain the approved moving grass.");
                 var grassSettings = new SerializedObject(grass);
-                foreach (string property in new[] { "nearMesh", "farMesh", "material" })
-                    StringAssert.StartsWith("Assets/Content/GroundGrass/", AssetDatabase.GetAssetPath(
-                        grassSettings.FindProperty(property).objectReferenceValue));
+                StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(
+                    grassSettings.FindProperty("nearMesh").objectReferenceValue));
+                Assert.That(grassSettings.FindProperty("farMesh").objectReferenceValue, Is.Null);
+                StringAssert.StartsWith("Assets/Content/Nature/", AssetDatabase.GetAssetPath(
+                    grassSettings.FindProperty("material").objectReferenceValue));
                 var grassMesh = (Mesh)grassSettings.FindProperty("nearMesh").objectReferenceValue;
-                Assert.That(grassMesh.bounds.size.y, Is.InRange(.35f, .5f), "Keep the requested taller authored grass.");
-                Assert.That(grassMesh.GetIndexCount(0) / 3, Is.EqualTo(168), "The taller shape must retain the clump's geometry budget.");
-                Assert.That(grassMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord1), Is.True,
-                    "The imported mesh must retain per-blade wind phase and height.");
+                Assert.That(grassMesh.GetIndexCount(0) / 3, Is.LessThanOrEqualTo(64), "Vendor grass must keep inexpensive instanced geometry.");
+                Assert.That(grassMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color), Is.True,
+                    "The vendor shader uses vertex color to weight wind.");
                 var grassMaterial = (Material)grassSettings.FindProperty("material").objectReferenceValue;
                 Assert.That(grassMaterial.enableInstancing, Is.True);
                 Assert.That(ShaderUtil.ShaderHasError(grassMaterial.shader), Is.False);
-                Assert.That(grassMaterial.GetTexture("_BaseMap"), Is.Not.Null);
+                Assert.That(grassMaterial.shader.name, Is.EqualTo("BK/Grass"));
+                Assert.That(grassMaterial.GetTexture("_MainTex"), Is.Not.Null);
                 var daylight = root.GetComponentInChildren<ExcavationDaylight>();
                 Assert.That(daylight, Is.Not.Null, "Excavation must attenuate ambient sky light in enclosed soil.");
                 var daylightShader = new SerializedObject(daylight).FindProperty("litShader").objectReferenceValue as Shader;

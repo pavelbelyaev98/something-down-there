@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Active Task:** None — `055` complete.
+- **Active Task:** None — `056` complete.
 - **Build:** `builds/windows/SomethingDownThere.exe` (Working prototype baseline)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
@@ -15,6 +15,7 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`056` — Pure Nature Integration:** configured the purchased pack, replaced prototype grass and documented asset/Git workflow. (`docs/tasks/completed/056-pure-nature-grass.md`)
 - [x] **`055` — Graphics Settings:** expose persistent rendering and shadow performance controls in the existing menu. (`docs/tasks/completed/055-graphics-settings.md`)
 - [x] **`054` — Render Resolution Defaults:** native rendering by default and supported high-resolution display choices. (`docs/tasks/completed/054-render-resolution-defaults.md`)
 - [x] **`053` — Dense World Performance:** suppress hidden find rendering, stop polling anchored physics and cap startup frames. (`docs/tasks/completed/053-dense-world-performance.md`)
@@ -103,6 +104,8 @@
 ## Completed
 
 > Format: `- [ID] Title: 1-2 sentences on what was implemented and how.`
+
+- **[056] Pure Nature Integration:** replaced the prototype grass with instanced BK grass, mesh-sized soil support, vendor wind and updated URP shaders while preserving project lighting. Asset/Git LFS workflow is documented; 304 checks passed, final grass/scene checks and native startup verified, and Windows player rebuilt with clean output-folder handling.
 
 - **[055] Graphics Settings:** replaced the Graphics placeholder with persistent render-resolution, shadow, MSAA, texture-quality and filtering controls plus category reset; shadow tiers modify the runtime URP clone while excavation daylight stays independent. Preference/runtime checks passed, the menu and live shadow pass were verified, and the Windows player was rebuilt.
 
