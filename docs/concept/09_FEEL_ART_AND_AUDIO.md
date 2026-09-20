@@ -11,10 +11,19 @@ or lifting the black level in deep tunnels.
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - **Objects read by silhouette**, because recognition is the core reward.
-- Purchased Pure Nature 2: Mountains remains available for the user's manual environment
-  design. The working scene is the simple excavation and stations again; the attempted
-  generated and copied reservoir compositions are removed. Keep existing gameplay functional
-  during future art work and wait for explicit instructions before changing the surroundings.
+- Purchased Pure Nature 2: Mountains builds the valley surroundings (tasks 063/064), matched
+  to the vendor demo: authored terrain with the vendor mud/gravel/grass layers and the demo's
+  23-prototype grass and flower detail set, vendor cliffs, boulders, conifer forest, stream,
+  lake and falls, under the demo's sky/fog/ambient/post stack. Rebuild with the tool menu;
+  keep gameplay functional during art work.
+- **Skyline rule:** the vendor peaks are authored in metres of finished mountain, not raw prefab
+  scale, and are sized against the valley rim so they always clear it by a wide margin. A small
+  site needs the horizon closed by mountains; peaks that merely peek over the tree line read as
+  pebbles and make the valley feel like a pit.
+- **Steep terrain rule:** Unity's terrain material projects planar UVs, so any face steep enough
+  to shed grass renders as a vertical smear. Steep ground is therefore either benched until
+  grass holds it or clothed with vendor cliffs — the generator finds the steep patches itself
+  rather than relying on hand-placed rock.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.
  AI-assisted modeling with real references is allowed.
 

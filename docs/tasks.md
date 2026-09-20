@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Active Task:** None — `062` restored the simple excavation and stations; user owns environment design.
+- **Active Task:** None — `064` rebuilt the surroundings as a mountain-ringed valley; next pending is `001`.
 - **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; simple site, working menus and gameplay)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
@@ -15,6 +15,8 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`064` — Demo-Matched Valley & Natural Boundary:** reshaped the surroundings into a radial alpine bowl ringed by two rings of vendor peaks, with demo grass/flower detail, a slope-driven cliff pass, stream, lake and notched waterfall; the invisible perimeter is gone and containment is terrain steepness. (`docs/tasks/completed/064-demo-matched-valley-and-natural-boundary.md`)
+- [x] **`063` — Drained Reservoir Environment:** authored the reservoir surroundings from the approved pack — sediment dig ground, grassy camp terrace, rocky forested banks, basin and distant peaks; arena panels hidden, boundaries unchanged. (`docs/tasks/completed/063-drained-reservoir-environment.md`)
 - [x] **`062` — Restore Simple Site:** restored the pre-environment gameplay scene and removed generated/copied surroundings; the user will design the environment manually. (`docs/tasks/completed/062-restore-simple-site.md`)
 - [x] **`061` — Guided Reservoir Assembly:** rejected; removed in task 062 with the other environment experiments. (`docs/tasks/completed/061-guided-reservoir-assembly.md`)
 - [x] **`060` — Restore Game Entry:** restored the normal playable build and removed preview replacement. (`docs/tasks/completed/060-restore-game-entry.md`)
@@ -109,6 +111,8 @@
 
 ## Completed
 
+- **[063] Drained Reservoir Environment:** authored four terrain tiles (inner edges at ±16 m) with vendor mud/gravel/grass layers, a sediment dig material, a grassy south camp terrace, rocky forested banks and distant peaks; hidden arena panels with unchanged boundary colliders, raised outdoor ambient for rock relief and camera far clip 600 m. EditMode 231/231 and PlayMode 191/191 passed (three timing flakes passed on isolated rerun); Windows player rebuilt. No dam/tent/crate/stump assets exist, so those stay out by user decision.
+
 - **[062] Restore Simple Site:** restored MainGame and its presentation to the pre-environment revision, removed reservoir/preview assets and tools, and retained the purchased pack for manual authoring. All 40 relevant scene/gameplay checks passed, the simple site was visually verified and the Windows player rebuilt; saves and recovery content were preserved.
 
 - **[061] Guided Reservoir Assembly (rejected):** copied selected demo lake/shore and river-bank sections into MainGame; gameplay checks passed but the composition was rejected. Removed with the other environment experiments in task 062.
@@ -122,6 +126,8 @@
 - **[057] Drained Reservoir Surroundings (rejected):** attempted cliff, forest and mountain composition. Scenery, presentation overrides and the environment benchmark were removed in task 062.
 
 > Format: `- [ID] Title: 1-2 sentences on what was implemented and how.`
+
+- **[064] Demo-Matched Valley & Natural Boundary:** `ReservoirEnvironmentSetup` now authors a radial bowl (meadow -> forested slope -> a two-step over-steep bank -> broken ridge) instead of a box canyon, clothes every steep face by scanning the height field rather than by hand-placed cliff rings, and rings the valley with two ranges of vendor peaks sized in metres against the rim (470-1000 m tall, 0.7-1.7 km out) — the previous pass scaled them ~10x too small, so they read as pebbles. `MainGameRoot/Perimeter` is deleted; a 360-bearing sweep in `MainGameSceneTests` asserts every way out of the valley is steeper than the 45 deg slope limit (weakest 1.31).
 
 - **[056] Pure Nature Integration:** replaced the prototype grass with instanced BK grass, mesh-sized soil support, vendor wind and updated URP shaders while preserving project lighting. Asset/Git LFS workflow is documented; 304 checks passed, final grass/scene checks and native startup verified, and Windows player rebuilt with clean output-folder handling.
 

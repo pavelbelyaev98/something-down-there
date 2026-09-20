@@ -18,7 +18,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = catalog.Generate(extent,seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed));
             Assert.That(layout.Length,Is.EqualTo(12484));
-            CollectionAssert.AreEqual(new[] {0,0,0,5500,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5500,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -61,7 +61,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(750));
-            CollectionAssert.AreEqual(new[] { 0, 0, 0, 750, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 750, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Select(e => e.ShallowCount));
             for (int seed = 0; seed < 100; seed++)
             {
                 var layout = catalog.Generate(SiteLayout.Extent, seed);
@@ -368,7 +368,7 @@ namespace SomethingDownThere.Tests
         public void PreviousThousandFindPopulationStillResolvesWithoutReroll()
         {
             var catalog = Catalog;
-            var counts = new[] { 0, 0, 0, 96, 240, 160, 128, 112, 96, 80, 64, 48 };
+            var counts = new[] { 96, 240, 160, 128, 112, 96, 80, 64, 48 };
             int index = 0;
             for (int e = 0; e < catalog.Entries.Length; e++)
                 for (int n = 0; n < counts[e]; n++)
@@ -519,7 +519,7 @@ namespace SomethingDownThere.Tests
             {
                 replacement.GetComponent<MeshFilter>().sharedMesh=original.Entries[1].Prefab.GetComponent<MeshFilter>().sharedMesh;
                 replacement.GetComponent<MeshCollider>().sharedMesh=original.Entries[1].Prefab.GetComponent<MeshCollider>().sharedMesh;
-                catalog.Entries[0]=new DiscoveryCatalog.Entry {Prefab=replacement.GetComponent<BuriedFind>(),Count=0,ShallowCount=0,LayOnSide=true};
+                catalog.Entries[0].Prefab=replacement.GetComponent<BuriedFind>();
                 catalog.Validate();
                 var saved=new FindSnapshot {ContentId=original.Entries[0].Prefab.SaveContentId,Item=new ItemSnapshot {Id="same-item",Name="Glass Bottle",Value=17},Scale=Vector3.one,Rotation=Quaternion.identity};
                 var restored=catalog.PrepareRestore(saved);

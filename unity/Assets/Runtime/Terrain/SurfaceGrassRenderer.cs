@@ -16,6 +16,7 @@ namespace SomethingDownThere
         [SerializeField] private Material material;
         [SerializeField, Min(1)] private float patchSize = 2f;
         [SerializeField, Range(4, 20)] private int cellsPerPatch = 8;
+        [SerializeField, Range(0f, 1f)] private float coverage = .88f;
         [SerializeField] private Vector2 scaleRange = new Vector2(.95f, 1.35f);
         [SerializeField] private Vector3 meshScale = new Vector3(.35f, 1.8f, .35f);
         [SerializeField, Min(0)] private float windPadding = .12f;
@@ -125,7 +126,7 @@ namespace SomethingDownThere
                     float keep = (float)random.NextDouble();
                     // Even whole-site growth, with seeded spacing and height
                     // variation. Camera distance only simplifies blade geometry.
-                    if (keep >= .88f) continue;
+                    if (keep >= coverage) continue;
                     float scale = Mathf.Lerp(minScale, maxScale, scaleRandom);
                     roots.Add(root);
                     matrices.Add(Matrix4x4.TRS(root, terrain.transform.rotation *

@@ -62,12 +62,8 @@ namespace SomethingDownThere.Editor
             Boundary("East", bedrock, new Vector3(12.5f, wallCentre, 0), new Vector3(1, wallHeight, 24), rock);
             Boundary("North", bedrock, new Vector3(0, wallCentre, 12.5f), new Vector3(26, wallHeight, 1), rock);
             Boundary("South", bedrock, new Vector3(0, wallCentre, -12.5f), new Vector3(26, wallHeight, 1), rock);
-
-            Transform perimeter = Group("Perimeter", root);
-            Perimeter("West", perimeter, new Vector3(-16.5f, 0.6f, 0), new Vector3(1, 1.2f, 34), rock);
-            Perimeter("East", perimeter, new Vector3(16.5f, 0.6f, 0), new Vector3(1, 1.2f, 34), rock);
-            Perimeter("North shoreline", perimeter, new Vector3(0, 0.6f, 16.5f), new Vector3(34, 1.2f, 1), rock);
-            Perimeter("South", perimeter, new Vector3(0, 0.6f, -16.5f), new Vector3(34, 1.2f, 1), rock);
+            // No invisible perimeter: the natural valley wall built by
+            // ReservoirEnvironmentSetup encloses the worksite.
 
             var terrainRoot = new GameObject("Excavation");
             terrainRoot.SetActive(false);
@@ -228,15 +224,6 @@ namespace SomethingDownThere.Editor
 
         private static void Boundary(string name, Transform parent, Vector3 position, Vector3 size, Material material)
             => Block(name, parent, position, size, material).AddComponent<PermanentTerrainBoundary>();
-
-        private static void Perimeter(string name, Transform parent, Vector3 position, Vector3 size, Material material)
-        {
-            Boundary(name, parent, position, size, material);
-            // A visible wall marks the finite site; its airspace also blocks powered escape.
-            Transform airspace = Anchor(name + " airspace", parent, new Vector3(position.x, 65.2f, position.z));
-            airspace.gameObject.AddComponent<BoxCollider>().size = new Vector3(size.x, 128, size.z);
-            airspace.gameObject.AddComponent<PermanentTerrainBoundary>();
-        }
 
         private static Material MaterialAsset(string name, Color color, float smoothness = 0.15f)
         {

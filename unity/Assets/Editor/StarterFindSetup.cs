@@ -50,7 +50,7 @@ namespace SomethingDownThere.Editor
             ValidateSource(source);
             EnsureFolder(Folder);
             foreach (string name in new[] { "Models", "Textures", "Materials", "Meshes", "Prefabs" }) EnsureFolder(Folder + "/" + name);
-            CopySource("LICENSE.txt", Folder + "/LICENSE.txt");
+            CopySourceIfPresent("LICENSE.txt", Folder + "/LICENSE.txt");
             var materials = new Dictionary<string, Material>();
             foreach (var entry in source.variants)
                 if (!materials.ContainsKey(entry.atlas_group)) materials.Add(entry.atlas_group, MaterialFor(entry));
@@ -139,6 +139,13 @@ namespace SomethingDownThere.Editor
                 foreach (string path in Directory.GetFiles(Folder + "/" + group).Select(p => p.Replace('\\', '/')))
                     if (!path.EndsWith(".meta", StringComparison.Ordinal) && !keep.Contains(path))
                         if (!AssetDatabase.DeleteAsset(path)) throw new IOException("Could not remove retired generated asset: " + path);
+            // The retired bottle trial owned these two files; with no variants left the
+            // whole starter-find batch is gone and old saves resolve through aliases.
+            if (source.variants.Length == 0)
+            {
+                foreach (string retired in new[] { Folder + "/BottleContact.physicMaterial", Folder + "/LICENSE.txt" })
+                    if (File.Exists(retired)) AssetDatabase.DeleteAsset(retired);
+            }
         }
 
         public static void ConfigureScene(DiscoveryCatalog catalog = null)
@@ -166,7 +173,9 @@ namespace SomethingDownThere.Editor
 
         private static void ValidateSource(SourceCatalog source)
         {
-            if (source == null || source.schema_version != 1 || source.variants == null || source.variants.Length == 0)
+            // The base catalog may be intentionally empty (the bottle trial was retired);
+            // the merged catalog still validates the active rock/mineral content.
+            if (source == null || source.schema_version != 1 || source.variants == null || source.legacy_aliases == null)
                 throw new InvalidDataException("Unsupported or missing starter source catalog.");
             var ids = new HashSet<string>(); var groups = new Dictionary<string, string>();
             int total = 0, shallow = 0;
@@ -184,11 +193,16 @@ namespace SomethingDownThere.Editor
                 groups[e.atlas_group] = maps; total += e.instances; shallow += e.shallow_instances;
             }
             // A retained batch may be disabled; the merged catalog validates active shallow content.
-            if (total > DiscoveryField.MaximumPopulation || source.legacy_aliases == null) throw new InvalidDataException("Invalid starter allocation or missing migration mapping.");
+            if (total > DiscoveryField.MaximumPopulation) throw new InvalidDataException("Invalid starter allocation.");
             var oldIds = new HashSet<string>();
             foreach (var alias in source.legacy_aliases)
-                if (string.IsNullOrWhiteSpace(alias.old_id) || ids.Contains(alias.old_id) || !oldIds.Add(alias.old_id) || !ids.Contains(alias.current_id))
+            {
+                // Targets are validated against the merged catalog, which also owns the
+                // retired bottle ids now mapped onto the rock entry.
+                if (string.IsNullOrWhiteSpace(alias.old_id) || ids.Contains(alias.old_id) || !oldIds.Add(alias.old_id)
+                    || string.IsNullOrWhiteSpace(alias.current_id))
                     throw new InvalidDataException("Invalid legacy mapping.");
+            }
         }
 
         private static Material MaterialFor(SourceEntry entry, string folder = Folder, string sourceRoot = null)
@@ -364,6 +378,11 @@ namespace SomethingDownThere.Editor
             return path;
         }
         private static void CopySource(string relative, string output, string sourceRoot = null) => WriteIfChanged(output, File.ReadAllBytes(SourcePath(relative, sourceRoot)));
+        private static void CopySourceIfPresent(string relative, string output, string sourceRoot = null)
+        {
+            string path = Path.GetFullPath(Path.Combine(sourceRoot ?? Source, relative));
+            if (File.Exists(path)) WriteIfChanged(output, File.ReadAllBytes(path));
+        }
         private static void WriteIfChanged(string output, byte[] bytes)
         {
             if (!File.Exists(output) || !File.ReadAllBytes(output).SequenceEqual(bytes)) File.WriteAllBytes(output, bytes);

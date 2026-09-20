@@ -1,7 +1,7 @@
 # Asset: Pure Nature 2: Mountains
-- **Purpose:** Approved grass in the playable prototype; environment assets available for the user's manual design.
+- **Purpose:** Approved environment pack: grass, sediment terrain, cliffs, boulders, conifers, plants, water and peaks; builds the mountain-ringed valley around the worksite (tasks 063/064). `Mountains/Mountain1-2` are ~2.8 cm across at scale 1 — size them in metres of finished peak, as `ScatterMountains` does, not by raw scale.
 - **Source/License:** User-purchased [BK Asset Store pack](https://assetstore.unity.com/packages/3d/environments/pure-nature-2-mountains-269088) v2.2, Unity Asset Store EULA; keep source access restricted.
-- **Unity Path:** `unity/Assets/BK/`; project material overrides in `unity/Assets/Content/Nature/`.
-- **Integration:** `SurfaceGrassSetup` binds purchased grass to the existing excavation renderer; the vendor demo remains a reference.
+- **Unity Path:** `unity/Assets/BK/`; project material overrides in `unity/Assets/Content/Nature/` and terrain data in `unity/Assets/Content/Environment/`.
+- **Integration:** `Tools > Something Down There > Build Drained Reservoir Environment` (`ReservoirEnvironmentSetup`) rebuilds terrain tiles, splat, scatter and `ReservoirSediment.mat`; `SurfaceGrassSetup` binds the grass to the excavation renderer. The vendor demo remains a reference.
 - **Publisher patch:** Eight matching shaders updated from the [6000.4.0 shader archive](https://www.bk-prod.fr/readme); imported GUIDs retained. Use this update after reimporting the original pack.
-- **Status/workflow:** Rejected reservoir compositions and project previews removed. Preserve vendor files and tune project copies; keep the complete import and metadata in private Git, with vendor binaries in LFS.
+- **Status/workflow:** Vendor files and GUIDs are preserved; props stay prefab instances and tuning uses project copies. Keep the complete import and metadata in private Git, with vendor binaries in LFS.

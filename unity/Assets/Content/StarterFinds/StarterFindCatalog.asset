@@ -13,57 +13,6 @@ MonoBehaviour:
   m_Name: StarterFindCatalog
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.DiscoveryCatalog
   Entries:
-  - ItemId: common_bottle_tall
-    Prefab: {fileID: 2445034132704893814, guid: cd762c181e1119e4382bb04b3aada3a9, type: 3}
-    AppearanceVariants: []
-    Count: 0
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 0
-    MaxDepth: 0
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
-    LayOnSide: 1
-    RandomOrientation: 0
-  - ItemId: common_bottle_stubby
-    Prefab: {fileID: 6630782152673132222, guid: b852338e3933db24bba516d2e21c9f87, type: 3}
-    AppearanceVariants: []
-    Count: 0
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 0
-    MaxDepth: 0
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
-    LayOnSide: 1
-    RandomOrientation: 0
-  - ItemId: common_bottle_square
-    Prefab: {fileID: 2442639858841321928, guid: b39badc6c92de0a498e33cb9c5fae8f0, type: 3}
-    AppearanceVariants: []
-    Count: 0
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 0
-    MaxDepth: 0
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
-    LayOnSide: 1
-    RandomOrientation: 0
   - ItemId: common_rock
     Prefab: {fileID: 6474309712400341572, guid: 476de7c38fb18d44bb8103ea7ced1543, type: 3}
     AppearanceVariants:
@@ -221,16 +170,22 @@ MonoBehaviour:
     RandomOrientation: 1
   LegacyAliases:
   - OldId: 51db261769dac514ebb168431cb1f25b
-    CurrentId: common_bottle_tall
+    CurrentId: common_rock_a
   - OldId: 4dd7320af043ad448a6c734ff4d8ed07
-    CurrentId: common_bottle_stubby
+    CurrentId: common_rock_a
   - OldId: dcbeb68af76f98f4c8af8e902406c0cf
-    CurrentId: common_bottle_square
+    CurrentId: common_rock_a
+  - OldId: common_bottle_tall
+    CurrentId: common_rock_a
+  - OldId: common_bottle_stubby
+    CurrentId: common_rock_a
+  - OldId: common_bottle_square
+    CurrentId: common_rock_a
   - OldId: common_can_intact
-    CurrentId: common_bottle_stubby
+    CurrentId: common_rock_a
   - OldId: common_can_crushed
-    CurrentId: common_bottle_tall
+    CurrentId: common_rock_a
   - OldId: common_brick_whole
-    CurrentId: common_bottle_square
+    CurrentId: common_rock_a
   - OldId: common_brick_chipped
-    CurrentId: common_bottle_stubby
+    CurrentId: common_rock_a

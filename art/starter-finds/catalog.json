@@ -1,132 +1,47 @@
 {
   "schema_version": 1,
-  "art_state": "replaceable trial, final style unapproved",
-  "variants": [
-    {
-      "content_id": "common_bottle_tall",
-      "throw_speed": 8,
-      "display_name": "Glass Bottle",
-      "atlas_group": "Bottles",
-      "dimensions_m": [
-        0.1,
-        0.1,
-        0.375
-      ],
-      "instances": 0,
-      "shallow_instances": 0,
-      "minimum_depth_m": 0.5,
-      "maximum_depth_m": 6,
-      "core_minimum_depth_m": 1,
-      "core_maximum_depth_m": 4,
-      "core_share": 0.8,
-      "model_scale": 1.0,
-      "sale_value": 2,
-      "slots": 1,
-      "tier": "common",
-      "detector_eligible": false,
-      "required_exposure": 0.6,
-      "lay_on_side": true,
-      "fbx": "exports/common_bottle_tall.fbx",
-      "textures": {
-        "BaseColor": "textures/Bottles_BaseColor.png",
-        "Normal": "textures/Bottles_Normal.png",
-        "Masks": "textures/Bottles_Masks.png"
-      },
-      "collision_fbx": "collisions/common_bottle_tall.fbx"
-    },
-    {
-      "content_id": "common_bottle_stubby",
-      "throw_speed": 8,
-      "display_name": "Glass Bottle",
-      "atlas_group": "Bottles",
-      "dimensions_m": [
-        0.125,
-        0.125,
-        0.3
-      ],
-      "instances": 0,
-      "shallow_instances": 0,
-      "minimum_depth_m": 0.5,
-      "maximum_depth_m": 6,
-      "core_minimum_depth_m": 1,
-      "core_maximum_depth_m": 4,
-      "core_share": 0.8,
-      "model_scale": 1.0,
-      "sale_value": 2,
-      "slots": 1,
-      "tier": "common",
-      "detector_eligible": false,
-      "required_exposure": 0.6,
-      "lay_on_side": true,
-      "fbx": "exports/common_bottle_stubby.fbx",
-      "textures": {
-        "BaseColor": "textures/Bottles_BaseColor.png",
-        "Normal": "textures/Bottles_Normal.png",
-        "Masks": "textures/Bottles_Masks.png"
-      },
-      "collision_fbx": "collisions/common_bottle_stubby.fbx"
-    },
-    {
-      "content_id": "common_bottle_square",
-      "throw_speed": 8,
-      "display_name": "Glass Bottle",
-      "atlas_group": "Bottles",
-      "dimensions_m": [
-        0.1125,
-        0.0875,
-        0.35
-      ],
-      "instances": 0,
-      "shallow_instances": 0,
-      "minimum_depth_m": 0.5,
-      "maximum_depth_m": 6,
-      "core_minimum_depth_m": 1,
-      "core_maximum_depth_m": 4,
-      "core_share": 0.8,
-      "model_scale": 1.0,
-      "sale_value": 2,
-      "slots": 1,
-      "tier": "common",
-      "detector_eligible": false,
-      "required_exposure": 0.6,
-      "lay_on_side": true,
-      "fbx": "exports/common_bottle_square.fbx",
-      "textures": {
-        "BaseColor": "textures/Bottles_BaseColor.png",
-        "Normal": "textures/Bottles_Normal.png",
-        "Masks": "textures/Bottles_Masks.png"
-      },
-      "collision_fbx": "collisions/common_bottle_square.fbx"
-    }
-  ],
+  "art_state": "retired in 064: the bottle trial assets were removed from art/ and unity/Assets/Content. This base catalog is intentionally empty and only carries legacy id mappings so old saves keep resolving; targets must be save content ids that exist in the built catalog (common_rock_a), not item ids.",
+  "variants": [],
   "legacy_aliases": [
     {
       "old_id": "51db261769dac514ebb168431cb1f25b",
-      "current_id": "common_bottle_tall"
+      "current_id": "common_rock_a"
     },
     {
       "old_id": "4dd7320af043ad448a6c734ff4d8ed07",
-      "current_id": "common_bottle_stubby"
+      "current_id": "common_rock_a"
     },
     {
       "old_id": "dcbeb68af76f98f4c8af8e902406c0cf",
-      "current_id": "common_bottle_square"
+      "current_id": "common_rock_a"
+    },
+    {
+      "old_id": "common_bottle_tall",
+      "current_id": "common_rock_a"
+    },
+    {
+      "old_id": "common_bottle_stubby",
+      "current_id": "common_rock_a"
+    },
+    {
+      "old_id": "common_bottle_square",
+      "current_id": "common_rock_a"
     },
     {
       "old_id": "common_can_intact",
-      "current_id": "common_bottle_stubby"
+      "current_id": "common_rock_a"
     },
     {
       "old_id": "common_can_crushed",
-      "current_id": "common_bottle_tall"
+      "current_id": "common_rock_a"
     },
     {
       "old_id": "common_brick_whole",
-      "current_id": "common_bottle_square"
+      "current_id": "common_rock_a"
     },
     {
       "old_id": "common_brick_chipped",
-      "current_id": "common_bottle_stubby"
+      "current_id": "common_rock_a"
     }
   ]
 }

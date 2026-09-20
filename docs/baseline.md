@@ -40,8 +40,21 @@
 - **Resolution:** new/default graphics render at 100%; existing saved preferences remain valid. The display list retains all supported monitor modes, including 4K and higher even when the desktop currently uses a lower resolution, with timed Keep/Revert confirmation.
 - **Graphics settings:** render resolution, shadows (Off/Low/Medium/High), MSAA, texture mip quality and anisotropic filtering apply immediately and persist as device preferences. Graphics reset is enabled; shadows adjust only the runtime URP clone and retain the independent excavation daylight field. High restores authored shadows; old profiles without a shadow choice use High.
 - **Station machines:** Workshop and Sell All are one fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`) — money-only header, categories in their own columns, one clickable row per upgrade track, refill service or carried find. One click buys; nothing is selected first and nothing resizes.
-- **Simple surface:** MainGame is restored to the pre-environment excavation, permanent rim/boundaries, original spawn and station models. Existing menus, movement, digging, grass and saves remain. The user will author the surroundings manually; all attempted reservoir scenery, preview assets and assembly tools are removed.
-- **Presentation:** original turf/soil material, purchased grass and clear noon sky are restored. The full purchased pack and vendor demo remain available for manual design. WindowsBuild always targets MainGame.
+- **Alpine valley surroundings:** `ReservoirEnvironmentSetup` authors four terrain tiles (inner
+  edges at ±16 m) as a radial bowl — meadow to ~68 m, forested slope to ~106 m, a two-step
+  over-steep bank, then a broken ridge near 100 m — with the vendor mud/gravel/grass layers and
+  the demo's 23 grass/flower detail prototypes. ~4,500 BK props: cliffs placed by scanning the
+  height field for steep patches (planar terrain UVs smear on any steep face), boulders, ~2,200
+  conifers, meadow scatter, stream, lake, waterfall. Two rings of vendor peaks (470–1000 m tall,
+  0.7–1.7 km out, authored in metres and converted from the prefab's 2.8 cm bounds) close the
+  horizon; they cast no shadows and the camera far clip is 3,200 m. The dig surface and neutral
+  rims use `ReservoirSediment` (vendor mud beneath a dry gravel crust); the south camp terrace
+  keeps the turf ground. `MainGameRoot/Perimeter` is gone: containment is terrain steepness, and
+  `MainGameSceneTests` sweeps 360 bearings to assert every way out is steeper than the 45° slope
+  limit. Rebuild with `Tools > Something Down There > Build Drained Reservoir Environment`.
+- **Presentation:** original turf/soil camp ground, the sediment bed, purchased grass and clear noon
+  sky. The full purchased pack and vendor demo remain available for manual design. WindowsBuild
+  always targets MainGame.
 - **Underground lighting:** `ExcavationDaylight` derives daylight from connected excavated air, with a generous early reach, stronger loss along sideways passages and no ambient brightness floor. Soil and adapted URP Lit finds/boundaries attenuate sun, sky fill and reflections together; sustained descents and long covered branches become near-black while local lights remain effective.
 
 ## 6. Persistence & Lifecycle (`unity/Assets/Runtime/Persistence/`)

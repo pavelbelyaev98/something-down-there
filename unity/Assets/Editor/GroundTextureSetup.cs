@@ -77,17 +77,15 @@ namespace SomethingDownThere.Editor
 
         private static void ConfigureLighting(Transform root)
         {
-            // Directional ambient fill preserves the bright lawn while giving
-            // side faces and undersides distinct values. Sunlight must respect
-            // the excavated shape rather than illuminate through its walls.
-            RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.58f, 0.67f, 0.79f);
-            RenderSettings.ambientEquatorColor = new Color(0.33f, 0.39f, 0.39f);
-            RenderSettings.ambientGroundColor = new Color(0.19f, 0.24f, 0.23f);
+            // Flat sky fill matches the approved valley demo; the sun keeps soft
+            // shadows so the excavated shape still shades itself.
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.622f, 0.639f, 0.657f);
+            RenderSettings.ambientIntensity = 1.2f;
             var sun = root.Find("Sun").GetComponent<Light>();
             Undo.RecordObject(sun, "Restore ground depth lighting");
             sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = 1f;
+            sun.shadowStrength = .9f;
             sun.shadowBias = 0.05f;
             sun.shadowNormalBias = 0.12f;
             var sunData = sun.GetComponent<UniversalAdditionalLightData>();

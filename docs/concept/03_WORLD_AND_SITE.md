@@ -10,11 +10,22 @@ retaining walls, and leftover waterworks. It is finite, believable and clearly b
   progression axis; the footprint stays contained, with useful lateral room for branches.
 - **Surface:** authored, not procedurally generated into ugliness. A small worksite yard
   (see [Surface Hub and Display](07_SURFACE_HUB_AND_DISPLAY.md)).
-- **Current surface direction:** the user will design the surroundings manually. Restore
-  the simple working excavation and stations; the rejected reservoir compositions and
-  their generation/copy tools are removed. Keep Pure Nature available for manual authoring.
-  Preserve menus, walking, digging and saves while the user builds the static surface.
-  Do not generate or assemble a new environment without a new explicit request.
+- **Current surface direction:** an alpine valley the worksite sits at the bottom of (task 064).
+  The dig and its neutral rims read as loose dry sediment; the south camp terrace keeps firm
+  turf. Around them the ground is a shallow radial bowl: walkable flower meadow to ~68 m,
+  forested slope to ~106 m, then one short over-steep bank (two ~25 m steps with a grassy bench
+  between) that rises to a broken, forested ridge line topping out near 100 m. Beyond the
+  terrain, two rings of vendor peaks 470–1000 m tall stand 0.7–1.7 km out and close the horizon
+  in every direction, so the small site reads as enclosed rather than fenced.
+- **Boundary:** terrain steepness only — there are no invisible walls. Both bank steps beat the
+  45° character-controller slope limit on every bearing out of the bowl, and the generator's
+  own contract test sweeps 360 headings to keep it that way. Cliff meshes dress the bank; the
+  corridor and terminal walls use the same rule.
+- **North corridor:** the valley's one opening descends past a stream into a lake basin under a
+  notched headwall with a waterfall, then closes into forested hillside.
+  Four authored terrain tiles start at ±16 m so no collider can cap the excavation.
+  Rebuild with `Tools > Something Down There > Build Drained Reservoir Environment`.
+  Rejected reservoir compositions and their generation/copy tools stay removed.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
 - **No pre-existing caves or tunnels:** every opening in the ground is one the player made.
 
