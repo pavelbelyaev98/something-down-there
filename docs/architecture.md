@@ -14,7 +14,7 @@
 - `FpsHud` owns the single UI Toolkit document with `GameHudView`/`GameMenuView`; one retained EventSystem routes menu input; no Canvas HUD.
 - `TerrainVolume`/`ExcavationGrid` own removed volume and synchronously rebuild matching render/collision meshes; `ExcavationDaylight`, `SurfaceGrassRenderer` and `SunPresentationSetup` derive presentation without excavation authority and save no lighting state.
 - Approved vendor content stays under `Assets/BK`; game material overrides live under `Assets/Content/Nature`. `SurfaceGrassSetup` wires purchased grass into the existing renderer; BK's environment manager supplies wind globals while project systems retain lighting ownership.
-- `ReservoirEnvironmentSetup` authors the static `Reservoir Surroundings` scene subtree from approved prefabs. Vendor LODs and shared material overrides render the banks/forest/peaks; permanent collision remains separate from voxel ownership and saved state.
+- MainGame retains the simple excavation, permanent rim, boundaries and stations. The user owns future surface authoring; reservoir assembly/generation tools, preview scene and their project assets are removed. `WindowsBuild` always builds MainGame.
 - `DiscoveryCatalog`/`StarterFindSetup`/`PhotoRockSetup` keep stable item identities separate from replaceable prefab art; `DiscoveryField` owns seeded placement and `BuriedFind` transfers records.
 - `SellStation`/`UpgradeStation`/`StationTrade` bind trades to inventory/wallet/battery revisions; `EquipmentProgression` owns authored capacity increments and prices.
 

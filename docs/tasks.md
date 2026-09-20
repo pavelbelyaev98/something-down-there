@@ -2,8 +2,8 @@
 
 ## Status
 
-- **Active Task:** None — `057` complete.
-- **Build:** `builds/windows/SomethingDownThere.exe` (Working prototype baseline)
+- **Active Task:** None — `062` restored the simple excavation and stations; user owns environment design.
+- **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; simple site, working menus and gameplay)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
 ---
@@ -15,7 +15,12 @@
 
 ### Phase 0: Immediate Feel Pass
 
-- [x] **`057` — Drained Reservoir Surroundings:** composed cliffs, forest, a dry gorge and distant mountains around the existing worksite.
+- [x] **`062` — Restore Simple Site:** restored the pre-environment gameplay scene and removed generated/copied surroundings; the user will design the environment manually. (`docs/tasks/completed/062-restore-simple-site.md`)
+- [x] **`061` — Guided Reservoir Assembly:** rejected; removed in task 062 with the other environment experiments. (`docs/tasks/completed/061-guided-reservoir-assembly.md`)
+- [x] **`060` — Restore Game Entry:** restored the normal playable build and removed preview replacement. (`docs/tasks/completed/060-restore-game-entry.md`)
+- [x] **`059` — Direct Demo Lake Preview:** rejected; preview and tools removed in task 062. (`docs/tasks/completed/059-demo-lake-preview.md`)
+- [x] **`058` — Reservoir Ground Base:** rejected; generated terrain and tools removed in task 062. (`docs/tasks/completed/058-reservoir-ground-base.md`)
+- [x] **`057` — Drained Reservoir Surroundings:** rejected; scenery and overrides removed in task 062.
 - [x] **`056` — Pure Nature Integration:** configured the purchased pack, replaced prototype grass and documented asset/Git workflow. (`docs/tasks/completed/056-pure-nature-grass.md`)
 - [x] **`055` — Graphics Settings:** expose persistent rendering and shadow performance controls in the existing menu. (`docs/tasks/completed/055-graphics-settings.md`)
 - [x] **`054` — Render Resolution Defaults:** native rendering by default and supported high-resolution display choices. (`docs/tasks/completed/054-render-resolution-defaults.md`)
@@ -104,7 +109,17 @@
 
 ## Completed
 
-- **[057] Drained Reservoir Surroundings:** authored BK cliffs, forest, dry rockfall gorge, edge stones and distant peaks with shared materials, LODs, a former-waterline shader and clouded mountain daylight. Safety colliders sit behind visible banks on supported permanent rims; 254 checks passed, native rendering cost measured, and Windows player rebuilt.
+- **[062] Restore Simple Site:** restored MainGame and its presentation to the pre-environment revision, removed reservoir/preview assets and tools, and retained the purchased pack for manual authoring. All 40 relevant scene/gameplay checks passed, the simple site was visually verified and the Windows player rebuilt; saves and recovery content were preserved.
+
+- **[061] Guided Reservoir Assembly (rejected):** copied selected demo lake/shore and river-bank sections into MainGame; gameplay checks passed but the composition was rejected. Removed with the other environment experiments in task 062.
+
+- **[060] Restore Game Entry:** removed the preview override and restored MainGame's menu, walking, excavation and saves; 49 checks passed. Preview assets were subsequently removed in task 062.
+
+- **[059] Direct Demo Lake Preview (rejected):** copied too much of the demo and replaced gameplay with a preview. The game entry was restored in task 060; preview assets and tools were removed in task 062.
+
+- **[058] Reservoir Ground Base (rejected):** generated terrain, painted surface cap and grass variants did not meet the requested art direction. Removed in task 062.
+
+- **[057] Drained Reservoir Surroundings (rejected):** attempted cliff, forest and mountain composition. Scenery, presentation overrides and the environment benchmark were removed in task 062.
 
 > Format: `- [ID] Title: 1-2 sentences on what was implemented and how.`
 

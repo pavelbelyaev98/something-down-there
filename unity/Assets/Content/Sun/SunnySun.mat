@@ -23,21 +23,16 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _CloudMap:
-        m_Texture: {fileID: 2800000, guid: 481582ad8c4a41fcb673b5c171c56d41, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _SunMap:
         m_Texture: {fileID: 2800000, guid: 5ba34a46ba0641243bbc2aae6932f753, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CloudAmount: 0.85
     - _SunTangentRadius: 0.08748866
     m_Colors:
-    - _HorizonColor: {r: 0.62, g: 0.77, b: 0.83, a: 1}
-    - _SkyColor: {r: 0.16, g: 0.48, b: 0.72, a: 1}
-    - _SunDirection: {r: 0.21486557, g: 0.927184, b: -0.30685964, a: 0}
+    - _HorizonColor: {r: 0.42, g: 0.88, b: 0.9, a: 1}
+    - _SkyColor: {r: 0.12, g: 0.77, b: 0.85, a: 1}
+    - _SunDirection: {r: 0.0815229, g: 0.9848077, b: -0.15332228, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

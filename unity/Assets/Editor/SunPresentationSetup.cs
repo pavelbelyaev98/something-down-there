@@ -22,9 +22,9 @@ namespace SomethingDownThere.Editor
             var camera = root.GetComponentInChildren<Camera>();
             var sun = root.transform.Find("Sun").GetComponent<Light>();
             Undo.RecordObjects(new UnityEngine.Object[] { sun, sun.transform }, "Set midday sunlight");
-            sun.transform.rotation = Quaternion.Euler(68, -35, 0);
-            sun.color = new Color(1, .97f, .9f);
-            sun.intensity = 1.45f;
+            sun.transform.rotation = Quaternion.Euler(80, -28, 0);
+            sun.color = new Color(1, .985f, .95f);
+            sun.intensity = 1.55f;
             RenderSettings.sun = sun;
             var importer = AssetImporter.GetAtPath(Folder + "Sun_Disc.png") as TextureImporter;
             if (importer == null) throw new InvalidOperationException("Import the approved Blender sun disc first.");
@@ -47,13 +47,10 @@ namespace SomethingDownThere.Editor
             Undo.RecordObject(material, "Configure approved sun");
             material.shader = shader;
             material.SetTexture("_SunMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "Sun_Disc.png"));
-            // Mountain daylight and inexpensive sky-only clouds; no global fog underground.
-            camera.backgroundColor = new Color(.16f, .48f, .72f, 1);
+            // Preserve the accepted clear cyan sky independently of cloud art.
+            camera.backgroundColor = new Color(.12f, .77f, .85f, 1);
             material.SetColor("_SkyColor", camera.backgroundColor);
-            material.SetColor("_HorizonColor", new Color(.62f, .77f, .83f, 1));
-            material.SetTexture("_CloudMap", AssetDatabase.LoadAssetAtPath<Texture2D>(
-                "Assets/BK/PureNature_Mountains/Textures/Clouds/Cloud_dist.png"));
-            material.SetFloat("_CloudAmount", .85f);
+            material.SetColor("_HorizonColor", new Color(.42f, .88f, .9f, 1));
             material.SetVector("_SunDirection", -sun.transform.forward);
             // The authored disc occupies ~60% of the 10-degree texture width.
             material.SetFloat("_SunTangentRadius", Mathf.Tan(5 * Mathf.Deg2Rad));
@@ -87,7 +84,7 @@ namespace SomethingDownThere.Editor
             }
             // Saturation adds color without lifting the black level underground.
             colors.active = true;
-            colors.saturation.Override(10);
+            colors.saturation.Override(18);
             EditorUtility.SetDirty(colors);
             EditorUtility.SetDirty(profile);
 

@@ -11,9 +11,10 @@ or lifting the black level in deep tunnels.
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - **Objects read by silhouette**, because recognition is the core reward.
-- Purchased Pure Nature 2: Mountains supplies grass, layered rocky banks, conifer forest and distant
-  peaks. The dry reservoir has warm exposed stone below its old waterline and greener ridges above;
-  clustered silhouettes and an open working floor keep it composed. Grass follows excavation.
+- Purchased Pure Nature 2: Mountains remains available for the user's manual environment
+  design. The working scene is the simple excavation and stations again; the attempted
+  generated and copied reservoir compositions are removed. Keep existing gameplay functional
+  during future art work and wait for explicit instructions before changing the surroundings.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.
  AI-assisted modeling with real references is allowed.
 

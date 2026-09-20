@@ -1,5 +1,7 @@
 # 057 — Drained reservoir surroundings
 
+> Superseded by task 062: rejected scenery, project preview assets and assembly tools removed; the user now authors the environment manually.
+
 ## Objective
 Frame the existing excavation with a composed mountain reservoir environment using the
 approved Pure Nature pack: dry rocky banks, a former waterline, conifers above it, a narrow

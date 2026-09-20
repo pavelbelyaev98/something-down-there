@@ -10,11 +10,11 @@ retaining walls, and leftover waterworks. It is finite, believable and clearly b
   progression axis; the footprint stays contained, with useful lateral room for branches.
 - **Surface:** authored, not procedurally generated into ugliness. A small worksite yard
   (see [Surface Hub and Display](07_SURFACE_HUB_AND_DISPLAY.md)).
-- **Surroundings:** steep exposed rocky banks carry a pale former waterline, with conifer forest
-  above it and distant mountain silhouettes. Low rocks mark the excavation edge while the
-  working floor and service routes stay open. A narrow rockfall gorge is scenic and inaccessible;
-  a larger rocky back boundary reserves the possibility of a future dam. No surface water or dam now.
-  Permanent rim support continues beneath the banks; safety colliders sit behind visible rock.
+- **Current surface direction:** the user will design the surroundings manually. Restore
+  the simple working excavation and stations; the rejected reservoir compositions and
+  their generation/copy tools are removed. Keep Pure Nature available for manual authoring.
+  Preserve menus, walking, digging and saves while the user builds the static surface.
+  Do not generate or assemble a new environment without a new explicit request.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
 - **No pre-existing caves or tunnels:** every opening in the ground is one the player made.
 

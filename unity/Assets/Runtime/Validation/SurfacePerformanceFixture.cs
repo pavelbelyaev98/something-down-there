@@ -35,12 +35,6 @@ namespace SomethingDownThere
             var grass = player.ExcavationTerrain.GetComponent<SurfaceGrassRenderer>();
             while (!player.ExcavationTerrain.CanDig || player.ExcavationTerrain.IsRestoring) yield return null;
             var args = Environment.GetCommandLineArgs();
-            int environmentReport = Array.IndexOf(args, "--environment-report");
-            if (environmentReport >= 0 && environmentReport + 1 < args.Length)
-            {
-                yield return MeasureEnvironment(player, args[environmentReport + 1]);
-                yield break;
-            }
             int discoveryReport = Array.IndexOf(args, "--discovery-report");
             if (discoveryReport >= 0 && discoveryReport + 1 < args.Length)
             {
