@@ -27,8 +27,8 @@ carrying home. Price stays fixed per type; the mix is what rewards descending.
 The accepted shallow rock layer stays intact. **The first few metres should feel almost as
 full of fresh finds as the first scrape**, with rocks continuing and coal entering as the
 player digs beneath the turf. Measure new objects emerging from intact soil at each dig face;
-loose rocks falling down from earlier layers do not count. Farther down, retain the existing
-lower-density progression and valuable finds throughout the reservoir.
+loose rocks falling down from earlier layers do not count. Farther down, the mix shifts toward
+richer types while the encounter rate stays roughly constant.
 
 Dense buried layers must keep excavation responsive. Hide meshes enclosed by untouched soil
 and suspend anchored motion updates until digging reaches them; preserve every find's identity,

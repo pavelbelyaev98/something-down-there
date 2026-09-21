@@ -1,6 +1,6 @@
 # 048 — Buried Find Depth Density (Immediate Feel Pass)
 
-**Status:** complete. Final shape: a 2,578-find catalog — full-size rocks own the shallow layer with the ore ladder beneath (coal first), every type at its authored 0.7 model scale — placed by a deterministic spatial grid; upgrade tracks share one tier price ladder in `EquipmentProgression.TierPrices`. The populations in the iterations below (1,024 → 2,042 → 1,996 → 2,324 → 2,578) are history; trust concept §05 and the source catalogs for current values.
+**Status:** complete. Depth changes the mix, not whether a metre of digging pays. Placement uses a deterministic spatial grid. The body records rejected attempts, including tiny finds and placer saturation. Do not re-run those, and do not treat any count in this file as current. Populations live in the source catalogs. The rule is `docs/concept/05_DISCOVERIES.md` §1.
 
 ## Objective
 

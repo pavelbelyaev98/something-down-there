@@ -27,9 +27,9 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
 
 ## 3. Minimal Documentation & Data Rules
 
-- **Strict Scannability:** Keep documentation minimal and concise. No session narratives, chat transcripts, or command logs. Target under 60 lines for roadmap/status files; task specs may be as thorough as needed.
+- **Strict Scannability:** Keep documentation minimal and concise. No session narratives, chat transcripts, or command logs. Target under 60 lines for roadmap/status files; task specs may be as thorough as needed. A pending queue entry keeps its title, concept refs, and goal with constraints. Do not shorten it to a bare title.
 - **Single Source of Truth:** pending work → `docs/tasks.md`; decisions & history → spec files in `docs/tasks/completed/`; current state → `docs/baseline.md`; design intent → `docs/concept/`; system ownership → `docs/architecture.md`; tooling setup → `unity/readme.md`. Facts are linked, never copied.
-- **Rewrite, Don't Append:** `docs/baseline.md` is a present-tense snapshot: rewrite affected sections in place; no task IDs, dates, or migration history. `docs/tasks.md` never stores test counts, build status, prices, or iteration logs.
+- **Rewrite, Don't Append:** `docs/baseline.md` is a present-tense snapshot: rewrite affected sections in place; no task IDs, dates, or migration history. `docs/tasks.md` never stores test counts, build status, prices, or iteration logs. A completed spec header states only a decision that is still true. It must not state a count, price, or layout the game no longer uses. Rejected attempts stay in the spec body so they are not re-run.
 - **Data-Driven Architecture:** **Never store item prices, coordinates, or tool stats in Markdown files.**
   - Discovery properties (prices, depths, exposure, counts) live in `catalog.json` / `DiscoveryCatalog.asset`.
   - Tool upgrade parameters and the shared tier price ladder live in `EquipmentProgression.cs`; every track pays the same for a tier, and none of it is serialized into the scene.
