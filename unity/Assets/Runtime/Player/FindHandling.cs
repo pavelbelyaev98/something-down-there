@@ -45,7 +45,7 @@ namespace SomethingDownThere
         public bool Release(bool throwing)
         {
             if (HeldFind == null) { held = null; return false; }
-            player.SuppressWalkCollection(HeldFind);
+            player.SuppressAutomaticCollection(HeldFind);
             Vector3 velocity = throwing ? (player.ViewCamera.transform.forward + Vector3.up * .12f).normalized * held.ThrowSpeed : Vector3.zero;
             held.EndHold(velocity); held = null;
             return true;

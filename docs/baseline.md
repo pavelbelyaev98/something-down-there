@@ -11,7 +11,7 @@
 ## 2. Terrain & Excavation (`unity/Assets/Runtime/Terrain/`)
 - **Voxel Engine:** Finite signed density field (24 × 24 × 100 m since 005, authored by `SiteLayout`) running synchronized surface-net meshing (0.125 m resolution) with collision generation. Chunks are materialized on demand: 7,200 possible keys, 144 built on a fresh site, so startup and load cost do not scale with depth.
 - **Checkpoints:** dense density (~119 MB for the shipped site) validated and gzip-Fastest encoded on a worker thread, packed payload capped at 64 MB / 256 MB unpacked. Only the current format and excavation layout load; previous formats require a new game.
-- **Digging:** Ordinary organic scoop cuts and detached soil cleanup within the stroke.
+- **Digging:** Ordinary organic scoop cuts, detached soil and local paper-thin strip cleanup within the stroke. Longer or multiply attached slivers crumble; thicker useful ledges and support crowns remain.
 - **Admin Tools:** Session-only debug panel (`Ctrl+Shift+F10`) with shovel tier selection, refill, and buried find markers.
 
 ## 3. Finds & Physics (`unity/Assets/Runtime/Interaction/`)
@@ -24,7 +24,8 @@
   Buried envelopes use a smaller soil gap while the accepted turf layout stays intact.
   Progression bands continue into a separate deep
   allocation across the lower reservoir, authored in the same catalogs. Model size and mass remain authored; retired content and its save aliases are deleted. Population tuning applies to new games; saved finds retain their positions.
-- **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. Released/falling finds have longer pickup reach; station and physical lifting reach remain separate. Pickup recovery delays soil strokes only; exposure, clear aim and bag capacity still gate collection.
+- **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. `FindProximityCollection` also collects clear finds within a close camera-centred area in front of the player during walking or held digging, at any height, with direct visibility and throw/drop exclusion. Released/falling finds have longer aimed reach; station/lifting reach stays separate. Pickup recovery delays soil strokes only.
+- **Release:** Nearly exposed finds with clear interiors and only shallow surface contact become dynamic; substantial burial still anchors them. Gravity and collision determine falling/settling.
 - **Handling:** Physical lift/drop (RMB) and throw (LMB). Carried finds track motion and settle physically on release; a slow creep on a slope counts as quiet, so finds stop instead of rolling away forever.
 - **Dense-world cost:** meshes enclosed by pristine soil stop rendering; conservative bounds and nearby terrain edits reactivate them before small fragments can be missed. Anchored physics callbacks sleep until a terrain change or explicit handling/restore; collision and save records remain intact.
 
@@ -34,6 +35,7 @@
 
 ## 5. UI & Presentation (`unity/Assets/Runtime/UI/`)
 - **UI Toolkit:** Single UI Document (`FpsHud`) driving the HUD, Pause menu, Settings tabs, and Station trading interfaces with unified grayscale styling.
+- **Capacity warning:** Full inventory uses the same persistent resource banner as low fuel; simultaneous warnings stack above the bottom edge, without overlapping feedback.
 - **Focus loss:** the game still pauses when the window loses focus, but the dim overlay and pause card are hidden while focus is elsewhere, so external screenshot tools capture the game rather than the pause screen.
 - **Frame pacing:** startup is capped at 144 FPS before the scene loads; device settings then apply the saved frame limit or VSync choice. Display reset also defaults to 144 FPS.
 - **Resolution:** new/default graphics render at 100%; existing saved preferences remain valid. The display list retains all supported monitor modes, including 4K and higher even when the desktop currently uses a lower resolution, with timed Keep/Revert confirmation.

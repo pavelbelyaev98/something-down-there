@@ -143,10 +143,11 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator WalkOverRejectsElevatedFindsAndAirborneMovement()
+        public IEnumerator NearbyWalkingCollectsElevatedFindsButNotAirborneMovement()
         {
             var find=field.Finds[0]; Place(find,1.2f);
-            WalkTo(find); Assert.That(find.Collected, Is.False, "Walking beneath a raised find does not collect it.");
+            WalkTo(find); Assert.That(find.Collected, Is.True, "Automatic collection must include clear finds above foot height.");
+            find=field.Finds[1];
             Place(find,.65f); yield return WaitForSimulation(1.5f);
             var motor=player.GetComponent<CharacterController>(); motor.enabled=false;
             player.transform.position=new Vector3(find.transform.position.x,.025f,find.transform.position.z-.15f);
@@ -169,7 +170,38 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryGrabOrDrop(), Is.True);
             player.Tuning.Gravity = -20;
             WalkTo(find, .55f); Assert.That(find.Collected, Is.False, "Walking over the just-dropped find must not undo handling.");
-            WalkTo(find, 2f); Assert.That(find.Collected, Is.True, "Leaving the item and returning re-enables walk pickup.");
+            WalkTo(find, 4.5f); Assert.That(find.Collected, Is.True, "Leaving automatic range and returning re-enables pickup.");
+        }
+
+        [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)]
+        public void HeldDigCollectsNearbyOffCentreFindAtEyeHeightUnlessOccluded(bool blocked, bool beyondRange)
+        {
+            var find=field.Finds[0]; Place(find,1.5f);
+            player.Tuning.Gravity=0;
+            var motor=player.GetComponent<CharacterController>(); motor.enabled=false;
+            player.transform.SetPositionAndRotation(find.WorldBounds.center+Vector3.back*(beyondRange?3f:2f)-Vector3.up*1.65f, Quaternion.identity);
+            player.ViewCamera.transform.localPosition=Vector3.up*1.65f;
+            motor.enabled=true;
+            LookRock(find.WorldBounds.center+Vector3.right*.8f);
+            Assert.That(Vector3.Distance(find.GetComponent<Collider>().ClosestPoint(player.ViewCamera.transform.position),
+                player.ViewCamera.transform.position), beyondRange ? Is.GreaterThan(2.25f) : Is.InRange(1.5f,2.25f));
+            GameObject wall=null;
+            if(blocked)
+            {
+                wall=GameObject.CreatePrimitive(PrimitiveType.Cube);
+                wall.transform.position=find.WorldBounds.center+Vector3.back*1.2f;
+                wall.transform.localScale=new Vector3(2,2,.15f);
+            }
+            try
+            {
+                Physics.SyncTransforms();
+                int strokes=player.SuccessfulStrokes; float charge=player.Battery.Charge;
+                player.Tick(new FpsInputFrame{DigHeld=true},.01f);
+                Assert.That(find.Collected, Is.EqualTo(!blocked && !beyondRange));
+                Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge));
+            }
+            finally { if(wall!=null) Object.DestroyImmediate(wall); }
         }
 
         [UnityTest]

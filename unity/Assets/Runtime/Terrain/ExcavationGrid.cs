@@ -264,6 +264,7 @@ namespace SomethingDownThere
             }
             if (changedMax.x < 0) return false;
             RemoveDetachedSoil(ref changedMin, ref changedMax);
+            RemovePaperThinSlivers(ref changedMin, ref changedMax);
             RemoveTinyRemnants(ref changedMin, ref changedMax);
             if (LastRemnantSamples > 0) RemoveDetachedSoil(ref changedMin, ref changedMax);
             changed = new BoundsInt(changedMin, changedMax - changedMin + Vector3Int.one);
@@ -283,7 +284,7 @@ namespace SomethingDownThere
         {
             // At the production 12.5 cm grid, clear protrusions narrower than 25 cm,
             // at most 50 cm long and 30 litres. A 60 cm player capsule cannot use
-            // these as a ledge. Large thin sheets and bridges between supports stay.
+            // these as a ledge. Larger sheets/bridges stay unless paper-thin.
             float maxWidth = Mathf.Min(CellSize * 2, RemnantMaxWidth);
             int maxSamples = Mathf.Clamp(Mathf.CeilToInt(RemnantMaxVolume / (CellSize * CellSize * CellSize * 0.5f)), 1, 128);
             while (remnantSeeds.Count > 0)
@@ -306,24 +307,68 @@ namespace SomethingDownThere
                 // Classify a whole pass before changing density, so order cannot
                 // turn a retained bridge/sheet into independently removable tips.
                 foreach (int index in remnantRemoval)
-                {
-                    var p = SampleCoordinates(index);
-                    float removed = Mathf.Clamp01(0.5f + density[index] / CellSize)
-                        * CellSize * CellSize * CellSize;
-                    density[index] = -band;
-                    LastRemovedVolume += removed;
-                    LastRemnantVolume += removed;
-                    LastRemnantSamples++;
-                    lowestCarvedY = Mathf.Min(lowestCarvedY, p.y);
-                    severedSamples.Add(index);
-                    remnantSeeds.Add(index);
-                    changedMin = Vector3Int.Min(changedMin, p);
-                    changedMax = Vector3Int.Max(changedMax, p);
-                }
+                    RemoveRemnantSample(index, ref changedMin, ref changedMax);
                 // Only neighbours of removed remnants need another pass. This
                 // settles within this stroke; idle time and repeated stale hits
                 // cannot slowly erode terrain or leave an extra collider frame.
             }
+        }
+
+        private void RemovePaperThinSlivers(ref Vector3Int changedMin, ref Vector3Int changedMax)
+        {
+            // Sub-voxel ribbons can be long or touch two walls, so the ordinary
+            // tip limits retain them. Follow only their fragile cross-section
+            // from this stroke, stopping at thicker soil and permanent borders.
+            remnantState.Clear();
+            remnantComponent.Clear();
+            foreach (int seed in remnantSeeds)
+            {
+                VisitSliver(seed);
+                VisitSliverNeighbours(seed);
+            }
+            for (int cursor = 0; cursor < remnantComponent.Count; cursor++)
+                VisitSliverNeighbours(remnantComponent[cursor]);
+            LastRemnantCheckedSamples += remnantState.Count;
+            foreach (int index in remnantComponent)
+                RemoveRemnantSample(index, ref changedMin, ref changedMax);
+        }
+
+        private void VisitSliverNeighbours(int index)
+        {
+            var p = SampleCoordinates(index);
+            if (p.x > 0) VisitSliver(index - 1);
+            if (p.x < Size.x) VisitSliver(index + 1);
+            if (p.y > 0) VisitSliver(index - strideY);
+            if (p.y < Size.y) VisitSliver(index + strideY);
+            if (p.z > 0) VisitSliver(index - strideZ);
+            if (p.z < Size.z) VisitSliver(index + strideZ);
+        }
+
+        private void VisitSliver(int index)
+        {
+            if (density[index] <= 0 || remnantState.ContainsKey(index)) return;
+            remnantState.Add(index, 1);
+            var p = SampleCoordinates(index);
+            if (p.x < 2 || p.x > Size.x - 2 || p.y < 2 || p.y >= Size.y
+                || p.z < 2 || p.z > Size.z - 2 || p.y < lowestCarvedY) return;
+            float maxWidth = Mathf.Min(CellSize * .5f, .0625f);
+            if (ThinAcross(index, 1, maxWidth) || ThinAcross(index, strideY, maxWidth, Size.y - p.y)
+                || ThinAcross(index, strideZ, maxWidth)) remnantComponent.Add(index);
+        }
+
+        private void RemoveRemnantSample(int index, ref Vector3Int changedMin, ref Vector3Int changedMax)
+        {
+            var p = SampleCoordinates(index);
+            float removed = Mathf.Clamp01(0.5f + density[index] / CellSize) * CellSize * CellSize * CellSize;
+            density[index] = -band;
+            LastRemovedVolume += removed;
+            LastRemnantVolume += removed;
+            LastRemnantSamples++;
+            lowestCarvedY = Mathf.Min(lowestCarvedY, p.y);
+            severedSamples.Add(index);
+            remnantSeeds.Add(index);
+            changedMin = Vector3Int.Min(changedMin, p);
+            changedMax = Vector3Int.Max(changedMax, p);
         }
 
         private byte RemnantKind(int index, float maxWidth)

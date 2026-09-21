@@ -111,6 +111,17 @@ namespace SomethingDownThere
             return false;
         }
 
+        internal bool CanReleaseFromSoil()
+        {
+            if (terrain == null || terrain.IsRestoring || terrain.IsSolid(transform.position)) return false;
+            bool nearlyFree = Exposure >= .9f;
+            float tolerance = nearlyFree ? terrain.CellSize * .35f : .005f;
+            foreach (var sample in exposureSamples)
+                if (terrain.SignedDensity(transform.TransformPoint(sample)) > tolerance
+                    || terrain.SignedDensity(transform.TransformPoint(sample * .65f)) > .005f) return false;
+            return true;
+        }
+
         public string GetPrompt(FpsPlayer player)
         {
             if (Collected || !isActiveAndEnabled) return "";
@@ -159,16 +170,16 @@ namespace SomethingDownThere
 
         public bool TryCollect(FpsPlayer player)
         {
-            // Aimed and walk-over pickup share one inventory transaction.
+            // Aimed and nearby pickup share one inventory transaction.
             if (!CanCollect(player)
                 || terrain.IsSolid(player.ViewCamera.transform.position)
                 || !player.TryGetTarget(player.PickupReach(this), out var hit) || hit.collider != hitCollider) return false;
             return CommitCollection(player);
         }
 
-        internal bool TryCollectAtFeet(FpsPlayer player)
+        internal bool TryCollectNearby(FpsPlayer player)
         {
-            if (!CanCollect(player) || !FullyUncovered || !player.CanCollectAtFeet(this)) return false;
+            if (!CanCollect(player) || !FullyUncovered || !player.CanCollectNearby(this)) return false;
             return CommitCollection(player);
         }
 

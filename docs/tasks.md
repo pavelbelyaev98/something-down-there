@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Active Task:** `001` — evolving tool rig and progression; terrain feel pass complete.
+- **Active Task:** `001` — evolving motorized tool and progression; immediate feel pass `072` completed.
 - **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; round meadow, gravel apron/stores, noon light; current-format saves only)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
@@ -15,6 +15,8 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`072` — Gentler Automatic Pickup:** reduced automatic radius by one quarter, preserving elevated and immediate falling-item pickup. (`docs/tasks/completed/072-gentler-automatic-pickup.md`)
+- [x] **`071` — Nearby Pickup, Natural Release & Soil Slivers:** camera-centred nearby collection, shallow-contact rock release, full-bag banner and local thin-strip cleanup. (`docs/tasks/completed/071-pickup-release-and-soil-slivers.md`)
 - [x] **`070` — Soft Rims & Pack Ground:** softened turf edges and self-shadow contours; pack ground throughout, custom soil art retained inactive. (`docs/tasks/completed/070-soft-rims-and-pack-ground.md`)
 - [x] **`069` — Grass Edges & Responsive Pickup:** precise foliage clearing, clean turf rim, longer loose-find reach and pickup between digging ticks. (`docs/tasks/completed/069-grass-edges-and-responsive-pickup.md`)
 - [x] **`068` — Odin Tooling:** configured Inspector/Validator in Editor Only mode with a focused MainGame/content profile and automatic build validation. (`docs/tasks/completed/068-odin-tooling.md`)
@@ -116,6 +118,8 @@
 ---
 
 ## Completed
+- **[072] Gentler Automatic Pickup:** reduced the camera-centred collection radius by one quarter after playtest feedback; distant off-centre finds remain in the world. Nine focused live checks passed and Windows player rebuilt and smoke-tested.
+- **[071] Nearby Pickup, Natural Release & Soil Slivers:** automatic collection reaches visible nearby finds at any height during walking/held digging; nearly freed rocks release, full bags share the fuel-warning presentation, and paper-thin soil ribbons crumble within the paid stroke. All 101 targeted checks passed, HUD/cuts reviewed, Odin clean, and Windows player rebuilt and smoke-tested.
 - **[070] Soft Rims & Pack Ground:** feathered the turf/soil transition, corrected noon shadow bias and retired the active soil comparison without deleting custom art. Scene/grass checks and Odin validation passed, visuals reviewed and Windows player rebuilt and smoke-tested; test preflight now discards unsaved scene experiments without blocking on Unity's save prompt.
 - **[069] Grass Edges & Responsive Pickup:** replaced padded clump clearing with root support and shader clipping, removed the dark turf rim, and separated loose-find reach and immediate held pickup from shovel recovery. Added an Odin meadow-shader guard; 295 relevant tests verified, content validation clean, visuals checked and Windows player rebuilt and smoke-tested.
 - **[068] Odin Tooling:** integrated approved 4.0.2.4 tools, focused asset validation and built-in prebuild checks; upgraded plugin metadata and documented usage. All 14,489 asset checks passed and the Windows player rebuilt with the unused runtime serializer excluded.

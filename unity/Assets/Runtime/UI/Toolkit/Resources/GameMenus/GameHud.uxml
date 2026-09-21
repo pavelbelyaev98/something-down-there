@@ -19,8 +19,9 @@
         <ui:Label name="Reticle" text="+" class="hud-reticle" />
         <ui:Label name="Target" class="hud-target" />
         <ui:Label name="Feedback" class="hud-feedback" />
-        <ui:VisualElement class="hud-fuel-warning-anchor" picking-mode="Ignore">
-            <ui:Label name="Fuel warning" class="hud-fuel-warning hidden" picking-mode="Ignore" />
+        <ui:VisualElement class="hud-resource-warning-anchor" picking-mode="Ignore">
+            <ui:Label name="Inventory warning" text="INVENTORY FULL" class="hud-resource-warning hidden" picking-mode="Ignore" />
+            <ui:Label name="Fuel warning" class="hud-resource-warning hidden" picking-mode="Ignore" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

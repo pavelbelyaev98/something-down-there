@@ -7,7 +7,7 @@ namespace SomethingDownThere
     public sealed class GameHudView
     {
         private readonly FpsPlayer player;
-        private readonly Label reticle, status, walletStatus, prompt, feedback, shovelStatus, adminHint, batteryStatus, returnWarning, fuelWarning;
+        private readonly Label reticle, status, walletStatus, prompt, feedback, shovelStatus, adminHint, batteryStatus, returnWarning, fuelWarning, inventoryWarning;
         private readonly VisualElement batteryGroup, batteryFill, xrayRoot;
         private readonly List<Label> xrayMarkers = new List<Label>();
         private Battery displayedBattery;
@@ -31,6 +31,7 @@ namespace SomethingDownThere
             batteryStatus = Root.Q<Label>("Battery status");
             returnWarning = Root.Q<Label>("Return warning");
             fuelWarning = Root.Q<Label>("Fuel warning");
+            inventoryWarning = Root.Q<Label>("Inventory warning");
             batteryGroup = Root.Q("batteryGroup");
             batteryFill = Root.Q("Charge");
             xrayRoot = Root.Q("Admin X-ray");
@@ -61,6 +62,8 @@ namespace SomethingDownThere
                 UpdateBattery();
                 displayedBattery = player.Battery;
             }
+            GameMenuView.Show(inventoryWarning, player.Inventory.IsFull);
+            Root.EnableInClassList("stacked-warnings", player.Inventory.IsFull && !fuelWarning.ClassListContains("hidden"));
             shovelStatus.EnableInClassList("hidden", !player.ExcavationAvailable);
             shovelStatus.text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m scoop"
                 + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.Depth:F1} m";

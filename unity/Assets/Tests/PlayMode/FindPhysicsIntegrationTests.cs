@@ -32,7 +32,7 @@ namespace SomethingDownThere.Tests
             terrain = root.GetComponentInChildren<TerrainVolume>(); field = root.GetComponentInChildren<DiscoveryField>();
             player = root.GetComponentInChildren<FpsPlayer>(); player.enabled = false; player.SetApplicationFocus(true);
             if (player.IsMenuOpen) player.CloseMenu();
-            yield return null; // Let generation finish before constructing a legacy save fixture.
+            yield return null; // Let generation finish before restoring the compact fixture.
             TestInputPreferences.RestoreSmallFindFixture(field);
             yield return null;
         }
@@ -67,6 +67,28 @@ namespace SomethingDownThere.Tests
                 Assert.That(physical.Body.position, Is.EqualTo(anchored));
                 Assert.That(Physics.GetIgnoreCollision(find.GetComponent<MeshCollider>(), player.GetComponent<CharacterController>()), Is.True);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator NearlyUncoveredRockReleasesWhileShallowSurfaceContactRemains()
+        {
+            var find=field.Finds.First(f=>f.Size==FindSize.Large);
+            bool ready=false;
+            for(float height=.05f;height<1f;height+=.001f)
+            {
+                Place(find,height);
+                if(find.Exposure>=.9f && find.Exposure<1f
+                    && find.WorldBounds.min.y>-.03f && find.WorldBounds.min.y<-.006f)
+                { ready=true;break; }
+            }
+            Assert.That(ready,Is.True,"Prepare a nearly exposed rock with a small remaining contact.");
+            var physical=find.GetComponent<FindPhysics>();
+            string identity=find.Item.InstanceId;
+            yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
+            Assert.That(physical.Released,Is.True,"A shallow final contact must no longer keep the rock anchored.");
+            Assert.That(physical.Body.isKinematic,Is.False);
+            Assert.That(find.Item.InstanceId,Is.EqualTo(identity));
+            Assert.That(find.Collected,Is.False);
         }
 
         [UnityTest]
@@ -141,8 +163,9 @@ namespace SomethingDownThere.Tests
             player.ViewCamera.transform.localPosition = Vector3.up * 2.1f;
             motor.enabled = true;
             AimRock(find);
-            // Start a real stroke beside the find while Dig is held, then turn
-            // onto the already-uncovered item on the immediately following frame.
+            // Start a real stroke before the find arrives, then expose it to
+            // automatic collection on the immediately following held frame.
+            find.gameObject.SetActive(false);
             LookRock(terrain.transform.TransformPoint(new Vector3(10.8f, terrain.Dimensions.y * terrain.CellSize, 12)));
             int strokes = player.SuccessfulStrokes;
             player.Tick(new FpsInputFrame { DigHeld = true }, .01f);
@@ -150,6 +173,7 @@ namespace SomethingDownThere.Tests
             Assert.That(find.Collected, Is.False);
             Assert.That(player.EffectiveDigInterval, Is.GreaterThan(.02f));
             int revision = terrain.Revision; float charge = player.Battery.Charge;
+            find.gameObject.SetActive(true);
             AimRock(find);
             Assert.That(player.TryGetTarget(player.Tuning.InteractReach, out var hit), Is.True);
             Assert.That(hit.collider, Is.SameAs(find.GetComponent<Collider>()), "The next held frame must be directly aimed at the find.");

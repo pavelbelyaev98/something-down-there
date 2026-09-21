@@ -77,6 +77,41 @@ namespace SomethingDownThere.Tests
             AssertEverySolidSampleHasSupport(grid);
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void AStrokeClearsLongPaperThinStripsIncludingBothEndAttachments(bool diagonal)
+        {
+            Vector3 normal=diagonal ? new Vector3(1,1,0).normalized : Vector3.up;
+            var origin=new Vector3(2,2,2);
+            var grid=RemnantFixture(p =>
+            {
+                var d=p-origin;
+                float wall=Mathf.Abs(d.z)-.8f;
+                float strip=Mathf.Min(.012f-Mathf.Abs(Vector3.Dot(d,normal)), .16f-Mathf.Abs(d.x), .85f-Mathf.Abs(d.z));
+                return Mathf.Max(wall,strip);
+            });
+            Assert.That(grid.IsSolid(origin), Is.True);
+            var witness=origin+Vector3.forward*.5f;
+            float[] before=ReadSamples(grid);
+            Assert.That(grid.RemoveSphere(origin+normal*.09f-Vector3.forward*.5f,.12f,out var changed), Is.True);
+            Assert.That(grid.IsSolid(witness), Is.False, "The uncut length of a paper-thin strip must crumble too.");
+            Assert.That(grid.LastRemnantSamples, Is.GreaterThan(0));
+            Assert.That(changed.Contains(Vector3Int.RoundToInt(witness/grid.CellSize)), Is.True);
+            Assert.That(grid.IsSolid(origin+Vector3.forward), Is.True, "Solid wall attachments remain.");
+            var after=ReadSamples(grid);
+            float volume=0;
+            for(int i=0;i<after.Length;i++)
+            {
+                Assert.That(after[i], Is.LessThanOrEqualTo(before[i]));
+                volume+=(Mathf.Clamp01(.5f+before[i]/grid.CellSize)-Mathf.Clamp01(.5f+after[i]/grid.CellSize))
+                    *grid.CellSize*grid.CellSize*grid.CellSize;
+            }
+            Assert.That(grid.LastRemovedVolume, Is.EqualTo(volume).Within(.00001f));
+            Assert.That(grid.Revision, Is.EqualTo(1));
+            var restored=new ExcavationGrid(grid.Size,grid.CellSize);restored.Restore(grid.Capture());
+            CollectionAssert.AreEqual(after,ReadSamples(restored));
+            AssertEverySolidSampleHasSupport(grid);
+        }
+
         // Controlled density fixtures represent already-excavated spaces, not new
         // runtime authoring APIs. Assertions concern clearance/support/accounting.
         private static ExcavationGrid RemnantFixture(Func<Vector3, float> shape)

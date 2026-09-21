@@ -354,10 +354,10 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator StrongHeldWideScoopsLeaveSmallFindsUntilHovered() => ExerciseWideScoop(false);
+        public IEnumerator StrongHeldWideScoopsCollectFreedSmallFindsWithoutHover() => ExerciseWideScoop(false);
 
         [UnityTest]
-        public IEnumerator StrongRemappedToggleWideScoopsLeaveSmallFindsUntilHovered() => ExerciseWideScoop(true);
+        public IEnumerator StrongRemappedToggleWideScoopsCollectFreedSmallFindsWithoutHover() => ExerciseWideScoop(true);
 
         private IEnumerator ExerciseWideScoop(bool toggle)
         {
@@ -397,8 +397,8 @@ namespace SomethingDownThere.Tests
                 LookAt(scoopAim); Physics.SyncTransforms();
                 player.enabled = true; player.SetApplicationFocus(true);
                 yield return null; yield return null;
-                var physical = find.GetComponent<FindPhysics>();
                 int initialStrokes = player.SuccessfulStrokes;
+                float initialCharge = player.Battery.Charge;
                 bool releasedToggleButton = false;
                 yield return ResumeAfterEditorFocusChange();
                 // The weaker top tier cannot engulf a find from one fixed aim, so the
@@ -406,10 +406,9 @@ namespace SomethingDownThere.Tests
                 var ring = new[] { Vector3.right, Vector3.forward, Vector3.left, Vector3.back };
                 int strokesLanded = 0;
                 float deadline = Time.realtimeSinceStartup + 15;
-                while (!physical.Released && Time.realtimeSinceStartup < deadline)
+                while (!find.Collected && Time.realtimeSinceStartup < deadline)
                 {
                     if (player.IsMenuOpen) yield return ResumeAfterEditorFocusChange();
-                    Assert.That(find.Collected, Is.False, "Being inside a large scoop never collects an off-aim find.");
                     Assert.That(player.TryGetTarget(3, out var hit) && hit.collider == find.GetComponent<MeshCollider>(), Is.False,
                         "Keep the centre ray beside the find during the wide-scoop regression.");
                     if (player.SuccessfulStrokes > initialStrokes + strokesLanded)
@@ -425,33 +424,14 @@ namespace SomethingDownThere.Tests
                     yield return null;
                 }
                 LookAt(player.ViewCamera.transform.position + Vector3.up);
-                Assert.That(physical.Released, Is.True, "The strongest off-aim cuts should free " + find.SaveContentId
+                Assert.That(find.Collected, Is.True, "Held/toggled digging should collect nearby freed loot without hovering: " + find.SaveContentId
                     + $". Strokes={player.SuccessfulStrokes - initialStrokes}, exposure={find.Exposure:F2}, "
                     + $"collectible={find.Collectible}, camera={player.ViewCamera.transform.position}, menu={player.Menu}, active={player.GameplayActive}, binding={player.InputSettings.Path(PlayerBinding.Dig)}, toggle={player.InputSettings.ToggleDig}");
-                yield return new WaitForSecondsRealtime(1.5f);
-                deadline = Time.realtimeSinceStartup + 5;
-                while (physical.Body.linearVelocity.sqrMagnitude > .01f && Time.realtimeSinceStartup < deadline)
-                {
-                    if (player.IsMenuOpen) yield return ResumeAfterEditorFocusChange();
-                    yield return null;
-                }
-                Assert.That(find.Collected, Is.False); Assert.That(find.GetComponent<MeshRenderer>().enabled, Is.True);
-                Assert.That(find.Collectible, Is.True);
-                // New shallow poses may meet soil after only a short drop. Release must
-                // remain physical; the dedicated support-removal test verifies falling.
-                Assert.That(physical.Body.isKinematic, Is.False);
-                Assert.That(physical.Body.useGravity, Is.True);
-                Assert.That(player.Inventory.Count, Is.EqualTo(collected));
-                int revision = terrain.Revision; float charge = player.Battery.Charge;
-                PrepareDeviceView(find, closeToFind: true);
-                if (player.IsMenuOpen) yield return ResumeAfterEditorFocusChange();
-                deadline = Time.realtimeSinceStartup + .25f;
-                while (!find.Collected && Time.realtimeSinceStartup < deadline) yield return null;
-                Assert.That(find.Collected, Is.True, "Moving the same held/toggled aim onto resting loot should pick it up. " + PickupState(find));
                 Assert.That(player.Inventory.Count, Is.EqualTo(++collected));
-                Assert.That(terrain.Revision, Is.EqualTo(revision)); Assert.That(player.Battery.Charge, Is.EqualTo(charge));
+                Assert.That(player.Battery.Charge, Is.EqualTo(initialCharge
+                    - (player.SuccessfulStrokes - initialStrokes) * player.EffectiveDigEnergy).Within(.001f),
+                    "Automatic pickup adds no fuel cost to the paid strokes.");
                 Assert.That(find.TryCollect(player), Is.False);
-                LookAt(player.ViewCamera.transform.position + Vector3.up);
             }
         }
 

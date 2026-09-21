@@ -56,7 +56,7 @@ namespace SomethingDownThere
         private FpsInput input;
         private PlayerCrouch crouch;
         private FindHandling findHandling;
-        private FindWalkCollection walkCollection;
+        private FindProximityCollection proximityCollection;
         private FindPickupPresentation pickupPresentation;
         public BuriedFind HeldFind => findHandling?.HeldFind;
         internal Vector3 CarryVelocity => motor != null ? motor.velocity : Vector3.zero;
@@ -161,7 +161,7 @@ namespace SomethingDownThere
                     Application.isEditor ? "EditorPreferences" : "Preferences", "input-v1.ini")));
             input = new FpsInput(InputSettings);
             findHandling = new FindHandling(this);
-            walkCollection = new FindWalkCollection(this, motor, worldMask);
+            proximityCollection = new FindProximityCollection(this, motor, worldMask);
             pickupPresentation = new FindPickupPresentation(transform, viewCamera);
             crouch = new PlayerCrouch(motor, viewCamera, tuning, worldMask);
             if (CameraSettings == null)
@@ -225,7 +225,7 @@ namespace SomethingDownThere
         public void Restore(WorldSnapshot snapshot)
         {
             pickupPresentation?.Clear();
-            walkCollection?.Clear();
+            proximityCollection?.Clear();
             findHandling?.Release(false);
             Physics.SyncTransforms();
             if (!crouch.CanRestore(snapshot.CrouchAmount, snapshot.PlayerPosition, snapshot.PlayerRotation, excavationTerrain))
@@ -308,8 +308,8 @@ namespace SomethingDownThere
         }
 
         internal void AnimateCollection(MeshRenderer source, MeshFilter mesh) => pickupPresentation?.Play(source, mesh);
-        internal bool CanCollectAtFeet(BuriedFind find) => walkCollection != null && walkCollection.CanCollect(find);
-        internal void SuppressWalkCollection(BuriedFind find) => walkCollection?.ExcludeUntilDeparture(find);
+        internal bool CanCollectNearby(BuriedFind find) => proximityCollection != null && proximityCollection.CanCollect(find);
+        internal void SuppressAutomaticCollection(BuriedFind find) => proximityCollection?.ExcludeUntilDeparture(find);
 
         // Exposed for deterministic simulation checks; device bindings remain in FpsInput.
         public void Tick(FpsInputFrame frame, float deltaTime)
@@ -383,7 +383,8 @@ namespace SomethingDownThere
                 return;
             }
             if (!frame.DigHeld) blockedPickup = null;
-            if (walkCollection.Tick(previousFeet, frame.Move.sqrMagnitude > .0001f))
+            if (primaryLockout <= 0f && proximityCollection.Tick(previousFeet,
+                frame.Move.sqrMagnitude > .0001f, frame.DigHeld || frame.DigPressed))
             {
                 DelayDigAfterPickup();
                 RefreshTargetPrompt();
@@ -993,7 +994,7 @@ namespace SomethingDownThere
         private void OnDisable()
         {
             pickupPresentation?.Clear();
-            walkCollection?.Clear();
+            proximityCollection?.Clear();
             GameSettings?.RevertDisplay();
             findHandling?.Release(false);
             Rescue?.Cancel();

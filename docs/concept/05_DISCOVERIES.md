@@ -82,6 +82,13 @@ collectible without requiring full cleaning or waiting for the player to name th
 Holding the digging action collects an eligible aimed find as soon as it becomes available,
 including while it falls and between digging strokes. Loose finds have a more generous pickup
 reach than anchored finds or physical lifting; clear aim, exposure and bag capacity still apply.
+Automatic collection also reaches nearby, clearly uncovered finds in front of the player while
+walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
+The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
+Soil, walls, partial burial and full bags still block it. Deliberately dropped/thrown finds wait
+until the player leaves and returns, or deliberately aims to collect them.
+Nearly excavated rocks break loose when only shallow surface contacts remain; substantial inner
+burial keeps them anchored. Their real colliders and gravity determine the resulting motion.
 
 **Buried connections: "Follow the thing"**:
 Extensions of the cluster system where discoveries physically connect through the ground:
@@ -198,6 +205,7 @@ a gold bar never receives a depth bonus. “Rare” describes a payout, not anot
  world, and can be retrieved on a later trip.
 - **Nothing is ever deleted.** No overflow teleport, no inventory destruction, no drop-on-death.
  Full capacity stops pickup, not digging or travel; excess valuables persist without blocking the route.
+ Show a persistent inventory-full HUD banner in the same style as the low-fuel warning; both remain readable together.
  No discarding; sale, extraction and reload preserve discovery credit.
 - Uniques and ending components never consume capacity and are never lost.
 

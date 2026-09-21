@@ -72,7 +72,7 @@ namespace SomethingDownThere
                 {
                     Released = false; StopMotion(); field?.NotifyMotion();
                 }
-                if (!Released && !find.HasSoilAttachment())
+                if (!Released && find.CanReleaseFromSoil())
                 {
                     Released = true; safePosition = body.position; safeRotation = body.rotation;
                     field?.NotifyMotion();

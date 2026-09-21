@@ -92,6 +92,8 @@ a small spatial choice: "where would a cut do the most?"
 - **Normal cleanup rules apply:** plain dirt crumbs vanish, embedded valuables remain in place without
   bonus duplicates, and interesting finds survive intact for deliberate partial exposure and recognition.
   Breaking a slab never creates extra loot or bypasses recognition.
+- Paper-thin soil fins and ribbons crumble as they are carved, even when long or attached at both
+  ends. Remove their collision with their visible geometry; thicker useful ledges remain stable.
 - Removal stays local to the worked section. Unrelated ledges, tunnels, and overhangs remain stable;
   this does not add a collapse hazard.
 
