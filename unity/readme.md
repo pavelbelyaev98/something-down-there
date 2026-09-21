@@ -48,8 +48,7 @@ Keep the project open in Unity for live commands, or open it with `unity open ./
 
 The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. Its official stdio bridge lives in the isolated, ignored `.tools/blender-mcp/` environment: `blender-mcp` 1.0.0 pinned to commit `4309a39646e644261624bfcd2bca669b343b7621`, MCP SDK 1.30.0 (`<2`). No art is created by setup.
 
-- Run `./tools/setup-blender-mcp-for-codex.ps1 -Install` to reproduce the installation (omit `-Install` to register an existing one); `tools/blender-mcp-server.cmd` launches the same executable. Keep the Blender add-on running and restart the Codex extension after registration. [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
-- Removal: close clients, delete `.tools/blender-mcp/` (excluded by `.gitignore`), and remove only `[mcp_servers.blender]` from `C:/Users/pavel/.codex/config.toml` (`codex mcp remove blender`) and `servers.blender` from `.vscode/mcp.json`. The user's pre-existing Blender add-on was used, not modified. Verification evidence: `Logs/Task19/`.
+- Run `./tools/setup-blender-mcp-for-codex.ps1 -Install` to reproduce the installation (omit `-Install` to register an existing one); `tools/blender-mcp-server.cmd` launches the same executable. Keep the Blender add-on running and restart the Codex extension after registration. The add-on is the user's pre-existing installation, unmodified. [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
 
 ## Purchased assets and Git
 
@@ -61,21 +60,13 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 - `Tools > Something Down There > Configure Approved Surface Grass` rebinds grass and required URP settings. The existing renderer owns soil support/culling; BK's environment manager owns wind globals with all lighting overrides disabled. Validate excavation, restored terrain, shaders and the Windows player after updates.
 - Keep demo scenes available as references; the build includes MainGame and its dependencies. Purchased surface shaders need explicit integration before use as underground finds with excavation darkness.
 - Open `Assets/Scenes/MainGame.unity` to author the playable scene. It contains the excavation and shared sell/upgrade computer; the user now designs the surroundings manually. Keep `MainGameRoot`'s player, camera, excavation, computer and save references intact.
-- The rejected reservoir generation/copy tools, scenery, terrain data and project preview scene are removed. The original `Assets/BK` demo is still available as a reference. Duplicate vendor assets into project-owned folders before editing shared data.
+- The original `Assets/BK` demo is available as a reference. Duplicate vendor assets into project-owned folders before editing shared data.
 - Terrain and Terrain Physics modules remain available for manual terrain work. Keep new TerrainColliders outside the excavation opening so they cannot cap digging.
 - `Tools > Something Down There > Build Windows Player` always builds MainGame regardless of the active Editor scene.
 
 ## Surface computer
 
 - The user-selected `Assets/Cosmic_Retro_Computer_1_FREE` import supplies computer 3 for the combined sell/upgrade/refill station. Keep the vendor prefab/material/GUIDs; author standing scale and interaction bounds through `SurfaceStationSetup`. See [asset card](../art/retro-computer/README.md).
-- `Tools > Something Down There > Configure Surface Computer` refreshes its visual/collider in MainGame. Save deliberate scene changes after running it. The old Blender station models and moving-part code are retired.
+- `Tools > Something Down There > Configure Surface Computer` refreshes its visual/collider in MainGame. Save deliberate scene changes after running it.
 
-## Source map
-
-- `Assets/Runtime/Player` — movement, input, camera, battery, preferences, wallet, save.
-- `Assets/Runtime/Interaction` — targeting, inventory, find placement and handling.
-- `Assets/Runtime/Terrain` — excavation grid, mesh, collision, boundaries, surface presentation.
-- `Assets/Runtime/UI` — HUD and menus (UI Toolkit).
-- `Assets/Runtime/Persistence` — snapshots, storage, recovery.
-- `Assets/Runtime/Validation` — temporary fixtures only.
-- `Assets/Editor`, `Assets/Tests` — scene/build tooling and repository-owned checks.
+Runtime folder ownership is documented in [docs/architecture.md](../docs/architecture.md).

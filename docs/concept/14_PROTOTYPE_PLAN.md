@@ -71,7 +71,7 @@ without a transport shaft to the sky or cable clipping.
 | Voluntary lateral digging | the majority of testers dig sideways at least once per session unprompted |
 | Recognition quality | ≥ 80% of testers correctly name slice objects from partial exposure |
 | Voluntary full uncovering | ≥ 70% choose to keep revealing an interesting object rather than skip it |
-| Purchase cadence | prototype-tuned for fewer stronger steps; 30–45 min is a working milestone hypothesis |
+| Purchase cadence | per [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) §9 |
 | Trip decision | testers want another outing; pushing for one more find is optional, never a requirement for success |
 | Return friction | yard + return time ≤ ~15% of session time |
 | Station clarity | no tester asks how to sell and upgrade at the computer after using them once |

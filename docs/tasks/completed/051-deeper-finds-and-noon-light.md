@@ -1,5 +1,7 @@
 # 051 — Deeper Finds and Noon Light
 
+**Status:** complete. Increased ordinary depth-band populations and added a catalog-owned lower-reservoir allocation while preserving the accepted shallow layout; near-overhead sunlight and a global URP saturation profile brighten the surface.
+
 ## Objective
 Keep the accepted shallow rock layer, make subsequent excavation meet more objects,
 and present the surface with vibrant colors and a bright, nearly overhead midday sun.

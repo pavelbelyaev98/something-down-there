@@ -1,5 +1,7 @@
 # 071 — Nearby pickup, natural release and soil slivers
 
+**Status:** complete. Automatic collection reaches visible nearby finds at any height during walking/held digging, nearly freed rocks release naturally, full bags use the resource-warning banner, and paper-thin soil ribbons crumble within the stroke.
+
 ## Objective
 Make automatic collection work comfortably around the player and on falling finds, release nearly excavated rocks naturally, show full inventory as a resource warning, and remove unusable paper-thin soil strips during excavation.
 

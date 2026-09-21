@@ -1,5 +1,7 @@
 # 064 - Demo-Matched Valley, Water & Natural Boundary
 
+**Status:** complete — environment later removed in 067. Reshaped the surroundings into a radial alpine bowl ringed by two ranges of vendor peaks, with terrain-steepness containment replacing the invisible perimeter and a tree-free reservoir bed.
+
 ## Objective
 Replace the box-canyon worksite with an alpine valley matched to the approved Pure Nature 2:
 Mountains demo (`Mountain_Demo.unity`) and enclose it with real mountains rather than walls:

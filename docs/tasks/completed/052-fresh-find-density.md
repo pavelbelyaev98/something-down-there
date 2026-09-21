@@ -1,5 +1,7 @@
 # 052 — Fresh Find Density
 
+**Status:** complete. Concentrated full-size rocks and coal through the first few metres with stratified depth targets, measured as fresh encounters at the dig face — fallen rocks from earlier layers never count.
+
 ## Objective
 Keep the accepted turf layer and make fresh finds on deeper excavation faces nearly as
 plentiful through the first few metres, with coal entering beneath the rocks.

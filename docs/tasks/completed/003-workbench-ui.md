@@ -1,6 +1,6 @@
 # 003 — One-Click Workbench & Sell Machine Table
 
-**Status:** complete. Development build rebuilt 2026-09-17.
+**Status:** complete. Rebuilt both station menus as one fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`): money-only header, category columns, one-click price/payout rows with tooltips. Superseded by 073, which merged both stations into `ComputerStation`.
 
 ## Objective
 

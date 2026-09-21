@@ -1,5 +1,7 @@
 # 062 — Restore the Simple Playable Site
 
+**Status:** complete. Restored MainGame to the pre-environment revision, removed the rejected reservoir/preview assets and tools, and retained the purchased pack for manual authoring.
+
 ## Objective
 Remove the rejected environment work and restore the pre-environment excavation and surface stations. The user will design the surroundings manually.
 

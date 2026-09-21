@@ -19,7 +19,7 @@ Once a choice is made, document it in the relevant chapter and remove it here.
 
 | Topic | Open choice | Leaning / next step |
 |---|---|---|
-| Site dimensions | Exact depth beyond the shipped 24 x 24 x 100 m | Compact and vertical, at least 100 m deep, with useful lateral room for buried places and the major connected finds. Deepening a save is non-destructive; 200 m is the documented next step if playtest says the shaft feels short |
+| Site depth | Exact final depth beyond 100 m | Compact and vertical with useful lateral room for buried places and the major connected finds; 200 m is the documented next step if playtest says the shaft feels short |
 | Materials | Final roster and useful variants | Start with five response groups: loose earth, clay/sediment, gravel, rock and diggable concrete; each must feel distinct |
 | Voxel/chunk size | 0.5 m / 0.25 m / 1.0 m working options | Test recognition, digging feel and travel. Cut scale and streamed-region size are separate measurements |
 | Final object | Ancient household technology / modern machine in ancient materials / ancient original of the player's machine / another object | Choose after the loop works. Its recognizable modern function must explain the major connected finds (see Mystery payoff); no candidate is selected |

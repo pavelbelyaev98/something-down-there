@@ -1,5 +1,7 @@
 # 055 — Graphics Settings
 
+**Status:** complete. Persistent render-resolution, shadow, MSAA, texture-quality and filtering controls with category reset; shadows adjust only the runtime URP clone while excavation daylight stays independent.
+
 ## Objective
 Expose useful, persistent performance controls in the existing Graphics tab, with clear labels and native rendering by default.
 

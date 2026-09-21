@@ -1,5 +1,7 @@
 # 060 — Restore the playable game entry
 
+**Status:** complete. Removed the preview override and restored MainGame's menu, walking, excavation and saves; preview assets were subsequently removed in 062.
+
 ## Objective and concept
 Restore the normal Windows game after the environment preview replaced its executable.
 Follow concept 03 and 09: construct one reservoir from selected lake/shore and river-bank

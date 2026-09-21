@@ -1,5 +1,7 @@
 # 066 — Meadow excavation and soil comparison
 
+**Status:** complete. Replaced active custom turf with a pack meadow of eleven instanced grass/flower/fern layers following excavation; the custom-versus-pack soil split was later unified to pack soil in 070.
+
 ## Objective and concept
 Match the supplied meadow reference across the whole diggable site using approved pack
 grass, flowers and ferns. Retire the custom turf surface from active use while retaining

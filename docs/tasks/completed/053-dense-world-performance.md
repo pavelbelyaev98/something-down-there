@@ -1,5 +1,7 @@
 # 053 — Dense World Performance
 
+**Status:** complete. Conservative soil occlusion suppresses buried find rendering and anchored physics sleeps until terrain edits or explicit handling; startup is frame-capped before preferences load.
+
 ## Objective
 Restore responsive excavation with the accepted find distribution intact, and ensure startup has a frame limit before preferences load.
 

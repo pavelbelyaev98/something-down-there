@@ -1,5 +1,7 @@
 # 005 — Extend `TerrainVolume` to 100 m Depth & Contained Reservoir Boundaries
 
+**Status:** complete. Scaled the site to 24 × 100 × 24 m (0.125 m voxels) with on-demand chunk materialization, so startup and load cost no longer scale with depth. The save-migration path described below was later retired; only current-format saves load.
+
 ## Objective
 
 Grow the shipped site from 24 × 32 × 24 m to **24 × 100 × 24 m at the same 0.125 m voxels**,

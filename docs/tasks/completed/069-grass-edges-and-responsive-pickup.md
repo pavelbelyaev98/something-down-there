@@ -1,5 +1,7 @@
 # 069 — Grass edges and responsive pickup
 
+**Status:** complete. Foliage clearing now uses root support and shader clipping with a clean turf rim, and loose-find reach plus immediate held pickup are separated from shovel recovery.
+
 ## Objective
 Keep meadow plants beside excavation, remove only foliage actually over the opening, keep turf continuous to the rim, and make aimed collection of loose/falling finds longer-reaching and immediate while digging is held.
 

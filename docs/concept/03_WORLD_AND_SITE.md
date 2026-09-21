@@ -2,9 +2,9 @@
 
 ## 1. The site
 
-The reservoir excavation is currently presented as a clean, isolated worksite for playtesting.
+The reservoir excavation is a single contained worksite.
 
-- **Surface direction:** one round meadow opening with grass and flowers, surrounded by permanent
+- **Surface:** one round meadow opening with grass and flowers, surrounded by permanent
   non-grass gravel walking ground. Only the existing stores stand around it. No mountains,
   trees, decorative boulders, streams, lakes, waterfalls or other surrounding scenery.
 - **Dimensions:** `SiteLayout` owns the opening, apron and subsurface allocation. Depth remains

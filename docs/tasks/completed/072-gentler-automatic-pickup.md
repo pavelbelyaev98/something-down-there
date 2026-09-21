@@ -1,5 +1,7 @@
 # 072 — Gentler automatic pickup
 
+**Status:** complete. Reduced the camera-centred automatic collection radius by one quarter after playtest feedback; distant off-centre finds remain in the world.
+
 ## Objective and concept
 Dial back the broad automatic collection added in 071 while retaining convenient pickup above foot height and between digging strokes. Update `05_DISCOVERIES.md` to favor a close collection area over sweeping nearby loose finds into the bag.
 

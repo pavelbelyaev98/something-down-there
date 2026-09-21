@@ -1,5 +1,7 @@
 # 056 — Pure Nature integration and surface grass
 
+**Status:** complete. Replaced the prototype grass with instanced BK vegetation, vendor wind and updated URP shaders under project lighting; asset and Git LFS workflow documented in `unity/readme.md` and `art/pure-nature-mountains/README.md`.
+
 ## Objective
 Use the purchased Pure Nature 2: Mountains pack as an approved environment art source;
 replace the prototype grass with its vegetation while preserving excavation behavior.

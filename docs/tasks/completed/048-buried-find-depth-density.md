@@ -1,6 +1,6 @@
 # 048 — Buried Find Depth Density (Immediate Feel Pass)
 
-**Status:** complete. Windows build rebuilt 2026-09-17.
+**Status:** complete. Final shape: a 2,578-find catalog — full-size rocks own the shallow layer with the ore ladder beneath (coal first), every type at its authored 0.7 model scale — placed by a deterministic spatial grid; upgrade tracks share one tier price ladder in `EquipmentProgression.TierPrices`. The populations in the iterations below (1,024 → 2,042 → 1,996 → 2,324 → 2,578) are history; trust concept §05 and the source catalogs for current values.
 
 ## Objective
 

@@ -71,7 +71,7 @@ extra upkeep or repeated chores are added just to sustain spending.
 - One battery powers **digging and jetpack**.
 - Drain occurs only during powered actions; reading, standing, thinking and inspecting never drain.
 - **Surface recharging:** Refills are purchased at the surface (full or partial); bigger tanks keep current fuel.
-  - *Tuning note:* Prototype testing will compare modest paid refills against **free surface charging** to ensure battery upgrades never feel punitive.
+  Whether surface charging stays paid or becomes free is an [open question](13_OPEN_QUESTIONS.md).
 - **Return-power warning:** an adaptive indicator with safe / risky / critical states — never exact
  required-energy math. It serves as an estimate, accounting for depth and ascent cost.
 - **Recovery as a supported service:** At zero fuel underground (or called intentionally from pause), auto-recovery returns the player to the surface with full fuel, **all finds kept**, and a depth-scaled fee. If broke, interest-free debt is applied, ensuring guaranteed access to baseline fuel for the next outing.

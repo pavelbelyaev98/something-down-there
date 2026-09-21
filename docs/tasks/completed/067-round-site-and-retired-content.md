@@ -1,5 +1,7 @@
 # 067 — Round site and retired content
 
+**Status:** complete. Replaced the valley scenery with a round meadow, permanent gravel apron and shared computer under overhead sun; deleted retired art, rigs, experiments and all older-save compatibility.
+
 ## Objective / concept
 - Playtest iteration on world/site, tool, controls and art chapters: a round meadow excavation, plain non-grass permanent walking ground and the existing stores. Remove the valley scenery and rejected custom assets/tools. Keep the current rock/mineral gameplay and custom-versus-pack soil comparison.
 - Move direct sunlight overhead for midday, preserving excavation daylight attenuation underground.

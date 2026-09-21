@@ -4,7 +4,7 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
 
 ## 1. Quick Start & Navigation
 
-1. **Active Task & Status:** Check `docs/tasks.md` first. It is the single source of truth for the priority queue and completed history.
+1. **Active Task & Status:** Check `docs/tasks.md` first. It is the single source of truth for the priority queue; completed history lives in `docs/tasks/completed/` (one spec per task, final-state summary in its header).
 2. **Game Design Authority:** Read `docs/concept/00_README.md` and relevant concept chapters (`docs/concept/01`–`15`).
 3. **Current Codebase:** Check `docs/architecture.md` for system ownership and `docs/baseline.md` for what is currently built.
    - *Note:* Existing baseline mechanics and art are working prototype features, **not** signed-off or final. They are expected to be refactored or replaced to match `docs/concept/`.
@@ -15,19 +15,21 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
 - **Outcome-Driven (Think, Don't Just Execute):** Tasks define the *experiential and mechanical goal*, not an inflexible script. You are expected to think independently about how to best achieve that gameplay feel in code, evaluate trade-offs, and suggest or ask about the best architectural path during the JIT spec phase rather than blindly hardcoding rigid assumptions.
 - **Extend, Don't Duplicate:** Inspect `docs/baseline.md` and `docs/architecture.md` first. Always build upon or refactor existing classes instead of creating parallel duplicate systems. If an architectural approach is ambiguous, ask the user.
 - **No Pre-Release Backward Compatibility:** Until the game releases, support only the current implementation and data formats. Do not retain old-save readers, migrations, content aliases, obsolete APIs/assets, compatibility shims or tests solely for legacy behavior. Remove superseded code and references when replacing a system. Breaking older saves or development data is acceptable and does not require separate compatibility approval; use New Game or disposable test profiles instead of preserving old formats. Keep current-format validation, corruption recovery and gameplay correctness. Define a release compatibility policy before shipping.
-- **Just-In-Time Spec:** When starting an active task, create a thorough spec at `docs/tasks/<id>-<slug>.md`. Thoroughly define: Objective, Concept Reference, live codebase analysis, exact architecture/class changes, edge cases, and concrete Acceptance Criteria.
+- **Just-In-Time Spec:** When starting an active task, read every concept chapter referenced in its queue entry before writing anything, then create a thorough spec at `docs/tasks/<id>-<slug>.md`. Thoroughly define: Objective, Concept Reference (stating the referenced rules, not just citing files), live codebase analysis, exact architecture/class changes, edge cases, and concrete Acceptance Criteria.
 - **Plan-First Mode:** If instructed to plan first or discuss, create the spec at `docs/tasks/<id>-<slug>.md`, summarize the technical approach and trade-offs in chat, and halt for user confirmation before modifying code.
 - **Pragmatic Tests & Benchmarks:** Write tests or benchmarks **only when useful on core systems** (e.g. voxel meshing algorithms, save serialization, progression math, or performance-critical loops). Do not write tests for trivial UI layout, cosmetic props, or simple visual tweaks.
 - **Completion Protocol:** A task is complete only when:
   1. Code compiles warning-free and passes relevant tests (including any new high-value tests).
   2. Playable gameplay changes are verified and built to `builds/windows/SomethingDownThere.exe`.
-  3. The completed spec is moved from `docs/tasks/<id>-<slug>.md` to `docs/tasks/completed/<id>-<slug>.md` to preserve architectural decisions.
+  3. The completed spec is moved from `docs/tasks/<id>-<slug>.md` to `docs/tasks/completed/<id>-<slug>.md` to preserve architectural decisions, and its header is rewritten to a 1–2 sentence final-state summary.
   4. If a baseline system was refactored or replaced, update `docs/baseline.md` so it remains an accurate snapshot of working code.
-  5. The task is marked `[x]` in `docs/tasks.md`, and a 1–2 sentence technical summary is appended under `## Completed`.
+  5. The task's queue entry is removed from `docs/tasks.md`; no per-task completion records are written there. A fully completed phase collapses to one line pointing at `docs/tasks/completed/`.
 
 ## 3. Minimal Documentation & Data Rules
 
 - **Strict Scannability:** Keep documentation minimal and concise. No session narratives, chat transcripts, or command logs. Target under 60 lines for roadmap/status files; task specs may be as thorough as needed.
+- **Single Source of Truth:** pending work → `docs/tasks.md`; decisions & history → spec files in `docs/tasks/completed/`; current state → `docs/baseline.md`; design intent → `docs/concept/`; system ownership → `docs/architecture.md`; tooling setup → `unity/readme.md`. Facts are linked, never copied.
+- **Rewrite, Don't Append:** `docs/baseline.md` is a present-tense snapshot: rewrite affected sections in place; no task IDs, dates, or migration history. `docs/tasks.md` never stores test counts, build status, prices, or iteration logs.
 - **Data-Driven Architecture:** **Never store item prices, coordinates, or tool stats in Markdown files.**
   - Discovery properties (prices, depths, exposure, counts) live in `catalog.json` / `DiscoveryCatalog.asset`.
   - Tool upgrade parameters and the shared tier price ladder live in `EquipmentProgression.cs`; every track pays the same for a tier, and none of it is serialized into the scene.
@@ -42,7 +44,7 @@ When the user playtests a build and modifies or redesigns a feature:
 1. **Update `docs/concept/` In Place:** Update the relevant section in `docs/concept/` to record the new design intent (the concept docs are the living source of truth).
 2. **Apply Code & Data Changes:** Adjust C# logic and balance numbers in `catalog.json` or `EquipmentProgression.cs`.
 3. **Keep `docs/baseline.md` Accurate:** Update the working system snapshot in `docs/baseline.md` so subsequent tasks never rely on obsolete assumptions.
-4. **Log the Iteration in `docs/tasks.md`:** Update the completed entry summary or append an iteration note under `## Completed`.
+4. **Log the Iteration in the Task's Spec:** Update the archived spec's header to the final state and append a short iteration note to the spec body; `docs/tasks.md` stays untouched.
 5. **Minimal Output:** Do not output chat narratives, changelogs, or walls of text. Apply the edits directly and confirm completion in under 3 lines.
 
 ## 5. Unity & Developer Tooling

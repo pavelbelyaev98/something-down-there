@@ -1,5 +1,7 @@
 # 054 — Render Resolution Defaults
 
+**Status:** complete. New graphics preferences default to 100% render resolution, and supported display modes above the current desktop resolution (4K and higher) remain selectable with timed Keep/Revert confirmation.
+
 ## Objective
 Default to native rendering and make resolution choices reflect supported display modes, including 4K where available.
 

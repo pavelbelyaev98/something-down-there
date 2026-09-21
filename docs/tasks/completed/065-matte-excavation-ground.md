@@ -1,5 +1,7 @@
 # 065 — Matte excavation ground
 
+**Status:** complete. Corrected vendor metallic/occlusion/smoothness mask decoding and capped ground smoothness, removing the glossy glare from the reservoir crust and excavated soil.
+
 ## Objective and concept
 Remove the crystal-like white glare from the reservoir surface and fresh cuts.
 Ground must read as dry, rough earth with visible colour and normal-map relief.

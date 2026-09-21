@@ -1,5 +1,7 @@
 # 070 — Soft rims and pack ground
 
+**Status:** complete. Feathered the turf/soil transition, corrected noon shadow bias and unified active ground on pack soil; custom soil art remains stored but unbound.
+
 ## Objective
 Give excavated meadow edges a softer, natural transition and use approved pack ground throughout the active top layer. Retain custom soil art for later use without binding it to the active terrain.
 

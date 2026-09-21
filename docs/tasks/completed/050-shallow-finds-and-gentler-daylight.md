@@ -1,5 +1,7 @@
 # 050 — Earlier Finds and Gentler Daylight
 
+**Status:** complete. Packed more full-size rocks just beneath the turf using actual mesh envelopes and catalog-authored cover, and extended the early daylight reach without restoring an ambient floor.
+
 ## Objective and concept
 
 Respond to the latest playtest: first scrapes should reveal more full-size rocks,

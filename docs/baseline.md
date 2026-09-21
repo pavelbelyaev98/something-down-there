@@ -6,24 +6,22 @@
 - **Controller:** First-person `CharacterController` with smooth crouch (Left Ctrl, 35% speed) and modest sprint (Left Shift, 1.35x speed).
 - **Tool ladder:** authored once in `ShovelProfile.Defaults()` and no longer serialized into `MainGame`; Developer admin → **Tool tuning** nudges bite/cadence/reach live and prints a paste-ready table (`Logs/tuning.txt`).
 - **Jetpack & Rescue:** Vertical thrust and hover mechanics. Automatic zero-fuel rescue if stranded.
-- **Input & Comfort:** Unity Input System with full runtime action rebinding. Camera FOV slider (55–90°), crosshair toggle, and preferences persistence (`Preferences/*.ini`).
+- **Input & Comfort:** Unity Input System with full runtime action rebinding. Hold-to-dig by default with a persisted toggle option. Camera FOV slider (55–90°), crosshair toggle, and preferences persistence (`Preferences/*.ini`).
 
 ## 2. Terrain & Excavation (`unity/Assets/Runtime/Terrain/`)
-- **Voxel Engine:** Finite signed density field (24 × 24 × 100 m since 005, authored by `SiteLayout`) running synchronized surface-net meshing (0.125 m resolution) with collision generation. Chunks are materialized on demand: 7,200 possible keys, 144 built on a fresh site, so startup and load cost do not scale with depth.
+- **Voxel Engine:** Finite signed density field (24 × 24 × 100 m, authored by `SiteLayout`) running synchronized surface-net meshing (0.125 m resolution) with collision generation. Chunks are materialized on demand: 7,200 possible keys, 144 built on a fresh site, so startup and load cost do not scale with depth.
 - **Checkpoints:** dense density (~119 MB for the shipped site) validated and gzip-Fastest encoded on a worker thread, packed payload capped at 64 MB / 256 MB unpacked. Only the current format and excavation layout load; previous formats require a new game.
 - **Digging:** Ordinary organic scoop cuts, detached soil and local paper-thin strip cleanup within the stroke. Longer or multiply attached slivers crumble; thicker useful ledges and support crowns remain.
 - **Admin Tools:** Session-only debug panel (`Ctrl+Shift+F10`) with shovel tier selection, refill, and buried find markers.
 
 ## 3. Finds & Physics (`unity/Assets/Runtime/Interaction/`)
-- **Finds:** full-size plain rocks form a dense layer immediately beneath the turf; first shallow
-  scrapes reveal nearby pieces. Placement uses enclosing spheres around actual visual/collision
-  vertices, with shallow soil cover and population authored in the source catalogs. The ore ladder
-  begins beneath the rocks. The first few metres contain a dense continuation of full-size
-  rocks with coal entering early; later bands gradually change the mix. Banded placement picks
-  a target depth before searching nearby lateral positions, avoiding an empty top of each band.
-  Buried envelopes use a smaller soil gap while the accepted turf layout stays intact.
-  Progression bands continue into a separate deep
-  allocation across the lower reservoir, authored in the same catalogs. Model size and mass remain authored; retired content and its save aliases are deleted. Population tuning applies to new games; saved finds retain their positions.
+- **Finds:** full-size plain rocks form a dense layer immediately beneath the turf, with the ore
+  ladder (coal first) beginning beneath them and deeper bands shifting the mix toward value.
+  Placement uses enclosing spheres around actual visual/collision vertices with shallow soil
+  cover; banded placement picks a target depth before searching nearby lateral positions, so
+  each band stays populated from its top. A separate lower-reservoir allocation continues the
+  progression. Populations are authored in the source catalogs, apply to new games, and saved
+  finds keep their positions. Model size and mass remain authored; retired content is deleted.
 - **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. `FindProximityCollection` also collects clear finds within a close camera-centred area in front of the player during walking or held digging, at any height, with direct visibility and throw/drop exclusion. Released/falling finds have longer aimed reach; station/lifting reach stays separate. Pickup recovery delays soil strokes only.
 - **Release:** Nearly exposed finds with clear interiors and only shallow surface contact become dynamic; substantial burial still anchors them. Gravity and collision determine falling/settling.
 - **Handling:** Physical lift/drop (RMB) and throw (LMB). Carried finds track motion and settle physically on release; a slow creep on a slope counts as quiet, so finds stop instead of rolling away forever.
@@ -47,9 +45,9 @@
 - **Meadow and soil:** eleven pack grass/flower/fern layers, seeded in change-driven instanced
   batches. Root support removes uprooted plants; a change-driven surface-density mask clips
   wind-displaced foliage over openings without clearing intact neighbours. The project grass
-  shader also clips the round perimeter. Pack turf uses continuous top projection and a soft,
-  textured soil transition; noon shadow bias prevents a tessellated self-shadow rim. Pack soil covers both former comparison
-  halves; custom soil art/materials remain stored but unbound from active terrain. Linear masks,
+   shader also clips the round perimeter. Pack turf uses continuous top projection and a soft,
+   textured soil transition; noon shadow bias prevents a tessellated self-shadow rim. Pack soil covers the active
+   terrain; custom soil art/materials remain stored but unbound. Linear masks,
   preserved alpha, normal-map imports and the dry smoothness cap prevent white glare.
 - **Presentation:** approved pack sky and almost overhead midday sunlight; custom grass, clouds,
   sun and trial-tool art/imports are deleted. No first-person rig, alternate digging modes,

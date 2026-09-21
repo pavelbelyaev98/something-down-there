@@ -1,5 +1,7 @@
 # 063 — Drained Reservoir Environment
 
+**Status:** complete — environment later removed in 067. Authored four terrain tiles from the approved pack (sediment dig ground, grassy camp terrace, rocky forested banks, distant peaks) around the worksite.
+
 ## Objective
 
 Author a believable drained mountain-reservoir valley around the existing MainGame worksite using only

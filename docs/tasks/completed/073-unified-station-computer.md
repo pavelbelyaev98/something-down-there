@@ -1,5 +1,7 @@
 # 073 — Unified station computer
 
+**Status:** complete. Merged sale/upgrade ownership into `ComputerStation` using the selected Cosmic retro model; selling flows directly into upgrades, an empty bag opens upgrades directly, and the old station art/code is removed. The prompt reads simply `Use`.
+
 ## Objective
 Replace the separate sale and upgrade machines with the user's imported retro computer.
 With carried finds, interaction opens the existing selling table; selling the last find or

@@ -1,5 +1,7 @@
 # 049 — Darkness in Deep and Lateral Tunnels
 
+**Status:** complete. Removed the ambient brightness floor and applied the connected-air daylight field to direct sun, sky fill and reflections, so sustained descents and long covered branches become near-black while local lamps stay effective.
+
 ## Objective and concept
 
 Restore the lighting intent in concept §03.7 and §09: daylight fades through the

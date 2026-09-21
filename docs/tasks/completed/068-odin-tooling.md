@@ -1,5 +1,7 @@
 # 068 — Odin editor tooling
 
+**Status:** complete. Odin Inspector/Validator 4.0.2.4 configured in Editor Only mode with a focused MainGame/content validation profile that runs before builds; setup and license notes live in `unity/readme.md`.
+
 ## Objective
 Finish the user-approved Odin installation and make Inspector/Validator useful in the existing developer workflow.
 

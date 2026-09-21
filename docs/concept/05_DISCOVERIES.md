@@ -38,8 +38,7 @@ The **top metre belongs to plain rocks** — the junk you meet while the starter
 and the ore ladder starts just beneath it: coal first, then the rest in order. Rocks stay full size
 and form a dense layer just beneath the turf, so the first shallow scrapes reveal several nearby
 pieces. Placement clearance follows the actual rock geometry; empty bounding-box corners must not
-force finds deeper or farther apart than necessary. Retired junk assets, catalog entries and save aliases are removed. The current prototype supports
-new-format saves only; older save formats and previous site layouts are not migrated.
+force finds deeper or farther apart than necessary.
 
 ### The exposure rule (deliberate reveal for all finds)
 - **Deliberate exposure applies to all finds, including common rubbish:** No instant vacuum auto-collect through solid dirt (the *Meltopia* anti-pattern). Every object must be dug around and exposed to a defined threshold (typically 50–60% voxel exposure) before it can be collected. The player must always see what they earned.
@@ -85,7 +84,7 @@ reach than anchored finds or physical lifting; clear aim, exposure and bag capac
 Automatic collection also reaches nearby, clearly uncovered finds in front of the player while
 walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
-Soil, walls, partial burial and full bags still block it. Deliberately dropped/thrown finds wait
+Soil, walls and partial burial still block it; a full bag stops all pickup (see §9). Deliberately dropped/thrown finds wait
 until the player leaves and returns, or deliberately aims to collect them.
 Nearly excavated rocks break loose when only shallow surface contacts remain; substantial inner
 burial keeps them anchored. Their real colliders and gravity determine the resulting motion.
@@ -107,10 +106,8 @@ For rare oversized discoveries (a small maintenance vehicle, an industrial pump,
 - **Dynamic shaft clearance:** If the object encounters any narrow bottlenecks or tight corners, it **dynamically carves and clears away the obstructing dirt** as it ascends so it never gets wedged or stuck.
 - **Arrival & Cash-in:** The object breaches the rim into daylight and slams down onto the dedicated **salvage pad**. The surface computer registers the prize for a massive lump-sum payday, and a commemorative photo or miniature is added to the trophy wall.
 
-**Moving discoveries**: objects respond physically as surrounding ground is removed. The
-developer reports this is already implemented; retain it as part of the reveal feedback.
-Common visibility before automatic pickup is also already implemented in the demo, according to
-the developer.
+**Moving discoveries**: objects respond physically as surrounding ground is removed,
+reinforcing the reveal feedback.
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig out a
 suitcase, expose and open it with the existing tool, then see coins or an odd keepsake inside.
