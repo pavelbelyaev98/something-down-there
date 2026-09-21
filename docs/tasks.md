@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Active Task:** `001` — next pending; task `067` complete.
+- **Active Task:** `001` — next pending; task `068` complete.
 - **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; round meadow, gravel apron/stores, noon light; current-format saves only)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
@@ -15,6 +15,7 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`068` — Odin Tooling:** configured Inspector/Validator in Editor Only mode with a focused MainGame/content profile and automatic build validation. (`docs/tasks/completed/068-odin-tooling.md`)
 - [x] **`067` — Round Site & Retired Content:** round meadow, permanent gravel apron/stores, overhead sun, full canopy clearing and removal of obsolete art/tools. (`docs/tasks/completed/067-round-site-and-retired-content.md`)
 - [x] **`066` — Meadow & Soil Comparison:** pack grass/flowers across excavation with custom versus pack soil beneath a shared meadow cap. (`docs/tasks/completed/066-meadow-and-soil-comparison.md`)
 - [x] **`065` — Matte Excavation Ground:** corrected vendor mask decoding and removed the glossy glare from the reservoir crust and excavated soil. (`docs/tasks/completed/065-matte-excavation-ground.md`)
@@ -113,6 +114,7 @@
 ---
 
 ## Completed
+- **[068] Odin Tooling:** integrated approved 4.0.2.4 tools, focused asset validation and built-in prebuild checks; upgraded plugin metadata and documented usage. All 14,489 asset checks passed and the Windows player rebuilt with the unused runtime serializer excluded.
 - **[067] Round Site & Retired Content:** replaced valley scenery with a round meadow and permanent gravel apron/stores, moved sunlight overhead, and clear entire plant canopies above cuts. Deleted retired art/rig/experiments and all older-save compatibility; 215 EditMode checks and affected gameplay/save regressions passed, visual review completed and Windows player rebuilt.
 
 - **[066] Meadow & Soil Comparison:** replaced active custom turf with pack meadow and eleven instanced grass/flower/fern layers that follow excavation, with corrected project-owned texture imports and a world-anchored custom/pack soil split. Visually verified the meadow and crossing cuts, passed 235 scene/grass/lighting checks, and rebuilt the Windows player.

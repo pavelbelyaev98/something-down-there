@@ -11,3 +11,11 @@ unity/Assets/BK/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/**/*.exr filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/PureNature_Mountains/Models/TerrainMountain.asset filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/PureNature_Mountains/Scenes/Mountain_Demo/LightingData.asset filter=lfs diff=lfs merge=lfs -text
+
+# Purchased Odin tooling: preserve vendor binaries in the private repository via LFS.
+unity/Assets/Plugins/Sirenix/**/*.dll filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Plugins/Sirenix/**/*.pdb filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Plugins/Sirenix/**/*.unitypackage filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Plugins/Sirenix/**/*.bytes filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Plugins/Sirenix/**/*.png filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Plugins/Sirenix/**/*.data filter=lfs diff=lfs merge=lfs -text

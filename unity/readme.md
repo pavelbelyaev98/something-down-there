@@ -30,6 +30,16 @@ Keep the project open in Unity for live commands, or open it with `unity open ./
 - Saving fixture: **Tools > Something Down There > Validation > Build Save Performance Player** builds `builds/validation/saving/SavePerformance.exe`; `-saveProfileSeconds 5` is a smoke check, not a qualification run.
 - Native Windows reviews share the user's desktop: announce input control, verify game focus, and repeat checks interrupted by user input. See [AGENTS.md](../AGENTS.md).
 
+## Odin Inspector and Validator
+
+- Approved installed version: **4.0.2.4** for both Inspector/Serializer and Validator, under `Assets/Plugins/Sirenix`. Update them together and preserve publisher GUIDs. [Local asset card](../art/odin/README.md).
+- Use Inspector attributes or Visual Designer when they simplify content authoring and tuning. Keep ordinary Unity serialization unless a concrete requirement needs more; existing `WorldSaveController`/save codec still own persistence.
+- **Editor Only mode is enabled**: Inspector and Validator work in the Editor; the unused Odin runtime serializer is excluded from players. [Publisher guidance](https://odininspector.com/tutorials/getting-started/editor-only-mode).
+- `Assets/Editor/Validation/MainGameValidation.asset` scans MainGame with dependencies and `Assets/Content`. Recovery and unused BK demo scenes are excluded; vendor assets actually used by MainGame remain covered. Open this profile in **Tools > Odin > Validator** for a manual scan.
+- Odin's built-in build automation runs this specific profile to completion before a build, stops on errors and logs warnings. Configuration lives in `Assets/Plugins/Sirenix/Odin Validator/Editor/Config/AutomationConfig.asset`; retain it in source control. No automatic fixes are enabled.
+- CLI scripts can load the profile, construct `Sirenix.OdinValidator.Editor.ValidationSession`, and enumerate `ValidateEverythingEnumerator(openClosedScenes: true, showProgressBar: false)`. Inspect each returned `ResultType`; session counters alone do not count this manual enumeration. Save reports under ignored `Logs/`. [Publisher API example](https://odininspector.com/tutorials/odin-validator/using-the-validator-in-your-custom-pipeline).
+- Add project-specific rules in `Assets/Editor` when real failure cases justify them. Built-in checks find broken asset setup; digging behavior, performance, rendering quality and save correctness still need their existing tests and playtests.
+
 ## Blender MCP
 
 The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. Its official stdio bridge lives in the isolated, ignored `.tools/blender-mcp/` environment: `blender-mcp` 1.0.0 pinned to commit `4309a39646e644261624bfcd2bca669b343b7621`, MCP SDK 1.30.0 (`<2`). No art is created by setup.
@@ -41,6 +51,7 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 
 - Keep the complete approved `Assets/BK` import and `Assets/BK.meta` in the private project repository for reproducible clones and future use. The initial import is approximately 1.65 GB; account for Git LFS storage/transfer quotas before pushing.
 - `.gitattributes` sends BK textures, models and binary terrain/lighting data to Git LFS. Keep all `.meta`, shader, script, material, prefab and scene files in ordinary Git. Never ignore metadata or commit `Library`, `Temp`, `Logs` or `builds`.
+- Keep the approved Sirenix import and its settings in the private repository too. Its DLLs, symbols, packaged demos and binary resources use Git LFS; preserve metadata and readable configuration in ordinary Git. Keep personal license keys and activation credentials out of source control.
 - On a new workstation, install Git LFS, run `git lfs install`, clone, then `git lfs pull` before opening Unity. For this first import, include `.gitattributes`, the complete BK folder and its parent metadata alongside the integration changes; inspect `git lfs status` before committing.
 - Keep vendor paths/GUIDs stable. Use material copies or prefab variants in `Assets/Content` for game tuning; apply publisher updates separately and check the local `art/pure-nature-mountains/README.md` patch note after reimporting.
 - `Tools > Something Down There > Configure Approved Surface Grass` rebinds grass and required URP settings. The existing renderer owns soil support/culling; BK's environment manager owns wind globals with all lighting overrides disabled. Validate excavation, restored terrain, shaders and the Windows player after updates.

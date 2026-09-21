@@ -7,6 +7,7 @@
 - `unity/Assets/Runtime/Persistence` — versioned whole-world snapshots, atomic disk storage, recovery and autosave.
 - `unity/Assets/Runtime/Validation` — disposable validation adapters, not production mechanics.
 - `unity/Assets/Scenes`, `unity/Assets/Editor`, `unity/Assets/Tests` — scenes, editor tooling and repository-owned checks. `unity/Packages/manifest.json` is the dependency source of truth.
+- `unity/Assets/Plugins/Sirenix` — approved Odin Inspector/Validator in Editor Only mode; `Assets/Editor/Validation/MainGameValidation.asset` owns game-content scan scope. Odin's build automation runs that profile before builds; game persistence remains independent.
 
 - `MainGame.unity` owns one player/menu root and world camera. `MainGameRoot` owns excavation, permanent walking apron/boundaries and station anchors; there is no tool rig or alternate-cut system.
 - `DesktopInstance` reserves one Windows player before scene load; duplicate launches focus the existing window and exit. `WorldSaveStore` separately locks the profile. Saves live in `Application.persistentDataPath/Save` (Editor uses `EditorSave`); only current-format v7 saves are supported, with atomic replacement and a retained previous checkpoint. Old content aliases, depth migration, fractional-money conversion and experiment fields are removed.
