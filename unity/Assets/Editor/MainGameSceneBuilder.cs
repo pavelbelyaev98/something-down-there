@@ -32,8 +32,6 @@ namespace SomethingDownThere.Editor
             Material soil = MaterialAsset("Soil", new Color(0.43f, 0.28f, 0.14f));
             Material grass = MaterialAsset("Surface", new Color(0.32f, 0.42f, 0.22f));
             Material rock = MaterialAsset("Bedrock", new Color(0.24f, 0.29f, 0.34f));
-            Material sell = MaterialAsset("SellAnchor", new Color(0.76f, 0.49f, 0.16f));
-            Material upgrade = MaterialAsset("UpgradeAnchor", new Color(0.16f, 0.41f, 0.52f));
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "MainGame";
@@ -74,11 +72,6 @@ namespace SomethingDownThere.Editor
                 SiteLayout.ChunkSize, ShovelProfile.Defaults()[0].Radius, soil, preview);
             terrainRoot.SetActive(true);
 
-            // Colored pedestals reserve nearby station positions; no fake transactions/recharge.
-            Transform sellAnchor = Anchor("SellStation", surface, new Vector3(-3, 0, -14));
-            Block("Selling pedestal", sellAnchor, new Vector3(-3, 0.6f, -14), new Vector3(1.2f, 1.2f, 1), sell);
-            Transform upgradeAnchor = Anchor("UpgradeStation", surface, new Vector3(3, 0, -14));
-            Block("Upgrade pedestal", upgradeAnchor, new Vector3(3, 0.6f, -14), new Vector3(1.2f, 1.2f, 1), upgrade);
             Anchor("RechargeZone", surface, new Vector3(0, 0, -14.5f));
             Anchor("ReturnAnchor", surface, new Vector3(0, 0.1f, -13.5f));
 

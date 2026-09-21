@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Surface landmark for HUD orientation. Fuel is purchased explicitly at the workshop.
+    // Surface landmark for HUD orientation. Fuel is purchased explicitly at the computer.
     [DisallowMultipleComponent, DefaultExecutionOrder(100)]
     public sealed class SurfaceRecharge : MonoBehaviour
     {

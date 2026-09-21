@@ -62,7 +62,7 @@ namespace SomethingDownThere.Tests
             yield return null; yield return null;
             Assert.That(recharge.IsPlayerInZone, Is.True);
             Assert.That(UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Label>(player.GetComponent<FpsHud>().View.Root, "Return warning").text,
-                Is.EqualTo("FUEL AT WORKSHOP"));
+                Is.EqualTo("FUEL AT COMPUTER"));
             player.OpenMenu(PlayerMenu.Inventory);
             yield return null;
             player.CloseMenu();
@@ -97,19 +97,23 @@ namespace SomethingDownThere.Tests
             player.Tick(default, .02f);
             Assert.That(player.Battery.Charge, Is.EqualTo(charge));
             player.Wallet.TryCredit(2);
-            var station = scene.GetRootGameObjects()[0].GetComponentInChildren<UpgradeStation>();
+            var station = scene.GetRootGameObjects()[0].GetComponentInChildren<ComputerStation>();
             Place(station.transform.position + new Vector3(0, .1f, 2.4f));
             player.transform.rotation = Quaternion.Euler(0, 180, 0);
             player.Tick(new FpsInputFrame { Look = new Vector2(0, (player.Pitch - 12) / player.Tuning.LookSensitivity) }, .016f);
             Physics.SyncTransforms();
             Assert.That(player.TryInteract(), Is.True);
             yield return null;
+            Assert.That(station.Selling, Is.True);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.RefillCommand), Is.False, "Sell the haul before refilling.");
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.True);
+            Assert.That(station.Selling, Is.False);
             decimal cost = station.Refill.Cost;
-            Assert.That(player.ExecuteStationCommand(UpgradeStation.RefillCommand), Is.True);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.RefillCommand), Is.True);
             Assert.That(player.Battery.Charge, Is.EqualTo(100));
-            Assert.That(player.Wallet.Balance, Is.EqualTo(2 - cost));
+            Assert.That(player.Wallet.Balance, Is.EqualTo(4 - cost));
             Assert.That(recharge.Terrain.RemovedVolume, Is.EqualTo(removed));
-            Assert.That(player.Inventory.Items.Single().InstanceId, Is.EqualTo("kept-find"));
+            Assert.That(player.Inventory.Count, Is.Zero);
             Assert.That(player.Shovel.Level, Is.EqualTo(2));
         }
 
@@ -124,7 +128,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator BottomCenterFuelWarningSurvivesWorkshopProximityAndUsesOwnedCapacity()
+        public IEnumerator BottomCenterFuelWarningSurvivesComputerProximityAndUsesOwnedCapacity()
         {
             Place(recharge.transform.position + Vector3.up * .1f);
             var hud = player.GetComponent<FpsHud>().View.Root;

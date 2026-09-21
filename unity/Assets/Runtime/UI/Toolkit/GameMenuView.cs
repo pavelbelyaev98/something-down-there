@@ -196,9 +196,9 @@ namespace SomethingDownThere
             Show(startupPage, displayed == PlayerMenu.MainMenu);
             Show(contentPage, displayingPreview || (displayed != PlayerMenu.None && displayed != PlayerMenu.Pause && displayed != PlayerMenu.MainMenu && !player.IsSettingsOpen));
             Root.EnableInClassList("title-screen", displayed == PlayerMenu.MainMenu);
-            bool stationShop = displayed == PlayerMenu.Station && (player.Station is SellStation || player.Station is UpgradeStation);
+            bool stationShop = displayed == PlayerMenu.Station && player.Station is ComputerStation;
             Root.EnableInClassList("shop-menu", stationShop);
-            Root.EnableInClassList("workshop-menu", displayed == PlayerMenu.Station && player.Station is UpgradeStation);
+            Root.EnableInClassList("workshop-menu", displayed == PlayerMenu.Station && player.Station is ComputerStation { Selling: false });
             Root.EnableInClassList("station-menu", stationShop);
             Root.EnableInClassList("settings-menu", settingsVisible);
             Root.EnableInClassList("startup-menu", player.Persistence != null && (player.Persistence.AwaitingGameChoice
@@ -286,8 +286,8 @@ namespace SomethingDownThere
             else if (displayed == PlayerMenu.ConfirmNewGame) BuildNewGameConfirmation();
             else if (displayed == PlayerMenu.DeveloperAdmin) BuildAdmin();
             else if (displayed == PlayerMenu.ConfirmTerrainReset) BuildTerrainReset();
-            else if (displayed == PlayerMenu.Station && player.Station is SellStation sell) BuildSale(sell);
-            else if (displayed == PlayerMenu.Station && player.Station is UpgradeStation upgrade) BuildUpgrade(upgrade);
+            else if (displayed == PlayerMenu.Station && player.Station is ComputerStation { Selling: true } sell) BuildSale(sell);
+            else if (displayed == PlayerMenu.Station && player.Station is ComputerStation upgrade) BuildUpgrade(upgrade);
             else BuildInventory();
             if (actions.childCount > 0) actions[0].AddToClassList("first-action");
             Show(actions, actions.childCount > 0);
@@ -297,7 +297,7 @@ namespace SomethingDownThere
                 // consecutive upgrades stay fluid; every other entry lands on the
                 // safe action instead of on a spending target.
                 VisualElement selected = null;
-                if (displayed == PlayerMenu.Station && (player.Station is SellStation || player.Station is UpgradeStation))
+                if (displayed == PlayerMenu.Station && player.Station is ComputerStation)
                 {
                     if (!string.IsNullOrEmpty(purchasedCard))
                     {
@@ -341,7 +341,7 @@ namespace SomethingDownThere
             Button(actions, "Start New Game", player.Persistence.ConfirmNewGame, true, "primary");
         }
 
-        private void BuildSale(SellStation station)
+        private void BuildSale(ComputerStation station)
         {
             title.text = "";
             subtitle.text = "";
@@ -352,22 +352,22 @@ namespace SomethingDownThere
             if (station.Items.Count == 0) Text(table, "Empty bag", "Your bag is empty", "station-empty");
             for (int i = 0; i < station.Items.Count; i++)
             {
-                int command = i + 1;
+                int command = ComputerStation.SellAllCommand + i + 1;
                 var item = station.Items[i];
                 var row = ToolkitStationRows.Block(table, "Sell " + item.InstanceId + " row", "station-sell-row");
                 ToolkitStationRows.Text(row, "Find name", item.DisplayName, "station-sell-name");
                 StationButton(row, "Sell " + item.InstanceId, $"Sell  +${item.SaleValue}",
                     () => player.ExecuteStationCommand(command, revision), "station-sell-value", station.CanExecute(command, player));
             }
-            var sellAll = Button(actions, "Sell all", () => player.ExecuteStationCommand(0, revision),
-                station.CanExecute(0, player), "sell-all", station.CommandLabel(0, player));
+            var sellAll = Button(actions, "Sell all", () => player.ExecuteStationCommand(ComputerStation.SellAllCommand, revision),
+                station.CanExecute(ComputerStation.SellAllCommand, player), "sell-all", station.CommandLabel(ComputerStation.SellAllCommand, player));
             // Styled inline: the shared menu-button rules outrank class selectors here.
             sellAll.style.backgroundImage = StyleKeyword.None;
             sellAll.style.backgroundColor = new Color(0.561f, 0.682f, 0.290f, 1f);
             sellAll.style.color = Color.white;
         }
 
-        private void BuildUpgrade(UpgradeStation station)
+        private void BuildUpgrade(ComputerStation station)
         {
             title.text = "";
             subtitle.text = "";
@@ -379,10 +379,10 @@ namespace SomethingDownThere
             var columns = Element(scroll, "station-columns");
             var upgrades = Element(columns, "station-column");
             Text(upgrades, "Upgrades heading", "UPGRADES", "station-column-heading");
-            for (int i = 0; i < UpgradeStation.RefillCommand; i++) BuildUpgradeRow(upgrades, station, i, revision);
+            for (int i = 0; i < ComputerStation.RefillCommand; i++) BuildUpgradeRow(upgrades, station, i, revision);
             var services = Element(columns, "station-column station-column-divided");
             Text(services, "Services heading", "SERVICES", "station-column-heading");
-            for (int i = UpgradeStation.RefillCommand; i < station.CommandCount; i++) BuildUpgradeRow(services, station, i, revision);
+            for (int i = ComputerStation.RefillCommand; i < station.CommandCount; i++) BuildUpgradeRow(services, station, i, revision);
         }
 
         // Header plate: money only. Close is ESC/B, and the machine itself says what
@@ -395,9 +395,9 @@ namespace SomethingDownThere
             Text(wallet, "Trade balance", $"${player.Wallet.Balance}", "trade-balance");
         }
 
-        private void BuildUpgradeRow(VisualElement parent, UpgradeStation station, int index, long revision)
+        private void BuildUpgradeRow(VisualElement parent, ComputerStation station, int index, long revision)
         {
-            bool refill = index == UpgradeStation.RefillCommand;
+            bool refill = index == ComputerStation.RefillCommand;
             var offer = station.OfferAt(index);
             string track = refill ? "Refill fuel" : EquipmentProgression.Name(offer.Kind);
             // The row is decoration; only the price button is interactive.
@@ -474,10 +474,10 @@ namespace SomethingDownThere
             return offer.Kind == EquipmentKind.Fuel ? "Refill sold separately" : "";
         }
 
-        private static string RefillDetail(UpgradeStation station) =>
+        private static string RefillDetail(ComputerStation station) =>
             $"$1 per {EquipmentProgression.FuelPerCredit:0.#} fuel, rounded up";
 
-        private string RefillHeadline(UpgradeStation station)
+        private string RefillHeadline(ComputerStation station)
         {
             var refill = station.Refill;
             return refill.Full || refill.Amount <= 0
@@ -485,7 +485,7 @@ namespace SomethingDownThere
                 : $"+{refill.Amount:0.#} \u2192 {refill.ChargeAfter:0.#}";
         }
 
-        private void ActivateUpgradeRow(UpgradeStation station, int index, long revision, Button row)
+        private void ActivateUpgradeRow(ComputerStation station, int index, long revision, Button row)
         {
             if (row == null || player.Station != station) return;
             if (!station.CanExecute(index, player))

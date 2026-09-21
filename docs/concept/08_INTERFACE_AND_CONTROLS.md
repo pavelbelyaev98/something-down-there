@@ -19,7 +19,10 @@ permanent tutorial text.
 
 - **No inventory screen**. The bag is abstract; the HUD shows capacity.
 - **Full bag behavior:** A full bag simply prevents new pickups. Uncovered items remain safely sitting in the world. Uniques and ending parts consume **zero bag slots**.
-- Sell ordinary finds at the machine. Special exhibits and keys are unsellable.
+- Sell ordinary finds at the surface computer. Special exhibits and keys are unsellable.
+- The computer opens selling for a carried haul, switches directly to upgrades after selling
+  the last item, and opens upgrades immediately when there is nothing to sell.
+- Its interaction prompt is simply **Use**, with no key prefix.
 - Inspect objects in the world and on their displays. Placed uniques always allow story rereading.
 - No stats, equipping, sorting or discard menu. Looking never drains the battery.
 - **Price on hover remains undecided:** a small fixed sale price could appear once a sellable find

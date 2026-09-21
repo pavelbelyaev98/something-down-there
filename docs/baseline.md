@@ -30,7 +30,7 @@
 - **Dense-world cost:** meshes enclosed by pristine soil stop rendering; conservative bounds and nearby terrain edits reactivate them before small fragments can be missed. Anchored physics callbacks sleep until a terrain change or explicit handling/restore; collision and save records remain intact.
 
 ## 4. Hub & Economy (`unity/Assets/Runtime/Player/`, `Runtime/Interaction/`)
-- **Surface Stations:** Sell Station (instant trade) and Upgrade Station (shovel, battery capacity 100–400, bag capacity 10–40 slots). Every track shares one tier price ladder (`EquipmentProgression.TierPrices` = 10/25/55/100/180, authored in code and never baked into the scene); the shovel runs one tier deeper than the bag and tank.
+- **Surface computer:** one Cosmic retro terminal opens selling for a carried haul, then upgrades immediately after Sell All or the last individual sale; an empty bag opens upgrades directly. The prompt reads simply `Use`, with no key prefix. Shovel, battery and bag progression still use `EquipmentProgression` and its shared `TierPrices`; parameters stay in code.
 - **Refill Economy:** Paid battery recharge ($1 minimum, whole-dollar `$`).
 
 ## 5. UI & Presentation (`unity/Assets/Runtime/UI/`)
@@ -40,9 +40,9 @@
 - **Frame pacing:** startup is capped at 144 FPS before the scene loads; device settings then apply the saved frame limit or VSync choice. Display reset also defaults to 144 FPS.
 - **Resolution:** new/default graphics render at 100%; existing saved preferences remain valid. The display list retains all supported monitor modes, including 4K and higher even when the desktop currently uses a lower resolution, with timed Keep/Revert confirmation.
 - **Graphics settings:** render resolution, shadows (Off/Low/Medium/High), MSAA, texture mip quality and anisotropic filtering apply immediately and persist as device preferences. Graphics reset is enabled; shadows adjust only the runtime URP clone and retain the independent excavation daylight field. High restores authored shadows; old profiles without a shadow choice use High.
-- **Station machines:** Workshop and Sell All are one fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`) — money-only header, categories in their own columns, one clickable row per upgrade track, refill service or carried find. One click buys; nothing is selected first and nothing resizes.
+- **Computer screens:** selling and upgrades share the existing fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`) — money-only header, categories in their own columns, one clickable row per upgrade track, refill service or carried find. One click buys; nothing is selected first and nothing resizes.
 - **Round worksite:** `RoundSiteSetup` authors a circular meadow opening and permanent dry-gravel
-  walking apron with the existing stores. Valley scenery and generated terrain are removed.
+  walking apron with the shared computer. Valley scenery and generated terrain are removed.
   The voxel grid extends beneath the apron for lateral digging.
 - **Meadow and soil:** eleven pack grass/flower/fern layers, seeded in change-driven instanced
   batches. Root support removes uprooted plants; a change-driven surface-density mask clips

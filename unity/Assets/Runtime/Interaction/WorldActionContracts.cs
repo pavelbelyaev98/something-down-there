@@ -25,7 +25,7 @@ namespace SomethingDownThere
         public abstract bool CanExecute(int index, FpsPlayer player);
         public abstract bool TryExecute(int index, FpsPlayer player);
         public virtual void RefreshOffers(FpsPlayer player) { }
-        public string GetPrompt(FpsPlayer player) => player.InputSettings.Display(PlayerBinding.Interact) + " " + Title;
+        public virtual string GetPrompt(FpsPlayer player) => player.InputSettings.Display(PlayerBinding.Interact) + " " + Title;
 
         public bool TryInteract(FpsPlayer player)
         {

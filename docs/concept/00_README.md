@@ -10,7 +10,7 @@ Eastern-European country after seeing a news story about valuables and bones exp
 water, and you conclude — reasonably — that there must be more down there. You dig a free-form voxel
 hole with one evolving, increasingly ridiculous machine, follow silent detector cues toward buried
 oddities, reveal objects by their shape before you know what they are, haul them home before your
-shared battery dies, sell everything ordinary at a janky Sell All machine, and upgrade. You dig
+shared battery dies, sell everything ordinary at the surface computer, and upgrade on that same screen. You dig
 deeper through four zones, from recent rubbish to old sediment to deep clay and finally to something
 constructed that should not exist. The finds belong to a buried place with a history, and the major
 discoveries are connected. What they add up to is still open: one huge buried structure, or parts

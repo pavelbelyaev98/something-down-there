@@ -2,9 +2,9 @@
 
 ## Status
 
-- **Active Task:** `001` — evolving motorized tool and progression; immediate feel pass `072` completed.
-- **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; round meadow, gravel apron/stores, noon light; current-format saves only)
-- **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
+- **Active Task:** `001` — evolving motorized tool and progression; unified computer `073` completed.
+- **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; round meadow, gravel apron/computer, noon light; current-format saves only)
+- **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the shared sell/upgrade computer & salvage winch, and 100m+ reservoir depth.
 
 ---
 
@@ -15,12 +15,14 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`073` — Unified Station Computer:** replace both old stations and their assets with the selected retro computer; sell first, then immediate upgrades, empty bag skips selling. (`docs/tasks/completed/073-unified-station-computer.md`)
+
 - [x] **`072` — Gentler Automatic Pickup:** reduced automatic radius by one quarter, preserving elevated and immediate falling-item pickup. (`docs/tasks/completed/072-gentler-automatic-pickup.md`)
 - [x] **`071` — Nearby Pickup, Natural Release & Soil Slivers:** camera-centred nearby collection, shallow-contact rock release, full-bag banner and local thin-strip cleanup. (`docs/tasks/completed/071-pickup-release-and-soil-slivers.md`)
 - [x] **`070` — Soft Rims & Pack Ground:** softened turf edges and self-shadow contours; pack ground throughout, custom soil art retained inactive. (`docs/tasks/completed/070-soft-rims-and-pack-ground.md`)
 - [x] **`069` — Grass Edges & Responsive Pickup:** precise foliage clearing, clean turf rim, longer loose-find reach and pickup between digging ticks. (`docs/tasks/completed/069-grass-edges-and-responsive-pickup.md`)
 - [x] **`068` — Odin Tooling:** configured Inspector/Validator in Editor Only mode with a focused MainGame/content profile and automatic build validation. (`docs/tasks/completed/068-odin-tooling.md`)
-- [x] **`067` — Round Site & Retired Content:** round meadow, permanent gravel apron/stores, overhead sun, full canopy clearing and removal of obsolete art/tools. (`docs/tasks/completed/067-round-site-and-retired-content.md`)
+- [x] **`067` — Round Site & Retired Content:** round meadow, permanent gravel apron/computer, overhead sun, full canopy clearing and removal of obsolete art/tools. (`docs/tasks/completed/067-round-site-and-retired-content.md`)
 - [x] **`066` — Meadow & Soil Comparison:** pack grass/flowers across excavation with custom versus pack soil beneath a shared meadow cap. (`docs/tasks/completed/066-meadow-and-soil-comparison.md`)
 - [x] **`065` — Matte Excavation Ground:** corrected vendor mask decoding and removed the glossy glare from the reservoir crust and excavated soil. (`docs/tasks/completed/065-matte-excavation-ground.md`)
 - [x] **`064` — Demo-Matched Valley & Natural Boundary:** reshaped the surroundings into a radial alpine bowl ringed by two rings of vendor peaks, with demo grass/flower detail, a slope-driven cliff pass, stream, lake and notched waterfall; the invisible perimeter is gone and containment is terrain steepness. (`docs/tasks/completed/064-demo-matched-valley-and-natural-boundary.md`)
@@ -44,9 +46,9 @@
 ### Phase 1: Machine Upgrades & Surface Shop
 
 - [ ] **`001` — Build the Evolving Motorized Tool Rig & 4-Tier Progression** (NEW) (`docs/concept/04_TOOL_AND_MOVEMENT.md`, `06_PROGRESSION_AND_ECONOMY.md`): The current playtest has no visible tool; the old rig and experiments are deleted. Any future visual machine needs a fresh design. Build the improvised motor-assisted first-person machine with bolt-on attachments, and refactor `ShovelState`/`EquipmentProgression` from 6 levels to 4 transformative tiers (bite volume, speed, cutting power).
-- [ ] **`002` — Upgrade the Sell Station into a Janky Sell-All Machine & Add the Salvage Winch** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): Upgrade the existing `SellStation` (which already supports Sell All) into a physical hopper with a lever, grinding audio, digital readout, and add the new surface winch that hauls unburied oversized set pieces up the shaft (dynamically carving dirt bottlenecks).
+- [ ] **`002` — Add the Salvage Winch & Pad** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): Haul unburied oversized set pieces up the shaft, dynamically carve dirt bottlenecks and register payout at the shared surface computer. The separate hopper/workbench design is superseded by 073.
 - [x] **`003` — One-Click Workbench & Sell Machine Table** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): fixed-size parts-board table — upgrades and services in separate columns (upgrades wider), rows are decoration and only the price/payout button is clickable and one click buys; no confirm step, no icons, no resizing.
-- [ ] **`004` — Upgrade `SurfaceRecharge` into a Dedicated Yard Fuel Dispenser** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): Refill logic already exists (`UpgradeStation`/`StationTrade`). Build a dedicated surface dispenser with transparent full/partial refill pricing, whole-dollar `$`, and preserving current fuel when tank capacity upgrades.
+- [ ] **`004` — Upgrade `SurfaceRecharge` into a Dedicated Yard Fuel Dispenser** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): Refill logic already exists (`ComputerStation`/`StationTrade`). Build a dedicated surface dispenser with transparent full/partial refill pricing, whole-dollar `$`, and preserving current fuel when tank capacity upgrades.
 
 ### Phase 2: Reservoir Depth, Zones & Ground Feel
 
@@ -118,12 +120,14 @@
 ---
 
 ## Completed
+
+- **073 — Unified Station Computer:** merged sale/upgrade ownership into `ComputerStation`, using the selected Cosmic retro model. Sales flow directly into upgrades, empty bags skip selling, and the old station art/code is removed; 279 checks pass and the Windows build is refreshed. Prompt iteration: simply `Use`, with no key prefix.
 - **[072] Gentler Automatic Pickup:** reduced the camera-centred collection radius by one quarter after playtest feedback; distant off-centre finds remain in the world. Nine focused live checks passed and Windows player rebuilt and smoke-tested.
 - **[071] Nearby Pickup, Natural Release & Soil Slivers:** automatic collection reaches visible nearby finds at any height during walking/held digging; nearly freed rocks release, full bags share the fuel-warning presentation, and paper-thin soil ribbons crumble within the paid stroke. All 101 targeted checks passed, HUD/cuts reviewed, Odin clean, and Windows player rebuilt and smoke-tested.
 - **[070] Soft Rims & Pack Ground:** feathered the turf/soil transition, corrected noon shadow bias and retired the active soil comparison without deleting custom art. Scene/grass checks and Odin validation passed, visuals reviewed and Windows player rebuilt and smoke-tested; test preflight now discards unsaved scene experiments without blocking on Unity's save prompt.
 - **[069] Grass Edges & Responsive Pickup:** replaced padded clump clearing with root support and shader clipping, removed the dark turf rim, and separated loose-find reach and immediate held pickup from shovel recovery. Added an Odin meadow-shader guard; 295 relevant tests verified, content validation clean, visuals checked and Windows player rebuilt and smoke-tested.
 - **[068] Odin Tooling:** integrated approved 4.0.2.4 tools, focused asset validation and built-in prebuild checks; setup/license notes are consolidated in `unity/readme.md`, with utility documentation excluded from `art/`. All 14,489 asset checks passed and the Windows player rebuilt with the unused runtime serializer excluded.
-- **[067] Round Site & Retired Content:** replaced valley scenery with a round meadow and permanent gravel apron/stores, moved sunlight overhead, and clear entire plant canopies above cuts. Deleted retired art/rig/experiments and all older-save compatibility; 215 EditMode checks and affected gameplay/save regressions passed, visual review completed and Windows player rebuilt.
+- **[067] Round Site & Retired Content:** replaced valley scenery with a round meadow and permanent gravel apron/computer, moved sunlight overhead, and clear entire plant canopies above cuts. Deleted retired art/rig/experiments and all older-save compatibility; 215 EditMode checks and affected gameplay/save regressions passed, visual review completed and Windows player rebuilt.
 
 - **[066] Meadow & Soil Comparison:** replaced active custom turf with pack meadow and eleven instanced grass/flower/fern layers that follow excavation, with corrected project-owned texture imports and a world-anchored custom/pack soil split. Visually verified the meadow and crossing cuts, passed 235 scene/grass/lighting checks, and rebuilt the Windows player.
 

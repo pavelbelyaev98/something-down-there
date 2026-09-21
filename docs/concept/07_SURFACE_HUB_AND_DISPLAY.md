@@ -9,8 +9,8 @@ no doors, no menu mazes, no NPCs.
 | Station | Function | Detail |
 |---|---|---|
 | **The shaft** | The hole itself, physically changing as the player digs | The player sees their own excavation from the rim; the landmark that never repeats |
-| **Sell All machine, Winch & Salvage Pad** | Sell ordinary hauls & operate the extraction winch | A janky Sell All hopper paired with a heavy rim winch that sends a cable down the shaft to haul up unburied vehicles (carving tight dirt bottlenecks), landing them on the salvage pad for payout |
-| **Upgrade bench** | Buy track levels; sequential purchase; adjacent to Sell All | Located immediately beside the Sell machine; transparent current → next stats |
+| **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
+| **Winch & salvage pad** | Extract oversized finds | A heavy rim winch hauls unburied vehicles through tight dirt bottlenecks onto the salvage pad for payout |
 | **Fuel point** | Battery refill | Amount and price shown before purchase; bigger tanks keep current fuel |
 | **Display wall** | Special unsellable exhibits and salvage records | Empty spaces visible; displays unique oddities plus miniatures/photos of whole-salvage finds |
 | **Lamp / charges shelf** | Buy reusable lamps and C4 | Supports remaining play |
@@ -25,37 +25,35 @@ Learning happens through the world, not a compulsory tutorial or popup chain.
 Contextual action prompts and the optional controls reference are allowed:
 
 - Stenciled signs and painted arrows: **SELL**, **UPGRADE**, **FUEL**.
-- The Sell All machine has a big visible lever/handle; the upgrade bench has a lit panel showing the
- next tool change; the display wall's empty spaces invite placement.
+- The standing computer has a visible screen and keyboard for both selling and upgrades; the
+ display wall's empty spaces invite placement.
 - A compact pause reference lists controls, and settings explain options.
 - **First-session full loop:** an unguided newcomer must find, sell and buy without a wiki or video —
- the stenciled signs, the Sell All lever and the lit upgrade panel are the teaching tools, and the
+ the stenciled signs and the shared computer are the teaching tools, and the
  session ends with a completed loop and a reason to come back (see [Prototype validation](14_PROTOTYPE_PLAN.md#4-validation-metrics-playtest-gates)).
 - First interactions work on the first try: stand at the machine, press the obvious button.
 - **Every system explains itself where it is used:** signs and objects cover the stations, C4,
  lamps and the detector. Players can learn the loop without a guide or a compulsory tutorial.
 
-## 3. The Sell All machine
+## 3. Selling at the computer
 
 - One press processes everything sellable in the bag.
-- **Animated sequence:** the machine rattles, jostles its contents, then coughs up coin feedback.
- Money is banked immediately; the player can move on while the animation finishes. A dominant
- material or awkward item can change the haul reaction without adding sorting.
-- **The haul drop:** the bag's contents appear as a single animated pile that the machine rattles
-  and eats — the tactile payoff happens once, at the machine, and can never be carried, dropped or
-  lost on the way home.
+- With finds in the bag, interaction opens the selling table. After Sell All or the final
+ individual sale, the same open computer immediately shows upgrades and the updated balance.
+- With nothing to sell, interaction opens upgrades directly. No automatic sale on approach
+ or interaction, no second machine, and no waiting for a physical hopper animation.
 - No manual depositing; individual selling is available as a secondary option at the machine.
 - Uniques and components are never sellable and are never at risk of being included.
-- The machine is a running character in its own right: it gets louder and more absurd as the game
- progresses, without ever becoming a comedy sketch the player must wait through.
+- Closing the computer before selling preserves the haul. Individual sales stay on the selling
+ screen while any sellable finds remain.
 
-## 4. The upgrade bench
+## 4. Upgrades at the same computer
 
 - Shows all six tracks with the next level for each.
 - Every row: current stat/behavior → next, cost, and a one-line practical benefit.
 - Locked future levels are visible with their unlock requirement, so there is always a next goal
  (the anti-dead-end rule).
-- Purchases are sequential; the bench never lets you skip ahead.
+- Purchases are sequential; the computer never lets you skip ahead.
 - Buying produces a visible, immediate change on the machine in your hands — the core reward loop of
  the surface.
 
@@ -77,7 +75,7 @@ filling.
 
 ## 6. Yard progression (cosmetic only)
 
-The worksite can visibly grow as milestones pass: more lamps, a shelter over the bench, a tarp over
+The worksite can visibly grow as milestones pass: more lamps, a shelter over the computer, a tarp over
 the display wall, small decorations bought with late-game money. Purely cosmetic, never functional
 gates, and never a base-building system. After the ending, the media
 wall appears: clippings, a radio and a small TV recording the discovery — the only station the

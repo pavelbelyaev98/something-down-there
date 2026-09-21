@@ -16,8 +16,7 @@ namespace SomethingDownThere.Tests
     {
         private Scene scene;
         private FpsPlayer player;
-        private SellStation sell;
-        private UpgradeStation upgrade;
+        private ComputerStation computer;
         private InputTestFixture devices;
         private Keyboard keyboard;
         private Mouse mouse;
@@ -36,8 +35,7 @@ namespace SomethingDownThere.Tests
             scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
             var root = scene.GetRootGameObjects().Single();
             player = root.GetComponentInChildren<FpsPlayer>();
-            sell = root.GetComponentInChildren<SellStation>();
-            upgrade = root.GetComponentInChildren<UpgradeStation>();
+            computer = root.GetComponentInChildren<ComputerStation>();
             player.Tuning.Gravity = 0;
             yield return null;
             yield return null;
@@ -61,16 +59,16 @@ namespace SomethingDownThere.Tests
             var second = new InventoryItem("second", "Coin", 17);
             player.Inventory.TryAdd(first); player.Inventory.TryAdd(second);
             player.OpenMenu(PlayerMenu.Inventory);
-            Assert.That(player.ExecuteStationCommand(0), Is.False);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.False);
             Assert.That(player.Inventory.Count, Is.EqualTo(2));
             player.CloseMenu();
             yield return null;
-            Face(sell);
+            Face(computer);
             devices.Press(keyboard.eKey, queueEventOnly: true);
             devices.Press(mouse.leftButton, queueEventOnly: true);
             yield return null;
             yield return null;
-            Assert.That(player.Station, Is.SameAs(sell));
+            Assert.That(player.Station, Is.SameAs(computer));
             Assert.That(player.Wallet.Balance, Is.Zero);
             Assert.That(player.Inventory.Count, Is.EqualTo(2));
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Sell first"), "The list itself is the focus route.");
@@ -87,7 +85,19 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Inventory.Count, Is.Zero);
             Assert.That(player.Wallet.Balance, Is.EqualTo(22));
             StringAssert.Contains("$22", Text("Trade balance"));
-            Assert.That(Button("Sell all").enabledSelf, Is.False);
+            Assert.That(computer.Selling, Is.False);
+            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Sell all"), Is.Null);
+            Assert.That(Button("Upgrade Shovel").enabledSelf, Is.True);
+            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Station));
+            Assert.That(Time.timeScale, Is.Zero);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.False);
+            MenuTestUI.Click(oldClick);
+            Assert.That(player.Wallet.Balance, Is.EqualTo(22));
+            Assert.That(player.Shovel.Level, Is.EqualTo(1));
+            MenuTestUI.Click(Button("Upgrade Shovel"));
+            yield return null;
+            Assert.That(player.Shovel.Level, Is.EqualTo(2));
+            Assert.That(player.Wallet.Balance, Is.EqualTo(12));
             devices.Release(keyboard.eKey, queueEventOnly: true);
             player.CloseMenu();
             yield return null;
@@ -99,7 +109,7 @@ namespace SomethingDownThere.Tests
         public IEnumerator UpgradeCardBuysWithOneActivationAndSurvivesSurfaceTrips()
         {
             player.Wallet.TryCredit(10);
-            Face(upgrade);
+            Face(computer);
             Assert.That(player.TryInteract(), Is.True);
             yield return null;
             yield return null;
@@ -144,8 +154,7 @@ namespace SomethingDownThere.Tests
             // Budget for two tier-1 upgrades plus the refill beside them.
             player.Wallet.TryCredit(2 * EquipmentProgression.Price(1) + 1);
             player.Battery.TrySpend(99);
-            player.Inventory.TryAdd(new InventoryItem("kept", "Rock", 2));
-            Face(upgrade);
+            Face(computer);
             Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Upgrade Shovel"), "The rows are the focus route.");
@@ -179,7 +188,7 @@ namespace SomethingDownThere.Tests
             MenuTestUI.Click(Button("Upgrade Refill fuel"));
             Assert.That(player.Wallet.Balance, Is.Zero);
             Assert.That(player.Battery.Charge, Is.EqualTo(101));
-            Assert.That(player.Inventory.Items.Single().InstanceId, Is.EqualTo("kept"));
+            Assert.That(player.Inventory.Count, Is.Zero);
             Assert.That(player.Shovel.Level, Is.EqualTo(1));
         }
 
@@ -188,12 +197,12 @@ namespace SomethingDownThere.Tests
         {
             player.Wallet.TryCredit(10);
             player.Battery.RestoreCharge(13.00586f);
-            Face(upgrade);
+            Face(computer);
             yield return null;
             Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
-            Assert.That(upgrade.Refill.Cost, Is.EqualTo(1));
-            Assert.That(upgrade.Refill.ChargeAfter, Is.EqualTo(100));
+            Assert.That(computer.Refill.Cost, Is.EqualTo(1));
+            Assert.That(computer.Refill.ChargeAfter, Is.EqualTo(100));
             var purchase = Button("Upgrade Refill fuel");
             devices.Set(mouse.position, MenuTestUI.ScreenPoint(player, purchase), queueEventOnly: true);
             yield return null;
@@ -228,28 +237,28 @@ namespace SomethingDownThere.Tests
         public IEnumerator PausedStationRevalidatesFocusRangeDisabledStateAndDisplayedContents()
         {
             player.Inventory.TryAdd(new InventoryItem("a", "Marble", 5));
-            Face(sell);
+            Face(computer);
             Assert.That(player.TryInteract(), Is.True);
             yield return null;
             long displayed = player.StationRevision;
             player.Inventory.TryAdd(new InventoryItem("b", "Token", 9));
-            Assert.That(player.ExecuteStationCommand(0, displayed), Is.False);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand, displayed), Is.False);
             Assert.That(player.Inventory.Count, Is.EqualTo(2));
             Assert.That(player.Wallet.Balance, Is.Zero);
             yield return null;
             player.SetApplicationFocus(false);
-            Assert.That(player.ExecuteStationCommand(0), Is.False);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.False);
             player.SetApplicationFocus(true);
-            sell.enabled = false;
-            Assert.That(player.ExecuteStationCommand(0), Is.False);
-            sell.enabled = true;
+            computer.enabled = false;
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.False);
+            computer.enabled = true;
             Place(player.transform.position + Vector3.forward * 8);
-            Assert.That(player.ExecuteStationCommand(0), Is.False);
-            Assert.That(sell.TryExecute(0, player), Is.False);
+            Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.False);
+            Assert.That(computer.TryExecute(ComputerStation.SellAllCommand, player), Is.False);
             Assert.That(player.Inventory.Count, Is.EqualTo(2));
             Assert.That(player.Wallet.Balance, Is.Zero);
             player.CloseMenu();
-            player.OpenStation(sell);
+            player.OpenStation(computer);
             Assert.That(player.IsMenuOpen, Is.False, "A remote station cannot be opened directly.");
         }
 
@@ -257,7 +266,7 @@ namespace SomethingDownThere.Tests
         public IEnumerator FullBagRowsScrollWithKeyboardAndResizeWithoutHidingTheFooter()
         {
             for (int i = 0; i < player.Inventory.Capacity; i++) player.Inventory.TryAdd(new InventoryItem("row-" + i, "Coin " + i, i + 1));
-            Face(sell);
+            Face(computer);
             Assert.That(player.TryInteract(), Is.True);
             yield return null;
             yield return null;
@@ -289,6 +298,39 @@ namespace SomethingDownThere.Tests
             Assert.That(sellAll.enabledInHierarchy, Is.True, "The whole-bag action stays below the list.");
             Assert.That(sellAll.worldBound.yMin, Is.GreaterThanOrEqualTo(scroll.worldBound.yMax - 1));
             Assert.That(sellAll.worldBound.yMax, Is.LessThanOrEqualTo(MenuTestUI.View(player).Root.worldBound.yMax));
+        }
+
+        [UnityTest]
+        public IEnumerator EmptyBagSkipsSellingAndFinalIndividualSaleAdvancesOnRevisit()
+        {
+            Face(computer);
+            Assert.That(player.TryInteract(), Is.True);
+            yield return null; yield return null;
+            Assert.That(computer.Selling, Is.False);
+            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Upgrade Shovel"), Is.Not.Null);
+            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Sell all"), Is.Null);
+            player.CloseMenu();
+            yield return null;
+            player.Inventory.TryAdd(new InventoryItem("last", "Rock", 13));
+            Assert.That(player.TryInteract(), Is.True);
+            yield return null; yield return null;
+            Assert.That(computer.Selling, Is.True);
+            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Upgrade Shovel"), Is.Null);
+            player.CloseMenu();
+            yield return null;
+            Assert.That(player.Inventory.Count, Is.EqualTo(1), "Closing the computer never sells.");
+            Assert.That(player.Wallet.Balance, Is.Zero);
+            Assert.That(player.TryInteract(), Is.True);
+            yield return null; yield return null;
+            var last = Button("Sell last");
+            MenuTestUI.Click(last);
+            yield return null; yield return null;
+            MenuTestUI.Click(last);
+            Assert.That(computer.Selling, Is.False);
+            Assert.That(player.Inventory.Count, Is.Zero);
+            Assert.That(player.Wallet.Balance, Is.EqualTo(13));
+            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Upgrade Shovel"));
+            Assert.That(player.Shovel.Level, Is.EqualTo(1));
         }
 
         private void Face(StationTarget station)

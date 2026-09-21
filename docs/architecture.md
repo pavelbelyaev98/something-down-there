@@ -17,6 +17,6 @@
 - Approved vendor content stays under `Assets/BK`; game material and texture overrides live under `Assets/Content/Nature`. `SurfaceGrassSetup` adapts the vendor grass shader with `SurfaceGrassSupport.hlsl` and wires meadow species into the existing renderer; `SurfaceGrassValidator` rejects missing meshes/materials or shaders without excavation clipping. BK's environment manager supplies wind globals while project systems retain lighting ownership.
 - MainGame owns excavation and stations; `RoundSiteSetup` authors the circular opening and permanent gravel apron above the subsurface grid. `GroundTextureSetup` configures the shared meadow cap and pack soil throughout active terrain; custom soil assets remain inactive. `WindowsBuild` always builds MainGame.
 - `DiscoveryCatalog`/`DiscoveryContentSetup`/`PhotoRockSetup`/`MineralSetup` keep stable item identities separate from replaceable prefab art; `DiscoveryField` owns seeded placement and `BuriedFind` transfers records. The merged catalog lives in `Content/Discoveries`; only current rock/mineral content IDs resolve.
-- `SellStation`/`UpgradeStation`/`StationTrade` bind trades to inventory/wallet/battery revisions; `EquipmentProgression` owns authored capacity increments and prices.
+- `ComputerStation` switches the shared terminal from selling to upgrades; `StationTrade` binds trades to inventory/wallet/battery revisions; `EquipmentProgression` owns authored capacity increments and prices.
 
 Update this file only when folder ownership, major system boundaries or scene ownership changes.

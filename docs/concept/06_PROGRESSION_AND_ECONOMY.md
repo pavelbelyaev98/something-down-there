@@ -91,8 +91,11 @@ extra upkeep or repeated chores are added just to sustain spending.
 
 ## 7. Selling
 
-- Selling happens only at the surface Sell All machine; there is no inventory screen.
-- **One-button Sell All** with a physical, comedic machine animation and clear money feedback.
+- Selling happens at the surface computer shared with upgrades; there is no inventory screen.
+- A carried haul opens the selling screen first. **One-button Sell All** banks the payout and
+  immediately opens upgrades; selling the final individual item does the same.
+- An empty bag opens upgrades directly. Closing the selling screen leaves the haul untouched.
+- Clear money feedback accompanies the sale; there is no extra confirmation or animation wait.
 - Individual selling available at the machine for players who want it.
 - Money is banked instantly on sale; there is no bank/branch/ATM system. The haul animation is
  nonblocking; the player can move on and buy an upgrade immediately.

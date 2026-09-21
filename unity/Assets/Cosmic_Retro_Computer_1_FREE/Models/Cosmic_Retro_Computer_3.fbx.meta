@@ -1,24 +1,32 @@
 fileFormatVersion: 2
 guid: 8f95934fcb9e57a46aa97c9c3453e9a6
+AssetOrigin:
+  serializedVersion: 1
+  productId: 322860
+  packageName: '[FREE] Low Poly Sci-Fi Computers Demo - 4 Retro Sample Props'
+  packageVersion: 1.0
+  assetPath: Assets/Cosmic_Retro_Computer_1_FREE/Models/Cosmic_Retro_Computer_3.fbx
+  uploadId: 901952
 ModelImporter:
-  serializedVersion: 22200
+  serializedVersion: 24600
   internalIDToNameTable: []
   externalObjects:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: CosmicRetroComputer_1
-    second: {fileID: 2100000, guid: e22b9977b3f29304c9c190b41e7bbb7b, type: 2}
+    second: {fileID: 2100000, guid: 4d5bd3fdae0f30947b61abeab6cf8627, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Material
-    second: {fileID: 2100000, guid: e22b9977b3f29304c9c190b41e7bbb7b, type: 2}
+    second: {fileID: 2100000, guid: 4d5bd3fdae0f30947b61abeab6cf8627, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
+    searchTexturesGlobally: 1
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -26,8 +34,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -50,6 +56,8 @@ ModelImporter:
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
+    preBakeConvexCollisionMesh: 0
+    preBakeTriangleCollisionMesh: 0
     importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
@@ -68,6 +76,11 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    importUVs: -1
+    importVertexColors: 1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -87,6 +100,7 @@ ModelImporter:
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
+    calculateBlendshapeNormalsDeltaFromImportedNormals: 1
   referencedClips: []
   importAnimation: 1
   humanDescription:
@@ -117,10 +131,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 322860
-  packageName: '[FREE] Low Poly Sci-Fi Computers Demo - 4 Retro Sample Props'
-  packageVersion: 1.0
-  assetPath: Assets/Cosmic_Retro_Computer_1_FREE/Models/Cosmic_Retro_Computer_3.fbx
-  uploadId: 901952

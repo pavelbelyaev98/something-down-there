@@ -24,7 +24,7 @@ build curiosity about what they add up to.
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
 | Hard pockets | One concrete plug diggable by the current tool; upgrades or C4 are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
-| Economy | Sell All machine, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
+| Economy | Shared sell/upgrade computer, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
 | Display | Compatible shelf/stand spaces; individual special placement and rereading, no undiscovered silhouettes or inventory screen |
 | Surface | Compact yard: shaft, machine, bench, fuel, display |
 | Interface | Minimal HUD, world inspection, pause, full rebinding, controller support |
@@ -74,7 +74,7 @@ without a transport shaft to the sky or cable clipping.
 | Purchase cadence | prototype-tuned for fewer stronger steps; 30–45 min is a working milestone hypothesis |
 | Trip decision | testers want another outing; pushing for one more find is optional, never a requirement for success |
 | Return friction | yard + return time ≤ ~15% of session time |
-| Station clarity | no tester asks what the Sell or Upgrade stations do after using them once |
+| Station clarity | no tester asks how to sell and upgrade at the computer after using them once |
 | Recovery | fair, loot-safe and financially recoverable; ordinary return remains convenient |
 | Save integrity | zero lost holes, inventories or display states across interrupted sessions |
 | Feel | no floating snags; no unreachable pickups; no stuck spots |

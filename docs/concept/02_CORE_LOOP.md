@@ -19,7 +19,7 @@ Rules for each beat:
 | **Recognize** | "Wait… is that a—" The object's silhouette resolves into identity | This moment is the game's core reward; objects must read at partial exposure |
 | **Collect** | Pickups fly into the abstract bag; oversized set pieces are extracted via surface winch cable | Exposure required for collection; oversized salvage = surface event |
 | **Return** | Climb your own hole with the jetpack; battery is an action budget; return-power warning shows safe/risky/critical | No normal surface teleport or added return system; jetpack, reusable lamps, no map |
-| **Sell** | Sell All machine gobbles everything ordinary; money is banked only here | One button; physical comedy; no deposit chore |
+| **Sell** | The surface computer sells the ordinary haul, then immediately shows upgrades | One Sell All button; no deposit chore or second station |
 | **Upgrade** | Buy the next level of a track; visible change on the tool; practical benefit shown | Sequential, transparent, each purchase changes the next outing |
 
 ## 2. The session loop (30–60 min)

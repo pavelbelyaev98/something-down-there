@@ -97,7 +97,7 @@ namespace SomethingDownThere
             GameMenuView.Show(fuelWarning, low);
             var recharge = player.SurfaceRecharge;
             returnWarning.text = !unlimited && recharge != null
-                && (recharge.IsPlayerInZone || (fraction < 1f && recharge.IsNearby)) ? "FUEL AT WORKSHOP" : "";
+                && (recharge.IsPlayerInZone || (fraction < 1f && recharge.IsNearby)) ? "FUEL AT COMPUTER" : "";
         }
 
         private void UpdateXray(bool visible)

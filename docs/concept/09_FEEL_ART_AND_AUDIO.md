@@ -48,7 +48,7 @@ Absurdity is controlled and deadpan:
 
 - The machine escalates into a welded, bolted, over-batteried monster.
 - Objects are placed straight-faced; the jokes are in what they are and what they are worth.
-- Physical comedy is allowed: pile wobble, a car yanked out of the ground, the Sell All machine
+- Physical comedy is allowed: pile wobble, a car yanked out of the ground, the salvage winch
  visibly struggling with a haul.
 - No random wackiness, no jokes baked into every texture, no cartoon eyes on the drill.
 
@@ -94,13 +94,13 @@ Ambience and feedback only. **No music. No voice acting**.
 - **Zone ambience layers:** wind and distant water near the surface; drips and settling rock deeper;
  a low, almost-silent hum in the ancient zone. Layers crossfade with depth.
 - **Action feedback:** dig loops per material, seam fractures, footsteps, jetpack thrust, salvage
-  bladder inflation and mud-release pop, C4 blast, machine interactions, pickup chimes, the Sell All machine's noises.
+  bladder inflation and mud-release pop, C4 blast, machine interactions, pickup chimes, the computer's sale feedback.
 - **No audio-only clues.** Every sound that carries information has a visual counterpart. The
   detector is silent by design and readable while muted.
 - **No threat-adjacent audio anywhere.** The deep zone hums; it never breathes, whispers, follows or
   stalks. Nothing in the mix implies a presence, and the impossible-material resonance never sounds
   like a response ([Ending and Mystery](11_ENDING_AND_MYSTERY.md)).
-- **Mix:** ambience stays under the dig loop; picking, digging and the Sell All machine are the
+- **Mix:** ambience stays under the dig loop; picking, digging and the computer are the
  loudest, most satisfying elements.
 - Licensed audio may be used where needed, but custom is preferred; every sound is reviewed for
  long-session fatigue.

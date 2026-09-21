@@ -61,14 +61,13 @@ namespace SomethingDownThere.Tests
                 Assert.That(RenderSettings.fogMode, Is.EqualTo(FogMode.Exponential));
                 Assert.That(RenderSettings.fogDensity, Is.InRange(.001f, .006f));
                 Assert.That(root.GetComponentsInChildren<MonoBehaviour>().Any(c => c.GetType().Name.StartsWith("Validation")), Is.False);
-                Assert.That(root.GetComponentsInChildren<SellStation>().Single().transform, Is.SameAs(root.Find("Surface/SellStation")));
-                Assert.That(root.GetComponentsInChildren<UpgradeStation>().Single().transform, Is.SameAs(root.Find("Surface/UpgradeStation")));
+                Assert.That(root.GetComponentsInChildren<StationTarget>().Single(), Is.TypeOf<ComputerStation>());
+                Assert.That(root.GetComponentInChildren<ComputerStation>().transform, Is.SameAs(root.Find("Surface/ComputerStation")));
                 foreach (var station in root.GetComponentsInChildren<StationTarget>())
                 {
                     Assert.That(station.GetComponent<Collider>(), Is.Not.Null);
-                    Assert.That(station.GetComponent<StationMotion>(), Is.Not.Null);
                     foreach (var mesh in station.GetComponentsInChildren<MeshFilter>())
-                        StringAssert.StartsWith("Assets/Content/Stations/", AssetDatabase.GetAssetPath(mesh.sharedMesh), "Stations must use their approved Blender models.");
+                        StringAssert.StartsWith("Assets/Cosmic_Retro_Computer_1_FREE/Models/Cosmic_Retro_Computer_3.fbx", AssetDatabase.GetAssetPath(mesh.sharedMesh), "Use the computer selected by the user.");
                     foreach (var renderer in station.GetComponentsInChildren<Renderer>())
                         Assert.That(renderer.sharedMaterial.GetTexture("_BaseMap"), Is.Not.Null, "Keep authored station textures.");
                 }
@@ -150,7 +149,7 @@ namespace SomethingDownThere.Tests
                     Assert.That(mask.sRGBTexture, Is.False, "Packed masks are linear data.");
                     Assert.That(mask.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput), "Preserve smoothness alpha.");
                 }
-                foreach (string name in new[] { "SellStation", "UpgradeStation", "RechargeZone", "ReturnAnchor" })
+                foreach (string name in new[] { "ComputerStation", "RechargeZone", "ReturnAnchor" })
                 {
                     Transform anchor = root.Find("Surface/" + name);
                     Assert.That(anchor, Is.Not.Null, name);

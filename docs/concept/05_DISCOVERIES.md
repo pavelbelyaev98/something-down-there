@@ -105,7 +105,7 @@ For rare oversized discoveries (a small maintenance vehicle, an industrial pump,
 - **Cable deployment:** The player presses the button on the winch. A heavy steel cable deploys down the shaft, following the carved route, and automatically attaches itself securely to the object at the bottom.
 - **The hauling spectacle:** The winch reverses and reels the cable back in. The player stands at the surface rim watching the entire sequence: the object gets hauled up through the carved shaft.
 - **Dynamic shaft clearance:** If the object encounters any narrow bottlenecks or tight corners, it **dynamically carves and clears away the obstructing dirt** as it ascends so it never gets wedged or stuck.
-- **Arrival & Cash-in:** The object breaches the rim into daylight and slams down onto the dedicated **salvage pad**. The Sell All machine processes the prize for a massive lump-sum payday, and a commemorative photo or miniature is added to the trophy wall.
+- **Arrival & Cash-in:** The object breaches the rim into daylight and slams down onto the dedicated **salvage pad**. The surface computer registers the prize for a massive lump-sum payday, and a commemorative photo or miniature is added to the trophy wall.
 
 **Moving discoveries**: objects respond physically as surrounding ground is removed. The
 developer reports this is already implemented; retain it as part of the reveal feedback.
