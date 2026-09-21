@@ -12,9 +12,11 @@ retaining walls, and leftover waterworks. It is finite, believable and clearly b
   (see [Surface Hub and Display](07_SURFACE_HUB_AND_DISPLAY.md)).
 - **Current surface direction:** an alpine valley the worksite sits at the bottom of (task 064).
   The dig and its neutral rims read as loose dry sediment; the south camp terrace keeps firm
-  turf. Around them the ground is a shallow radial bowl: walkable flower meadow to ~68 m,
-  forested slope to ~106 m, then one short over-steep bank (two ~25 m steps with a grassy bench
-  between) that rises to a broken, forested ridge line topping out near 100 m. Beyond the
+  turf. Around them the ground is a shallow radial bowl: walkable flower meadow to ~68 m and a
+  treeless sediment slope to ~106 m, then one short over-steep bank (two ~25 m steps with a grassy
+  bench between) that rises to a broken ridge line topping out near 100 m. The drained reservoir
+  bed — the floor and its inner slope — stays bare; the conifer forest line starts on the
+  containing bank and covers the ridge beyond. Beyond the
   terrain, two rings of vendor peaks 470–1000 m tall stand 0.7–1.7 km out and close the horizon
   in every direction, so the small site reads as enclosed rather than fenced.
 - **Boundary:** terrain steepness only — there are no invisible walls. Both bank steps beat the

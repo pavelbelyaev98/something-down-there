@@ -11,9 +11,11 @@ namespace SomethingDownThere.Editor
 {
     // Authors the worksite surroundings as a close match of the approved Pure Nature 2:
     // Mountains demo valley: green meadow, dense conifer forest, grass-ledged cliffs,
-    // stream -> lake -> waterfall and hazy blue mountains. The diggable sediment pad is
-    // untouched; the ground around it is non-diggable meadow and rock; steep terrain and
-    // cliff colliders form the natural boundary (the old invisible Perimeter is removed).
+    // stream -> lake -> waterfall and hazy blue mountains. The drained reservoir bed -
+    // the flat floor and the sediment slope up to the over-steep bank - stays bare; the
+    // forest line starts on the bank. The diggable sediment pad is untouched; the ground
+    // around it is non-diggable meadow and rock; steep terrain and cliff colliders form
+    // the natural boundary (the old invisible Perimeter is removed).
     // Deterministic and re-runnable: the tool replaces MainGameRoot/Environment and
     // regenerates the terrain assets, never touching excavation, stations or save state.
     public static class ReservoirEnvironmentSetup
@@ -605,8 +607,14 @@ namespace SomethingDownThere.Editor
 
             public GameObject SpawnTree(Transform parent, float x, float z, float scale)
             {
+                // The randomness is drawn before the reservoir check so declining an
+                // in-bed tree cannot shift the layout of everything planted after it.
+                string path = Pick(Trees);
+                float yaw = Range(0f, 360f);
+                float embed = Range(.03f, .1f);
+                if (InsideReservoirBed(x, z)) return null;
                 TreeCount++;
-                return Spawn(parent, Pick(Trees), x, z, Range(0f, 360f), scale, Range(.03f, .1f));
+                return Spawn(parent, path, x, z, yaw, scale, embed);
             }
 
             public void CountWater() => WaterCount++;
@@ -642,6 +650,13 @@ namespace SomethingDownThere.Editor
 
         private static bool ClearOfWater(float x, float z) =>
             LakeMask(x, z) < .05f && DistanceToPath(x, z, StreamPath) > 5f;
+
+        // The drained reservoir bed runs from the worksite out to the foot of the
+        // over-steep containing bank (SlopeEdge). No tree may stand there - the basin
+        // floor and its inner slope stay bare, and the conifer forest starts on the bank
+        // itself, so the reservoir reads as drained ground rather than a forest clearing.
+        public static bool InsideReservoirBed(float x, float z) =>
+            Mathf.Sqrt(x * x + z * z) < SlopeEdge * LobeAt(x, z);
 
         // Vendor cliffs are 64 x 30 x 58 m at scale 1, so a 1.1 scale already spans
         // 70 m. Keep their faces clear of the worksite pad and the corridor floor.
@@ -791,9 +806,10 @@ namespace SomethingDownThere.Editor
         private static void ScatterForest(Scatter scatter, Transform parent)
         {
             Transform group = Group("Conifer forest", parent);
-            // Clustered stands break the tree line up, exactly as the demo does: the
-            // slope band and the ridge beyond the bank carry almost all of them, so the
-            // rim reads as forest against the peaks rather than as bare terrain.
+            // Clustered stands break the tree line up, exactly as the demo does. The bank
+            // and the ridge beyond carry the forest; in-bed candidates are declined in
+            // SpawnTree, so the rim reads as forest against the peaks while the drained
+            // floor and its slope stay bare.
             for (int cluster = 0; cluster < 210; cluster++)
             {
                 float angle = scatter.Range(-Mathf.PI, Mathf.PI);
@@ -835,7 +851,10 @@ namespace SomethingDownThere.Editor
                 if (!scatter.Ground(x, z, out float h) || h < .4f || h > 130f || scatter.Slope(x, z) > 1.45f) continue;
                 scatter.SpawnTree(group, x, z, scatter.Range(1f, 1.9f));
             }
-            // Lone meadow trees framing the worksite, like the demo meadow's singles.
+            // Worksite singles: every candidate here sits inside the reservoir bed, so
+            // SpawnTree declines them all. The loop stays as authored because the shared
+            // scatter stream is drawn from it - removing it would re-roll everything
+            // planted after the forest.
             for (int index = 0; index < 34; index++)
             {
                 float angle = scatter.Range(-Mathf.PI, Mathf.PI);

@@ -14,8 +14,9 @@ or lifting the black level in deep tunnels.
 - Purchased Pure Nature 2: Mountains builds the valley surroundings (tasks 063/064), matched
   to the vendor demo: authored terrain with the vendor mud/gravel/grass layers and the demo's
   23-prototype grass and flower detail set, vendor cliffs, boulders, conifer forest, stream,
-  lake and falls, under the demo's sky/fog/ambient/post stack. Rebuild with the tool menu;
-  keep gameplay functional during art work.
+  lake and falls, under the demo's sky/fog/ambient/post stack. The drained reservoir bed stays
+  tree-free; the forest line starts on the over-steep bank that contains the bowl. Rebuild with
+  the tool menu; keep gameplay functional during art work.
 - **Skyline rule:** the vendor peaks are authored in metres of finished mountain, not raw prefab
   scale, and are sized against the valley rim so they always clear it by a wide margin. A small
   site needs the horizon closed by mountains; peaks that merely peek over the tree line read as

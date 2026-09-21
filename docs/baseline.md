@@ -41,10 +41,12 @@
 - **Graphics settings:** render resolution, shadows (Off/Low/Medium/High), MSAA, texture mip quality and anisotropic filtering apply immediately and persist as device preferences. Graphics reset is enabled; shadows adjust only the runtime URP clone and retain the independent excavation daylight field. High restores authored shadows; old profiles without a shadow choice use High.
 - **Station machines:** Workshop and Sell All are one fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`) — money-only header, categories in their own columns, one clickable row per upgrade track, refill service or carried find. One click buys; nothing is selected first and nothing resizes.
 - **Alpine valley surroundings:** `ReservoirEnvironmentSetup` authors four terrain tiles (inner
-  edges at ±16 m) as a radial bowl — meadow to ~68 m, forested slope to ~106 m, a two-step
-  over-steep bank, then a broken ridge near 100 m — with the vendor mud/gravel/grass layers and
-  the demo's 23 grass/flower detail prototypes. ~4,500 BK props: cliffs placed by scanning the
-  height field for steep patches (planar terrain UVs smear on any steep face), boulders, ~2,200
+  edges at ±16 m) as a radial bowl — meadow to ~68 m, a treeless sediment slope to ~106 m, a
+  two-step over-steep bank, then a broken ridge near 100 m — with the vendor mud/gravel/grass
+  layers and the demo's 23 grass/flower detail prototypes. The drained reservoir bed (floor and
+  inner slope) stays bare of trees; the conifer line starts on the containing bank and covers the
+  ridge. ~3,800 BK props: cliffs placed by scanning the
+  height field for steep patches (planar terrain UVs smear on any steep face), boulders, ~1,550
   conifers, meadow scatter, stream, lake, waterfall. Two rings of vendor peaks (470–1000 m tall,
   0.7–1.7 km out, authored in metres and converted from the prefab's 2.8 cm bounds) close the
   horizon; they cast no shadows and the camera far clip is 3,200 m. The dig surface and neutral

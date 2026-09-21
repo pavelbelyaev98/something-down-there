@@ -20,6 +20,10 @@ namespace SomethingDownThere.Tests
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
             try
             {
+                // The test runner executes EditMode tests in an empty scene, so the scene
+                // under test must go active before scene-owned globals (fog, ambient) are
+                // read back; otherwise they keep the empty runner scene's defaults.
+                SceneManager.SetActiveScene(scene);
                 GameObject[] roots = scene.GetRootGameObjects();
                 Assert.That(roots.Length, Is.EqualTo(1));
                 Transform root = roots[0].transform;
@@ -221,6 +225,19 @@ namespace SomethingDownThere.Tests
                 Assert.That(heights.Count, Is.GreaterThan(20), "Two ranges ring the valley.");
                 Assert.That(heights.Min(), Is.GreaterThan(300f),
                     "Peaks must clear the ~100 m valley rim by a wide margin or they read as pebbles.");
+                // The drained reservoir bed stays bare: the forest line starts on the
+                // over-steep bank, so no tree stands on the basin floor or its slope.
+                Transform forest = environment.Find("Forest/Conifer forest");
+                Assert.That(forest, Is.Not.Null, "The valley keeps its conifer forest.");
+                Assert.That(forest.childCount, Is.GreaterThan(1200), "The bank and ridge keep a dense tree line.");
+                foreach (Transform tree in forest)
+                {
+                    float radius = Mathf.Sqrt(tree.position.x * tree.position.x + tree.position.z * tree.position.z);
+                    float bedEdge = ReservoirEnvironmentSetup.SlopeEdge
+                        * ReservoirEnvironmentSetup.LobeAt(tree.position.x, tree.position.z);
+                    Assert.That(radius, Is.GreaterThanOrEqualTo(bedEdge),
+                        tree.name + " must not stand inside the reservoir bed.");
+                }
                 foreach (Renderer renderer in environment.GetComponentsInChildren<Renderer>(true))
                 {
                     Assert.That(renderer.sharedMaterial, Is.Not.Null, renderer.name);
