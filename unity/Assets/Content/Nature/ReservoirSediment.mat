@@ -12,7 +12,8 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _SOILCOMPARISON_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -23,40 +24,61 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _ComparisonAlbedo:
+        m_Texture: {fileID: 2800000, guid: 579c3b5de05b35e46af52cba989a8a41, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ComparisonNormal:
+        m_Texture: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ComparisonRoughness:
+        m_Texture: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SoilAlbedo:
-        m_Texture: {fileID: 2800000, guid: 28893c22527e45c0bc613977651c64bf, type: 3}
+        m_Texture: {fileID: 2800000, guid: aa7a2512f32c88340a05b0f4e08c8268, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilNormal:
-        m_Texture: {fileID: 2800000, guid: 0557460f480c47e397af6cd71bf6516b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 488933da49528c04e97ca1f520da4b7d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilRoughness:
-        m_Texture: {fileID: 2800000, guid: 1324c751514f4a21937ca2dc16778080, type: 3}
+        m_Texture: {fileID: 2800000, guid: b6a47f331f5f71b409e55a7e43bddcd8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfAlbedo:
-        m_Texture: {fileID: 2800000, guid: 5b5c48079d7749feacd97ecf4eea34bd, type: 3}
+        m_Texture: {fileID: 2800000, guid: b5cf7bb00a396294abfbe6d4fc8310aa, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfNormal:
-        m_Texture: {fileID: 2800000, guid: dd432318ddfb48dca0f3c1debd8f49ed, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4b5aadda936bd1440918750ef7e778af, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfRoughness:
-        m_Texture: {fileID: 2800000, guid: dea33792273a469d8aa509061f7cfde1, type: 3}
+        m_Texture: {fileID: 2800000, guid: d63f60f4a40be5c47a8d50701156760b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ComparisonMaskLayout: 0
+    - _ComparisonNormalStrength: 0.55
+    - _ComparisonStoneNormalStrength: 0.9
+    - _ComparisonTileMetres: 2
     - _MacroVariation: 0.06
+    - _MaskLayout: 1
+    - _MaxSmoothness: 0.15
     - _NormalStrength: 0.45
+    - _SoilComparison: 1
+    - _SoilSplitX: 0
     - _SoilTileMetres: 4.2
     - _StoneNormalStrength: 0.55
     - _SurfaceHeight: 0
-    - _TileMetres: 3.4
-    - _TurfDepth: 0.03
-    - _TurfNormalStrength: 0.3
+    - _TileMetres: 10
+    - _TurfDepth: 0.035
+    - _TurfMaskLayout: 1
+    - _TurfNormalStrength: 1
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

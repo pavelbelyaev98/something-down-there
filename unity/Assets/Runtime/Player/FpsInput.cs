@@ -12,7 +12,6 @@ namespace SomethingDownThere
         public bool DigHeld;
         public bool DigPressed;
         public bool GrabPressed;
-        public bool CycleModePressed;
         public bool ThrowPressed;
         public bool JumpPressed;
         public bool JetpackHeld;
@@ -31,10 +30,10 @@ namespace SomethingDownThere
     public sealed class FpsInput : IDisposable
     {
         private readonly InputActionMap actions = new InputActionMap("FPS");
-        private readonly InputAction move, look, dig, grab, cycleMode, jetpack, crouch, sprint, interact, inventory, back, escape;
+        private readonly InputAction move, look, dig, grab, jetpack, crouch, sprint, interact, inventory, back, escape;
         private readonly InputAction refill, returnToSurface, adminMenu, adminCtrl, adminShift, xray;
         private readonly InputAction[] adminLevels = new InputAction[6];
-        private bool digArmed, grabArmed, modeArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
+        private bool digArmed, grabArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
         private InputPreferences preferences;
         private int preferenceRevision = -1;
         private uint lastToggleUpdate = uint.MaxValue;
@@ -48,7 +47,6 @@ namespace SomethingDownThere
             look = actions.AddAction("Look", InputActionType.Value, "<Mouse>/delta");
             dig = actions.AddAction("Dig", InputActionType.Button, "<Mouse>/leftButton");
             grab = actions.AddAction("Grab", InputActionType.Button, "<Mouse>/rightButton");
-            cycleMode = actions.AddAction("CycleExcavationMode", InputActionType.Button, "<Keyboard>/q");
             jetpack = actions.AddAction("JumpAndJetpack", InputActionType.Button, "<Keyboard>/space");
             crouch = actions.AddAction("Crouch", InputActionType.Button, "<Keyboard>/leftCtrl");
             crouch.wantsInitialStateCheck = true;
@@ -89,7 +87,6 @@ namespace SomethingDownThere
             for (int i = 0; i < 4; i++) move.ApplyBindingOverride(i + 1, preferences.Path((PlayerBinding)i));
             dig.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Dig));
             grab.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Grab));
-            cycleMode.ApplyBindingOverride(0, preferences.Path(PlayerBinding.CycleMode));
             jetpack.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Jump));
             crouch.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Crouch));
             sprint.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Sprint));
@@ -112,7 +109,6 @@ namespace SomethingDownThere
         public void SuppressHeldActions()
         {
             digArmed = grabArmed = jetpackArmed = interactArmed = false;
-            modeArmed = false;
             inventoryArmed = !inventory.IsPressed();
             backArmed = !back.IsPressed();
             escapeArmed = !escape.IsPressed();
@@ -127,7 +123,6 @@ namespace SomethingDownThere
             bool interactHeld = interact.IsPressed();
             if (!digHeld) digArmed = true;
             if (!grab.IsPressed()) grabArmed = true;
-            if (!cycleMode.IsPressed()) modeArmed = true;
             if (!jetpackHeld) jetpackArmed = true;
             if (!interactHeld) interactArmed = true;
             if (!inventory.IsPressed()) inventoryArmed = true;
@@ -152,7 +147,6 @@ namespace SomethingDownThere
                 DigHeld = gameplayActive && (toggle ? toggleIntent : digArmed && digHeld),
                 DigPressed = gameplayActive && digPressed && (!toggle || toggleIntent),
                 GrabPressed = gameplayActive && grabArmed && grab.WasPressedThisFrame(),
-                CycleModePressed = gameplayActive && !adminChord && modeArmed && cycleMode.WasPressedThisFrame(),
                 ThrowPressed = gameplayActive && digPressed,
                 JumpPressed = jetpackArmed && jetpack.WasPressedThisFrame(),
                 JetpackHeld = jetpackArmed && jetpackHeld,

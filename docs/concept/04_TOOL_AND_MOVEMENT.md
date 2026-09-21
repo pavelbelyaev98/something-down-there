@@ -24,6 +24,9 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
  sensitivity options; optional gyro.
 - No mashing, no QTEs, no rhythm inputs, anywhere in the game.
 
+The current playtest has ordinary scoop digging and no visible tool rig. The rejected rig and
+alternate-cut experiments, including their admin controls and key binding, are removed.
+
 ## 3. Automatic material adaptation (the mode model)
 
 There is no mode button and no required switching. The machine reads the ground and changes

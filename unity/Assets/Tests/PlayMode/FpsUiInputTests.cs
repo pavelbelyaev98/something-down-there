@@ -576,14 +576,13 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator OrdinaryGameplayIgnoresExperimentalCycleWithoutInterruptingHeldDig()
+        public IEnumerator UnboundKeyDoesNotInterruptHeldDig()
         {
             var dig = target.AddComponent<ValidationDigTarget>();
             yield return null; yield return null;
             devices.Press(mouse.leftButton, queueEventOnly: true); yield return null; yield return null;
             Assert.That(dig.HitsRemaining, Is.EqualTo(2));
             yield return Key(keyboard.qKey);
-            Assert.That(player.DigMode, Is.EqualTo(ExcavationMode.Scoop));
             yield return new WaitForSecondsRealtime(.7f);
             Assert.That(dig.HitsRemaining, Is.LessThan(2));
             devices.Release(mouse.leftButton, queueEventOnly: true); yield return null;

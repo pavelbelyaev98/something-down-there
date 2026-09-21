@@ -42,7 +42,6 @@ namespace SomethingDownThere.Tests
                     "Recharge must stay on the permanent rim, outside excavatable soil.");
                 Assert.That(root.GetComponentsInChildren<Camera>(true).Length, Is.EqualTo(1));
                 var camera = root.GetComponentInChildren<Camera>();
-                Assert.That(root.GetComponentInChildren<ExcavatorView>(true), Is.Null, "Trial art must not be part of the normal scene.");
                 Assert.That(camera.GetUniversalAdditionalCameraData().cameraStack, Is.Empty);
                 Assert.That(root.GetComponentsInChildren<AudioSource>(true), Is.Empty);
                 Assert.That(camera.clearFlags, Is.EqualTo(CameraClearFlags.Skybox));
@@ -57,7 +56,8 @@ namespace SomethingDownThere.Tests
                 Assert.That(root.Find("Clouds"), Is.Null);
                 // Clear flags are Skybox, so backgroundColor never renders; what matters is
                 // that the demo's haze is on, since the peaks are read through it.
-                Assert.That(RenderSettings.fog, Is.True);
+                Assert.That(RenderSettings.fog, Is.False);
+                Assert.That(Vector3.Angle(root.Find("Sun").forward, Vector3.down), Is.LessThan(3f));
                 Assert.That(RenderSettings.fogMode, Is.EqualTo(FogMode.Exponential));
                 Assert.That(RenderSettings.fogDensity, Is.InRange(.001f, .006f));
                 Assert.That(root.GetComponentsInChildren<MonoBehaviour>().Any(c => c.GetType().Name.StartsWith("Validation")), Is.False);
@@ -106,8 +106,19 @@ namespace SomethingDownThere.Tests
                 Assert.That(ShaderUtil.ShaderHasError(grassMaterial.shader), Is.False);
                 Assert.That(grassMaterial.shader.name, Is.EqualTo("BK/Grass"));
                 Assert.That(grassMaterial.GetTexture("_MainTex"), Is.Not.Null);
-                Assert.That(grassSettings.FindProperty("coverage").floatValue, Is.InRange(.005f, .12f),
-                    "The sediment bed keeps only sparse tufts.");
+                var meadowLayers = grassSettings.FindProperty("detailLayers");
+                Assert.That(meadowLayers.arraySize, Is.GreaterThanOrEqualTo(8), "The whole dig site keeps mixed grass, flowers and ferns.");
+                for (int i = 0; i < meadowLayers.arraySize; i++)
+                {
+                    var layer = meadowLayers.GetArrayElementAtIndex(i);
+                    var mesh = layer.FindPropertyRelative("mesh").objectReferenceValue as Mesh;
+                    var material = layer.FindPropertyRelative("material").objectReferenceValue as Material;
+                    Assert.That(mesh, Is.Not.Null);
+                    StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(mesh));
+                    Assert.That(material, Is.Not.Null);
+                    Assert.That(material.enableInstancing, Is.True);
+                    Assert.That(ShaderUtil.ShaderHasError(material.shader), Is.False);
+                }
                 var daylight = root.GetComponentInChildren<ExcavationDaylight>();
                 Assert.That(daylight, Is.Not.Null, "Excavation must attenuate ambient sky light in enclosed soil.");
                 var daylightShader = new SerializedObject(daylight).FindProperty("litShader").objectReferenceValue as Shader;
@@ -120,15 +131,23 @@ namespace SomethingDownThere.Tests
                 foreach (string kind in new[] { "Soil", "Turf" })
                 foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                     Assert.That(ground.GetTexture("_" + kind + channel), Is.Not.Null, kind + channel);
-                StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(ground.GetTexture("_SoilAlbedo")),
-                    "The sediment bed uses the approved vendor mud and gravel.");
+                StringAssert.StartsWith(GroundTextureSetup.PackTextureFolder, AssetDatabase.GetAssetPath(ground.GetTexture("_SoilAlbedo")),
+                    "Pack ground uses project copies with close-range texture imports.");
+                Assert.That(ground.GetFloat("_SoilComparison"), Is.EqualTo(1));
+                Assert.That(ground.GetFloat("_MaskLayout"), Is.EqualTo(1));
+                Assert.That(ground.GetFloat("_ComparisonMaskLayout"), Is.Zero);
+                Assert.That(ground.GetFloat("_TurfMaskLayout"), Is.EqualTo(1));
+                Assert.That(ground.GetFloat("_MaxSmoothness"), Is.LessThanOrEqualTo(.15f));
                 Assert.That(preview.GetComponent<Renderer>().sharedMaterial, Is.SameAs(ground));
                 var camp = (Material)AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/GroundTextures/GardenGround.mat");
-                foreach (string side in new[] { "North", "East", "West" })
-                    Assert.That(root.Find("Surface/" + side + " rim").GetComponent<Renderer>().sharedMaterial, Is.SameAs(ground),
-                        side + " rim continues the soft sediment.");
-                Assert.That(root.Find("Surface/South rim").GetComponent<Renderer>().sharedMaterial, Is.SameAs(camp),
-                    "The camp side keeps the firm turf ground.");
+                foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
+                {
+                    Assert.That(camp.GetTexture("_Turf" + channel), Is.SameAs(ground.GetTexture("_Turf" + channel)),
+                        "Camp and excavation must use the same pack meadow cap.");
+                    var mask = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(ground.GetTexture("_TurfRoughness")));
+                    Assert.That(mask.sRGBTexture, Is.False, "Packed masks are linear data.");
+                    Assert.That(mask.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput), "Preserve smoothness alpha.");
+                }
                 foreach (string name in new[] { "SellStation", "UpgradeStation", "RechargeZone", "ReturnAnchor" })
                 {
                     Transform anchor = root.Find("Surface/" + name);
@@ -139,110 +158,38 @@ namespace SomethingDownThere.Tests
                 Assert.That(root.Find("Bedrock").GetComponentsInChildren<PermanentTerrainBoundary>().Length, Is.EqualTo(5));
                 Assert.That(root.Find("Perimeter"), Is.Null,
                     "The valley wall replaced the invisible arena box.");
-                foreach (string side in new[] { "West", "East", "North", "South" })
-                {
-                    var wall = root.Find("Bedrock/" + side).GetComponent<Renderer>().bounds;
-                    var rim = root.Find("Surface/" + side + " rim").GetComponent<Renderer>().bounds;
-                    Assert.That(wall.max.y, Is.EqualTo(rim.min.y).Within(0.0001f),
-                        side + ": coincident vertical wall/rim faces must meet without overlapping or leaving a gap.");
-                }
                 Assert.That(root.Find("Player").gameObject.layer, Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")));
             }
             finally { EditorSceneManager.CloseScene(scene, true); }
         }
 
         [Test]
-        public void DrainedReservoirSurroundsTheDigWithVendorTerrainAndProps()
+        public void RoundOpeningHasPermanentGravelAndOnlyStoresAroundIt()
         {
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
             try
             {
-                Transform root = scene.GetRootGameObjects().Single().transform;
-                Transform environment = root.Find("Environment");
-                Assert.That(environment, Is.Not.Null, "The drained reservoir must surround the worksite.");
-                Terrain[] tiles = environment.GetComponentsInChildren<Terrain>();
-                Assert.That(tiles.Length, Is.EqualTo(4), "Four terrain tiles frame the excavation without a cap.");
-                foreach (Terrain tile in tiles)
+                var root = scene.GetRootGameObjects().Single().transform;
+                Assert.That(root.Find("Environment"), Is.Null);
+                Assert.That(root.GetComponentsInChildren<Terrain>(true), Is.Empty);
+                var apron = root.Find("Surface/Walking apron");
+                Assert.That(apron, Is.Not.Null);
+                Assert.That(apron.GetComponent<PermanentTerrainBoundary>().CanDig, Is.False);
+                var collider = apron.GetComponent<MeshCollider>();
+                Assert.That(collider.sharedMesh, Is.SameAs(apron.GetComponent<MeshFilter>().sharedMesh));
+                var material = apron.GetComponent<Renderer>().sharedMaterial;
+                Assert.That(material.GetFloat("_Smoothness"), Is.Zero);
+                StringAssert.Contains("Gravel", AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap")));
+                for (int i = 0; i < 72; i++)
                 {
-                    Assert.That(tile.GetComponent<TerrainCollider>(), Is.Not.Null, tile.name);
-                    Bounds bounds = tile.terrainData.bounds;
-                    bounds.center += tile.transform.position;
-                    bool overOpening = bounds.min.x < 15.999f && bounds.max.x > -15.999f
-                        && bounds.min.z < 15.999f && bounds.max.z > -15.999f;
-                    Assert.That(overOpening, Is.False,
-                        tile.name + " must never reach over the excavatable opening.");
-                    Assert.That(tile.terrainData.terrainLayers.Length, Is.EqualTo(5), tile.name);
-                    Assert.That(tile.terrainData.detailPrototypes.Length, Is.GreaterThan(15),
-                        tile.name + " carries the demo's grass and flower detail set.");
-                    foreach (TerrainLayer layer in tile.terrainData.terrainLayers)
-                    {
-                        Assert.That(layer, Is.Not.Null, tile.name);
-                        StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(layer),
-                            "The basin surface uses the approved vendor layers.");
-                    }
+                    Vector3 direction = Quaternion.Euler(0, i * 5, 0) * Vector3.forward;
+                    Assert.That(collider.Raycast(new Ray(direction * (SiteLayout.OpeningRadius - .1f) + Vector3.up * 2, Vector3.down), out _, 3), Is.False);
+                    Assert.That(collider.Raycast(new Ray(direction * (SiteLayout.OpeningRadius + .1f) + Vector3.up * 2, Vector3.down), out _, 3), Is.True);
                 }
-                Camera camera = root.GetComponentInChildren<Camera>();
-                Assert.That(camera.farClipPlane, Is.GreaterThanOrEqualTo(2000f),
-                    "The camera must reach the outer mountain range.");
-                // The valley is closed by terrain now, so every bearing out of the bowl
-                // has to cross ground steeper than the character controller can walk.
-                float weakest = float.MaxValue;
-                for (int step = 0; step < 360; step++)
-                {
-                    float bearing = step / 360f * Mathf.PI * 2f;
-                    float steepest = 0f;
-                    int sampled = 0;
-                    for (float distance = 40f; distance < 210f; distance += 1f)
-                    {
-                        float x = Mathf.Cos(bearing) * distance;
-                        float z = Mathf.Sin(bearing) * distance;
-                        if (z > 8f && Mathf.Abs(x) < ReservoirEnvironmentSetup.CorridorHalfWidth(z) + 4f) continue;
-                        sampled++;
-                        float here = ReservoirEnvironmentSetup.GroundHeight(x, z);
-                        float ahead = ReservoirEnvironmentSetup.GroundHeight(
-                            Mathf.Cos(bearing) * (distance + 2f), Mathf.Sin(bearing) * (distance + 2f));
-                        steepest = Mathf.Max(steepest, (ahead - here) / 2f);
-                    }
-                    if (sampled > 60) weakest = Mathf.Min(weakest, steepest);
-                }
-                Assert.That(weakest, Is.GreaterThan(1.05f),
-                    "Every bearing out of the valley must cross ground steeper than the 45 deg slope limit.");
-                int props = 0;
-                foreach (Transform item in environment.GetComponentsInChildren<Transform>(true))
-                {
-                    GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(item.gameObject);
-                    if (source == null) continue;
-                    StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(source),
-                        item.name + " must stay a vendor prefab instance.");
-                    props++;
-                }
-                Assert.That(props, Is.GreaterThan(2000), "Expect a populated valley of vendor props.");
-                Transform peaks = environment.Find("Mountains/Distant peaks");
-                Assert.That(peaks, Is.Not.Null, "The small valley is enclosed by vendor peaks.");
-                var heights = new List<float>();
-                foreach (Renderer renderer in peaks.GetComponentsInChildren<Renderer>())
-                    heights.Add(renderer.bounds.size.y);
-                Assert.That(heights.Count, Is.GreaterThan(20), "Two ranges ring the valley.");
-                Assert.That(heights.Min(), Is.GreaterThan(300f),
-                    "Peaks must clear the ~100 m valley rim by a wide margin or they read as pebbles.");
-                // The drained reservoir bed stays bare: the forest line starts on the
-                // over-steep bank, so no tree stands on the basin floor or its slope.
-                Transform forest = environment.Find("Forest/Conifer forest");
-                Assert.That(forest, Is.Not.Null, "The valley keeps its conifer forest.");
-                Assert.That(forest.childCount, Is.GreaterThan(1200), "The bank and ridge keep a dense tree line.");
-                foreach (Transform tree in forest)
-                {
-                    float radius = Mathf.Sqrt(tree.position.x * tree.position.x + tree.position.z * tree.position.z);
-                    float bedEdge = ReservoirEnvironmentSetup.SlopeEdge
-                        * ReservoirEnvironmentSetup.LobeAt(tree.position.x, tree.position.z);
-                    Assert.That(radius, Is.GreaterThanOrEqualTo(bedEdge),
-                        tree.name + " must not stand inside the reservoir bed.");
-                }
-                foreach (Renderer renderer in environment.GetComponentsInChildren<Renderer>(true))
-                {
-                    Assert.That(renderer.sharedMaterial, Is.Not.Null, renderer.name);
-                    Assert.That(ShaderUtil.ShaderHasError(renderer.sharedMaterial.shader), Is.False, renderer.name);
-                }
+                foreach (var station in root.GetComponentsInChildren<StationTarget>())
+                    Assert.That(collider.Raycast(new Ray(station.transform.position + Vector3.up * 2, Vector3.down), out _, 3), Is.True);
+                var grass = new SerializedObject(root.GetComponentInChildren<SurfaceGrassRenderer>());
+                Assert.That(grass.FindProperty("surfaceRadius").floatValue, Is.EqualTo(SiteLayout.OpeningRadius));
             }
             finally { EditorSceneManager.CloseScene(scene, true); }
         }

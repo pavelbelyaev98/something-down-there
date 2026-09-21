@@ -18,7 +18,7 @@ namespace SomethingDownThere
         private readonly PlayerBinding[] displayOrder = {
             PlayerBinding.Forward, PlayerBinding.Backward, PlayerBinding.Left, PlayerBinding.Right,
             PlayerBinding.Sprint, PlayerBinding.Crouch, PlayerBinding.Jump,
-            PlayerBinding.Dig, PlayerBinding.CycleMode, PlayerBinding.Grab, PlayerBinding.Interact, PlayerBinding.Inventory, PlayerBinding.Pause
+            PlayerBinding.Dig, PlayerBinding.Grab, PlayerBinding.Interact, PlayerBinding.Inventory, PlayerBinding.Pause
         };
         private BindingCaptureState displayedState;
         public VisualElement First => mouseRows.First;
@@ -80,9 +80,7 @@ namespace SomethingDownThere
             for (int i = 0; i < bindings.Length; i++)
             {
                 bindings[i].text = settings.Display((PlayerBinding)i);
-                bool available = i != (int)PlayerBinding.CycleMode || player.ExperimentalExcavation;
-                GameMenuView.Show(bindings[i].parent, available);
-                bindings[i].SetEnabled(idle && available);
+                bindings[i].SetEnabled(idle);
                 bindings[i].EnableInClassList("binding-selected", !idle && i == (int)capture.Binding);
             }
             GameMenuView.Show(conflict, capture.State == BindingCaptureState.Conflict);

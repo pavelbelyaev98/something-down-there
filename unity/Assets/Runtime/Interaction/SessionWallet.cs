@@ -9,16 +9,12 @@ namespace SomethingDownThere
         public const decimal MaximumBalance = int.MaxValue;
         public int Balance { get; private set; }
         public int WholeCredits => Balance;
-        public int CreditFraction => 0;
         public long Revision { get; private set; }
 
-        public SessionWallet(int startingBalance = 0, int creditFraction = 0)
+        public SessionWallet(int startingBalance = 0)
         {
-            if (startingBalance < 0 || creditFraction < 0 || creditFraction > 99
-                || (startingBalance == int.MaxValue && creditFraction != 0))
-                throw new ArgumentOutOfRangeException(nameof(startingBalance));
-            // Retain purchasing power from the short-lived fractional save format.
-            Balance = startingBalance + (creditFraction > 0 ? 1 : 0);
+            if (startingBalance < 0) throw new ArgumentOutOfRangeException(nameof(startingBalance));
+            Balance = startingBalance;
         }
 
         public bool TryCredit(decimal amount)

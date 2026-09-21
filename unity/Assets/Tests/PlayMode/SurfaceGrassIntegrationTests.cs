@@ -14,6 +14,48 @@ namespace SomethingDownThere.Tests
     {
         [UnityTest]
         public IEnumerator GrassTracksLocalCutsRestorationResetAndReenableWithoutSaveState()
+            => TrackLifecycle(false);
+
+        [UnityTest]
+        public IEnumerator MeadowSpeciesTrackLocalCutsRestorationResetAndReenableWithoutSaveState()
+            => TrackLifecycle(true);
+
+        [UnityTest]
+        public IEnumerator NarrowOpeningBetweenOldSupportProbesClearsTheWholeCanopy()
+        {
+            var root = new GameObject("Canopy footprint fixture");
+            root.SetActive(false);
+            root.transform.position = new Vector3(100, 0, 100);
+            var soil = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            var terrain = root.AddComponent<TerrainVolume>();
+            terrain.Configure(new Vector3Int(64, 24, 64), .125f, 16, .4f, soil);
+            var grass = root.AddComponent<SurfaceGrassRenderer>();
+            var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var supported = typeof(SurfaceGrassRenderer).GetMethod("RootSupported", flags);
+            Vector3 canopyRoot = new Vector3(104, 2.994f, 104);
+            bool HasSupport() => (bool)supported.Invoke(grass, new object[] { canopyRoot, 1.2f });
+            try
+            {
+                root.SetActive(true); yield return null;
+                Assert.That(HasSupport(), Is.True);
+                var origin = canopyRoot + new Vector3(.45f, 2, .2f);
+                Assert.That(Physics.Raycast(origin, Vector3.down, out var hit, 3), Is.True);
+                Assert.That(terrain.TryDig(hit, .125f), Is.True);
+                // The root and all eight former perimeter probes still have soil.
+                Assert.That(terrain.IsSolid(canopyRoot - Vector3.up * .018f), Is.True);
+                for (int i = 0; i < 8; i++)
+                    Assert.That(terrain.IsSolid(canopyRoot - Vector3.up * .018f +
+                        Quaternion.Euler(0, i * 45, 0) * Vector3.forward * 1.2f), Is.True);
+                Assert.That(HasSupport(), Is.False, "Wide leaves must not remain over an opening between support probes.");
+                terrain.ResetExcavation();
+                Assert.That(HasSupport(), Is.True);
+                typeof(SurfaceGrassRenderer).GetField("surfaceRadius", flags).SetValue(grass, 1f);
+                Assert.That(HasSupport(), Is.False, "The whole canopy must fit inside the round opening.");
+            }
+            finally { Object.Destroy(root); Object.Destroy(soil); }
+        }
+
+        private IEnumerator TrackLifecycle(bool meadow)
         {
             var root = new GameObject("Grass validation fixture");
             root.SetActive(false);
@@ -28,6 +70,23 @@ namespace SomethingDownThere.Tests
             typeof(SurfaceGrassRenderer).GetField("cellsPerPatch", flags).SetValue(grass, 6);
             typeof(SurfaceGrassRenderer).GetField("material", flags).SetValue(grass,
                 AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Nature/MountainGrass.mat"));
+            if (meadow)
+            {
+                var flower = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BK/PureNature_Mountains/Prefabs/Plants/Carot1.prefab");
+                typeof(SurfaceGrassRenderer).GetField("detailLayers", flags).SetValue(grass, new[] {
+                    new SurfaceGrassRenderer.DetailLayer {
+                        mesh = prefab.GetComponentInChildren<MeshFilter>().sharedMesh,
+                        material = prefab.GetComponentInChildren<MeshRenderer>().sharedMaterial,
+                        cellsPerPatch = 6, coverage = .65f, patchiness = 0,
+                        meshScale = new Vector3(.35f, 1.8f, .35f), scaleRange = new Vector2(.95f, 1.35f)
+                    },
+                    new SurfaceGrassRenderer.DetailLayer {
+                        mesh = flower.GetComponentInChildren<MeshFilter>().sharedMesh,
+                        material = flower.GetComponentInChildren<MeshRenderer>().sharedMaterial,
+                        cellsPerPatch = 4, coverage = .3f, patchiness = 0, meshScale = Vector3.one * .65f
+                    }
+                });
+            }
             var cameraObject = new GameObject("Grass fixture camera");
             var camera = cameraObject.AddComponent<Camera>();
             camera.enabled = false;
@@ -36,24 +95,27 @@ namespace SomethingDownThere.Tests
                 root.SetActive(true);
                 yield return null;
                 yield return null;
-                Assert.That(grass.PatchCount, Is.EqualTo(16));
+                Assert.That(grass.PatchCount, Is.EqualTo(meadow ? 32 : 16));
                 int initial = grass.SupportedClumps;
                 ulong originalHash = grass.PlacementHash;
-                Assert.That(initial, Is.InRange(350, 550), "Wide vendor cards cover the surface at a lower root density.");
+                Assert.That(initial, Is.InRange(300, 650), "Wide vendor cards cover the surface at a lower root density.");
                 var patches = (System.Collections.IList)typeof(SurfaceGrassRenderer).GetField("patches", flags).GetValue(grass);
                 var supportedPatch = patches.Cast<object>().First(p => (int)p.GetType().GetField("NearCount").GetValue(p) > 0);
                 var matrices = (Matrix4x4[])supportedPatch.GetType().GetField("Near").GetValue(supportedPatch);
                 Vector3 supportedRoot = matrices[0].GetColumn(3);
-                foreach (object patch in patches)
+                foreach (object patch in patches.Cast<object>().Take(16))
                 {
                     int count = (int)patch.GetType().GetField("NearCount").GetValue(patch);
-                    Assert.That(count, Is.GreaterThan(10), "Every supported spatial patch must retain grass, including boundary patches.");
+                    Assert.That(count, Is.GreaterThan(meadow ? 5 : 10), "Every supported spatial patch must retain grass, including boundary patches.");
                 }
+                if (meadow)
+                    Assert.That(patches.Cast<object>().Skip(16).Sum(p => (int)p.GetType().GetField("NearCount").GetValue(p)),
+                        Is.GreaterThan(20), "The flower layer must have its own supported population.");
                 int colliderCount = root.GetComponentsInChildren<Collider>().Length;
                 Assert.That(Physics.Raycast(supportedRoot + Vector3.up * 2, Vector3.down, out var hit, 4), Is.True);
                 Assert.That(terrain.TryDig(hit, .5f), Is.True);
                 typeof(SurfaceGrassRenderer).GetMethod("LateUpdate", flags).Invoke(grass, null);
-                Assert.That(grass.LastRebuiltPatches, Is.InRange(1, 4), "Only the touched surface patches need soil checks.");
+                Assert.That(grass.LastRebuiltPatches, Is.InRange(1, meadow ? 8 : 4), "Only touched patches of each species need soil checks.");
                 yield return null;
                 yield return null;
                 Assert.That(grass.SupportedClumps, Is.LessThan(initial));

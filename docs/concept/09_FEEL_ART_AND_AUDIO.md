@@ -4,27 +4,25 @@
 
 Stylized painted low-poly: strong silhouettes, restrained texture detail, painted gradients,
 cohesive art direction across custom and licensed assets. Bright and readable, never realistic mud, never asset-store clutter.
-Surface daylight reads as high mountain daylight: a high sun, short shadows, vivid grass,
+Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid grass,
 warm soil and a blue sky with soft clouds. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
+The reservoir crust and freshly dug soil read as dry, rough ground: no mirror-like white
+glare or crystal sparkles. Preserve texture relief and contact shadows without a wet sheen.
+The whole round diggable surface is a meadow using approved pack plants: low grass,
+white/blue daisies, taller white/yellow/pink flowers and occasional ferns, with small clearings.
+Use pack turf instead of custom turf. Remove a whole vegetation clump if any visible part,
+including wind movement, overlaps a hole; leaves and flowers must never hang over an exposed cut.
+For the current playtest, compare custom soil on the left and pack soil on the right when
+looking from the workbench into the site, beneath the same meadow cap. Soil choice is not final.
 
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - **Objects read by silhouette**, because recognition is the core reward.
-- Purchased Pure Nature 2: Mountains builds the valley surroundings (tasks 063/064), matched
-  to the vendor demo: authored terrain with the vendor mud/gravel/grass layers and the demo's
-  23-prototype grass and flower detail set, vendor cliffs, boulders, conifer forest, stream,
-  lake and falls, under the demo's sky/fog/ambient/post stack. The drained reservoir bed stays
-  tree-free; the forest line starts on the over-steep bank that contains the bowl. Rebuild with
-  the tool menu; keep gameplay functional during art work.
-- **Skyline rule:** the vendor peaks are authored in metres of finished mountain, not raw prefab
-  scale, and are sized against the valley rim so they always clear it by a wide margin. A small
-  site needs the horizon closed by mountains; peaks that merely peek over the tree line read as
-  pebbles and make the valley feel like a pit.
-- **Steep terrain rule:** Unity's terrain material projects planar UVs, so any face steep enough
-  to shed grass renders as a vertical smear. Steep ground is therefore either benched until
-  grass holds it or clothed with vendor cliffs — the generator finds the steep patches itself
-  rather than relying on hand-placed rock.
+- Pure Nature 2 supplies the meadow plants, ground textures and sky. Keep the surrounding yard
+  plain gravel with stores only; the valley composition and all scenery are retired.
+- Custom grass clump, cloud and sun art and the rejected first-person tool experiments are removed.
+  Preserve the full licensed pack for future use; tune project-owned copies.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.
  AI-assisted modeling with real references is allowed.
 

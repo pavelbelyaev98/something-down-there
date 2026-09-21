@@ -1,6 +1,0 @@
-Original Sunny Clouds artwork for Something Down There, 2026.
-Created for this project through Blender MCP; no third-party artwork is included.
-
-Permission is granted, free of charge, to use, copy, modify, redistribute,
-sublicense and sell this artwork and its source, including in commercial games.
-No attribution is required. Provided without warranty.

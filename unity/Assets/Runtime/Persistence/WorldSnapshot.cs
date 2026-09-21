@@ -18,43 +18,17 @@ namespace SomethingDownThere
         public FindSnapshot[] Finds;
         public ItemSnapshot[] Inventory;
         public int InventoryCapacity, Credits, ShovelLevel, SuccessfulStrokes;
-        public int CreditFraction;
-        public ExcavationMode DigMode;
         public int InventoryLevel = 1, FuelLevel = 1;
         public float BatteryCapacity, BatteryCharge, Pitch, VerticalSpeed;
         public float CrouchAmount;
         public Vector3 PlayerPosition;
         public Quaternion PlayerRotation;
 
-        // A shallower shipped layout of this site migrates to a deeper one: old samples
-        // keep their world position and the added depth starts as untouched soil, so
-        // existing holes, finds and progression survive a depth change. The loaded
-        // recovery source stays immutable.
-        public WorldSnapshot PrepareForTerrain(Vector3Int size, float cellSize, Vector3 position, Quaternion rotation)
+        public void ValidateTerrain(Vector3Int size, float cellSize, Vector3 position, Quaternion rotation)
         {
-            if (Terrain.Size == size && Terrain.CellSize == cellSize
-                && Vector3.Distance(TerrainPosition, position) < .001f && Quaternion.Angle(TerrainRotation, rotation) < .001f)
-                return this;
-            int added = size.y - Terrain.Size.y;
-            Require(SiteId == "main-site-v1" && Terrain.CellSize == .125f && cellSize == .125f
-                && size.x == Terrain.Size.x && size.z == Terrain.Size.z && added > 0
-                && Vector3.Distance(position, TerrainPosition - Vector3.up * (added * cellSize)) < .001f
-                && Quaternion.Angle(TerrainRotation, rotation) < .001f,
-                "This game version has a different excavation layout. The save has been kept.");
-            Terrain.Validate();
-            int width = size.x + 1;
-            var extended = new PagedDensity(width * (size.y + 1) * (size.z + 1));
-            for (int z = 0; z <= size.z; z++)
-            for (int y = 0; y <= size.y; y++)
-            for (int x = 0; x <= size.x; x++)
-                extended[x + width * (y + (size.y + 1) * z)] = y < added ? cellSize * 2
-                    : Terrain.Density[x + width * (y - added + (Terrain.Size.y + 1) * z)];
-            var result = (WorldSnapshot)MemberwiseClone();
-            result.Terrain = new GridSnapshot { Size = size, CellSize = cellSize, Density = extended.Capture(),
-                Revision = Terrain.Revision, LowestCarvedY = Terrain.LowestCarvedY + added, RemovedVolume = Terrain.RemovedVolume };
-            result.TerrainPosition = position;
-            result.TerrainRotation = rotation;
-            return result;
+            Require(Terrain.Size == size && Terrain.CellSize == cellSize
+                && Vector3.Distance(TerrainPosition, position) < .001f && Quaternion.Angle(TerrainRotation, rotation) < .001f,
+                "The saved excavation layout does not match this game. Start a new game.");
         }
 
         public void Validate()
@@ -68,8 +42,6 @@ namespace SomethingDownThere
             Require(Finite(CrouchAmount) && CrouchAmount >= 0f && CrouchAmount <= 1f, "Invalid saved crouch stance.");
             Require(InventoryCapacity > 0 && InventoryCapacity <= 256 && Credits >= 0 && ShovelLevel >= 1
                 && ShovelLevel <= 6 && SuccessfulStrokes >= 0, "Invalid progression.");
-            Require(CreditFraction >= 0 && CreditFraction <= 99 && (Credits < int.MaxValue || CreditFraction == 0), "Invalid credit fraction.");
-            Require(ExcavationModes.Valid(DigMode), "Invalid excavation mode.");
             Require(InventoryLevel >= 1 && InventoryLevel <= EquipmentProgression.LevelCount
                 && FuelLevel >= 1 && FuelLevel <= EquipmentProgression.LevelCount, "Invalid capacity upgrades.");
             Require(Finite(BatteryCapacity) && BatteryCapacity > 0 && Finite(BatteryCharge)

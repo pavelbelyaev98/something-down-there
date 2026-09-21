@@ -72,8 +72,6 @@ namespace SomethingDownThere
         private ShovelProfile[] adminTuning;
         private bool unlimitedBattery;
         private bool adminXray;
-        private bool experimentalExcavation;
-        private ExcavatorView experimentalTool;
         private bool jetpackReadyInAir;
 
         public FpsTuning Tuning => tuning;
@@ -116,8 +114,7 @@ namespace SomethingDownThere
         public static bool AdminBuild => Debug.isDebugBuild;
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
-        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || experimentalExcavation);
-        public bool ExperimentalExcavation => AdminAvailable && experimentalExcavation;
+        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray);
         public DiscoveryField Discoveries => discoveries;
         public bool AdminXray => AdminAvailable && adminXray && discoveries != null && discoveries.isActiveAndEnabled;
         public bool UnlimitedBattery => AdminAvailable && unlimitedBattery;
@@ -131,11 +128,8 @@ namespace SomethingDownThere
         public const float MaximumDigReach = 8f;
         public float DigReachAtLevel(int level) => Mathf.Min(MaximumDigReach, tuning.DigReach + ProfileAt(level).ReachBonus);
         public float EffectiveDigReach => DigReachAtLevel(EffectiveShovelLevel);
-        public ExcavationMode DigMode { get; private set; }
-        public float EffectiveDigInterval => ExperimentalExcavation
-            ? Mathf.Max(.08f, tuning.DigInterval * EffectiveShovel.CadenceMultiplier * ExcavationModes.Cadence(DigMode))
-            : tuning.DigInterval * EffectiveShovel.CadenceMultiplier;
-        public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy) * ExcavationModes.Energy(DigMode);
+        public float EffectiveDigInterval => tuning.DigInterval * EffectiveShovel.CadenceMultiplier;
+        public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy);
         public float DigPulse { get; private set; }
         public int SuccessfulStrokes { get; private set; }
         public float LastScoopVolume { get; private set; }
@@ -215,7 +209,6 @@ namespace SomethingDownThere
             snapshot.Inventory = new ItemSnapshot[Inventory.Count];
             for (int i = 0; i < Inventory.Count; i++) snapshot.Inventory[i] = ItemSnapshot.Capture(Inventory.Items[i]);
             snapshot.Credits = Wallet.WholeCredits;
-            snapshot.CreditFraction = Wallet.CreditFraction;
             snapshot.ShovelLevel = Shovel.Level;
             snapshot.BatteryCapacity = Battery.Capacity;
             snapshot.BatteryCharge = Battery.Charge;
@@ -225,8 +218,6 @@ namespace SomethingDownThere
             snapshot.VerticalSpeed = verticalSpeed;
             snapshot.CrouchAmount = CrouchAmount;
             snapshot.SuccessfulStrokes = SuccessfulStrokes;
-            // v6 remains readable, but an admin experiment is never owned progress.
-            snapshot.DigMode = ExcavationMode.Scoop;
         }
 
         public void Restore(WorldSnapshot snapshot)
@@ -246,7 +237,7 @@ namespace SomethingDownThere
             var battery = new Battery(snapshot.BatteryCapacity, snapshot.FuelLevel);
             battery.RestoreCharge(snapshot.BatteryCharge);
             Inventory = inventory;
-            Wallet = new SessionWallet(snapshot.Credits, snapshot.CreditFraction);
+            Wallet = new SessionWallet(snapshot.Credits);
             Shovel = shovel;
             Battery = battery;
             Trade = new StationTrade(Inventory, Wallet, Shovel, shovelUpgradeCosts, Battery);
@@ -260,7 +251,6 @@ namespace SomethingDownThere
             viewCamera.transform.localRotation = Quaternion.Euler(pitch, 0, 0);
             verticalSpeed = snapshot.VerticalSpeed;
             SuccessfulStrokes = snapshot.SuccessfulStrokes;
-            ClearExperimentalExcavation();
             ResetJetpackHold();
             digCooldown = pickupRecovery = DigPulse = LastScoopVolume = 0;
             blockedPickup = null;
@@ -384,11 +374,7 @@ namespace SomethingDownThere
                 TryGrabOrDrop();
                 return;
             }
-            if (ExperimentalExcavation && frame.CycleModePressed)
-            {
-                SelectDigMode((ExcavationMode)(((int)DigMode + 1) % ExcavationModes.Count));
-                return;
-            }
+
             if (HeldFind != null)
             {
                 if (frame.ThrowPressed) TryThrow();
@@ -563,8 +549,7 @@ namespace SomethingDownThere
             }
             float cost = EffectiveDigEnergy;
             if (!UnlimitedBattery && !Battery.CanSpend(cost)) { ShowFeedback("Not enough charge to dig - return to recharge"); return false; }
-            bool accepted = target is TerrainVolume terrain ? terrain.TryDig(hit, EffectiveShovel.Radius, DigMode,
-                viewCamera.transform.forward, viewCamera.transform.right) : target.TryDig(hit);
+            bool accepted = target is TerrainVolume terrain ? terrain.TryDig(hit, EffectiveShovel.Radius) : target.TryDig(hit);
             if (!accepted) return false;
             SpendEnergy(cost);
             SuccessfulStrokes++;
@@ -573,44 +558,6 @@ namespace SomethingDownThere
             RefreshTargetPrompt();
             TryAutomaticRescue();
             return true;
-        }
-
-        public bool SelectDigMode(ExcavationMode mode)
-        {
-            if (!ExperimentalExcavation || !GameplayActive || !ExcavationModes.Valid(mode) || DigMode == mode) return false;
-            DigMode = mode;
-            input?.SuppressHeldActions();
-            blockedPickup = null;
-            ShowFeedback(ExcavationModes.Name(mode) + "  |  " + ExcavationModes.Purpose(mode));
-            return true;
-        }
-
-        public void ToggleAdminExperimentalExcavation() => SetAdminExperimentalExcavation(!ExperimentalExcavation);
-
-        public bool SetAdminExperimentalExcavation(bool value)
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)
-                || (Persistence != null && Persistence.BlocksPlay) || experimentalExcavation == value) return false;
-            if (value)
-            {
-                experimentalTool = ExcavatorView.AttachExperiment(this);
-                if (experimentalTool == null) { ShowFeedback("The experimental tool is unavailable."); return false; }
-                experimentalExcavation = true;
-                DigMode = ExcavationMode.Shave;
-            }
-            else ClearExperimentalExcavation();
-            input?.SuppressHeldActions(); blockedPickup = null;
-            ShowFeedback(value ? "Experimental excavation: Shave" : "Normal digging restored");
-            MenuChanged?.Invoke();
-            return true;
-        }
-
-        private void ClearExperimentalExcavation()
-        {
-            experimentalExcavation = false; DigMode = ExcavationMode.Scoop;
-            if (experimentalTool != null) experimentalTool.ReleaseExperiment();
-            experimentalTool = null;
-            input?.SuppressHeldActions(); blockedPickup = null;
         }
 
         public bool TryGrabOrDrop()
@@ -634,7 +581,6 @@ namespace SomethingDownThere
         public void RestoreAdminOverrides()
         {
             if (!focused || !AdminAvailable) return;
-            ClearExperimentalExcavation();
             adminLevel = 0;
             unlimitedBattery = false;
             adminXray = false;

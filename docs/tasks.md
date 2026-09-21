@@ -2,8 +2,8 @@
 
 ## Status
 
-- **Active Task:** None — `064` rebuilt the surroundings as a mountain-ringed valley; next pending is `001`.
-- **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; simple site, working menus and gameplay)
+- **Active Task:** `001` — next pending; task `067` complete.
+- **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; round meadow, gravel apron/stores, noon light; current-format saves only)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
 ---
@@ -15,6 +15,9 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`067` — Round Site & Retired Content:** round meadow, permanent gravel apron/stores, overhead sun, full canopy clearing and removal of obsolete art/tools. (`docs/tasks/completed/067-round-site-and-retired-content.md`)
+- [x] **`066` — Meadow & Soil Comparison:** pack grass/flowers across excavation with custom versus pack soil beneath a shared meadow cap. (`docs/tasks/completed/066-meadow-and-soil-comparison.md`)
+- [x] **`065` — Matte Excavation Ground:** corrected vendor mask decoding and removed the glossy glare from the reservoir crust and excavated soil. (`docs/tasks/completed/065-matte-excavation-ground.md`)
 - [x] **`064` — Demo-Matched Valley & Natural Boundary:** reshaped the surroundings into a radial alpine bowl ringed by two rings of vendor peaks, with demo grass/flower detail, a slope-driven cliff pass, stream, lake and notched waterfall; the invisible perimeter is gone and containment is terrain steepness. (`docs/tasks/completed/064-demo-matched-valley-and-natural-boundary.md`)
 - [x] **`063` — Drained Reservoir Environment:** authored the reservoir surroundings from the approved pack — sediment dig ground, grassy camp terrace, rocky forested banks, basin and distant peaks; arena panels hidden, boundaries unchanged. (`docs/tasks/completed/063-drained-reservoir-environment.md`)
 - [x] **`062` — Restore Simple Site:** restored the pre-environment gameplay scene and removed generated/copied surroundings; the user will design the environment manually. (`docs/tasks/completed/062-restore-simple-site.md`)
@@ -35,7 +38,7 @@
 
 ### Phase 1: Machine Upgrades & Surface Shop
 
-- [ ] **`001` — Build the Evolving Motorized Tool Rig & 4-Tier Progression** (NEW) (`docs/concept/04_TOOL_AND_MOVEMENT.md`, `06_PROGRESSION_AND_ECONOMY.md`): The normal game currently has no visible tool (only the admin-only experiment). Build the improvised motor-assisted first-person machine with bolt-on attachments, and refactor `ShovelState`/`EquipmentProgression` from 6 levels to 4 transformative tiers (bite volume, speed, cutting power).
+- [ ] **`001` — Build the Evolving Motorized Tool Rig & 4-Tier Progression** (NEW) (`docs/concept/04_TOOL_AND_MOVEMENT.md`, `06_PROGRESSION_AND_ECONOMY.md`): The current playtest has no visible tool; the old rig and experiments are deleted. Any future visual machine needs a fresh design. Build the improvised motor-assisted first-person machine with bolt-on attachments, and refactor `ShovelState`/`EquipmentProgression` from 6 levels to 4 transformative tiers (bite volume, speed, cutting power).
 - [ ] **`002` — Upgrade the Sell Station into a Janky Sell-All Machine & Add the Salvage Winch** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): Upgrade the existing `SellStation` (which already supports Sell All) into a physical hopper with a lever, grinding audio, digital readout, and add the new surface winch that hauls unburied oversized set pieces up the shaft (dynamically carving dirt bottlenecks).
 - [x] **`003` — One-Click Workbench & Sell Machine Table** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): fixed-size parts-board table — upgrades and services in separate columns (upgrades wider), rows are decoration and only the price/payout button is clickable and one click buys; no confirm step, no icons, no resizing.
 - [ ] **`004` — Upgrade `SurfaceRecharge` into a Dedicated Yard Fuel Dispenser** (`docs/concept/06_PROGRESSION_AND_ECONOMY.md`, `07_SURFACE_HUB_AND_DISPLAY.md`): Refill logic already exists (`UpgradeStation`/`StationTrade`). Build a dedicated surface dispenser with transparent full/partial refill pricing, whole-dollar `$`, and preserving current fuel when tank capacity upgrades.
@@ -110,6 +113,11 @@
 ---
 
 ## Completed
+- **[067] Round Site & Retired Content:** replaced valley scenery with a round meadow and permanent gravel apron/stores, moved sunlight overhead, and clear entire plant canopies above cuts. Deleted retired art/rig/experiments and all older-save compatibility; 215 EditMode checks and affected gameplay/save regressions passed, visual review completed and Windows player rebuilt.
+
+- **[066] Meadow & Soil Comparison:** replaced active custom turf with pack meadow and eleven instanced grass/flower/fern layers that follow excavation, with corrected project-owned texture imports and a world-anchored custom/pack soil split. Visually verified the meadow and crossing cuts, passed 235 scene/grass/lighting checks, and rebuilt the Windows player.
+
+- **[065] Matte Excavation Ground:** fixed BK metallic/occlusion/smoothness masks being read as RGB roughness, preserved original camp mask support, and capped ground smoothness for dry surface/cut-wall shading. Visually verified fresh excavation, passed 231 EditMode and 2 lighting PlayMode checks, and rebuilt the Windows player.
 
 - **[063] Drained Reservoir Environment:** authored four terrain tiles (inner edges at ±16 m) with vendor mud/gravel/grass layers, a sediment dig material, a grassy south camp terrace, rocky forested banks and distant peaks; hidden arena panels with unchanged boundary colliders, raised outdoor ambient for rock relief and camera far clip 600 m. EditMode 231/231 and PlayMode 191/191 passed (three timing flakes passed on isolated rerun); Windows player rebuilt. No dam/tent/crate/stump assets exist, so those stay out by user decision.
 

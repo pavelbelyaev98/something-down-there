@@ -7,14 +7,14 @@ using UnityEngine.InputSystem;
 
 namespace SomethingDownThere
 {
-    public enum PlayerBinding { Forward, Backward, Left, Right, Dig, Jump, Crouch, Interact, Inventory, Pause, Sprint, Grab, CycleMode }
+    public enum PlayerBinding { Forward, Backward, Left, Right, Dig, Jump, Crouch, Interact, Inventory, Pause, Sprint, Grab }
 
     public sealed class InputPreferences
     {
-        public const int BindingCount = 13;
-        private static readonly string[] ids = { "forward", "backward", "left", "right", "dig", "jump", "crouch", "interact", "inventory", "pause", "sprint", "grab", "cycleMode" };
-        private static readonly string[] labels = { "Move forward", "Move backward", "Move left", "Move right", "Dig / collect / throw", "Jump / jetpack", "Hold to crouch", "Interact", "Inventory", "Pause", "Hold to sprint", "Lift / drop find", "Experimental: next cut" };
-        private static readonly string[] defaults = { "<Keyboard>/w", "<Keyboard>/s", "<Keyboard>/a", "<Keyboard>/d", "<Mouse>/leftButton", "<Keyboard>/space", "<Keyboard>/leftCtrl", "<Keyboard>/e", "<Keyboard>/tab", "<Keyboard>/escape", "<Keyboard>/leftShift", "<Mouse>/rightButton", "<Keyboard>/q" };
+        public const int BindingCount = 12;
+        private static readonly string[] ids = { "forward", "backward", "left", "right", "dig", "jump", "crouch", "interact", "inventory", "pause", "sprint", "grab" };
+        private static readonly string[] labels = { "Move forward", "Move backward", "Move left", "Move right", "Dig / collect / throw", "Jump / jetpack", "Hold to crouch", "Interact", "Inventory", "Pause", "Hold to sprint", "Lift / drop find" };
+        private static readonly string[] defaults = { "<Keyboard>/w", "<Keyboard>/s", "<Keyboard>/a", "<Keyboard>/d", "<Mouse>/leftButton", "<Keyboard>/space", "<Keyboard>/leftCtrl", "<Keyboard>/e", "<Keyboard>/tab", "<Keyboard>/escape", "<Keyboard>/leftShift", "<Mouse>/rightButton" };
         private static readonly Dictionary<string, string> supportedPaths = CreatePaths();
         private readonly IDevicePreferencesStore store;
         private string[] paths = (string[])defaults.Clone();
@@ -59,9 +59,6 @@ namespace SomethingDownThere
             if ((int)binding < 0 || (int)binding >= BindingCount || !TryNormalize(path, out path)) return false;
             for (int i = 0; i < paths.Length; i++)
                 if (i != (int)binding && paths[i] == path) conflict = i;
-            // A hidden experimental action must never reserve an ordinary key.
-            // It yields by swapping to the normal action's previous binding.
-            if (conflict == (int)PlayerBinding.CycleMode) conflict = -1;
             return true;
         }
 
@@ -69,8 +66,6 @@ namespace SomethingDownThere
         {
             if (!TryNormalize(path, out path) || !CanBind(binding, path, out int conflict) || (conflict >= 0 && !replace)) return false;
             if (paths[(int)binding] == path) return true;
-            if (binding != PlayerBinding.CycleMode && paths[(int)PlayerBinding.CycleMode] == path)
-                paths[(int)PlayerBinding.CycleMode] = paths[(int)binding];
             if (conflict >= 0) paths[conflict] = paths[(int)binding];
             paths[(int)binding] = path;
             Dirty();
@@ -149,15 +144,7 @@ namespace SomethingDownThere
                         if (used.Add(available)) { candidate[i] = available; break; }
                     continue;
                 }
-                if (i == (int)PlayerBinding.CycleMode && !fields.ContainsKey(ids[i]))
-                {
-                    foreach (string key in new[] { "q", "f", "g", "c", "v", "b", "n", "m", "p", "r", "t", "y", "u", "i" })
-                    {
-                        string available = "<Keyboard>/" + key;
-                        if (used.Add(available)) { candidate[i] = available; break; }
-                    }
-                    continue;
-                }
+
                 if (!fields.TryGetValue(ids[i], out string path) || !TryNormalize(path, out candidate[i])
                     || !used.Add(candidate[i])) return;
             }

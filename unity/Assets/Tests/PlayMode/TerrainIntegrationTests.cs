@@ -63,49 +63,41 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void SelectedExcavationModesChargeOnceMatchCollisionAndRejectStaleHits()
+        public void ScoopsChargeOnceMatchCollisionAndRejectStaleHits()
         {
             player.enabled = true;
-            Assert.That(player.SetAdminExperimentalExcavation(true), Is.True);
-            foreach (ExcavationMode mode in System.Enum.GetValues(typeof(ExcavationMode)))
+            for (int stroke = 0; stroke < 4; stroke++)
             {
-                player.SelectDigMode(mode);
-                player.ViewCamera.transform.position = new Vector3(-7 + (int)mode * 4, 1.5f, -7);
+                player.ViewCamera.transform.position = new Vector3(-7 + stroke * 4, 1.5f, -7);
                 player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
                 Physics.SyncTransforms();
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var before), Is.True);
                 float charge = player.Battery.Charge;
                 int revision = terrain.Revision;
-                Assert.That(player.TryDig(), Is.True, mode.ToString());
+                Assert.That(player.TryDig(), Is.True, "Stroke " + stroke);
                 Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
                 Assert.That(terrain.Revision, Is.EqualTo(revision + 1));
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var after), Is.True);
                 Assert.That(after.point.y, Is.LessThan(before.point.y - .05f));
-                Assert.That(terrain.TryDig(before, player.EffectiveShovel.Radius, mode, Vector3.down, Vector3.right), Is.False);
+                Assert.That(terrain.TryDig(before, player.EffectiveShovel.Radius), Is.False);
                 Assert.That(terrain.Revision, Is.EqualTo(revision + 1));
             }
-            var selected = player.DigMode;
             player.OpenMenu(PlayerMenu.Pause);
             float pausedCharge = player.Battery.Charge;
-            Assert.That(player.SelectDigMode(ExcavationMode.Bore), Is.False);
             Assert.That(player.TryDig(), Is.False);
-            Assert.That(player.DigMode, Is.EqualTo(selected));
             Assert.That(player.Battery.Charge, Is.EqualTo(pausedCharge));
             player.enabled = false;
         }
 
         [UnityTest]
-        public IEnumerator SwitchingShapesCannotBypassACutCooldownOrSpendFuel()
+        public IEnumerator RepeatedPrimaryActionsCannotBypassACutCooldownOrSpendFuel()
         {
             player.enabled = true;
-            Assert.That(player.SetAdminExperimentalExcavation(true), Is.True);
-            player.SelectDigMode(ExcavationMode.Scoop);
             player.ViewCamera.transform.position = new Vector3(0, 1.5f, -7);
             player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
             Physics.SyncTransforms();
             Assert.That(player.TryPrimaryAction(), Is.True);
             float charge = player.Battery.Charge; int strokes = player.SuccessfulStrokes;
-            Assert.That(player.SelectDigMode(ExcavationMode.Shave), Is.True);
             Assert.That(player.TryPrimaryAction(), Is.False);
             Assert.That(player.Battery.Charge, Is.EqualTo(charge));
             Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
@@ -183,7 +175,7 @@ namespace SomethingDownThere.Tests
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
                 Assert.That(chunk.name.Split(',')[1], Is.EqualTo(surfaceLayer), "Only the surface layer is materialized.");
             Assert.That(terrain.Revision, Is.Zero);
-            foreach (Vector3 origin in new[] { new Vector3(-10, 2, -10), new Vector3(0, 2, 0), new Vector3(10, 2, 10) })
+            foreach (Vector3 origin in new[] { new Vector3(-7, 2, -7), new Vector3(0, 2, 0), new Vector3(7, 2, 7) })
             {
                 RaycastHit hit = Hit(origin, Vector3.down);
                 Assert.That(hit.collider.GetComponentInParent<TerrainVolume>(), Is.EqualTo(terrain));
@@ -752,7 +744,7 @@ namespace SomethingDownThere.Tests
             {
                 var bounds = root.Find("Bedrock/" + side).GetComponent<Collider>().bounds;
                 Assert.That(bounds.min.y, Is.EqualTo(-SiteLayout.Extent.y).Within(.001f));
-                Assert.That(bounds.max.y, Is.EqualTo(-1).Within(.001f));
+                Assert.That(bounds.max.y, Is.EqualTo(SiteLayout.ApronBottom).Within(.001f));
             }
             var timer = System.Diagnostics.Stopwatch.StartNew();
             var snapshot = terrain.Capture(); timer.Stop();

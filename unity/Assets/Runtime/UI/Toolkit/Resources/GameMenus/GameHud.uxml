@@ -19,16 +19,6 @@
         <ui:Label name="Reticle" text="+" class="hud-reticle" />
         <ui:Label name="Target" class="hud-target" />
         <ui:Label name="Feedback" class="hud-feedback" />
-        <ui:VisualElement name="excavationModes" class="hud-modes hidden" picking-mode="Ignore">
-            <ui:Label name="modeBinding" class="hud-mode-binding" />
-            <ui:VisualElement class="hud-mode-row">
-                <ui:Label name="modeScoop" text="SCOOP" class="hud-mode" />
-                <ui:Label name="modeBore" text="BORE" class="hud-mode" />
-                <ui:Label name="modeFan" text="FAN" class="hud-mode" />
-                <ui:Label name="modeShave" text="SHAVE" class="hud-mode" />
-            </ui:VisualElement>
-            <ui:Label name="modePurpose" class="hud-mode-purpose" />
-        </ui:VisualElement>
         <ui:VisualElement class="hud-fuel-warning-anchor" picking-mode="Ignore">
             <ui:Label name="Fuel warning" class="hud-fuel-warning hidden" picking-mode="Ignore" />
         </ui:VisualElement>

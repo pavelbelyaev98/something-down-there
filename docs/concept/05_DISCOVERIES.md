@@ -38,8 +38,8 @@ The **top metre belongs to plain rocks** — the junk you meet while the starter
 and the ore ladder starts just beneath it: coal first, then the rest in order. Rocks stay full size
 and form a dense layer just beneath the turf, so the first shallow scrapes reveal several nearby
 pieces. Placement clearance follows the actual rock geometry; empty bounding-box corners must not
-force finds deeper or farther apart than necessary. Retired junk types stay in the catalog as
-zero-count entries so old saves resolve them and new games never spawn them.
+force finds deeper or farther apart than necessary. Retired junk assets, catalog entries and save aliases are removed. The current prototype supports
+new-format saves only; older save formats and previous site layouts are not migrated.
 
 ### The exposure rule (deliberate reveal for all finds)
 - **Deliberate exposure applies to all finds, including common rubbish:** No instant vacuum auto-collect through solid dirt (the *Meltopia* anti-pattern). Every object must be dug around and exposed to a defined threshold (typically 50–60% voxel exposure) before it can be collected. The player must always see what they earned.

@@ -176,13 +176,10 @@ namespace SomethingDownThere
         public bool TryDig(RaycastHit hit) => TryDig(hit, digRadius);
 
         public bool TryDig(RaycastHit hit, float radius)
-            => TryDig(hit, radius, ExcavationMode.Scoop, Vector3.zero, Vector3.zero);
-
-        public bool TryDig(RaycastHit hit, float radius, ExcavationMode mode, Vector3 aim, Vector3 right)
         {
             LastRebuiltChunkCount = 0;
             LastDigMilliseconds = 0;
-            if (!CanDig || !ExcavationModes.Valid(mode) || hit.collider == null || !hit.collider.enabled || hit.collider.transform.parent != chunkRoot)
+            if (!CanDig || hit.collider == null || !hit.collider.enabled || hit.collider.transform.parent != chunkRoot)
                 return false;
             if (!ExcavationGrid.Finite(radius) || radius < cellSize || radius > 4f) return false;
             Vector3 surface = transform.InverseTransformPoint(hit.point);
@@ -200,11 +197,9 @@ namespace SomethingDownThere
             depthHash = (depthHash >> 22) ^ depthHash;
             float depthOffset = ((depthHash >> 8) * (1f / 16777216f) * 2 - 1) * scoopDepthVariation;
             Vector3 normal = transform.InverseTransformDirection(hit.normal).normalized;
-            if (mode == ExcavationMode.Bore && WorldSnapshot.Valid(aim) && aim.sqrMagnitude > .0001f)
-                normal = -transform.InverseTransformDirection(aim).normalized;
             Vector3 point = surface - normal * (radius * (0.12f + depthOffset));
             var timer = Stopwatch.StartNew();
-            if (!grid.RemoveCut(point, radius, normal, transform.InverseTransformDirection(right), mode,
+            if (!grid.RemoveScoop(point, radius, normal,
                 seed, scoopVariation, out BoundsInt changed)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
             // The grid expands this region to include any detached components, even

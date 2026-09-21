@@ -9,13 +9,11 @@ namespace SomethingDownThere.Tests
 {
     public sealed partial class FindPhysicsIntegrationTests
     {
-        [TestCase(ExcavationMode.Bore)] [TestCase(ExcavationMode.Fan)] [TestCase(ExcavationMode.Shave)]
-        public void AlternativePatternsUncoverAndCollectOneAimedIdentityForTheirActualFuelCost(ExcavationMode mode)
+        [Test]
+        public void ScoopUncoversAndCollectsOneAimedIdentityForItsActualFuelCost()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
-            player.enabled = true; Assert.That(player.SetAdminExperimentalExcavation(true), Is.True);
-            if (mode != player.DigMode) Assert.That(player.SelectDigMode(mode), Is.True);
             player.enabled = false;
             HalfCover(find); AimVisible(find);
             int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
@@ -24,21 +22,21 @@ namespace SomethingDownThere.Tests
                 AimVisible(find);
                 player.Tick(new FpsInputFrame { DigHeld = true }, 1f);
             }
-            Assert.That(find.Collected, Is.True, mode.ToString());
+            Assert.That(find.Collected, Is.True);
             Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
             Assert.That(player.Battery.Charge, Is.EqualTo(charge - (player.SuccessfulStrokes - strokes) * player.EffectiveDigEnergy).Within(.001f));
         }
 
         [Test]
-        public void WideFanRevealsAnOffAimFindWithoutCollectingOrBypassingAFullBag()
+        public void ScoopRevealsAnOffAimFindWithoutCollectingOrBypassingAFullBag()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
-            player.enabled = true; player.SetAdminExperimentalExcavation(true); player.SelectDigMode(ExcavationMode.Fan); player.enabled = false;
             HalfCover(find);
             player.ViewCamera.transform.position = find.transform.position + Vector3.up * 2f;
             player.ViewCamera.transform.rotation = Quaternion.LookRotation(
-                find.transform.position + Vector3.right * .9f - player.ViewCamera.transform.position, Vector3.forward);
+                find.transform.position + Vector3.right * (player.EffectiveShovel.Radius * .7f)
+                - player.ViewCamera.transform.position, Vector3.forward);
             Physics.SyncTransforms();
             Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
             Assert.That(hit.collider.GetComponentInParent<TerrainVolume>(), Is.SameAs(terrain));

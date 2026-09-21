@@ -14,8 +14,105 @@ namespace SomethingDownThere.Editor
         public const string Folder = "Assets/Content/GroundTextures/";
         public const string MaterialPath = Folder + "GardenGround.mat";
         public const string ShaderName = "Something Down There/Ground Triplanar";
+        public const string SedimentPath = "Assets/Content/Nature/ReservoirSediment.mat";
+        public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
 
-        [MenuItem("Tools/Something Down There/Configure Original Ground Textures")]
+        [MenuItem("Tools/Something Down There/Configure Meadow and Soil Comparison")]
+        public static void ConfigureMeadowComparison()
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (EditorApplication.isPlaying || scene.path != MainGameSceneBuilder.ScenePath)
+                throw new InvalidOperationException("Open MainGame outside Play Mode.");
+            var root = scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").transform;
+            ConfigureMeadowMaterials(root);
+            SurfaceGrassSetup.Configure();
+            EditorSceneManager.MarkSceneDirty(scene);
+            AssetDatabase.SaveAssets();
+        }
+
+        public static void ConfigureMeadowMaterials(Transform root)
+        {
+            var shader = Shader.Find(ShaderName);
+            if (shader == null || ShaderUtil.ShaderHasError(shader))
+                throw new InvalidOperationException("The ground shader must compile before integration.");
+            var terrain = root.GetComponentInChildren<TerrainVolume>();
+            var sediment = AssetDatabase.LoadAssetAtPath<Material>(SedimentPath);
+            if (sediment == null)
+            {
+                sediment = new Material(shader) { name = "ReservoirSediment" };
+                AssetDatabase.CreateAsset(sediment, SedimentPath);
+            }
+            Undo.RecordObject(sediment, "Configure meadow soil comparison");
+            sediment.shader = shader;
+            foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
+            {
+                sediment.SetTexture("_Soil" + channel, PackTexture("Mud01", channel));
+                string customPath = Folder + "Soil_" + channel + ".png";
+                ConfigureImport(customPath, channel);
+                sediment.SetTexture("_Comparison" + channel, AssetDatabase.LoadAssetAtPath<Texture2D>(customPath));
+            }
+            ConfigurePackTurf(sediment, terrain.SurfaceHeight);
+            sediment.SetFloat("_MaskLayout", 1);
+            sediment.SetFloat("_SoilTileMetres", 4.2f);
+            sediment.SetFloat("_NormalStrength", .45f);
+            sediment.SetFloat("_StoneNormalStrength", .55f);
+            sediment.SetFloat("_SoilComparison", 1);
+            sediment.SetFloat("_SoilSplitX", terrain.transform.TransformPoint(
+                new Vector3(terrain.Dimensions.x * terrain.CellSize * .5f, 0, 0)).x);
+            sediment.SetFloat("_ComparisonMaskLayout", 0);
+            sediment.SetFloat("_ComparisonTileMetres", 2);
+            sediment.SetFloat("_ComparisonNormalStrength", .55f);
+            sediment.SetFloat("_ComparisonStoneNormalStrength", .9f);
+            EditorUtility.SetDirty(sediment);
+
+            var camp = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            if (camp == null) throw new InvalidOperationException("Keep the existing camp material.");
+            Undo.RecordObject(camp, "Replace custom turf with pack meadow");
+            ConfigurePackTurf(camp, terrain.SurfaceHeight);
+            camp.SetFloat("_SoilComparison", 0);
+            EditorUtility.SetDirty(camp);
+            var settings = new SerializedObject(terrain);
+            settings.FindProperty("soilMaterial").objectReferenceValue = sediment;
+            var preview = settings.FindProperty("untouchedPreview").objectReferenceValue as GameObject;
+            if (preview == null) throw new InvalidOperationException("Keep the existing edit-mode preview.");
+            settings.ApplyModifiedProperties();
+            Assign(preview.GetComponent<Renderer>(), sediment);
+            foreach (string side in new[] { "North", "East", "West" })
+                Assign(root.Find("Surface/" + side + " rim")?.GetComponent<Renderer>(), sediment);
+            Assign(root.Find("Surface/South rim")?.GetComponent<Renderer>(), camp);
+            EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
+        }
+
+        private static void ConfigurePackTurf(Material material, float surfaceHeight)
+        {
+            foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
+                material.SetTexture("_Turf" + channel, PackTexture("Grass01", channel));
+            material.SetFloat("_TurfMaskLayout", 1);
+            material.SetFloat("_TileMetres", 10f);
+            material.SetFloat("_TurfNormalStrength", 1f);
+            material.SetFloat("_SurfaceHeight", surfaceHeight);
+            material.SetFloat("_TurfDepth", .035f);
+            material.SetFloat("_MaxSmoothness", .15f);
+            material.SetFloat("_MacroVariation", .06f);
+        }
+
+        private static Texture2D PackTexture(string surface, string channel)
+        {
+            string folder = PackTextureFolder.TrimEnd('/');
+            if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder("Assets/Content/Nature", "GroundTextures");
+            string suffix = channel == "Albedo" ? "a" : channel == "Normal" ? "n" : "m";
+            string file = surface + "_" + suffix + ".png";
+            string path = PackTextureFolder + file;
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null &&
+                !AssetDatabase.CopyAsset("Assets/BK/PureNature_Mountains/Textures/Surfaces/" + file, path))
+                throw new InvalidOperationException("Missing approved ground texture: " + file);
+            // Project copies allow close-range filtering and linear masks without
+            // modifying vendor imports shared by the demo and the valley terrain.
+            ConfigureImport(path, channel, true);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        [MenuItem("Tools/Something Down There/Configure Original Soil With Meadow")]
         public static void Configure()
         {
             Scene scene = SceneManager.GetActiveScene();
@@ -28,7 +125,7 @@ namespace SomethingDownThere.Editor
             if (shader == null || ShaderUtil.ShaderHasError(shader))
                 throw new InvalidOperationException("The ground shader must compile before integration.");
             // Validate the complete batch before changing any existing references.
-            foreach (string kind in new[] { "Soil", "Turf" })
+            foreach (string kind in new[] { "Soil" })
             foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                 if (AssetImporter.GetAtPath(Folder + kind + "_" + channel + ".png") is not TextureImporter)
                     throw new InvalidOperationException("Missing Blender ground export: " + kind + "_" + channel);
@@ -41,18 +138,20 @@ namespace SomethingDownThere.Editor
             }
             Undo.RecordObject(material, "Configure original ground textures");
             material.shader = shader;
-            foreach (string kind in new[] { "Soil", "Turf" })
+            foreach (string kind in new[] { "Soil" })
             foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
             {
                 string path = Folder + kind + "_" + channel + ".png";
                 ConfigureImport(path, channel);
                 material.SetTexture("_" + kind + channel, AssetDatabase.LoadAssetAtPath<Texture2D>(path));
             }
-            material.SetFloat("_TileMetres", 1.25f);
+            ConfigurePackTurf(material, terrain.SurfaceHeight);
+            material.SetFloat("_SoilComparison", 0);
+            material.SetFloat("_MaskLayout", 0f); // Original: roughness R, contact G, stone coverage B.
+            material.SetFloat("_MaxSmoothness", .15f);
             material.SetFloat("_SoilTileMetres", 2f);
             material.SetFloat("_NormalStrength", 0.55f);
             material.SetFloat("_StoneNormalStrength", 0.9f);
-            material.SetFloat("_TurfNormalStrength", 0.4f);
             material.SetFloat("_SurfaceHeight", terrain.SurfaceHeight);
             material.SetFloat("_TurfDepth", 0.035f);
             material.SetFloat("_MacroVariation", 0.06f);
@@ -64,7 +163,7 @@ namespace SomethingDownThere.Editor
             settings.ApplyModifiedProperties();
             Assign(preview.GetComponent<Renderer>(), material);
             foreach (string side in new[] { "North", "South", "East", "West" })
-                Assign(root.Find("Surface/" + side + " rim").GetComponent<Renderer>(), material);
+                Assign(root.Find("Surface/" + side + " rim")?.GetComponent<Renderer>(), material);
             ConfigureLighting(root);
             if (terrain.GetComponent<ExcavationDaylight>() == null)
                 Undo.AddComponent<ExcavationDaylight>(terrain.gameObject);
@@ -138,17 +237,19 @@ namespace SomethingDownThere.Editor
 
         private static void Assign(Renderer renderer, Material material)
         {
+            if (renderer == null) return;
             Undo.RecordObject(renderer, "Assign original ground surface");
             renderer.sharedMaterial = material;
             EditorUtility.SetDirty(renderer);
         }
 
-        private static void ConfigureImport(string path, string channel)
+        private static void ConfigureImport(string path, string channel, bool packedMask = false)
         {
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
             importer.textureType = channel == "Normal" ? TextureImporterType.NormalMap : TextureImporterType.Default;
             importer.sRGBTexture = channel == "Albedo";
-            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.alphaSource = packedMask && channel == "Roughness"
+                ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
             importer.wrapMode = TextureWrapMode.Repeat;
             importer.filterMode = FilterMode.Trilinear;
             importer.mipmapEnabled = true;

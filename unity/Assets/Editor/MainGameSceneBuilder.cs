@@ -56,14 +56,13 @@ namespace SomethingDownThere.Editor
             Transform bedrock = Group("Bedrock", root);
             float depth = SiteLayout.Extent.y;
             Boundary("Floor", bedrock, new Vector3(0, -depth - 0.5f, 0), new Vector3(26, 1, 26), rock);
-            // Meet the rim underside at y=-1. Overlapping vertical faces flicker after digging.
-            float wallCentre = (-depth - 1f) * 0.5f, wallHeight = depth - 1f;
+            // Meet the permanent apron underside without overlapping visible faces.
+            float wallCentre = (-depth + SiteLayout.ApronBottom) * 0.5f, wallHeight = depth + SiteLayout.ApronBottom;
             Boundary("West", bedrock, new Vector3(-12.5f, wallCentre, 0), new Vector3(1, wallHeight, 24), rock);
             Boundary("East", bedrock, new Vector3(12.5f, wallCentre, 0), new Vector3(1, wallHeight, 24), rock);
             Boundary("North", bedrock, new Vector3(0, wallCentre, 12.5f), new Vector3(26, wallHeight, 1), rock);
             Boundary("South", bedrock, new Vector3(0, wallCentre, -12.5f), new Vector3(26, wallHeight, 1), rock);
-            // No invisible perimeter: the natural valley wall built by
-            // ReservoirEnvironmentSetup encloses the worksite.
+            // RoundSiteSetup replaces the temporary rectangular construction rims.
 
             var terrainRoot = new GameObject("Excavation");
             terrainRoot.SetActive(false);
@@ -93,7 +92,7 @@ namespace SomethingDownThere.Editor
             ConfigureDiscoveryContent();
             GroundTextureSetup.Configure();
             SurfaceGrassSetup.Configure();
-            SunPresentationSetup.Configure();
+            RoundSiteSetup.Configure();
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
             Debug.Log("Main game scene created with untouched terrain and permanent boundaries.");
@@ -127,8 +126,8 @@ namespace SomethingDownThere.Editor
             foreach (string side in new[] { "West", "East", "North", "South" })
             {
                 var wall = root.Find("Bedrock/" + side);
-                var position = wall.position; position.y = (-SiteLayout.Extent.y - 1f) * 0.5f; wall.position = position;
-                var scale = wall.localScale; scale.y = SiteLayout.Extent.y - 1f; wall.localScale = scale;
+                var position = wall.position; position.y = (-SiteLayout.Extent.y + SiteLayout.ApronBottom) * 0.5f; wall.position = position;
+                var scale = wall.localScale; scale.y = SiteLayout.Extent.y + SiteLayout.ApronBottom; wall.localScale = scale;
             }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -159,10 +158,10 @@ namespace SomethingDownThere.Editor
         }
 
         [MenuItem("Tools/Something Down There/Configure Discovery Content")]
-        public static void ConfigureDiscoveryContent() => StarterFindSetup.ConfigureScene();
+        public static void ConfigureDiscoveryContent() => DiscoveryContentSetup.ConfigureScene();
 
         [MenuItem("Tools/Something Down There/Configure Find Collection")]
-        public static void ConfigureFindCollection() => StarterFindSetup.Sync();
+        public static void ConfigureFindCollection() => DiscoveryContentSetup.Sync();
 
         private static void CreatePlayer(Transform parent)
         {

@@ -47,9 +47,3 @@
 .hud-root .hud-fuel-warning.critical { color: #ff625c; }
 .hud-marker { position: absolute; width: 34px; height: 34px; margin-left: -17px; margin-top: -17px; font-size: 23px; color: #4defe6; -unity-text-align: middle-center; }
 .hud-marker.collectible { color: #80ff7a; }
-.hud-modes { position: absolute; left: 24px; bottom: 24px; max-width: 42%; background-color: rgba(19, 25, 31, 0.92); border-radius: 4px; padding: 12px 14px; }
-.hud-mode-row { flex-direction: row; margin-top: 7px; margin-bottom: 7px; }
-.hud-root .hud-mode { padding: 5px 10px; margin-right: 4px; font-size: 16px; color: var(--muted); border-radius: 2px; }
-.hud-root .hud-mode.active { background-color: #efbf58; color: #192127; -unity-font-style: bold; text-shadow: 0 0 0 transparent; }
-.hud-mode-binding { font-size: 14px; color: var(--muted); }
-.hud-mode-purpose { font-size: 15px; white-space: normal; }

@@ -50,6 +50,9 @@ namespace SomethingDownThere.Tests
             player.SetApplicationFocus(true);
             if (player.IsMenuOpen) player.CloseMenu();
             yield return null;
+            // Entering Play Mode can deliver its native focus notification on this frame.
+            player.SetApplicationFocus(true);
+            if (player.IsMenuOpen) player.CloseMenu();
             Physics.SyncTransforms();
         }
 
@@ -63,7 +66,7 @@ namespace SomethingDownThere.Tests
             Cursor.visible = oldCursorVisible;
         }
 
-        [TestCase(11.45f, 2f)] [TestCase(3f, 10f)] [TestCase(19f, 20f)] [TestCase(11.45f, 16f)]
+        [TestCase(11.45f, 2f)] [TestCase(3f, 10f)] [TestCase(18f, 17f)] [TestCase(11.45f, 16f)]
         public void DefaultShovelRevealsMultipleShallowFindsInAnUninformedSmallPatch(float x, float z)
         {
             Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(ShovelProfile.Defaults()[0].Radius).Within(.00001f));
@@ -281,24 +284,33 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator StrongHeldWideScoopsLeaveAllVariantsUntilHovered() => ExerciseWideScoop(false);
+        public IEnumerator StrongHeldWideScoopsLeaveSmallFindsUntilHovered() => ExerciseWideScoop(false);
 
         [UnityTest]
-        public IEnumerator StrongRemappedToggleWideScoopsLeaveAllVariantsUntilHovered() => ExerciseWideScoop(true);
+        public IEnumerator StrongRemappedToggleWideScoopsLeaveSmallFindsUntilHovered() => ExerciseWideScoop(true);
 
         private IEnumerator ExerciseWideScoop(bool toggle)
         {
-            // Small-find coverage comes from the test-only retired-junk fixture: the shipped
-            // catalog is minerals only and they are all large finds.
-            TestInputPreferences.RestoreBottleCompatibilityFixture(field);
+            // Use current small coal finds at the known shallow fixture positions.
+            TestInputPreferences.RestoreSmallFindFixture(field);
             yield return null;
-            var variants = field.Finds.Where(f => f.Size == FindSize.Small)
-                .GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
-            Assert.That(variants.Length, Is.EqualTo(3), "The fixture supplies all three small-find variants.");
+            var variants = field.Finds.Where(f => f.Size == FindSize.Small).Take(3).ToArray();
+            Assert.That(variants.Length, Is.EqualTo(3), "The fixture supplies three separate current small finds.");
             player.SelectAdminLevel(6);
             player.InputSettings.SetToggleDig(toggle);
             if (toggle) player.InputSettings.Bind(PlayerBinding.Dig, "<Mouse>/rightButton", true);
             var primary = toggle ? mouse.rightButton : mouse.leftButton;
+            // Native Editor focus changes are outside this input fixture's scope.
+            // Resume with a fresh press, as the runtime correctly suppresses held input.
+            IEnumerator ResumeAfterEditorFocusChange()
+            {
+                player.SetApplicationFocus(true);
+                player.CloseMenu();
+                devices.Release(primary, queueEventOnly: true);
+                yield return null;
+                yield return null;
+                devices.Press(primary, queueEventOnly: true);
+            }
             int collected = 0;
             foreach (var find in variants)
             {
@@ -314,17 +326,18 @@ namespace SomethingDownThere.Tests
                 var physical = find.GetComponent<FindPhysics>();
                 int initialStrokes = player.SuccessfulStrokes;
                 bool releasedToggleButton = false;
-                devices.Press(primary, queueEventOnly: true);
+                yield return ResumeAfterEditorFocusChange();
                 // The weaker top tier cannot engulf a find from one fixed aim, so the
                 // held strokes walk around it; the centre ray still never lands on it.
                 var ring = new[] { Vector3.right, Vector3.forward, Vector3.left, Vector3.back };
                 int strokesLanded = 0;
-                float deadline = Time.time + 15;
-                while (!physical.Released && Time.time < deadline)
+                float deadline = Time.realtimeSinceStartup + 15;
+                while (!physical.Released && Time.realtimeSinceStartup < deadline)
                 {
-                    Assert.That(find.Collected, Is.False, "Being inside a large scoop never collects an off-aim bottle.");
+                    if (player.IsMenuOpen) yield return ResumeAfterEditorFocusChange();
+                    Assert.That(find.Collected, Is.False, "Being inside a large scoop never collects an off-aim find.");
                     Assert.That(player.TryGetTarget(3, out var hit) && hit.collider == find.GetComponent<MeshCollider>(), Is.False,
-                        "Keep the centre ray beside the bottle during the wide-scoop regression.");
+                        "Keep the centre ray beside the find during the wide-scoop regression.");
                     if (player.SuccessfulStrokes > initialStrokes + strokesLanded)
                     {
                         strokesLanded++;
@@ -340,10 +353,14 @@ namespace SomethingDownThere.Tests
                 LookAt(player.ViewCamera.transform.position + Vector3.up);
                 Assert.That(physical.Released, Is.True, "The strongest off-aim cuts should free " + find.SaveContentId
                     + $". Strokes={player.SuccessfulStrokes - initialStrokes}, exposure={find.Exposure:F2}, "
-                    + $"collectible={find.Collectible}, camera={player.ViewCamera.transform.position}");
-                yield return new WaitForSeconds(1.5f);
-                deadline = Time.time + 5;
-                while (physical.Body.linearVelocity.sqrMagnitude > .01f && Time.time < deadline) yield return null;
+                    + $"collectible={find.Collectible}, camera={player.ViewCamera.transform.position}, menu={player.Menu}, active={player.GameplayActive}, binding={player.InputSettings.Path(PlayerBinding.Dig)}, toggle={player.InputSettings.ToggleDig}");
+                yield return new WaitForSecondsRealtime(1.5f);
+                deadline = Time.realtimeSinceStartup + 5;
+                while (physical.Body.linearVelocity.sqrMagnitude > .01f && Time.realtimeSinceStartup < deadline)
+                {
+                    if (player.IsMenuOpen) yield return ResumeAfterEditorFocusChange();
+                    yield return null;
+                }
                 Assert.That(find.Collected, Is.False); Assert.That(find.GetComponent<MeshRenderer>().enabled, Is.True);
                 Assert.That(find.Collectible, Is.True);
                 // New shallow poses may meet soil after only a short drop. Release must
@@ -353,8 +370,9 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.Inventory.Count, Is.EqualTo(collected));
                 int revision = terrain.Revision; float charge = player.Battery.Charge;
                 PrepareDeviceView(find, closeToFind: true);
-                deadline = Time.time + .25f;
-                while (!find.Collected && Time.time < deadline) yield return null;
+                if (player.IsMenuOpen) yield return ResumeAfterEditorFocusChange();
+                deadline = Time.realtimeSinceStartup + .25f;
+                while (!find.Collected && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(find.Collected, Is.True, "Moving the same held/toggled aim onto resting loot should pick it up. " + PickupState(find));
                 Assert.That(player.Inventory.Count, Is.EqualTo(++collected));
                 Assert.That(terrain.Revision, Is.EqualTo(revision)); Assert.That(player.Battery.Charge, Is.EqualTo(charge));

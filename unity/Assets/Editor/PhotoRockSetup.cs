@@ -20,11 +20,11 @@ namespace SomethingDownThere.Editor
             public float core_minimum_depth_m, core_maximum_depth_m, core_share;
             public float model_scale;
             public float shallow_minimum_cover_m, shallow_maximum_cover_m;
-            public StarterFindSetup.SourceEntry[] appearances;
+            public DiscoveryContentSetup.SourceEntry[] appearances;
         }
 
         [MenuItem("Tools/Something Down There/Sync Rock Models")]
-        public static void Sync() => StarterFindSetup.Sync();
+        public static void Sync() => DiscoveryContentSetup.Sync();
 
         internal static void AppendToCatalog(List<DiscoveryCatalog.Entry> entries)
         {
@@ -58,7 +58,7 @@ namespace SomethingDownThere.Editor
                 appearance.throw_speed = source.throw_speed;
                 appearance.model_scale = source.model_scale;
                 appearance.tier = "common"; appearance.detector_eligible = false;
-                prefabs.Add(StarterFindSetup.ImportAppearance(appearance, Source, Folder, true, source.mass_kg));
+                prefabs.Add(DiscoveryContentSetup.ImportAppearance(appearance, Source, Folder, true, source.mass_kg));
             }
             entries.Add(new DiscoveryCatalog.Entry { ItemId = source.item_id, Prefab = prefabs[0],
                 AppearanceVariants = prefabs.Skip(1).ToArray(), Count = source.instances,

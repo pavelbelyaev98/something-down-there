@@ -2,6 +2,8 @@
 
 Unity is pinned to `6000.6.0f1` with URP `17.6.0`. Runtime work belongs in `Assets/`; generated evidence stays under ignored `Logs/`.
 
+Follow [AGENTS.md](../AGENTS.md) for dependency and purchase policy: proactively request useful assets/utilities, and install justified free libraries with compatible licenses and pinned versions. Before release, only current code/data formats are supported; remove legacy readers, migrations, aliases and superseded assets instead of maintaining backward compatibility. Older saves may require New Game; current-format integrity and recovery still matter.
+
 ## Official Unity CLI and Pipeline
 
 Use Unity's official CLI directly from the terminal with `com.unity.pipeline` for live editor work; no other server or bridge is configured.

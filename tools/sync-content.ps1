@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath $UnityEditor -PathType Leaf)) {
 New-Item -ItemType Directory -Path (Split-Path $log) -Force | Out-Null
 $arguments = @(
     '-batchmode', '-quit', '-projectPath', ('"' + $project + '"'),
-    '-executeMethod', 'SomethingDownThere.Editor.StarterFindSetup.SyncBatch',
+    '-executeMethod', 'SomethingDownThere.Editor.DiscoveryContentSetup.SyncBatch',
     '-logFile', ('"' + $log + '"')
 )
 

@@ -10,11 +10,10 @@ namespace SomethingDownThere
     public sealed class UnsupportedSaveException : IOException
     { public UnsupportedSaveException() : base("This save needs a different game version. Its files have been kept.") { } }
 
-    // Bounded, checksummed binary format. Version 1 remains a supported reader when
-    // later tasks add state; migrate explicitly instead of regenerating an old world.
+    // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 6;
+        public const int Version = 7;
         // The packed payload is a few MB even for a carved 100 m world; the unpacked
         // bound covers the 24 x 100 x 24 m density plus headroom for the planned 200 m
         // step. The sample bound is the real allocation guard while reading.
@@ -52,8 +51,6 @@ namespace SomethingDownThere
                 w.Write(s.CrouchAmount);
                 foreach (var find in s.Finds) w.Write(find.PhysicsReleased);
                 w.Write(s.InventoryLevel); w.Write(s.FuelLevel);
-                w.Write(s.CreditFraction);
-                w.Write((int)s.DigMode);
             }
             using var hash = SHA256.Create();
             byte[] payload = packed.ToArray();
@@ -74,7 +71,7 @@ namespace SomethingDownThere
             var magic = ReadExact(header, Magic.Length);
             for (int i = 0; i < magic.Length; i++) WorldSnapshot.Require(magic[i] == Magic[i], "Unrecognized save file.");
             int version = header.ReadInt32();
-            if (version < 1 || version > Version) throw new UnsupportedSaveException();
+            if (version != Version) throw new UnsupportedSaveException();
             int length = Count(header, MaximumPackedBytes);
             byte[] expected = ReadExact(header, 32), payload = ReadExact(header, length);
             WorldSnapshot.Require(source.ReadByte() == -1, "Unexpected data after checkpoint.");
@@ -105,15 +102,9 @@ namespace SomethingDownThere
             for (int i = 0; i < s.Inventory.Length; i++) s.Inventory[i] = ReadItem(r);
             int samples = Count(r, MaximumSamples);
             s.Terrain.Density = DensitySnapshot.Read(r, samples);
-            // Version 1 had no stance and always used the standing capsule.
-            s.CrouchAmount = version >= 2 ? r.ReadSingle() : 0f;
-            // Old finds were fixed; evaluate their attachment against the restored terrain.
-            if (version >= 3) foreach (var find in s.Finds) find.PhysicsReleased = r.ReadBoolean();
-            // Earlier saves retain their exact capacities and start the new tracks at level 1.
-            if (version >= 4) { s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32(); }
-            // Whole-credit saves gain a zero fraction, preserving their buying power.
-            if (version >= 5) s.CreditFraction = r.ReadInt32();
-            if (version >= 6) s.DigMode = (ExcavationMode)r.ReadInt32();
+            s.CrouchAmount = r.ReadSingle();
+            foreach (var find in s.Finds) find.PhysicsReleased = r.ReadBoolean();
+            s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32();
             WorldSnapshot.Require(zip.ReadByte() == -1, "Unexpected checkpoint fields.");
             s.Validate();
             return s;

@@ -55,12 +55,7 @@ namespace SomethingDownThere
                 }
             }
         }
-        [Serializable] public sealed class LegacyAlias
-        {
-            public string OldId, CurrentId;
-        }
         public Entry[] Entries = Array.Empty<Entry>();
-        public LegacyAlias[] LegacyAliases = Array.Empty<LegacyAlias>();
         public int TotalCount { get { int total = 0; foreach (var e in Entries) total += e.Count; return total; } }
         public int ShallowCount { get { int total = 0; foreach (var e in Entries) total += e.ShallowCount; return total; } }
 
@@ -105,35 +100,15 @@ namespace SomethingDownThere
                 }
             }
             if (TotalCount > DiscoveryField.MaximumPopulation || shallow < 1) throw new InvalidDataException("Starter allocation requires shallow finds and a supported total.");
-            var aliases = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var a in LegacyAliases)
-                if (a == null || string.IsNullOrWhiteSpace(a.OldId) || ids.Contains(a.OldId)
-                    || !aliases.Add(a.OldId) || !ids.Contains(a.CurrentId))
-                    throw new InvalidDataException("Invalid legacy discovery mapping.");
+
         }
 
-        public BuriedFind Resolve(string id, out bool legacy)
+        public BuriedFind Resolve(string id)
         {
-            legacy = false;
-            foreach (var alias in LegacyAliases)
-                if (alias.OldId == id) { id = alias.CurrentId; legacy = true; break; }
             foreach (var entry in Entries)
                 for (int i = 0; i < entry.AppearanceCount; i++)
                     if (entry.Appearance(i).SaveContentId == id) return entry.Appearance(i);
             throw new InvalidDataException("This save needs discovery content missing from this game version.");
-        }
-
-        // Content migration 1: legacy primitive GUIDs -> stable catalog keys.
-        // The binary v1/v2 readers are unchanged. Never mutate the decoded recovery record.
-        public FindSnapshot PrepareRestore(FindSnapshot saved)
-        {
-            var prefab = Resolve(saved.ContentId, out bool legacy);
-            return new FindSnapshot {
-                ContentId = prefab.SaveContentId, Position = saved.Position, Rotation = saved.Rotation,
-                Scale = legacy ? Vector3.one : saved.Scale, Collected = saved.Collected, PhysicsReleased = saved.PhysicsReleased,
-                Item = new ItemSnapshot { Id = saved.Item.Id, Value = saved.Item.Value,
-                    Name = legacy && !saved.Collected ? prefab.DisplayName : saved.Item.Name }
-            };
         }
 
         public DiscoveryPlacement[] Generate(Vector3 extent, int seed)

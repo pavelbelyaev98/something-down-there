@@ -13,7 +13,7 @@ collectathons and false "no cheating" detectors. None of that exists here.
 3. **Deterministic:** no RNG, no seeds, no luck-based unlocks.
 4. **Mode/assist independent:** auto-dig, toggle dig, muted audio and colorblind palettes never block
  an achievement.
-5. **Retroactive and durable:** discovery and progression records persist; loading an old save
+5. **Retroactive and durable:** discovery and progression records persist; loading a supported save
  re-grants anything already earned.
 6. **No false detectors:** the game never accuses the player of cheating.
 7. **No grinds:** nothing requires clearing every voxel or repeating unfun loops.

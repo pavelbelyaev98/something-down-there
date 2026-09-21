@@ -14,11 +14,6 @@ namespace SomethingDownThere
         private readonly Label fps;
         private int frameSamples;
         private float sampleSeconds;
-        private readonly VisualElement modeGroup;
-        private readonly Label modeBinding, modePurpose;
-        private readonly Label[] modeLabels = new Label[ExcavationModes.Count];
-        private ExcavationMode displayedMode = (ExcavationMode)(-1);
-        private int displayedBindings = -1;
         public VisualElement Root { get; }
 
         public GameHudView(VisualElement document, FpsPlayer player)
@@ -39,10 +34,6 @@ namespace SomethingDownThere
             batteryGroup = Root.Q("batteryGroup");
             batteryFill = Root.Q("Charge");
             xrayRoot = Root.Q("Admin X-ray");
-            modeGroup = Root.Q("excavationModes");
-            modeBinding = Root.Q<Label>("modeBinding");
-            modePurpose = Root.Q<Label>("modePurpose");
-            for (int i = 0; i < modeLabels.Length; i++) modeLabels[i] = Root.Q<Label>("mode" + (ExcavationMode)i);
             Root.Query<VisualElement>().ForEach(element => element.pickingMode = PickingMode.Ignore);
         }
 
@@ -73,14 +64,7 @@ namespace SomethingDownThere
             shovelStatus.EnableInClassList("hidden", !player.ExcavationAvailable);
             shovelStatus.text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m scoop"
                 + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.Depth:F1} m";
-            GameMenuView.Show(modeGroup, player.ExperimentalExcavation);
-            if (displayedMode != player.DigMode || displayedBindings != player.InputSettings.Revision)
-            {
-                displayedMode = player.DigMode; displayedBindings = player.InputSettings.Revision;
-                modeBinding.text = "EXPERIMENTAL  |  " + player.InputSettings.Display(PlayerBinding.CycleMode) + " / CHANGE CUT";
-                modePurpose.text = ExcavationModes.Purpose(displayedMode);
-                for (int i = 0; i < modeLabels.Length; i++) modeLabels[i].EnableInClassList("active", i == (int)displayedMode);
-            }
+
             adminHint.text = !player.AdminAvailable || !gameplay ? ""
                 : "DEVELOPER ADMIN"
                     + (player.HasAdminOverrides ? "  |  Overrides active" : "")

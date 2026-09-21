@@ -129,7 +129,7 @@ namespace SomethingDownThere
                 Exception validation = null;
                 try
                 {
-                    snapshot = snapshot.PrepareForTerrain(terrain.Dimensions, terrain.CellSize, terrain.transform.position, terrain.transform.rotation);
+                    snapshot.ValidateTerrain(terrain.Dimensions, terrain.CellSize, terrain.transform.position, terrain.transform.rotation);
                     discoveries.ValidateRestore(snapshot.Finds);
                 }
                 catch (Exception error) { validation = error; }

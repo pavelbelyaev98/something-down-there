@@ -4,10 +4,22 @@ Shader "Something Down There/Ground Triplanar"
     {
         _SoilAlbedo("Soil colour", 2D) = "white" {}
         [Normal] _SoilNormal("Soil normal", 2D) = "bump" {}
-        _SoilRoughness("Soil roughness (R), contact (G), stone coverage (B)", 2D) = "white" {}
+        _SoilRoughness("Soil mask (see mask layout)", 2D) = "white" {}
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
-        _TurfRoughness("Turf roughness (R), blade contact (G)", 2D) = "white" {}
+        _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
+        [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _MaskLayout("Mask layout", Float) = 0
+        [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _TurfMaskLayout("Turf mask layout", Float) = 0
+        [Toggle] _SoilComparison("Compare soil on the west half", Float) = 0
+        _SoilSplitX("Soil comparison split (world X)", Float) = 0
+        _ComparisonAlbedo("Comparison soil colour", 2D) = "white" {}
+        [Normal] _ComparisonNormal("Comparison soil normal", 2D) = "bump" {}
+        _ComparisonRoughness("Comparison soil mask", 2D) = "white" {}
+        [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _ComparisonMaskLayout("Comparison mask layout", Float) = 0
+        _ComparisonTileMetres("Comparison soil tile metres", Float) = 2
+        _ComparisonNormalStrength("Comparison soil relief", Range(0, 2)) = 0.55
+        _ComparisonStoneNormalStrength("Comparison stone relief", Range(0, 2)) = 0.9
+        _MaxSmoothness("Dry ground maximum smoothness", Range(0, 1)) = 0.15
         _TileMetres("Turf tile metres", Float) = 1
         _SoilTileMetres("Soil tile metres", Float) = 2
         _NormalStrength("Soil relief", Range(0, 2)) = 0.8
@@ -32,6 +44,15 @@ Shader "Something Down There/Ground Triplanar"
             float _SurfaceHeight;
             float _TurfDepth;
             float _MacroVariation;
+            float _MaskLayout;
+            float _TurfMaskLayout;
+            float _SoilComparison;
+            float _SoilSplitX;
+            float _ComparisonMaskLayout;
+            float _ComparisonTileMetres;
+            float _ComparisonNormalStrength;
+            float _ComparisonStoneNormalStrength;
+            float _MaxSmoothness;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -39,6 +60,9 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_TurfAlbedo); SAMPLER(sampler_TurfAlbedo);
         TEXTURE2D(_TurfNormal); SAMPLER(sampler_TurfNormal);
         TEXTURE2D(_TurfRoughness); SAMPLER(sampler_TurfRoughness);
+        TEXTURE2D(_ComparisonAlbedo); SAMPLER(sampler_ComparisonAlbedo);
+        TEXTURE2D(_ComparisonNormal); SAMPLER(sampler_ComparisonNormal);
+        TEXTURE2D(_ComparisonRoughness); SAMPLER(sampler_ComparisonRoughness);
         #include "../../Runtime/Terrain/ExcavationDaylight.hlsl"
 
         struct GroundAttributes
@@ -73,6 +97,31 @@ Shader "Something Down There/Ground Triplanar"
         // projection sign. Sign boundaries must not select an unrelated coarse mip.
         #define GROUND_SAMPLE(tex, uv, dx, dy) SAMPLE_TEXTURE2D_GRAD(tex, sampler##tex, uv, dx, dy)
 
+        half4 SampleGroundSoil(TEXTURE2D_PARAM(primaryTexture, primarySampler),
+            TEXTURE2D_PARAM(comparisonTexture, comparisonSampler),
+            float2 uv, float2 dx, float2 dy, bool useComparison)
+        {
+            // Gradients are derived from continuous world position before the
+            // split, so even a cut crossing it retains stable mip selection.
+            half4 sampled = half4(0, 0, 0, 0);
+            [branch] if (useComparison)
+                sampled = SAMPLE_TEXTURE2D_GRAD(comparisonTexture, comparisonSampler, uv, dx, dy);
+            else
+                sampled = SAMPLE_TEXTURE2D_GRAD(primaryTexture, primarySampler, uv, dx, dy);
+            return sampled;
+        }
+        #define SOIL_SAMPLE(channel, uv, dx, dy) SampleGroundSoil( \
+            TEXTURE2D_ARGS(_Soil##channel, sampler_Soil##channel), \
+            TEXTURE2D_ARGS(_Comparison##channel, sampler_Comparison##channel), uv, dx, dy, useComparison)
+
+        half3 DecodeGroundMask(half4 mask, float layout)
+        {
+            // Original masks: roughness/contact/stone coverage in RGB.
+            // BK masks: metallic/occlusion/smoothness in R/G/A. Ground stays
+            // non-metallic, and BK's B channel is not a stone-coverage mask.
+            return lerp(mask.rgb, half3(1 - mask.a, mask.g, 0), layout);
+        }
+
         half3 ProjectGroundNormal(half3 n, half3 weights, half3 axisSign,
             half3 nx, half3 ny, half3 nz)
         {
@@ -93,10 +142,15 @@ Shader "Something Down There/Ground Triplanar"
             half3 weights = smoothstep(bestAxis - 0.16, bestAxis, axis);
             weights /= max(dot(weights, 1.0), 0.0001);
             half3 turfWeights = weights;
-            float3 p = position / max(_SoilTileMetres, 0.05);
+            bool useComparison = _SoilComparison > 0.5 && position.x < _SoilSplitX;
+            float soilTileMetres = max(useComparison ? _ComparisonTileMetres : _SoilTileMetres, 0.05);
+            float maskLayout = useComparison ? _ComparisonMaskLayout : _MaskLayout;
+            float normalStrength = useComparison ? _ComparisonNormalStrength : _NormalStrength;
+            float stoneNormalStrength = useComparison ? _ComparisonStoneNormalStrength : _StoneNormalStrength;
+            float3 p = position / soilTileMetres;
             float3 positionDx = ddx(position), positionDy = ddy(position);
-            float3 pDx = positionDx / max(_SoilTileMetres, 0.05);
-            float3 pDy = positionDy / max(_SoilTileMetres, 0.05);
+            float3 pDx = positionDx / soilTileMetres;
+            float3 pDy = positionDy / soilTileMetres;
             // One world-space origin across chunks and rim meshes. No mesh UVs
             // or tangents: fresh vertical cuts keep the same physical texel scale.
             half3 axisSign = half3(n.x < 0 ? -1 : 1, n.y < 0 ? -1 : 1, n.z < 0 ? -1 : 1);
@@ -106,12 +160,12 @@ Shader "Something Down There/Ground Triplanar"
             float2 dxX = float2(pDx.z * axisSign.x, pDx.y), dyX = float2(pDy.z * axisSign.x, pDy.y);
             float2 dxY = float2(pDx.x * axisSign.y, pDx.z), dyY = float2(pDy.x * axisSign.y, pDy.z);
             float2 dxZ = float2(-pDx.x * axisSign.z, pDx.y), dyZ = float2(-pDy.x * axisSign.z, pDy.y);
-            half3 cx = GROUND_SAMPLE(_SoilAlbedo, uvX, dxX, dyX).rgb;
-            half3 cy = GROUND_SAMPLE(_SoilAlbedo, uvY, dxY, dyY).rgb;
-            half3 cz = GROUND_SAMPLE(_SoilAlbedo, uvZ, dxZ, dyZ).rgb;
-            half3 maskX = GROUND_SAMPLE(_SoilRoughness, uvX, dxX, dyX).rgb;
-            half3 maskY = GROUND_SAMPLE(_SoilRoughness, uvY, dxY, dyY).rgb;
-            half3 maskZ = GROUND_SAMPLE(_SoilRoughness, uvZ, dxZ, dyZ).rgb;
+            half3 cx = SOIL_SAMPLE(Albedo, uvX, dxX, dyX).rgb;
+            half3 cy = SOIL_SAMPLE(Albedo, uvY, dxY, dyY).rgb;
+            half3 cz = SOIL_SAMPLE(Albedo, uvZ, dxZ, dyZ).rgb;
+            half3 maskX = DecodeGroundMask(SOIL_SAMPLE(Roughness, uvX, dxX, dyX), maskLayout);
+            half3 maskY = DecodeGroundMask(SOIL_SAMPLE(Roughness, uvY, dxY, dyY), maskLayout);
+            half3 maskZ = DecodeGroundMask(SOIL_SAMPLE(Roughness, uvZ, dxZ, dyZ), maskLayout);
             // Coverage is a material boundary, not a transparent overlay. The
             // former multiplicative weighting still diluted whole stone faces
             // with another plane's dirt. Height-select one coherent material
@@ -129,15 +183,22 @@ Shader "Something Down There/Ground Triplanar"
             colour = cx * weights.x + cy * weights.y + cz * weights.z;
             // Authored B coverage gives stones their own relief without
             // amplifying the accepted soil grain or adding texture lookups.
-            half3 nx = UnpackNormalScale(GROUND_SAMPLE(_SoilNormal, uvX, dxX, dyX), lerp(_NormalStrength, _StoneNormalStrength, maskX.b));
-            half3 ny = UnpackNormalScale(GROUND_SAMPLE(_SoilNormal, uvY, dxY, dyY), lerp(_NormalStrength, _StoneNormalStrength, maskY.b));
-            half3 nz = UnpackNormalScale(GROUND_SAMPLE(_SoilNormal, uvZ, dxZ, dyZ), lerp(_NormalStrength, _StoneNormalStrength, maskZ.b));
+            half3 nx = UnpackNormalScale(SOIL_SAMPLE(Normal, uvX, dxX, dyX), lerp(normalStrength, stoneNormalStrength, maskX.b));
+            half3 ny = UnpackNormalScale(SOIL_SAMPLE(Normal, uvY, dxY, dyY), lerp(normalStrength, stoneNormalStrength, maskY.b));
+            half3 nz = UnpackNormalScale(SOIL_SAMPLE(Normal, uvZ, dxZ, dyZ), lerp(normalStrength, stoneNormalStrength, maskZ.b));
             // Surface-gradient projection: a flat normal map reproduces the
             // density-gradient mesh normal exactly, including blended slopes.
             normal = ProjectGroundNormal(n, weights, axisSign, nx, ny, nz);
             half2 soilMask = maskX.rg * weights.x + maskY.rg * weights.y + maskZ.rg * weights.z;
             roughness = soilMask.r;
             occlusion = soilMask.g;
+            // Soil variation stays below the shared meadow cap so its colour is
+            // identical on both halves of the comparison.
+            float2 macroUV = (position.xz + position.y * float2(0.37, 0.23)) * 0.073;
+            float2 macroDx = (positionDx.xz + positionDx.y * float2(0.37, 0.23)) * 0.073;
+            float2 macroDy = (positionDy.xz + positionDy.y * float2(0.37, 0.23)) * 0.073;
+            half macro = SOIL_SAMPLE(Albedo, macroUV, macroDx, macroDy).r;
+            colour *= 1 + (macro - 0.47) * _MacroVariation * 3;
 
             // The turf cap continues a short way down fresh lips. The authored
             // leaf pattern supplies ragged tips; height excludes deeper walls,
@@ -149,13 +210,13 @@ Shader "Something Down There/Ground Triplanar"
             float edgeWidth = max(0.00075, (abs(positionDx.y) + abs(positionDy.y)) * 0.65);
             if (depth < _TurfDepth + 0.02)
             {
-                float turfScale = max(_SoilTileMetres, 0.05) / max(_TileMetres, 0.05);
+                float turfScale = soilTileMetres / max(_TileMetres, 0.05);
                 half3 grassX = GROUND_SAMPLE(_TurfAlbedo, uvX * turfScale, dxX * turfScale, dyX * turfScale).rgb;
                 half3 grassY = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb;
                 half3 grassZ = GROUND_SAMPLE(_TurfAlbedo, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale).rgb;
                 half3 grass = grassX * turfWeights.x + grassY * turfWeights.y + grassZ * turfWeights.z;
                 half leaf = saturate((grass.g - grass.r * 0.7) * 3.5);
-                half drift = GROUND_SAMPLE(_SoilAlbedo, position.xz * 0.61, positionDx.xz * 0.61, positionDy.xz * 0.61).r;
+                half drift = GROUND_SAMPLE(_TurfAlbedo, position.xz * 0.61, positionDx.xz * 0.61, positionDy.xz * 0.61).r;
                 float fringeDepth = _TurfDepth * (0.45 + leaf * 0.55) + (drift - 0.35) * 0.012;
                 // Filter just the visible boundary rather than a fixed 2 cm colour
                 // fade. Pixel derivatives keep the narrow edge stable at distance.
@@ -170,17 +231,12 @@ Shader "Something Down There/Ground Triplanar"
                 half3 gz = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale), _TurfNormalStrength);
                 normal = normalize(lerp(normal, ProjectGroundNormal(n, turfWeights, axisSign, gx, gy, gz), turf));
                 colour = lerp(colour, grass, turf);
-                half2 turfMask = GROUND_SAMPLE(_TurfRoughness, uvX * turfScale, dxX * turfScale, dyX * turfScale).rg * turfWeights.x
-                    + GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale).rg * turfWeights.y
-                    + GROUND_SAMPLE(_TurfRoughness, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale).rg * turfWeights.z;
+                half2 turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvX * turfScale, dxX * turfScale, dyX * turfScale), _TurfMaskLayout).rg * turfWeights.x
+                    + DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg * turfWeights.y
+                    + DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale), _TurfMaskLayout).rg * turfWeights.z;
                 roughness = lerp(roughness, turfMask.r, turf);
                 occlusion = lerp(occlusion, lerp(0.65, 1, turfMask.g), turf);
             }
-            // Broad variation comes from the authored soil texture at a second
-            // incommensurate scale; it remains anchored when chunks regenerate.
-            half macro = SAMPLE_TEXTURE2D(_SoilAlbedo, sampler_SoilAlbedo,
-                (position.xz + position.y * float2(0.37, 0.23)) * 0.073).r;
-            colour *= 1 + (macro - 0.47) * _MacroVariation * 3;
         }
         ENDHLSL
 
@@ -222,7 +278,9 @@ Shader "Something Down There/Ground Triplanar"
                 SurfaceData surface = (SurfaceData)0;
                 surface.albedo = albedo;
                 surface.normalTS = half3(0, 0, 1);
-                surface.smoothness = 1 - roughness;
+                // Dry earth must not turn wet or crystalline even where a source
+                // mask contains polished grains or was authored for damp mud.
+                surface.smoothness = min(saturate(1 - roughness), _MaxSmoothness);
                 surface.occlusion = occlusion * ExcavationAmbient(input.positionWS, normalize(input.normalWS));
                 surface.alpha = 1;
                 half4 result = UniversalFragmentPBR(lighting, surface);

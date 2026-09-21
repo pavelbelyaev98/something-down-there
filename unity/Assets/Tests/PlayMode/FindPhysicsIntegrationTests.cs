@@ -33,7 +33,7 @@ namespace SomethingDownThere.Tests
             player = root.GetComponentInChildren<FpsPlayer>(); player.enabled = false; player.SetApplicationFocus(true);
             if (player.IsMenuOpen) player.CloseMenu();
             yield return null; // Let generation finish before constructing a legacy save fixture.
-            TestInputPreferences.RestoreBottleCompatibilityFixture(field);
+            TestInputPreferences.RestoreSmallFindFixture(field);
             yield return null;
         }
 
@@ -46,7 +46,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator SixtyPercentAllowsPickupButRetainedSoilStillAnchorsEveryBottle()
+        public IEnumerator SixtyPercentAllowsPickupButRetainedSoilStillAnchorsSmallFinds()
         {
             foreach (var find in Variants())
             {
@@ -90,7 +90,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator SettledBottleWakesWhenGroundIsDugAndReanchorsWhenReset()
+        public IEnumerator SettledSmallFindWakesWhenGroundIsDugAndReanchorsWhenReset()
         {
             var find = field.Finds[0]; Place(find, .65f);
             yield return WaitForSimulation(1.5f);
@@ -108,7 +108,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator PauseAndRestorePreserveAReleasedBottleAndInvalidPoseRecoversSameIdentity()
+        public IEnumerator PauseAndRestorePreserveAReleasedSmallFindAndInvalidPoseRecoversSameIdentity()
         {
             var find = field.Finds[0]; Place(find, 1.2f);
             var physical = find.GetComponent<FindPhysics>();
@@ -289,7 +289,7 @@ namespace SomethingDownThere.Tests
             Assert.That(Time.time, Is.GreaterThanOrEqualTo(until), $"Simulation stopped at wait line {line}: menu={player.Menu}, enabled={player.enabled}, scale={Time.timeScale}");
         }
 
-        private BuriedFind[] Variants() => field.Finds.Where(f => f.Size == FindSize.Small).GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
+        private BuriedFind[] Variants() => field.Finds.Where(f => f.Size == FindSize.Small).Take(3).ToArray();
 
         [UnityTest]
         public IEnumerator LargeFindVariantsFallSettleAndRestoreTheirExactAppearanceAndPose()

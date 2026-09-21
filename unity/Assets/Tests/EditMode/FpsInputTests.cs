@@ -27,17 +27,7 @@ namespace SomethingDownThere.Tests
             base.TearDown();
         }
 
-        [Test]
-        public void ExcavationModeIsAnEdgeAndCannotResumeFromAHeldKeyOrAdminChord()
-        {
-            Press(keyboard.qKey); Assert.That(input.Read().CycleModePressed, Is.True);
-            InputSystem.Update(); Assert.That(input.Read().CycleModePressed, Is.False);
-            input.SuppressHeldActions(); InputSystem.Update(); Assert.That(input.Read().CycleModePressed, Is.False);
-            Release(keyboard.qKey); input.Read(); Press(keyboard.qKey);
-            Assert.That(input.Read(false).CycleModePressed, Is.False);
-            Release(keyboard.qKey); input.Read(); Press(keyboard.leftCtrlKey); Press(keyboard.leftShiftKey); Press(keyboard.qKey);
-            Assert.That(input.Read().CycleModePressed, Is.False);
-        }
+
 
         [Test]
         public void WasdDiagonalIsNormalizedAndMouseDeltaIsPreserved()

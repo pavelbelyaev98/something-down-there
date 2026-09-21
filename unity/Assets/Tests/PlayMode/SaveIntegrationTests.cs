@@ -74,55 +74,23 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator ExperimentalSelectionClearsOnReloadWhileItsExcavationAndOwnedProgressSurvive()
+        public IEnumerator ExcavationAndOwnedProgressSurviveReload()
         {
             yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
             player.CloseMenu(); yield return null;
             player.enabled = true;
-            Assert.That(player.SetAdminExperimentalExcavation(true), Is.True);
-            Assert.That(player.SelectDigMode(ExcavationMode.Bore), Is.True);
             player.enabled = false;
             Assert.That(Physics.Raycast(new Vector3(-8, 2, -8), Vector3.down, out var hit, 5), Is.True);
-            Assert.That(terrain.TryDig(hit, .6f, player.DigMode, Vector3.down, Vector3.right), Is.True);
+            Assert.That(terrain.TryDig(hit, .6f), Is.True);
             var density = terrain.Capture().Density.ToArray();
             var population = discoveries.Capture().Select(f => f.Item.Id).ToArray();
             int owned = player.Shovel.Level; float charge = player.Battery.Charge;
             long sequence = save.CompletedSequence; save.RequestCheckpoint();
             yield return Until(() => save.CompletedSequence > sequence && save.State == WorldSaveState.Ready);
             yield return SceneManager.UnloadSceneAsync(scene); yield return Open();
-            Assert.That(player.DigMode, Is.EqualTo(ExcavationMode.Scoop));
-            Assert.That(player.ExperimentalExcavation, Is.False);
-            Assert.That(player.GetComponentInChildren<ExcavatorView>(true), Is.Null);
             Assert.That(player.Shovel.Level, Is.EqualTo(owned)); Assert.That(player.Battery.Charge, Is.EqualTo(charge));
             Assert.That(terrain.Capture().Density.ToArray(), Is.EqualTo(density));
             Assert.That(discoveries.Capture().Select(f => f.Item.Id), Is.EqualTo(population));
-        }
-
-        [UnityTest]
-        public IEnumerator LegacyFractionalFileBalanceRoundsUpOnceAndPersistsWholeMoney()
-        {
-            yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
-            var legacy = save.Capture(save.CompletedSequence + 1);
-            legacy.Credits = 9;
-            legacy.CreditFraction = 13;
-            yield return SceneManager.UnloadSceneAsync(scene);
-            using (var stream = File.Create(Path.Combine(directory, "world.sav"))) WorldSaveCodec.Write(stream, legacy);
-            yield return Open();
-            Assert.That(player.Wallet.Balance, Is.EqualTo(10));
-            Assert.That(player.Wallet.CreditFraction, Is.Zero);
-            Assert.That(player.Trade.TryUpgrade(player.Trade.OfferUpgrade()), Is.True);
-            for (int repeat = 0; repeat < 2; repeat++)
-            {
-                long sequence = save.CompletedSequence;
-                save.RequestCheckpoint();
-                yield return Until(() => save.CompletedSequence > sequence && save.State == WorldSaveState.Ready);
-                var written = WorldSaveStore.Read(Path.Combine(directory, "world.sav"));
-                Assert.That(written.Credits, Is.Zero);
-                Assert.That(written.CreditFraction, Is.Zero);
-                yield return SceneManager.UnloadSceneAsync(scene); yield return Open();
-                Assert.That(player.Wallet.Balance, Is.Zero, "The old fraction cannot create money again after spending.");
-                Assert.That(player.Shovel.Level, Is.EqualTo(2));
-            }
         }
 
         [UnityTest]
@@ -182,6 +150,8 @@ namespace SomethingDownThere.Tests
             yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
             player.CloseMenu();
             yield return null;
+            player.SetApplicationFocus(true);
+            player.CloseMenu();
             var find = discoveries.Finds[0];
             Expose(find);
             player.ViewCamera.transform.position = find.transform.position + Vector3.up * 1.5f;
@@ -252,7 +222,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Pause));
                 Assert.That(player.HasAdminOverrides, Is.False);
                 Assert.That(player.Shovel.Level, Is.EqualTo(expected.ShovelLevel));
-                Assert.That(player.Wallet.Balance, Is.EqualTo(expected.Credits + (expected.CreditFraction > 0 ? 1 : 0)));
+                Assert.That(player.Wallet.Balance, Is.EqualTo(expected.Credits));
                 Assert.That(player.Inventory.Count, Is.Zero);
                 Assert.That(player.Battery.Charge, Is.EqualTo(expected.BatteryCharge));
                 Assert.That(player.Inventory.Level, Is.EqualTo(2));
@@ -292,51 +262,6 @@ namespace SomethingDownThere.Tests
             Assert.That(rescued.Credits, Is.EqualTo(Math.Max(0, expected.Credits - 10)));
             Assert.That(rescued.BatteryCharge, Is.EqualTo(150));
             Assert.That(rescued.Terrain.RemovedVolume, Is.GreaterThanOrEqualTo(expected.Terrain.RemovedVolume));
-        }
-
-        [UnityTest]
-        public IEnumerator LegacyFindsSurviveMigrationCheckpointRecoveryAndRepeatedReload()
-        {
-            yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
-            var old = WorldSaveStore.Read(Path.Combine(directory, "world.sav"));
-            var catalog = discoveries.Catalog;
-            var layout = DiscoveryField.Generate((Vector3)terrain.Dimensions * terrain.CellSize, 96, old.DiscoverySeed);
-            old.Finds = layout.Select((p, i) => new FindSnapshot {
-                ContentId = catalog.LegacyAliases[i % 3].OldId,
-                Item = new ItemSnapshot { Id = "legacy-" + i, Name = "Historical find " + (i % 3), Value = 5 + i % 3 * 3 },
-                Position = p.Position, Rotation = p.Rotation, Scale = Vector3.one * .8f, Collected = i < 2
-            }).ToArray();
-            old.Inventory = new[] { old.Finds[0].Item }; old.Sequence++;
-            yield return SceneManager.UnloadSceneAsync(scene);
-            using (var store = new WorldSaveStore(directory)) { store.Load(); store.Commit(old); }
-            yield return Open();
-            Assert.That(discoveries.Finds.Count, Is.EqualTo(96));
-            Assert.That(player.Inventory.Items.Single().DisplayName, Is.EqualTo(old.Inventory[0].Name));
-            for (int i = 0; i < 96; i++)
-            {
-                var actual = discoveries.Finds[i].Capture();
-                Assert.That(Vector3.Distance(actual.Position, old.Finds[i].Position), Is.LessThan(.000003f), "World/local transforms retain the saved centre within float precision.");
-                Assert.That(actual.Item.Id, Is.EqualTo(old.Finds[i].Item.Id));
-                Assert.That(actual.Item.Value, Is.EqualTo(old.Finds[i].Item.Value));
-                Assert.That(actual.Collected, Is.EqualTo(i < 2)); Assert.That(actual.Scale, Is.EqualTo(Vector3.one));
-            }
-            long previous = save.CompletedSequence; save.RequestCheckpoint();
-            yield return Until(() => save.CompletedSequence > previous && save.State == WorldSaveState.Ready);
-            yield return SceneManager.UnloadSceneAsync(scene);
-            // Recovery falls back to the retained legacy checkpoint, then migrates again.
-            string path = Path.Combine(directory, "world.sav"); var bytes = File.ReadAllBytes(path);
-            bytes[bytes.Length - 1] ^= 0x3f; File.WriteAllBytes(path, bytes);
-            yield return Open(); Assert.That(save.State, Is.EqualTo(WorldSaveState.Recovery));
-            save.AcceptRecovery(); yield return Until(() => save.State == WorldSaveState.Ready);
-            Assert.That(discoveries.Finds.Count, Is.EqualTo(96));
-            Assert.That(discoveries.Finds.Count(f => f.Collected), Is.EqualTo(2));
-            Assert.That(player.Inventory.Items.Single().SaleValue, Is.EqualTo(5));
-            previous = save.CompletedSequence; save.RequestCheckpoint();
-            yield return Until(() => save.CompletedSequence > previous && save.State == WorldSaveState.Ready);
-            yield return SceneManager.UnloadSceneAsync(scene); yield return Open();
-            Assert.That(discoveries.Finds.Count, Is.EqualTo(96));
-            Assert.That(discoveries.Finds.Select(f => f.Item.InstanceId), Is.EqualTo(old.Finds.Select(f => f.Item.Id)));
-            Assert.That(discoveries.Finds.All(f => f.transform.localScale == Vector3.one), Is.True);
         }
 
         [UnityTest]
@@ -522,7 +447,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator BottleMotionAloneAutosavesAndReleasedPoseSurvivesReload()
+        public IEnumerator FindMotionAloneAutosavesAndReleasedPoseSurvivesReload()
         {
             yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
             player.SetApplicationFocus(true);
@@ -585,7 +510,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(actual.Collected, Is.EqualTo(expected.Collected));
                 Assert.That(restored.gameObject.activeSelf, Is.EqualTo(!expected.Collected));
                 Assert.That(restored.GetComponent<MeshFilter>().sharedMesh,
-                    Is.SameAs(discoveries.Catalog.Resolve(expected.ContentId, out _).GetComponent<MeshFilter>().sharedMesh));
+                    Is.SameAs(discoveries.Catalog.Resolve(expected.ContentId).GetComponent<MeshFilter>().sharedMesh));
             }
             Assert.That(player.Inventory.Items.Single().InstanceId, Is.EqualTo(rocks[0].Item.Id));
         }
@@ -613,102 +538,6 @@ namespace SomethingDownThere.Tests
             Assert.That(restored.Capture().Position, Is.EqualTo(expected.Position));
             Assert.That(restored.SaveContentId, Is.EqualTo(expected.ContentId)); Assert.That(restored.Collected, Is.False);
             Assert.That(player.Inventory.Items.Any(i => i.InstanceId == expected.Item.Id), Is.False);
-        }
-
-        [UnityTest]
-        public IEnumerator RetiredCanAndBrickRecordsBecomeBottlesWithoutLosingPopulationOrValue()
-        {
-            yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
-            var old = save.Capture(save.CompletedSequence + 1);
-            old.Finds = old.Finds.Take(72).ToArray();
-            var bottles = discoveries.Catalog.Entries.Where(e => e.ItemId.StartsWith("common_bottle_")).ToArray();
-            for (int i = 0; i < old.Finds.Length; i++)
-            {
-                var bottle = bottles[i % bottles.Length].Prefab;
-                old.Finds[i].ContentId = bottle.SaveContentId;
-                old.Finds[i].Item.Name = bottle.DisplayName;
-                old.Finds[i].Item.Value = bottle.SaleValue;
-            }
-            string[] retired = { "common_can_intact", "common_can_crushed", "common_brick_whole", "common_brick_chipped" };
-            for (int i = 0; i < 4; i++) { old.Finds[i].ContentId = retired[i]; old.Finds[i].Item.Name = i < 2 ? "Food/Drink Can" : "Brick"; old.Finds[i].Item.Value = i < 2 ? 1 : 3; }
-            yield return SceneManager.UnloadSceneAsync(scene);
-            using (var stream = File.Create(Path.Combine(directory, "world.sav"))) WorldSaveCodec.Write(stream, old);
-            yield return Open();
-            Assert.That(discoveries.Finds.Count, Is.EqualTo(72));
-            Assert.That(discoveries.Finds.All(f => f.SaveContentId.StartsWith("common_bottle_")), Is.True);
-            for (int i = 0; i < 4; i++)
-            {
-                var actual = discoveries.Finds[i].Capture();
-                Assert.That(actual.Item.Name, Is.EqualTo("Glass Bottle")); Assert.That(actual.Item.Id, Is.EqualTo(old.Finds[i].Item.Id));
-                Assert.That(actual.Item.Value, Is.EqualTo(old.Finds[i].Item.Value));
-                Assert.That(Vector3.Distance(actual.Position, old.Finds[i].Position), Is.LessThan(.00001f));
-            }
-            var restoredStates = discoveries.Capture();
-            save.RequestCheckpoint();
-            yield return Until(() => save.CompletedSequence > old.Sequence && save.State == WorldSaveState.Ready);
-            var resaved = WorldSaveStore.Read(Path.Combine(directory, "world.sav"));
-            Assert.That(resaved.Finds.Length, Is.EqualTo(72));
-            for (int i = 0; i < restoredStates.Length; i++)
-                Assert.That(JsonUtility.ToJson(resaved.Finds[i]), Is.EqualTo(JsonUtility.ToJson(restoredStates[i])));
-        }
-
-        [UnityTest]
-        public IEnumerator TwelveMetreCheckpointExtendsThroughNormalLoadWithoutRerollingFinds()
-        {
-            yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
-            var old = save.Capture(save.CompletedSequence + 1);
-            var oldGrid = new ExcavationGrid(new Vector3Int(192, 96, 192), .125f);
-            oldGrid.RemoveSphere(new Vector3(12, 11.4f, 12), .8f, out _);
-            old.Terrain = oldGrid.Capture(); old.TerrainPosition = new Vector3(-12, -12, -12);
-            old.Finds = old.Finds.Take(24).ToArray(); old.Credits = 17;
-            yield return SceneManager.UnloadSceneAsync(scene);
-            using (var file = File.Create(Path.Combine(directory, "world.sav"))) WorldSaveCodec.Write(file, old);
-            byte[] original = File.ReadAllBytes(Path.Combine(directory, "world.sav"));
-            yield return Open();
-            Assert.That(save.State, Is.EqualTo(WorldSaveState.Ready));
-            Assert.That(player.Wallet.Balance, Is.EqualTo(17));
-            Assert.That(discoveries.Finds.Select(f => f.Item.InstanceId), Is.EqualTo(old.Finds.Select(f => f.Item.Id)));
-            Assert.That(terrain.IsSolid(new Vector3(0, -.6f, 0)), Is.False, "Old excavation retains its world position.");
-            Assert.That(terrain.IsSolid(new Vector3(0, -20, 0)), Is.True, "Extension starts as untouched soil.");
-            Assert.That(terrain.IsSolid(new Vector3(0, -80, 0)), Is.True, "The added 68 m of depth is solid too.");
-            long sequence = save.CompletedSequence; save.RequestCheckpoint();
-            yield return Until(() => save.CompletedSequence > sequence && save.State == WorldSaveState.Ready);
-            var expanded = WorldSaveStore.Read(Path.Combine(directory, "world.sav"));
-            Assert.That(expanded.Terrain.Size.y, Is.EqualTo(SiteLayout.Size.y));
-            Assert.That(expanded.TerrainPosition.y, Is.EqualTo(SiteLayout.Origin.y));
-            Assert.That(expanded.Finds.Length, Is.EqualTo(24));
-            Assert.That(expanded.Terrain.RemovedVolume, Is.EqualTo(old.Terrain.RemovedVolume));
-            Assert.That(File.ReadAllBytes(Path.Combine(directory, "world.previous.sav")), Is.EqualTo(original), "Keep the original as the transactional recovery checkpoint.");
-            yield return SceneManager.UnloadSceneAsync(scene); yield return Open();
-            Assert.That(discoveries.Finds.Count, Is.EqualTo(24));
-            Assert.That(terrain.RemovedVolume, Is.EqualTo(old.Terrain.RemovedVolume));
-        }
-
-        [UnityTest]
-        public IEnumerator ThirtyTwoMetreCheckpointDeepensThroughNormalLoadWithoutRerollingFinds()
-        {
-            yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
-            var old = save.Capture(save.CompletedSequence + 1);
-            var oldGrid = new ExcavationGrid(new Vector3Int(192, 256, 192), .125f);
-            // A hole next to the old 32 m floor: the deepest layer that must keep its place.
-            oldGrid.RemoveSphere(new Vector3(12, 2, 12), .8f, out _);
-            old.Terrain = oldGrid.Capture(); old.TerrainPosition = new Vector3(-12, -32, -12);
-            old.Finds = old.Finds.Take(30).ToArray(); old.Credits = 23;
-            yield return SceneManager.UnloadSceneAsync(scene);
-            using (var file = File.Create(Path.Combine(directory, "world.sav"))) WorldSaveCodec.Write(file, old);
-            yield return Open();
-            Assert.That(save.State, Is.EqualTo(WorldSaveState.Ready));
-            Assert.That(player.Wallet.Balance, Is.EqualTo(23));
-            Assert.That(discoveries.Finds.Select(f => f.Item.InstanceId), Is.EqualTo(old.Finds.Select(f => f.Item.Id)));
-            Assert.That(terrain.IsSolid(new Vector3(0, -30, 0)), Is.False, "The old floor-level hole keeps its world position.");
-            Assert.That(terrain.IsSolid(new Vector3(0, -45, 0)), Is.True, "Added depth starts as untouched soil.");
-            long sequence = save.CompletedSequence; save.RequestCheckpoint();
-            yield return Until(() => save.CompletedSequence > sequence && save.State == WorldSaveState.Ready);
-            var expanded = WorldSaveStore.Read(Path.Combine(directory, "world.sav"));
-            Assert.That(expanded.Terrain.Size, Is.EqualTo(SiteLayout.Size));
-            Assert.That(expanded.TerrainPosition.y, Is.EqualTo(SiteLayout.Origin.y));
-            Assert.That(expanded.Finds.Length, Is.EqualTo(30));
-            Assert.That(expanded.Terrain.RemovedVolume, Is.EqualTo(old.Terrain.RemovedVolume));
         }
 
         [UnityTest]

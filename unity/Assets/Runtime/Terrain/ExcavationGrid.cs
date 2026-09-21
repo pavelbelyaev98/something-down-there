@@ -156,15 +156,8 @@ namespace SomethingDownThere
         public bool RemoveScoop(Vector3 center, float radius, Vector3 normal, int seed, float variation, out BoundsInt changed)
             => RemoveBrush(center, radius, normal, seed, variation, true, out changed);
 
-        public bool RemoveCut(Vector3 center, float radius, Vector3 normal, Vector3 right, ExcavationMode mode,
-            int seed, float variation, out BoundsInt changed)
-        {
-            if (!ExcavationModes.Valid(mode)) { changed = default; return false; }
-            return RemoveBrush(center, radius, normal, seed, variation, true, out changed, mode, right);
-        }
-
         private bool RemoveBrush(Vector3 center, float radius, Vector3 normal, int seed, float variation,
-            bool shovel, out BoundsInt changed, ExcavationMode mode = ExcavationMode.Scoop, Vector3 right = default)
+            bool shovel, out BoundsInt changed)
         {
             changed = default;
             LastRemovedVolume = LastDetachedVolume = 0;
@@ -180,10 +173,7 @@ namespace SomethingDownThere
                 || !Finite(normal.sqrMagnitude) || normal.sqrMagnitude < 0.0001f) return false;
             // Covers the bevelled, tapered bite in every orientation, including its
             // outward cap. The density halo must fit too for matching chunk normals.
-            bool shaped = shovel && mode != ExcavationMode.Scoop;
-            Vector3 shape = ExcavationModes.Shape(mode) * radius;
-            if (shaped) shape.z = Mathf.Max(CellSize, shape.z);
-            float maximumRadius = shaped ? shape.magnitude + radius * .2f : radius * (shovel ? 1.8f : 1f);
+            float maximumRadius = radius * (shovel ? 1.8f : 1f);
             float influence = maximumRadius + band;
             Vector3 extent = Extent;
             if (center.x + maximumRadius < 0 || center.y + maximumRadius < 0 || center.z + maximumRadius < 0
@@ -200,12 +190,7 @@ namespace SomethingDownThere
             normal.Normalize();
             Vector3 tangent = Vector3.Cross(normal, Mathf.Abs(normal.y) < 0.95f ? Vector3.up : Vector3.forward).normalized;
             tangent = Quaternion.AngleAxis(Next01(ref random) * 360, normal) * tangent;
-            if (shaped)
-            {
-                Vector3 projected = Vector3.ProjectOnPlane(right, normal);
-                tangent = Finite(projected.sqrMagnitude) && projected.sqrMagnitude > .0001f ? projected.normalized
-                    : Vector3.Cross(normal, Mathf.Abs(normal.y) < .95f ? Vector3.up : Vector3.forward).normalized;
-            }
+
             Vector3 bitangent = Vector3.Cross(normal, tangent);
             float width = radius * Mathf.Lerp(1.02f, 1.14f, Next01(ref random));
             float length = radius * Mathf.Lerp(0.84f, 0.96f, Next01(ref random));
@@ -214,19 +199,7 @@ namespace SomethingDownThere
             float tiltZ = Mathf.Lerp(-0.12f, 0.12f, Next01(ref random));
             float amplitude = radius * variation, bevel = radius * 0.24f;
             Vector3 boundsCenter = center, boundsExtent = Vector3.one * influence;
-            if (shaped)
-            {
-                // Bound the oriented cut and its full density halo, not a cube
-                // around the longest axis. Fan/shave need very little depth work.
-                float halo = band + amplitude;
-                float minor = Mathf.Min(shape.x, shape.y), cap = radius * .35f;
-                Vector3 a = tangent * (shape.x * (1 + halo / minor));
-                Vector3 b = bitangent * (shape.y * (1 + halo / minor));
-                Vector3 c = normal * ((shape.z + cap) * .5f + halo);
-                boundsCenter += normal * ((cap - shape.z) * .5f);
-                boundsExtent = new Vector3(Mathf.Abs(a.x) + Mathf.Abs(b.x) + Mathf.Abs(c.x),
-                    Mathf.Abs(a.y) + Mathf.Abs(b.y) + Mathf.Abs(c.y), Mathf.Abs(a.z) + Mathf.Abs(b.z) + Mathf.Abs(c.z));
-            }
+
             Vector3Int first = Vector3Int.Max(Vector3Int.zero,
                 Vector3Int.FloorToInt((boundsCenter - boundsExtent) / CellSize));
             Vector3Int last = Vector3Int.Min(Size,
@@ -242,26 +215,8 @@ namespace SomethingDownThere
                 if (before <= -band) continue;
                 Vector3 delta = new Vector3(x, y, z) * CellSize - center;
                 float cut;
-                if (shaped)
-                {
-                    float u = Vector3.Dot(delta, tangent), v = Vector3.Dot(delta, bitangent);
-                    float height = Vector3.Dot(delta, normal);
-                    float floor = -height - shape.z;
-                    float cap = height - radius * .35f;
-                    if (Mathf.Max(floor, cap) - amplitude >= before) continue;
-                    float taper = 1f - .1f * Mathf.Clamp01(-height / shape.z);
-                    float a = u / (shape.x * taper), b = v / (shape.y * taper);
-                    if ((Mathf.Max(Mathf.Abs(a), Mathf.Abs(b)) - 1f) * Mathf.Min(shape.x, shape.y) - amplitude >= before) continue;
-                    float side = (Mathf.Sqrt(a * a + b * b) - 1f) * Mathf.Min(shape.x, shape.y);
-                    float rounding = Mathf.Max(CellSize * .35f, radius * .12f);
-                    float join = Mathf.Max(rounding - Mathf.Abs(side - floor), 0) / rounding;
-                    cut = Mathf.Max(Mathf.Max(side, floor) + join * join * rounding * .25f, cap);
-                    if (cut - amplitude >= before) continue;
-                    // Restrained irregularity avoids machine-stamped walls without
-                    // erasing the player's chosen thin/deep/wide shape.
-                    cut -= amplitude * .25f * Mathf.Sin(Vector3.Dot(delta, axisA) + phase.x);
-                }
-                else if (shovel)
+
+                if (shovel)
                 {
                     float u = Vector3.Dot(delta, tangent), v = Vector3.Dot(delta, bitangent);
                     float height = Vector3.Dot(delta, normal);

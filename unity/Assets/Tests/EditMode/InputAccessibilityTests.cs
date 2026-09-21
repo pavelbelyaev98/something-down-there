@@ -33,24 +33,20 @@ namespace SomethingDownThere.Tests
         public override void TearDown() { input.Dispose(); base.TearDown(); }
 
         [Test]
-        public void OrdinaryBindingsCanTakeTheExperimentalKeyWithoutAConflictOrLostBinding()
+        public void OrdinaryBindingsCanUseQWithoutAConflictOrLostBinding()
         {
-            string previous = settings.Path(PlayerBinding.Dig);
             Assert.That(settings.CanBind(PlayerBinding.Dig, "<Keyboard>/q", out int conflict), Is.True);
             Assert.That(conflict, Is.EqualTo(-1));
             Assert.That(settings.Bind(PlayerBinding.Dig, "<Keyboard>/q"), Is.True);
-            Assert.That(settings.Path(PlayerBinding.CycleMode), Is.EqualTo(previous));
             Assert.That(Enumerable.Range(0, InputPreferences.BindingCount).Select(i => settings.Path((PlayerBinding)i)).Distinct().Count(), Is.EqualTo(InputPreferences.BindingCount));
             settings.Flush();
             var restored = new InputPreferences(store);
             Assert.That(restored.Path(PlayerBinding.Dig), Is.EqualTo("<Keyboard>/q"));
-            Assert.That(restored.Path(PlayerBinding.CycleMode), Is.EqualTo(previous));
         }
 
         [Test]
         public void AllBindingsRoundTripAndConflictsSwapWithoutLosingAnAction()
         {
-            Assert.That(settings.Bind(PlayerBinding.CycleMode, "<Keyboard>/h"), Is.True);
             var keys = new[] { "i", "k", "j", "l", "q", "r", "c", "f", "b", "p", "o", "u", "h" };
             for (int i = 0; i < InputPreferences.BindingCount; i++) Assert.That(settings.Bind((PlayerBinding)i, "<Keyboard>/" + keys[i]), Is.True);
             Assert.That(settings.Bind(PlayerBinding.Dig, "<Keyboard>/r"), Is.False);
@@ -65,18 +61,17 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void OlderBindingsGainModeCyclingWithoutStealingThePlayersDigKey()
+        public void RetiredBindingFieldsAreIgnoredWithoutStealingThePlayersDigKey()
         {
             settings.Bind(PlayerBinding.Dig, "<Keyboard>/q", true); settings.SetToggleDig(true); settings.Flush();
-            store.Text = string.Join("\n", store.Text.Split('\n').Where(line => !line.StartsWith("cycleMode=")));
+            store.Text += "cycleMode=<Keyboard>/q\n";
             string old = store.Text;
             var restored = new InputPreferences(store);
             Assert.That(restored.Path(PlayerBinding.Dig), Is.EqualTo("<Keyboard>/q"));
-            Assert.That(restored.Path(PlayerBinding.CycleMode), Is.EqualTo("<Keyboard>/f"));
             Assert.That(restored.ToggleDig, Is.True);
             restored.Flush(); Assert.That(store.Text, Is.EqualTo(old));
             input.ConfigurePreferences(restored); InputSystem.Update(); input.Read();
-            Press(keyboard.fKey); Assert.That(input.Read().CycleModePressed, Is.True);
+            Press(keyboard.fKey);
             Assert.That(input.Read().DigPressed, Is.False);
         }
 
@@ -142,6 +137,7 @@ namespace SomethingDownThere.Tests
             string damaged = store.Text;
             var restored = new InputPreferences(store);
             input.ConfigurePreferences(restored); InputSystem.Update(); input.Read();
+            Press(keyboard.fKey);
             Press(mouse.leftButton); Assert.That(input.Read().DigHeld, Is.True);
             Release(mouse.leftButton); Assert.That(input.Read().DigHeld, Is.False, "Recovered input must stop on release.");
             restored.Flush(); Assert.That(store.Text, Is.EqualTo(damaged)); Assert.That(store.Writes, Is.EqualTo(1));

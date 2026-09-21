@@ -48,7 +48,7 @@ namespace SomethingDownThere
             if (catalog != null)
             {
                 catalog.Validate();
-                foreach (var state in states) catalog.Resolve(state.ContentId, out _);
+                foreach (var state in states) catalog.Resolve(state.ContentId);
                 return;
             }
             if (developmentContent && !FpsPlayer.AdminBuild && states.Length > 0)
@@ -64,10 +64,9 @@ namespace SomethingDownThere
             foreach (var find in finds) { find.gameObject.SetActive(false); Destroy(find.gameObject); }
             finds.Clear();
             seed = savedSeed;
-            foreach (var saved in states)
+            foreach (var state in states)
             {
-                var state = catalog != null ? catalog.PrepareRestore(saved) : saved;
-                var prefab = catalog != null ? catalog.Resolve(state.ContentId, out _) : Array.Find(prefabs, p => p.SaveContentId == state.ContentId);
+                var prefab = catalog != null ? catalog.Resolve(state.ContentId) : Array.Find(prefabs, p => p.SaveContentId == state.ContentId);
                 var find = Instantiate(prefab, transform);
                 find.Initialize(terrain, state.Item.Id, this);
                 find.Restore(state);

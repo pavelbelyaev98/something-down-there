@@ -14,11 +14,11 @@ namespace SomethingDownThere.Editor
         private static string Source => Path.GetFullPath(Path.Combine(Application.dataPath, "../../art/minerals"));
 
         [MenuItem("Tools/Something Down There/Sync Mineral Models")]
-        public static void Sync() => StarterFindSetup.Sync();
+        public static void Sync() => DiscoveryContentSetup.Sync();
 
         internal static void AppendToCatalog(List<DiscoveryCatalog.Entry> entries)
         {
-            var source = JsonUtility.FromJson<StarterFindSetup.SourceCatalog>(File.ReadAllText(Path.Combine(Source, "catalog.json")));
+            var source = JsonUtility.FromJson<DiscoveryContentSetup.SourceCatalog>(File.ReadAllText(Path.Combine(Source, "catalog.json")));
             string[] names = { "Coal", "Copper", "Iron", "Silver", "Gold", "Emerald", "Ruby", "Diamond" };
             if (source == null || source.schema_version != 1 || source.variants == null || source.variants.Length != names.Length)
                 throw new InvalidDataException("Invalid approved mineral source catalog.");
@@ -44,7 +44,7 @@ namespace SomethingDownThere.Editor
                 if (i > 0 && (e.sale_value <= source.variants[i - 1].sale_value
                     || e.core_minimum_depth_m <= source.variants[i - 1].core_minimum_depth_m))
                     throw new InvalidDataException("Mineral value and core depth must increase in the selected order.");
-                var prefab = StarterFindSetup.ImportAppearance(e, Source, Folder, !e.small, i < 5 ? 4 : 2);
+                var prefab = DiscoveryContentSetup.ImportAppearance(e, Source, Folder, !e.small, i < 5 ? 4 : 2);
                 entries.Add(new DiscoveryCatalog.Entry { ItemId = e.content_id, Prefab = prefab, Count = e.instances,
                     ShallowCount = e.shallow_instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m,
                     CoreMinDepth = e.core_minimum_depth_m, CoreMaxDepth = e.core_maximum_depth_m, CoreShare = e.core_share,

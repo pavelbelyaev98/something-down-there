@@ -1,0 +1,170 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddecc3d5963d55a4f9241610a3fbd375, type: 3}
+  m_Name: DiscoveryCatalog
+  m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.DiscoveryCatalog
+  Entries:
+  - ItemId: common_rock
+    Prefab: {fileID: 6474309712400341572, guid: 476de7c38fb18d44bb8103ea7ced1543, type: 3}
+    AppearanceVariants:
+    - {fileID: 98826337501060310, guid: 106b917856caab4489fc1324c86d9f45, type: 3}
+    - {fileID: 4056722544200649903, guid: d50d7996b62834241ad3c20a1fbea7c4, type: 3}
+    Count: 5500
+    ShallowCount: 750
+    ShallowMinCover: 0.02
+    ShallowMaxCover: 0.06
+    MinDepth: 0.72
+    MaxDepth: 14
+    CoreMinDepth: 0.72
+    CoreMaxDepth: 4.5
+    CoreShare: 0.92
+    DeepCount: 0
+    DeepMinDepth: 0
+    DeepMaxDepth: 0
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_coal
+    Prefab: {fileID: 1574777764794235731, guid: 5b43cd0c70fde7e4c914f4e4c9c22aeb, type: 3}
+    AppearanceVariants: []
+    Count: 1200
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 22
+    CoreMinDepth: 1
+    CoreMaxDepth: 5.5
+    CoreShare: 0.9
+    DeepCount: 0
+    DeepMinDepth: 0
+    DeepMaxDepth: 0
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_copper
+    Prefab: {fileID: 4582630098943393868, guid: 639e718224a86954693289508c116355, type: 3}
+    AppearanceVariants: []
+    Count: 458
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 24
+    CoreMinDepth: 1.1
+    CoreMaxDepth: 14
+    CoreShare: 0.9
+    DeepCount: 0
+    DeepMinDepth: 0
+    DeepMaxDepth: 0
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_iron
+    Prefab: {fileID: 2564259689525694727, guid: 5da72b4cede10d64897000d7646f75de, type: 3}
+    AppearanceVariants: []
+    Count: 436
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 27
+    CoreMinDepth: 6
+    CoreMaxDepth: 18
+    CoreShare: 0.88
+    DeepCount: 0
+    DeepMinDepth: 0
+    DeepMaxDepth: 0
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_silver
+    Prefab: {fileID: 1723953362618204297, guid: 9f59f9736d541ed4f8f663f9891e3d39, type: 3}
+    AppearanceVariants: []
+    Count: 438
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 28
+    CoreMinDepth: 10
+    CoreMaxDepth: 22
+    CoreShare: 0.88
+    DeepCount: 0
+    DeepMinDepth: 0
+    DeepMaxDepth: 0
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_gold
+    Prefab: {fileID: 5887150894810649546, guid: 9a260e874716482448f1cedad8255236, type: 3}
+    AppearanceVariants: []
+    Count: 1038
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 31.2
+    CoreMinDepth: 14
+    CoreMaxDepth: 26
+    CoreShare: 0.88
+    DeepCount: 600
+    DeepMinDepth: 31.2
+    DeepMaxDepth: 99.2
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_emerald
+    Prefab: {fileID: 6329973060314555801, guid: eb556f9a02aa83940a9607a270da09d2, type: 3}
+    AppearanceVariants: []
+    Count: 1270
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 31.2
+    CoreMinDepth: 18
+    CoreMaxDepth: 31.2
+    CoreShare: 0.9
+    DeepCount: 800
+    DeepMinDepth: 31.2
+    DeepMaxDepth: 99.2
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_ruby
+    Prefab: {fileID: 8312464020256252658, guid: 715919f0cdfaaae458c2b25297e021cd, type: 3}
+    AppearanceVariants: []
+    Count: 1142
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 31.2
+    CoreMinDepth: 22
+    CoreMaxDepth: 31.2
+    CoreShare: 0.86
+    DeepCount: 800
+    DeepMinDepth: 31.2
+    DeepMaxDepth: 99.2
+    LayOnSide: 0
+    RandomOrientation: 1
+  - ItemId: mineral_diamond
+    Prefab: {fileID: 8911235515186892685, guid: 1527e65ddc4f4224eb30348e8930992d, type: 3}
+    AppearanceVariants: []
+    Count: 1002
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1.1
+    MaxDepth: 31.2
+    CoreMinDepth: 26
+    CoreMaxDepth: 31.2
+    CoreShare: 0.82
+    DeepCount: 800
+    DeepMinDepth: 31.2
+    DeepMaxDepth: 99.2
+    LayOnSide: 0
+    RandomOrientation: 1
