@@ -39,7 +39,6 @@ namespace SomethingDownThere
         private sealed class Patch
         {
             public DetailLayer Layer;
-            public float RootRadius;
             public Bounds Bounds;
             public Vector3[] Roots;
             public Matrix4x4[] Candidates, Near;
@@ -50,6 +49,11 @@ namespace SomethingDownThere
         private DetailLayer[] activeLayers;
         private readonly List<Patch> patches = new List<Patch>();
         private readonly Plane[] planes = new Plane[6];
+        private Texture2D surfaceSupport;
+        private float[] supportSamples;
+        private RectInt dirtySupport;
+        private MaterialPropertyBlock drawProperties;
+        private const float SupportDepth = .024f;
         // Vendor shaders also upload inverse matrices: retain the conservative
         // 511-instance limit without changing their instancing declarations.
         private readonly Matrix4x4[] nearBatch = new Matrix4x4[511], farBatch = new Matrix4x4[511];
@@ -66,6 +70,7 @@ namespace SomethingDownThere
 
         private void OnEnable()
         {
+            drawProperties = new MaterialPropertyBlock();
             terrain = GetComponent<TerrainVolume>();
             terrain.Changed += SoilChanged;
             RenderPipelineManager.beginCameraRendering += RenderCamera;
@@ -77,6 +82,9 @@ namespace SomethingDownThere
             RenderPipelineManager.beginCameraRendering -= RenderCamera;
             patches.Clear();
             activeLayers = null;
+            if (surfaceSupport != null) Destroy(surfaceSupport);
+            surfaceSupport = null;
+            supportSamples = null;
             SupportedClumps = LastRebuiltPatches = LastDrawCalls = LastTriangles = LastVisibleClumps = 0;
             PlacementHash = 0;
         }
@@ -87,6 +95,7 @@ namespace SomethingDownThere
             if (terrain == null || !terrain.CanDig || terrain.IsRestoring) return;
             if ((detailLayers == null || detailLayers.Length == 0) && (nearMesh == null || material == null)) return;
             var start = Stopwatch.GetTimestamp();
+            UpdateSurfaceSupport();
             if (patches.Count == 0) CreatePatches();
             foreach (var patch in patches)
             {
@@ -95,9 +104,7 @@ namespace SomethingDownThere
                 patch.NearCount = 0;
                 for (int i = 0; i < patch.Roots.Length; i++)
                 {
-                    float footprintScale = Mathf.Max(patch.Candidates[i].GetColumn(0).magnitude,
-                        patch.Candidates[i].GetColumn(2).magnitude);
-                    if (!RootSupported(patch.Roots[i], footprintScale * patch.RootRadius + windPadding)) continue;
+                    if (!RootSupported(patch.Roots[i])) continue;
                     patch.Near[patch.NearCount++] = patch.Candidates[i];
                 }
                 SupportedClumps += patch.NearCount;
@@ -129,9 +136,6 @@ namespace SomethingDownThere
             // Include the imported card footprint, all rotations, and wind.
             Bounds meshBounds = layer.mesh.bounds;
             if (layer.farMesh != null) meshBounds.Encapsulate(layer.farMesh.bounds);
-            var reach = new Vector2(Mathf.Max(Mathf.Abs(meshBounds.min.x), Mathf.Abs(meshBounds.max.x)),
-                Mathf.Max(Mathf.Abs(meshBounds.min.z), Mathf.Abs(meshBounds.max.z)));
-            float rootRadius = reach.magnitude;
             Vector3 shape = Vector3.Max(Vector3.one * .01f, layer.meshScale);
             float minScale = Mathf.Max(.01f, Mathf.Min(layer.scaleRange.x, layer.scaleRange.y));
             float maxScale = Mathf.Max(minScale, Mathf.Max(layer.scaleRange.x, layer.scaleRange.y));
@@ -170,43 +174,77 @@ namespace SomethingDownThere
                 bounds.Encapsulate(terrain.transform.TransformPoint(new Vector3(x, extent.y, Mathf.Min(z + size, extent.z))));
                 bounds.Encapsulate(terrain.transform.TransformPoint(new Vector3(Mathf.Min(x + size, extent.x), extent.y, Mathf.Min(z + size, extent.z))));
                 bounds.Expand(bladePadding * 2);
-                patches.Add(new Patch { Layer = layer, RootRadius = rootRadius,
+                patches.Add(new Patch { Layer = layer,
                     Bounds = bounds, Roots = roots.ToArray(), Candidates = matrices.ToArray(),
                     Near = new Matrix4x4[roots.Count] });
             }
         }
 
-        private bool RootSupported(Vector3 root, float radius)
+        private bool RootSupported(Vector3 root)
         {
-            // A handful of perimeter probes misses a small hole between the root
-            // and wide leaves. Inspect every surface grid column intersecting the
-            // entire canopy, including wind and the mesher's cell-sized edge halo.
-            float cell = terrain.CellSize;
             Vector3 local = terrain.transform.InverseTransformPoint(root);
-            Vector3 extent = (Vector3)terrain.Dimensions * cell;
-            if (local.x - radius < 0 || local.z - radius < 0 ||
-                local.x + radius > extent.x || local.z + radius > extent.z) return false;
+            Vector3 extent = (Vector3)terrain.Dimensions * terrain.CellSize;
+            if (local.x < 0 || local.z < 0 || local.x > extent.x || local.z > extent.z) return false;
             if (surfaceRadius > 0 && new Vector2(local.x - extent.x * .5f,
-                local.z - extent.z * .5f).magnitude + radius > surfaceRadius) return false;
-            if (!terrain.IsSolid(root - terrain.transform.up * .018f)) return false;
-            float reach = radius + cell * 1.414214f;
-            int firstX = Mathf.Max(0, Mathf.FloorToInt((local.x - reach) / cell));
-            int lastX = Mathf.Min(terrain.Dimensions.x, Mathf.CeilToInt((local.x + reach) / cell));
-            int firstZ = Mathf.Max(0, Mathf.FloorToInt((local.z - reach) / cell));
-            int lastZ = Mathf.Min(terrain.Dimensions.z, Mathf.CeilToInt((local.z + reach) / cell));
-            for (int z = firstZ; z <= lastZ; z++)
-            for (int x = firstX; x <= lastX; x++)
+                local.z - extent.z * .5f).magnitude > surfaceRadius) return false;
+            // Only remove a whole plant when its root loses support. The shader
+            // clips individual wind-displaced fragments over holes, so empty space
+            // in a card's bounds cannot erase neighbouring intact vegetation.
+            local.y = extent.y - SupportDepth;
+            return terrain.SignedDensity(terrain.transform.TransformPoint(local)) >= 0;
+        }
+
+        private void UpdateSurfaceSupport()
+        {
+            int width = terrain.Dimensions.x + 1, height = terrain.Dimensions.z + 1;
+            if (surfaceSupport == null)
             {
-                float dx = x * cell - local.x, dz = z * cell - local.z;
-                if (dx * dx + dz * dz > reach * reach) continue;
-                var sample = terrain.transform.TransformPoint(new Vector3(x * cell, extent.y, z * cell));
-                if (terrain.SignedDensity(sample) < -.00001f) return false;
+                surfaceSupport = new Texture2D(width, height, TextureFormat.RFloat, false, true) {
+                    name = "Excavation grass support", filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave
+                };
+                supportSamples = new float[width * height];
+                dirtySupport = new RectInt(0, 0, width, height);
             }
-            return true;
+            if (dirtySupport.width <= 0 || dirtySupport.height <= 0) return;
+            float y = terrain.Dimensions.y * terrain.CellSize - SupportDepth;
+            for (int z = dirtySupport.yMin; z < dirtySupport.yMax; z++)
+            for (int x = dirtySupport.xMin; x < dirtySupport.xMax; x++)
+                supportSamples[z * width + x] = terrain.SignedDensity(terrain.transform.TransformPoint(
+                    new Vector3(x * terrain.CellSize, y, z * terrain.CellSize)));
+            surfaceSupport.SetPixelData(supportSamples, 0);
+            surfaceSupport.Apply(false, false);
+            dirtySupport = default;
+            drawProperties.SetTexture("_SurfaceGrassSupport", surfaceSupport);
+            drawProperties.SetMatrix("_SurfaceGrassWorldToLocal", terrain.transform.worldToLocalMatrix);
+            drawProperties.SetVector("_SurfaceGrassSupportSize", new Vector4(width, height,
+                terrain.Dimensions.x * terrain.CellSize, terrain.Dimensions.z * terrain.CellSize));
+            drawProperties.SetFloat("_SurfaceGrassRadius", surfaceRadius);
+            drawProperties.SetFloat("_SurfaceGrassEnabled", 1);
         }
 
         private void SoilChanged(Bounds changed)
         {
+            // A cut only refreshes the affected surface columns; deep tunnel cuts
+            // cannot change the support texture while the roof remains intact.
+            var local = new Bounds(terrain.transform.InverseTransformPoint(changed.min), Vector3.zero);
+            for (int i = 1; i < 8; i++)
+                local.Encapsulate(terrain.transform.InverseTransformPoint(new Vector3(
+                    (i & 1) == 0 ? changed.min.x : changed.max.x,
+                    (i & 2) == 0 ? changed.min.y : changed.max.y,
+                    (i & 4) == 0 ? changed.min.z : changed.max.z)));
+            if (local.max.y >= terrain.Dimensions.y * terrain.CellSize - SupportDepth)
+            {
+                int x0 = Mathf.Clamp(Mathf.FloorToInt(local.min.x / terrain.CellSize) - 1, 0, terrain.Dimensions.x);
+                int z0 = Mathf.Clamp(Mathf.FloorToInt(local.min.z / terrain.CellSize) - 1, 0, terrain.Dimensions.z);
+                int x1 = Mathf.Clamp(Mathf.CeilToInt(local.max.x / terrain.CellSize) + 1, 0, terrain.Dimensions.x) + 1;
+                int z1 = Mathf.Clamp(Mathf.CeilToInt(local.max.z / terrain.CellSize) + 1, 0, terrain.Dimensions.z) + 1;
+                if (dirtySupport.width > 0) {
+                    x0 = Mathf.Min(x0, dirtySupport.xMin); z0 = Mathf.Min(z0, dirtySupport.yMin);
+                    x1 = Mathf.Max(x1, dirtySupport.xMax); z1 = Mathf.Max(z1, dirtySupport.yMax);
+                }
+                dirtySupport = new RectInt(x0, z0, x1 - x0, z1 - z0);
+            }
             changed.Expand(.25f);
             foreach (var patch in patches)
                 if (patch.Bounds.Intersects(changed)) patch.Dirty = true;
@@ -276,6 +314,7 @@ namespace SomethingDownThere
             if (count == 0 || mesh == null) return;
             var parameters = new RenderParams(drawMaterial) {
                 camera = camera, worldBounds = bounds, layer = gameObject.layer,
+                matProps = drawProperties,
                 shadowCastingMode = ShadowCastingMode.Off, receiveShadows = true,
                 lightProbeUsage = LightProbeUsage.Off, motionVectorMode = MotionVectorGenerationMode.Camera
             };

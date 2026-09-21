@@ -11,10 +11,12 @@ The reservoir crust and freshly dug soil read as dry, rough ground: no mirror-li
 glare or crystal sparkles. Preserve texture relief and contact shadows without a wet sheen.
 The whole round diggable surface is a meadow using approved pack plants: low grass,
 white/blue daisies, taller white/yellow/pink flowers and occasional ferns, with small clearings.
-Use pack turf instead of custom turf. Remove a whole vegetation clump if any visible part,
-including wind movement, overlaps a hole; leaves and flowers must never hang over an exposed cut.
-For the current playtest, compare custom soil on the left and pack soil on the right when
-looking from the workbench into the site, beneath the same meadow cap. Soil choice is not final.
+Use pack turf instead of custom turf, continuous to cut edges with a soft, natural transition
+into soil. Avoid sharp sawtooth colouring and dark polygonal outlines around holes.
+Keep plants rooted beside holes; clip only foliage actually above the opening, including wind
+movement. Remove whole plants when their roots lose support, without a padded clearing margin.
+Use approved pack ground throughout the top layer beneath the meadow. The comparison is over;
+retain the custom soil art as an inactive option for later, without applying it to the site.
 
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.

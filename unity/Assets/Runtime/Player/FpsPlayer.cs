@@ -25,7 +25,7 @@ namespace SomethingDownThere
         [Min(0.01f)] public float DigInterval = 0.35f;
         [Min(0.01f)] public float DigReach = 3f;
         [Min(0.01f)] public float InteractReach = 3f;
-        [Min(0.01f)] public float PickupInterval = 0.2f;
+        [Min(0.01f)] public float LooseFindReach = 6f;
         [Min(1)] public int InventorySlots = 10;
     }
 
@@ -65,7 +65,7 @@ namespace SomethingDownThere
         private bool savedCursorVisible, ownsPresentation, focused = true;
         private int transitionFrame = -1;
         private float feedbackUntil;
-        private float pickupRecovery;
+        private float primaryLockout;
         private float rescueRetryDelay;
         private BuriedFind blockedPickup;
         private int adminLevel;
@@ -128,6 +128,8 @@ namespace SomethingDownThere
         public const float MaximumDigReach = 8f;
         public float DigReachAtLevel(int level) => Mathf.Min(MaximumDigReach, tuning.DigReach + ProfileAt(level).ReachBonus);
         public float EffectiveDigReach => DigReachAtLevel(EffectiveShovelLevel);
+        public float MaximumPickupReach => Mathf.Max(tuning.InteractReach, tuning.LooseFindReach);
+        public float PickupReach(BuriedFind find) => find != null && find.IsReleased ? MaximumPickupReach : tuning.InteractReach;
         public float EffectiveDigInterval => tuning.DigInterval * EffectiveShovel.CadenceMultiplier;
         public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy);
         public float DigPulse { get; private set; }
@@ -252,7 +254,7 @@ namespace SomethingDownThere
             verticalSpeed = snapshot.VerticalSpeed;
             SuccessfulStrokes = snapshot.SuccessfulStrokes;
             ResetJetpackHold();
-            digCooldown = pickupRecovery = DigPulse = LastScoopVolume = 0;
+            digCooldown = primaryLockout = DigPulse = LastScoopVolume = 0;
             blockedPickup = null;
             motor.enabled = true;
             Physics.SyncTransforms();
@@ -361,7 +363,7 @@ namespace SomethingDownThere
             Move(frame.Move, frame.JumpPressed, frame.JetpackHeld, frame.CrouchHeld, frame.SprintHeld, deltaTime);
             if (TryAutomaticRescue()) return;
             digCooldown = Mathf.Max(0f, digCooldown - deltaTime);
-            pickupRecovery = Mathf.Max(0f, pickupRecovery - deltaTime);
+            primaryLockout = Mathf.Max(0f, primaryLockout - deltaTime);
             RefreshTargetPrompt();
             // Interaction wins a simultaneous press so opening a station cannot also dig.
             if (frame.InteractPressed)
@@ -383,7 +385,7 @@ namespace SomethingDownThere
             if (!frame.DigHeld) blockedPickup = null;
             if (walkCollection.Tick(previousFeet, frame.Move.sqrMagnitude > .0001f))
             {
-                ApplyPickupRecovery();
+                DelayDigAfterPickup();
                 RefreshTargetPrompt();
                 return;
             }
@@ -475,10 +477,10 @@ namespace SomethingDownThere
                 TargetPrompt = $"{HeldFind.DisplayName}  |  {InputSettings.Display(PlayerBinding.Dig)} to throw  |  {InputSettings.Display(PlayerBinding.Grab)} to drop";
                 return;
             }
-            if (IsMenuOpen || !TryGetTarget(Mathf.Max(EffectiveDigReach, tuning.InteractReach), out var hit)) return;
+            if (IsMenuOpen || !TryGetTarget(Mathf.Max(EffectiveDigReach, MaximumPickupReach), out var hit)) return;
             var find = Contract<BuriedFind>(hit.collider);
             var interactable = Contract<IInteractionTarget>(hit.collider);
-            if (hit.distance <= tuning.InteractReach && find != null)
+            if (find != null && hit.distance <= PickupReach(find))
                 TargetPrompt = find.GetPrompt(this);
             else if (hit.distance <= tuning.InteractReach && interactable != null)
                 TargetPrompt = interactable.GetPrompt(this);
@@ -492,8 +494,9 @@ namespace SomethingDownThere
         // Soil-only strokes never collect off-aim finds.
         public bool TryPrimaryAction()
         {
-            if (IsMenuOpen || !focused || HeldFind != null || pickupRecovery > 0f) return false;
-            if (TryGetTarget(Mathf.Max(EffectiveDigReach, tuning.InteractReach), out var hit)
+            if (IsMenuOpen || !focused || HeldFind != null || primaryLockout > 0f
+                || (Persistence != null && Persistence.BlocksPlay)) return false;
+            if (TryGetTarget(Mathf.Max(EffectiveDigReach, MaximumPickupReach), out var hit)
                 && Contract<BuriedFind>(hit.collider) is BuriedFind find)
             {
                 if (!find.Collectible)
@@ -505,18 +508,18 @@ namespace SomethingDownThere
                     {
                         bool finishedPickup = find.TryCollect(this);
                         blockedPickup = !finishedPickup && Inventory.IsFull ? find : null;
-                        if (finishedPickup) ApplyPickupRecovery();
+                        if (finishedPickup) DelayDigAfterPickup();
                     }
                     RefreshTargetPrompt();
                     return uncovered;
                 }
-                if (hit.distance > tuning.InteractReach) return false;
+                if (hit.distance > PickupReach(find)) return false;
                 if (Inventory.IsFull && blockedPickup == find) return false;
                 bool collected = find.TryCollect(this);
                 blockedPickup = !collected && Inventory.IsFull ? find : null;
                 if (collected)
                 {
-                    ApplyPickupRecovery();
+                    DelayDigAfterPickup();
                 }
                 RefreshTargetPrompt();
                 return collected;
@@ -525,13 +528,19 @@ namespace SomethingDownThere
             if (digCooldown > 0) return false;
             bool dug = TryDig();
             digCooldown = Mathf.Max(0.01f, EffectiveDigInterval);
+            // The cut can reveal a different find on the same ray. Resolve it now,
+            // then keep checking each held-input frame while the shovel recovers.
+            if (dug && TryGetTarget(MaximumPickupReach, out var newlyExposed)
+                && Contract<BuriedFind>(newlyExposed.collider) is BuriedFind revealed
+                && revealed.TryCollect(this)) DelayDigAfterPickup();
             return dug;
         }
 
-        private void ApplyPickupRecovery()
+        private void DelayDigAfterPickup()
         {
-            pickupRecovery = Mathf.Max(0.01f, tuning.PickupInterval);
-            digCooldown = Mathf.Max(digCooldown, Mathf.Max(pickupRecovery, EffectiveDigInterval));
+            // Collection never delays another eligible pickup. Only soil cutting
+            // waits, so holding on a falling find does not race a pickup timer.
+            digCooldown = Mathf.Max(digCooldown, EffectiveDigInterval);
         }
 
         public bool TryDig()
@@ -572,7 +581,7 @@ namespace SomethingDownThere
         {
             if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay) || !findHandling.Release(true)) return false;
             input?.SuppressHeldActions(); blockedPickup = null;
-            pickupRecovery = Mathf.Max(.2f, tuning.PickupInterval);
+            primaryLockout = .2f;
             RefreshTargetPrompt(); return true;
         }
 
@@ -751,7 +760,7 @@ namespace SomethingDownThere
             verticalSpeed = 0;
             jetpackReadyInAir = false;
             ResetJetpackHold();
-            digCooldown = pickupRecovery = DigPulse = 0;
+            digCooldown = primaryLockout = DigPulse = 0;
             blockedPickup = null;
             motor.enabled = true;
             Physics.SyncTransforms();

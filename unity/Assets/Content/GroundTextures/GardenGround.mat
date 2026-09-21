@@ -75,7 +75,7 @@ Material:
     - _StoneNormalStrength: 0.9
     - _SurfaceHeight: 0
     - _TileMetres: 10
-    - _TurfDepth: 0.035
+    - _TurfDepth: 0.045
     - _TurfMaskLayout: 1
     - _TurfNormalStrength: 1
     m_Colors: []

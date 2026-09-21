@@ -12,8 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _SOILCOMPARISON_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -25,15 +24,15 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _ComparisonAlbedo:
-        m_Texture: {fileID: 2800000, guid: 579c3b5de05b35e46af52cba989a8a41, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ComparisonNormal:
-        m_Texture: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ComparisonRoughness:
-        m_Texture: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilAlbedo:
@@ -70,13 +69,13 @@ Material:
     - _MaskLayout: 1
     - _MaxSmoothness: 0.15
     - _NormalStrength: 0.45
-    - _SoilComparison: 1
+    - _SoilComparison: 0
     - _SoilSplitX: 0
     - _SoilTileMetres: 4.2
     - _StoneNormalStrength: 0.55
     - _SurfaceHeight: 0
     - _TileMetres: 10
-    - _TurfDepth: 0.035
+    - _TurfDepth: 0.045
     - _TurfMaskLayout: 1
     - _TurfNormalStrength: 1
     m_Colors: []

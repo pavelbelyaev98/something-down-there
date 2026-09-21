@@ -26,7 +26,7 @@ Shader "Something Down There/Ground Triplanar"
         _StoneNormalStrength("Embedded stone relief", Range(0, 2)) = 0.85
         _TurfNormalStrength("Turf relief", Range(0, 2)) = 0.45
         _SurfaceHeight("Original surface height", Float) = 0
-        _TurfDepth("Turf transition depth", Range(0.01, 0.1)) = 0.035
+        _TurfDepth("Turf transition depth", Range(0.001, 0.1)) = 0.045
         _MacroVariation("Broad colour variation", Range(0, 0.4)) = 0.12
     }
     SubShader
@@ -141,7 +141,6 @@ Shader "Something Down There/Ground Triplanar"
             // Exclude stretched grazing projections from the soil blend.
             half3 weights = smoothstep(bestAxis - 0.16, bestAxis, axis);
             weights /= max(dot(weights, 1.0), 0.0001);
-            half3 turfWeights = weights;
             bool useComparison = _SoilComparison > 0.5 && position.x < _SoilSplitX;
             float soilTileMetres = max(useComparison ? _ComparisonTileMetres : _SoilTileMetres, 0.05);
             float maskLayout = useComparison ? _ComparisonMaskLayout : _MaskLayout;
@@ -192,48 +191,40 @@ Shader "Something Down There/Ground Triplanar"
             half2 soilMask = maskX.rg * weights.x + maskY.rg * weights.y + maskZ.rg * weights.z;
             roughness = soilMask.r;
             occlusion = soilMask.g;
-            // Soil variation stays below the shared meadow cap so its colour is
-            // identical on both halves of the comparison.
+            // Soil variation stays below the continuous meadow cap.
             float2 macroUV = (position.xz + position.y * float2(0.37, 0.23)) * 0.073;
             float2 macroDx = (positionDx.xz + positionDx.y * float2(0.37, 0.23)) * 0.073;
             float2 macroDy = (positionDy.xz + positionDy.y * float2(0.37, 0.23)) * 0.073;
             half macro = SOIL_SAMPLE(Albedo, macroUV, macroDx, macroDy).r;
             colour *= 1 + (macro - 0.47) * _MacroVariation * 3;
 
-            // The turf cap continues a short way down fresh lips. The authored
-            // leaf pattern supplies ragged tips; height excludes deeper walls,
-            // while the facing term excludes ceilings rather than all slopes.
+            // Feather turf into the exposed soil over a shallow collar. A nearly
+            // binary cutoff at the flat surface traced individual mesh triangles.
             float depth = max(0, _SurfaceHeight - position.y);
-            // Reuse the same three world planes for turf. The old top-only UVs
-            // stretched leaf shapes into stripes down even a shallow cut lip.
-            // All explicit gradients are available before this depth branch.
-            float edgeWidth = max(0.00075, (abs(positionDx.y) + abs(positionDy.y)) * 0.65);
-            if (depth < _TurfDepth + 0.02)
+            // The meadow stays on one continuous top projection across the rim.
+            // Switching to a wall projection near tilted mesh normals produced
+            // unrelated dark polygonal patches on the otherwise intact lawn.
+            float edgeWidth = max(_TurfDepth * 0.45, (abs(positionDx.y) + abs(positionDy.y)) * 0.65);
+            if (depth < _TurfDepth * 1.5 + 0.02)
             {
                 float turfScale = soilTileMetres / max(_TileMetres, 0.05);
-                half3 grassX = GROUND_SAMPLE(_TurfAlbedo, uvX * turfScale, dxX * turfScale, dyX * turfScale).rgb;
                 half3 grassY = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb;
-                half3 grassZ = GROUND_SAMPLE(_TurfAlbedo, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale).rgb;
-                half3 grass = grassX * turfWeights.x + grassY * turfWeights.y + grassZ * turfWeights.z;
+                half3 grass = grassY;
                 half leaf = saturate((grass.g - grass.r * 0.7) * 3.5);
                 half drift = GROUND_SAMPLE(_TurfAlbedo, position.xz * 0.61, positionDx.xz * 0.61, positionDy.xz * 0.61).r;
-                float fringeDepth = _TurfDepth * (0.45 + leaf * 0.55) + (drift - 0.35) * 0.012;
-                // Filter just the visible boundary rather than a fixed 2 cm colour
-                // fade. Pixel derivatives keep the narrow edge stable at distance.
+                float fringeDepth = _TurfDepth * (0.75 + leaf * 0.15 + drift * 0.1);
+                // Texture variation stays within the blend so it breaks up the
+                // contour without punching holes in untouched flat grass.
                 float edge = depth - fringeDepth;
                 half turf = (1 - smoothstep(-edgeWidth, edgeWidth, edge))
                     * smoothstep(-0.2, -0.05, n.y);
-                // Darker roots give the thin living cap thickness without drawing a
-                // constant black outline around cuts. Flat lawn stays unchanged.
-                grass *= lerp(1, 0.82, saturate(depth / max(fringeDepth, 0.01)) * (1 - saturate(n.y)));
-                half3 gx = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvX * turfScale, dxX * turfScale, dyX * turfScale), _TurfNormalStrength);
                 half3 gy = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfNormalStrength);
-                half3 gz = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale), _TurfNormalStrength);
-                normal = normalize(lerp(normal, ProjectGroundNormal(n, turfWeights, axisSign, gx, gy, gz), turf));
+                // The thin turf fringe shares the lawn's lighting. Following the
+                // steep soil normal here draws a dark polygonal outline on each cut.
+                half3 turfNormal = half3(0, 1, 0);
+                normal = normalize(lerp(normal, ProjectGroundNormal(turfNormal, half3(0, 1, 0), axisSign, gy, gy, gy), turf));
                 colour = lerp(colour, grass, turf);
-                half2 turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvX * turfScale, dxX * turfScale, dyX * turfScale), _TurfMaskLayout).rg * turfWeights.x
-                    + DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg * turfWeights.y
-                    + DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvZ * turfScale, dxZ * turfScale, dyZ * turfScale), _TurfMaskLayout).rg * turfWeights.z;
+                half2 turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg;
                 roughness = lerp(roughness, turfMask.r, turf);
                 occlusion = lerp(occlusion, lerp(0.65, 1, turfMask.g), turf);
             }
@@ -281,7 +272,10 @@ Shader "Something Down There/Ground Triplanar"
                 // Dry earth must not turn wet or crystalline even where a source
                 // mask contains polished grains or was authored for damp mud.
                 surface.smoothness = min(saturate(1 - roughness), _MaxSmoothness);
-                surface.occlusion = occlusion * ExcavationAmbient(input.positionWS, normalize(input.normalWS));
+                half3 daylightNormal = normalize(input.normalWS);
+                if (input.positionWS.y >= _SurfaceHeight - _TurfDepth - 0.02 && daylightNormal.y > 0)
+                    daylightNormal = half3(0, 1, 0);
+                surface.occlusion = occlusion * ExcavationAmbient(input.positionWS, daylightNormal);
                 surface.alpha = 1;
                 half4 result = UniversalFragmentPBR(lighting, surface);
                 result.rgb = MixFog(result.rgb, input.fogFactor);

@@ -21,7 +21,7 @@ namespace SomethingDownThere.Tests
             => TrackLifecycle(true);
 
         [UnityTest]
-        public IEnumerator NarrowOpeningBetweenOldSupportProbesClearsTheWholeCanopy()
+        public IEnumerator NarrowOpeningClipsCanopyWithoutRemovingAnIntactNeighbouringRoot()
         {
             var root = new GameObject("Canopy footprint fixture");
             root.SetActive(false);
@@ -33,11 +33,21 @@ namespace SomethingDownThere.Tests
             var flags = BindingFlags.Instance | BindingFlags.NonPublic;
             var supported = typeof(SurfaceGrassRenderer).GetMethod("RootSupported", flags);
             Vector3 canopyRoot = new Vector3(104, 2.994f, 104);
-            bool HasSupport() => (bool)supported.Invoke(grass, new object[] { canopyRoot, 1.2f });
+            bool HasSupport(Vector3 position) => (bool)supported.Invoke(grass, new object[] { position });
+            Texture2D Mask() {
+                typeof(SurfaceGrassRenderer).GetMethod("UpdateSurfaceSupport", flags).Invoke(grass, null);
+                return (Texture2D)typeof(SurfaceGrassRenderer).GetField("surfaceSupport", flags).GetValue(grass);
+            }
+            float MaskAt(Vector3 position) {
+                var mask = Mask();
+                Vector3 p = terrain.transform.InverseTransformPoint(position) / terrain.CellSize;
+                return mask.GetPixelBilinear((p.x + .5f) / mask.width, (p.z + .5f) / mask.height).r;
+            }
             try
             {
                 root.SetActive(true); yield return null;
-                Assert.That(HasSupport(), Is.True);
+                Assert.That(HasSupport(canopyRoot), Is.True);
+                Assert.That(MaskAt(canopyRoot), Is.GreaterThan(0));
                 var origin = canopyRoot + new Vector3(.45f, 2, .2f);
                 Assert.That(Physics.Raycast(origin, Vector3.down, out var hit, 3), Is.True);
                 Assert.That(terrain.TryDig(hit, .125f), Is.True);
@@ -46,11 +56,16 @@ namespace SomethingDownThere.Tests
                 for (int i = 0; i < 8; i++)
                     Assert.That(terrain.IsSolid(canopyRoot - Vector3.up * .018f +
                         Quaternion.Euler(0, i * 45, 0) * Vector3.forward * 1.2f), Is.True);
-                Assert.That(HasSupport(), Is.False, "Wide leaves must not remain over an opening between support probes.");
+                Assert.That(HasSupport(canopyRoot), Is.True, "A hole beside the root must not delete the whole nearby clump.");
+                Assert.That(MaskAt(canopyRoot), Is.GreaterThan(0), "The intact grass must remain drawable.");
+                Assert.That(MaskAt(origin), Is.LessThan(0), "Fragments directly above the opening must clip, even between former support probes.");
+                Assert.That(HasSupport(new Vector3(origin.x, canopyRoot.y, origin.z)), Is.False);
                 terrain.ResetExcavation();
-                Assert.That(HasSupport(), Is.True);
+                Assert.That(HasSupport(canopyRoot), Is.True);
+                Assert.That(MaskAt(origin), Is.GreaterThan(0), "Reset must restore foliage clipping data too.");
                 typeof(SurfaceGrassRenderer).GetField("surfaceRadius", flags).SetValue(grass, 1f);
-                Assert.That(HasSupport(), Is.False, "The whole canopy must fit inside the round opening.");
+                Assert.That(HasSupport(canopyRoot), Is.True);
+                Assert.That(HasSupport(canopyRoot + Vector3.right * 1.2f), Is.False, "Roots outside the round meadow are excluded.");
             }
             finally { Object.Destroy(root); Object.Destroy(soil); }
         }

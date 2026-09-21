@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Gorse1
-  m_Shader: {fileID: 4800000, guid: 947355c823b272d489f36561db5960f5, type: 3}
+  m_Shader: {fileID: 4800000, guid: e1107290fe3c2ec4b996926d90201d38, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
@@ -99,6 +99,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _EnvironmentReflections: 1
+    - _ExcavationGrassClip: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _Metallic: 0

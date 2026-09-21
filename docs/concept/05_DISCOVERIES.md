@@ -79,6 +79,9 @@ The detector is passive equipment: the player never equips it. They simply dig.
 Small/common finds are quick: a bite or two, instant pickup, clear feedback so nothing is collected
 unseen. Interesting finds remain after wide cuts, support cleanup and C4; exposure makes them
 collectible without requiring full cleaning or waiting for the player to name them.
+Holding the digging action collects an eligible aimed find as soon as it becomes available,
+including while it falls and between digging strokes. Loose finds have a more generous pickup
+reach than anchored finds or physical lifting; clear aim, exposure and bag capacity still apply.
 
 **Buried connections: "Follow the thing"**:
 Extensions of the cluster system where discoveries physically connect through the ground:

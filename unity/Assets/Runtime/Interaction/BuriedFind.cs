@@ -33,6 +33,7 @@ namespace SomethingDownThere
         // Visibility/range are checked against the actual collider when collecting.
         public float RequiredExposure => Mathf.Clamp(collectionThreshold, 0.1f, 1f);
         public bool IsHeld => physical != null && physical.Held;
+        public bool IsReleased => physical != null && physical.Released;
         public bool Collectible => Item != null && !Collected && !IsHeld && Exposure >= RequiredExposure;
         // Released convex bodies can rest slightly inside the sampled
         // field's smooth collider. Permit only shallow contact on a free item;
@@ -116,7 +117,8 @@ namespace SomethingDownThere
             if (!Collectible) return $"Uncover more  |  {Mathf.RoundToInt(Exposure * 100)}% / {Mathf.RoundToInt(RequiredExposure * 100)}% exposed";
             string collect = player.Inventory.IsFull ? "Inventory full"
                 : $"{(player.InputSettings.ToggleDig ? "Toggle" : "Hold")} {player.InputSettings.Display(PlayerBinding.Dig)} to collect";
-            return $"{Item.DisplayName}  |  {collect}  |  {player.InputSettings.Display(PlayerBinding.Grab)} to lift";
+            string lift = CanLift(player) ? $"  |  {player.InputSettings.Display(PlayerBinding.Grab)} to lift" : "";
+            return $"{Item.DisplayName}  |  {collect}{lift}";
         }
 
         internal bool TryGetCoveringSoil(FpsPlayer player, int worldMask, out RaycastHit soil)
@@ -160,7 +162,7 @@ namespace SomethingDownThere
             // Aimed and walk-over pickup share one inventory transaction.
             if (!CanCollect(player)
                 || terrain.IsSolid(player.ViewCamera.transform.position)
-                || !player.TryGetTarget(player.Tuning.InteractReach, out var hit) || hit.collider != hitCollider) return false;
+                || !player.TryGetTarget(player.PickupReach(this), out var hit) || hit.collider != hitCollider) return false;
             return CommitCollection(player);
         }
 

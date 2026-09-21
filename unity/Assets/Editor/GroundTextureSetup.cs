@@ -17,8 +17,8 @@ namespace SomethingDownThere.Editor
         public const string SedimentPath = "Assets/Content/Nature/ReservoirSediment.mat";
         public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
 
-        [MenuItem("Tools/Something Down There/Configure Meadow and Soil Comparison")]
-        public static void ConfigureMeadowComparison()
+        [MenuItem("Tools/Something Down There/Configure Pack Meadow Ground")]
+        public static void ConfigurePackMeadow()
         {
             var scene = SceneManager.GetActiveScene();
             if (EditorApplication.isPlaying || scene.path != MainGameSceneBuilder.ScenePath)
@@ -42,21 +42,21 @@ namespace SomethingDownThere.Editor
                 sediment = new Material(shader) { name = "ReservoirSediment" };
                 AssetDatabase.CreateAsset(sediment, SedimentPath);
             }
-            Undo.RecordObject(sediment, "Configure meadow soil comparison");
+            Undo.RecordObject(sediment, "Use pack meadow ground");
             sediment.shader = shader;
             foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
             {
                 sediment.SetTexture("_Soil" + channel, PackTexture("Mud01", channel));
-                string customPath = Folder + "Soil_" + channel + ".png";
-                ConfigureImport(customPath, channel);
-                sediment.SetTexture("_Comparison" + channel, AssetDatabase.LoadAssetAtPath<Texture2D>(customPath));
+                // Retain custom art and its material, but don't pull it into the
+                // active terrain or player build through dormant comparison slots.
+                sediment.SetTexture("_Comparison" + channel, null);
             }
             ConfigurePackTurf(sediment, terrain.SurfaceHeight);
             sediment.SetFloat("_MaskLayout", 1);
             sediment.SetFloat("_SoilTileMetres", 4.2f);
             sediment.SetFloat("_NormalStrength", .45f);
             sediment.SetFloat("_StoneNormalStrength", .55f);
-            sediment.SetFloat("_SoilComparison", 1);
+            sediment.SetFloat("_SoilComparison", 0);
             sediment.SetFloat("_SoilSplitX", terrain.transform.TransformPoint(
                 new Vector3(terrain.Dimensions.x * terrain.CellSize * .5f, 0, 0)).x);
             sediment.SetFloat("_ComparisonMaskLayout", 0);
@@ -79,7 +79,8 @@ namespace SomethingDownThere.Editor
             Assign(preview.GetComponent<Renderer>(), sediment);
             foreach (string side in new[] { "North", "East", "West" })
                 Assign(root.Find("Surface/" + side + " rim")?.GetComponent<Renderer>(), sediment);
-            Assign(root.Find("Surface/South rim")?.GetComponent<Renderer>(), camp);
+            Assign(root.Find("Surface/South rim")?.GetComponent<Renderer>(), sediment);
+            ConfigureSunBias(root);
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
         }
 
@@ -91,7 +92,7 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_TileMetres", 10f);
             material.SetFloat("_TurfNormalStrength", 1f);
             material.SetFloat("_SurfaceHeight", surfaceHeight);
-            material.SetFloat("_TurfDepth", .035f);
+            material.SetFloat("_TurfDepth", .045f);
             material.SetFloat("_MaxSmoothness", .15f);
             material.SetFloat("_MacroVariation", .06f);
         }
@@ -153,7 +154,7 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_NormalStrength", 0.55f);
             material.SetFloat("_StoneNormalStrength", 0.9f);
             material.SetFloat("_SurfaceHeight", terrain.SurfaceHeight);
-            material.SetFloat("_TurfDepth", 0.035f);
+            material.SetFloat("_TurfDepth", .045f);
             material.SetFloat("_MacroVariation", 0.06f);
             EditorUtility.SetDirty(material);
             var settings = new SerializedObject(terrain);
@@ -185,7 +186,7 @@ namespace SomethingDownThere.Editor
             Undo.RecordObject(sun, "Restore ground depth lighting");
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .9f;
-            sun.shadowBias = 0.05f;
+            ConfigureSunBias(root);
             sun.shadowNormalBias = 0.12f;
             var sunData = sun.GetComponent<UniversalAdditionalLightData>();
             if (sunData == null) sunData = Undo.AddComponent<UniversalAdditionalLightData>(sun.gameObject);
@@ -233,6 +234,16 @@ namespace SomethingDownThere.Editor
             renderer.SetDirty();
             EditorUtility.SetDirty(renderer);
             EditorUtility.SetDirty(contact);
+        }
+
+        private static void ConfigureSunBias(Transform root)
+        {
+            var sun = root.Find("Sun").GetComponent<Light>();
+            Undo.RecordObject(sun, "Prevent turf self-shadow contours");
+            // Near-overhead light needs enough depth bias to keep the flat cap
+            // from tracing its own tessellation around freshly excavated rims.
+            sun.shadowBias = 0.5f;
+            EditorUtility.SetDirty(sun);
         }
 
         private static void Assign(Renderer renderer, Material material)

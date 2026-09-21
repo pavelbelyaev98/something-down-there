@@ -24,7 +24,7 @@
   Buried envelopes use a smaller soil gap while the accepted turf layout stays intact.
   Progression bands continue into a separate deep
   allocation across the lower reservoir, authored in the same catalogs. Model size and mass remain authored; retired content and its save aliases are deleted. Population tuning applies to new games; saved finds retain their positions.
-- **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold for collection, held aim instant pickup.
+- **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. Released/falling finds have longer pickup reach; station and physical lifting reach remain separate. Pickup recovery delays soil strokes only; exposure, clear aim and bag capacity still gate collection.
 - **Handling:** Physical lift/drop (RMB) and throw (LMB). Carried finds track motion and settle physically on release; a slow creep on a slope counts as quiet, so finds stop instead of rolling away forever.
 - **Dense-world cost:** meshes enclosed by pristine soil stop rendering; conservative bounds and nearby terrain edits reactivate them before small fragments can be missed. Anchored physics callbacks sleep until a terrain change or explicit handling/restore; collision and save records remain intact.
 
@@ -43,9 +43,11 @@
   walking apron with the existing stores. Valley scenery and generated terrain are removed.
   The voxel grid extends beneath the apron for lateral digging.
 - **Meadow and soil:** eleven pack grass/flower/fern layers, seeded in change-driven instanced
-  batches. Every surface grid column across the canopy and wind margin is checked after cuts;
-  overlapping clumps disappear entirely. MainGame vegetation stays inside the round opening.
-  Shared pack turf caps the custom-soil left half and pack-mud right half. Linear masks,
+  batches. Root support removes uprooted plants; a change-driven surface-density mask clips
+  wind-displaced foliage over openings without clearing intact neighbours. The project grass
+  shader also clips the round perimeter. Pack turf uses continuous top projection and a soft,
+  textured soil transition; noon shadow bias prevents a tessellated self-shadow rim. Pack soil covers both former comparison
+  halves; custom soil art/materials remain stored but unbound from active terrain. Linear masks,
   preserved alpha, normal-map imports and the dry smoothness cap prevent white glare.
 - **Presentation:** approved pack sky and almost overhead midday sunlight; custom grass, clouds,
   sun and trial-tool art/imports are deleted. No first-person rig, alternate digging modes,

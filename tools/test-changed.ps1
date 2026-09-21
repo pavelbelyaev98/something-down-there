@@ -103,6 +103,13 @@ function Get-TestStatus {
 # completed result from the previous run cannot be mistaken for this one.
 function Invoke-UnityTests([string]$mode, [string]$filter) {
     $before = Get-TestStatus
+    if ($before.status -eq 'running') { throw 'Wait for the active Unity test run to finish.' }
+    # Unity's runner otherwise opens a modal save dialog. Intentional edits must
+    # already be saved; unsaved scene experiments are disposable in this repo.
+    $prepare = unity command eval_file --file (Join-Path $PSScriptRoot 'prepare-editor-tests.cs') --project-path $projectPath --format json | ConvertFrom-Json
+    if (-not $prepare.success -or -not $prepare.data.result.success) {
+        throw "Could not prepare a clean test scene: $($prepare | ConvertTo-Json -Depth 5 -Compress)"
+    }
     $arguments = @('command', 'run_tests', '--project-path', $projectPath, '--format', 'json')
     if ($filter) { $arguments += @('--mode', $mode, '--filter', $filter, '--filter_type', 'testName') }
     else {
@@ -110,7 +117,8 @@ function Invoke-UnityTests([string]$mode, [string]$filter) {
         $arguments += @('--mode', $mode, '--filter', $assembly, '--filter_type', 'assembly')
     }
     $arguments += @('--async_tests', 'true', '--timeout', '3600')
-    & unity @arguments | Out-Null
+    $launch = & unity @arguments | ConvertFrom-Json
+    if (-not $launch.success) { throw "Could not start tests: $($launch | ConvertTo-Json -Depth 5 -Compress)" }
     $deadline = (Get-Date).AddMinutes(45)
     $started = $false
     while ($true) {

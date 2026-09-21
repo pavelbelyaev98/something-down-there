@@ -228,6 +228,76 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator HeldMouseUncoversAndCollectsWithoutAnotherPress() => ExerciseDigAndCollection(false, 1);
 
+        [Test]
+        public void ReleasedFindUsesLongerPickupReachWithoutExtendingBuriedFindOrStationReach()
+        {
+            var find = field.Finds[0];
+            Expose(find);
+            var position = find.transform.position;
+            Aim(position + Vector3.up * 4.5f, position);
+            Assert.That(find.TryCollect(player), Is.False, "An anchored find keeps the existing close interaction reach.");
+            find.GetComponent<FindPhysics>().Restore(true);
+            player.RefreshTargetPrompt();
+            StringAssert.Contains(find.DisplayName, player.TargetPrompt);
+            StringAssert.DoesNotContain("to lift", player.TargetPrompt, "Distant pickup must not advertise an out-of-range physical grab.");
+            Assert.That(player.TryGrabOrDrop(), Is.False);
+            Assert.That(player.TryPrimaryAction(), Is.True, "An exposed released find should be collectable from the rim.");
+            Assert.That(find.Collected, Is.True);
+        }
+
+        [Test]
+        public void HeldPickupCollectsAFallingFindDuringRecoveryWithoutAnotherDigTick()
+        {
+            var first = field.Finds[0];
+            var falling = field.Finds[1];
+            Expose(first); Expose(falling);
+            Aim(first.transform.position + Vector3.up * 1.5f, first.transform.position);
+            Assert.That(player.TryPrimaryAction(), Is.True);
+            // The previous pickup has just armed the soil-cut cooldown.
+            var body = falling.GetComponent<Rigidbody>();
+            falling.GetComponent<FindPhysics>().Restore(true);
+            body.isKinematic = false; body.useGravity = true; body.linearVelocity = Vector3.down;
+            var motor = player.GetComponent<CharacterController>();
+            motor.enabled = false;
+            player.transform.SetPositionAndRotation(falling.transform.position + new Vector3(0, 2.9f, -.6f), Quaternion.identity);
+            player.ViewCamera.transform.localPosition = Vector3.up * 1.6f;
+            motor.enabled = true;
+            player.Tuning.Gravity = 0;
+            LookAt(falling.transform.position);
+            Physics.SyncTransforms();
+            Assert.That(player.TryGetTarget(player.MaximumPickupReach, out var aimed), Is.True);
+            Assert.That(aimed.collider, Is.EqualTo(falling.GetComponent<Collider>()));
+            int strokes = player.SuccessfulStrokes, revision = terrain.Revision;
+            float charge = player.Battery.Charge;
+            player.Tick(new FpsInputFrame { DigHeld = true }, .001f);
+            Assert.That(falling.Collected, Is.True, "Held aim must collect the falling find immediately, not after a pickup/shovel timer.");
+            Assert.That(player.Inventory.Count, Is.EqualTo(2));
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
+            Assert.That(terrain.Revision, Is.EqualTo(revision));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge));
+            Assert.That(falling.TryCollect(player), Is.False, "Immediate collection still commits once.");
+        }
+
+        [Test]
+        public void ExtendedLoosePickupStillRequiresClearAimAndFiniteReach()
+        {
+            var find = field.Finds[0];
+            Expose(find);
+            find.GetComponent<FindPhysics>().Restore(true);
+            Aim(find.transform.position + Vector3.up * (player.MaximumPickupReach + 2), find.transform.position);
+            Assert.That(find.TryCollect(player), Is.False);
+            Aim(find.transform.position + Vector3.up * 4.5f, find.transform.position);
+            var blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try {
+                blocker.transform.position = find.transform.position + Vector3.up * 2;
+                blocker.transform.localScale = Vector3.one * .5f;
+                Physics.SyncTransforms();
+                Assert.That(find.TryCollect(player), Is.False, "Longer reach must not pass through props.");
+                Assert.That(find.Collected, Is.False);
+            }
+            finally { Object.DestroyImmediate(blocker); }
+        }
+
         [UnityTest]
         public IEnumerator RemappedToggleUncoversAndCollectsWithoutAnotherPress() => ExerciseDigAndCollection(true, 1);
 
@@ -314,6 +384,10 @@ namespace SomethingDownThere.Tests
             int collected = 0;
             foreach (var find in variants)
             {
+                // Isolate this identity: with immediate pickup, another exposed
+                // background find on the same ray can legitimately collect next.
+                foreach (var other in field.Finds)
+                    other.gameObject.SetActive(other == find && !other.Collected);
                 player.enabled = false; devices.Release(primary, queueEventOnly: true);
                 player.RefillAdminBattery(); PrepareDeviceView(find);
                 var motor = player.GetComponent<CharacterController>(); motor.enabled = false;

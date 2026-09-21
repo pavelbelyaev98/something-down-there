@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,6 +15,30 @@ namespace SomethingDownThere.Editor
         public const string Folder = "Assets/Content/Nature/";
         public const string GrassPrefab = "Assets/BK/PureNature_Mountains/Prefabs/Plants/Grass1.prefab";
         public const string MaterialPath = Folder + "MountainGrass.mat";
+        public const string GrassShaderPath = Folder + "ExcavationGrass.shader";
+
+        public static Shader ConfigureGrassShader()
+        {
+            const string sourcePath = "Assets/BK/Pure_Common/Shaders/BK_Grass.shader";
+            string source = File.ReadAllText(sourcePath);
+            const string anchor = "float3 PositionWS = input.positionWS;";
+            if (source.Split(new[] { anchor }, StringSplitOptions.None).Length != 11)
+                throw new InvalidOperationException("BK grass passes changed; review the excavation clip integration.");
+            string adapted = source.Replace("Shader \"BK/Grass\"", "Shader \"Something Down There/Excavation Grass\"")
+                .Replace("[HideInInspector] _Cutoff", "[HideInInspector] _ExcavationGrassClip(\"Excavation grass support\", Float) = 1\n\t\t[HideInInspector] _Cutoff")
+                .Replace("#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Filtering.hlsl\"",
+                    "#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Filtering.hlsl\"\n\t\t#include \"../../Runtime/Terrain/SurfaceGrassSupport.hlsl\"")
+                .Replace(anchor, anchor + "\n\t\t\t\tClipExcavationGrass(PositionWS);");
+            if (!File.Exists(GrassShaderPath) || File.ReadAllText(GrassShaderPath) != adapted)
+            {
+                File.WriteAllText(GrassShaderPath, adapted);
+                AssetDatabase.ImportAsset(GrassShaderPath, ImportAssetOptions.ForceSynchronousImport);
+            }
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(GrassShaderPath);
+            if (shader == null || ShaderUtil.ShaderHasError(shader))
+                throw new InvalidOperationException("Excavation grass shader must compile before binding meadow materials.");
+            return shader;
+        }
 
         [MenuItem("Tools/Something Down There/Configure Approved Surface Grass")]
         public static void Configure()
@@ -35,6 +60,7 @@ namespace SomethingDownThere.Editor
                 AssetDatabase.CreateAsset(material, MaterialPath);
             }
             material.enableInstancing = true;
+            material.shader = ConfigureGrassShader();
             material.SetFloat("_WindMultiplier", .8f);
             EditorUtility.SetDirty(material);
             var grass = terrain.GetComponent<SurfaceGrassRenderer>();
@@ -99,6 +125,7 @@ namespace SomethingDownThere.Editor
                 AssetDatabase.CreateAsset(material, path);
             }
             else { material.shader = source.shader; material.CopyPropertiesFromMaterial(source); }
+            material.shader = ConfigureGrassShader();
             material.enableInstancing = true;
             material.SetFloat("_WindMultiplier", .8f);
             EditorUtility.SetDirty(material);

@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Active Task:** `001` — next pending; task `068` complete.
+- **Active Task:** `001` — evolving tool rig and progression; terrain feel pass complete.
 - **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; round meadow, gravel apron/stores, noon light; current-format saves only)
 - **Direction:** Implementing the vertical slice per `docs/concept/`. Starting with the transformative machine, the janky Sell-All machine & salvage winch, the visual workbench, and 100m+ reservoir depth.
 
@@ -15,6 +15,8 @@
 
 ### Phase 0: Immediate Feel Pass
 
+- [x] **`070` — Soft Rims & Pack Ground:** softened turf edges and self-shadow contours; pack ground throughout, custom soil art retained inactive. (`docs/tasks/completed/070-soft-rims-and-pack-ground.md`)
+- [x] **`069` — Grass Edges & Responsive Pickup:** precise foliage clearing, clean turf rim, longer loose-find reach and pickup between digging ticks. (`docs/tasks/completed/069-grass-edges-and-responsive-pickup.md`)
 - [x] **`068` — Odin Tooling:** configured Inspector/Validator in Editor Only mode with a focused MainGame/content profile and automatic build validation. (`docs/tasks/completed/068-odin-tooling.md`)
 - [x] **`067` — Round Site & Retired Content:** round meadow, permanent gravel apron/stores, overhead sun, full canopy clearing and removal of obsolete art/tools. (`docs/tasks/completed/067-round-site-and-retired-content.md`)
 - [x] **`066` — Meadow & Soil Comparison:** pack grass/flowers across excavation with custom versus pack soil beneath a shared meadow cap. (`docs/tasks/completed/066-meadow-and-soil-comparison.md`)
@@ -114,6 +116,8 @@
 ---
 
 ## Completed
+- **[070] Soft Rims & Pack Ground:** feathered the turf/soil transition, corrected noon shadow bias and retired the active soil comparison without deleting custom art. Scene/grass checks and Odin validation passed, visuals reviewed and Windows player rebuilt and smoke-tested; test preflight now discards unsaved scene experiments without blocking on Unity's save prompt.
+- **[069] Grass Edges & Responsive Pickup:** replaced padded clump clearing with root support and shader clipping, removed the dark turf rim, and separated loose-find reach and immediate held pickup from shovel recovery. Added an Odin meadow-shader guard; 295 relevant tests verified, content validation clean, visuals checked and Windows player rebuilt and smoke-tested.
 - **[068] Odin Tooling:** integrated approved 4.0.2.4 tools, focused asset validation and built-in prebuild checks; upgraded plugin metadata and documented usage. All 14,489 asset checks passed and the Windows player rebuilt with the unused runtime serializer excluded.
 - **[067] Round Site & Retired Content:** replaced valley scenery with a round meadow and permanent gravel apron/stores, moved sunlight overhead, and clear entire plant canopies above cuts. Deleted retired art/rig/experiments and all older-save compatibility; 215 EditMode checks and affected gameplay/save regressions passed, visual review completed and Windows player rebuilt.
 

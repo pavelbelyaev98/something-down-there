@@ -104,7 +104,7 @@ namespace SomethingDownThere.Tests
                 var grassMaterial = (Material)grassSettings.FindProperty("material").objectReferenceValue;
                 Assert.That(grassMaterial.enableInstancing, Is.True);
                 Assert.That(ShaderUtil.ShaderHasError(grassMaterial.shader), Is.False);
-                Assert.That(grassMaterial.shader.name, Is.EqualTo("BK/Grass"));
+                Assert.That(grassMaterial.shader.name, Is.EqualTo("Something Down There/Excavation Grass"));
                 Assert.That(grassMaterial.GetTexture("_MainTex"), Is.Not.Null);
                 var meadowLayers = grassSettings.FindProperty("detailLayers");
                 Assert.That(meadowLayers.arraySize, Is.GreaterThanOrEqualTo(8), "The whole dig site keeps mixed grass, flowers and ferns.");
@@ -133,7 +133,9 @@ namespace SomethingDownThere.Tests
                     Assert.That(ground.GetTexture("_" + kind + channel), Is.Not.Null, kind + channel);
                 StringAssert.StartsWith(GroundTextureSetup.PackTextureFolder, AssetDatabase.GetAssetPath(ground.GetTexture("_SoilAlbedo")),
                     "Pack ground uses project copies with close-range texture imports.");
-                Assert.That(ground.GetFloat("_SoilComparison"), Is.EqualTo(1));
+                Assert.That(ground.GetFloat("_SoilComparison"), Is.Zero, "Pack ground covers the entire dig site.");
+                foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
+                    Assert.That(ground.GetTexture("_Comparison" + channel), Is.Null, "Inactive custom soil must not remain bound to active terrain.");
                 Assert.That(ground.GetFloat("_MaskLayout"), Is.EqualTo(1));
                 Assert.That(ground.GetFloat("_ComparisonMaskLayout"), Is.Zero);
                 Assert.That(ground.GetFloat("_TurfMaskLayout"), Is.EqualTo(1));
