@@ -33,7 +33,9 @@ Keep the project open in Unity for live commands, or open it with `unity open ./
 
 ## Odin Inspector and Validator
 
-- Approved installed version: **4.0.2.4** for both Inspector/Serializer and Validator, under `Assets/Plugins/Sirenix`. Update them together and preserve publisher GUIDs. [Local asset card](../art/odin/README.md).
+- Approved installed version: **4.0.2.4** for both Inspector/Serializer and Validator, under `Assets/Plugins/Sirenix`. Update them together and preserve publisher GUIDs.
+- Source/license: user-purchased Sirenix packages from Unity Asset Store, under the purchased seat license; private repository only. Vendor binaries use Git LFS; personal activation credentials stay outside the repository.
+- Unity 6.6 import adjustment: reserialized five outdated plugin importer metadata files after enabling Editor Only mode; publisher binaries and GUIDs preserved. Retain Editor Only mode and Validator profile/automation settings when updating.
 - Use Inspector attributes or Visual Designer when they simplify content authoring and tuning. Keep ordinary Unity serialization unless a concrete requirement needs more; existing `WorldSaveController`/save codec still own persistence.
 - **Editor Only mode is enabled**: Inspector and Validator work in the Editor; the unused Odin runtime serializer is excluded from players. [Publisher guidance](https://odininspector.com/tutorials/getting-started/editor-only-mode).
 - `Assets/Editor/Validation/MainGameValidation.asset` scans MainGame with dependencies and `Assets/Content`. Recovery and unused BK demo scenes are excluded; vendor assets actually used by MainGame remain covered. Open this profile in **Tools > Odin > Validator** for a manual scan.
