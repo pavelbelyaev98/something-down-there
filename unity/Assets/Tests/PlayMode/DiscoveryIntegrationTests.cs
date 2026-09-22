@@ -72,8 +72,8 @@ namespace SomethingDownThere.Tests
             Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(ShovelProfile.Defaults()[0].Radius).Within(.00001f));
             int strokes = 0, firstEncounter = 0;
             // A fixed approximately 2 x 2 m excavation, independent of hidden find
-            // positions. Cap floor depth and use normal reach, scoop and energy.
-            for (int pass = 0; pass < 5; pass++)
+            // positions. Shallow shaves get the same powered-time budget as scoops.
+            for (int pass = 0; pass < 50; pass++)
                 for (int iz = 0; iz < 3; iz++)
                     for (int ix = 0; ix < 3; ix++)
                     {
@@ -85,10 +85,10 @@ namespace SomethingDownThere.Tests
                         if (player.TryDig()) strokes++;
                         if (firstEncounter == 0 && field.Finds.Any(f => f.Exposure > 0)) firstEncounter = strokes;
                     }
-            Assert.That(strokes, Is.InRange(1, 45));
-            // The starter bite is deliberately weak (048 follow-up): ~30 strokes is
-            // still under 20 s of digging, so the entry layer keeps its promise.
-            Assert.That(firstEncounter, Is.InRange(1, 40));
+            Assert.That(strokes, Is.InRange(1, 450));
+            Assert.That(firstEncounter, Is.GreaterThan(0));
+            Assert.That(firstEncounter * player.EffectiveDigInterval, Is.LessThan(23f),
+                "The entry layer must remain within the original powered-time budget.");
             // Authored entry density is ~0.54 finds/m², so a 2 x 2 m blind patch
             // averages two: the bar is "several reachable views", not a lucky spot.
             Assert.That(field.Finds.Count(f => f.Exposure > 0), Is.GreaterThanOrEqualTo(2));
@@ -108,7 +108,7 @@ namespace SomethingDownThere.Tests
                     DigAbove(revealed, offset * ring, .23f);
                 }
             Assert.That(revealed.Collectible, Is.True, "Aimed finishing turns a revealed find into a pickup.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(player.Battery.Capacity - strokes * player.Tuning.DigEnergy));
+            Assert.That(player.Battery.Charge, Is.EqualTo(player.Battery.Capacity - strokes * player.EffectiveDigEnergy).Within(.001f));
             Assert.That(player.Battery.Charge, Is.GreaterThan(0));
             Assert.That(player.Inventory.Count, Is.Zero, "Revealing off-aim finds does not collect them automatically.");
             Debug.Log($"Shallow patch ({x}, {z}): {strokes} strokes, first encounter {firstEncounter}, " +
@@ -342,12 +342,12 @@ namespace SomethingDownThere.Tests
             int finishingStrokes = player.SuccessfulStrokes - beforePickupStrokes;
             Assert.That(finishingStrokes, Is.InRange(0, 1), "An aimed uncovering stroke can finish pickup immediately.");
             Assert.That(terrain.Revision, Is.EqualTo(beforePickupRevision + finishingStrokes));
-            Assert.That(player.Battery.Charge, Is.EqualTo(beforePickupEnergy - finishingStrokes * player.Tuning.DigEnergy),
+            Assert.That(player.Battery.Charge, Is.EqualTo(beforePickupEnergy - finishingStrokes * player.EffectiveDigEnergy).Within(.001f),
                 "Only the uncovering stroke costs fuel; pickup adds no charge.");
             int revision = terrain.Revision; float energy = player.Battery.Charge;
             PrepareDeviceView(find);
             LookAt(new Vector3(find.transform.position.x, 0, find.transform.position.z - 1.5f));
-            yield return new WaitForSeconds(player.EffectiveDigInterval + .05f);
+            yield return new WaitForSeconds(player.ScoopDigInterval + .05f);
             Assert.That(terrain.Revision, Is.GreaterThan(revision), "The same hold/toggle continues after pickup recovery.");
             Assert.That(player.Battery.Charge, Is.LessThan(energy));
             Assert.That(player.Inventory.Count, Is.EqualTo(1), "Continuing cannot duplicate the find.");
@@ -458,7 +458,7 @@ namespace SomethingDownThere.Tests
             float charge = player.Battery.Charge;
             int strokes = player.SuccessfulStrokes;
             player.Tuning.Gravity = 0;
-            for (int i = 0; i < 12 && !find.Collected; i++)
+            for (int i = 0; i < 120 && !find.Collected; i++)
             {
                 Aim(find.transform.position + Vector3.up * 2, find.transform.position);
                 Assert.That(player.TryPrimaryAction(), Is.True);
@@ -471,9 +471,9 @@ namespace SomethingDownThere.Tests
             // The uncover loop may already have resolved a small find, in which case the
             // aimed press only collects it and costs no stroke.
             int finishingStrokes = player.SuccessfulStrokes - strokes;
-            Assert.That(finishingStrokes, Is.InRange(0, 12));
+            Assert.That(finishingStrokes, Is.InRange(0, 120));
             Assert.That(terrain.Revision, Is.EqualTo(revision + finishingStrokes));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - finishingStrokes * player.Tuning.DigEnergy));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - finishingStrokes * player.EffectiveDigEnergy).Within(.001f));
             {
                 revision = terrain.Revision;
                 player.TryPrimaryAction();

@@ -9,15 +9,96 @@ namespace SomethingDownThere.Tests
 {
     public sealed partial class FindPhysicsIntegrationTests
     {
+        [TestCase(true, false)] [TestCase(false, false)]
+        [TestCase(true, true)] [TestCase(false, true)]
+        public void PickupKeepsTheReadyCutInTheSameHeldFrame(bool shaving, bool nearby)
+        {
+            var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
+            player.Tuning.Gravity = 0;
+            player.SelectAdminLevel(4);
+            if (!shaving) player.ToggleAdminShaving();
+            PlacePickupCutFixture(find, nearby);
+            AimPickupCutFixture(find, nearby ? .7f : 0);
+            Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
+            Assert.That(hit.collider.GetComponentInParent<BuriedFind>() == find, Is.EqualTo(!nearby));
+            int strokes = player.SuccessfulStrokes, revision = terrain.Revision;
+            float charge = player.Battery.Charge;
+            player.Tick(new FpsInputFrame { DigHeld = true }, .001f);
+            Assert.That(find.Collected, Is.True);
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 1), "Pickup cannot consume a ready cutting frame.");
+            Assert.That(terrain.Revision, Is.EqualTo(revision + 1));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(player.TryPrimaryAction(), Is.False, "Collection must not allow a second cut before its cadence.");
+            player.Tick(new FpsInputFrame { DigHeld = true }, player.EffectiveDigInterval);
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 2), "Continue while the pickup visual is active.");
+        }
+
+        [TestCase(true)] [TestCase(false)]
+        public void PickupKeepsAnExistingCutDeadline(bool shaving)
+        {
+            var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
+            player.Tuning.Gravity = 0;
+            player.SelectAdminLevel(4);
+            if (!shaving) player.ToggleAdminShaving();
+            PlacePickupCutFixture(find, false);
+            AimPickupCutFixture(find, 1.1f);
+            Assert.That(player.TryPrimaryAction(), Is.True);
+            int strokes = player.SuccessfulStrokes;
+            float interval = player.EffectiveDigInterval;
+            player.Tick(default, interval * .5f);
+            AimPickupCutFixture(find, 0);
+            player.Tick(new FpsInputFrame { DigHeld = true }, .001f);
+            Assert.That(find.Collected, Is.True);
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes), "Pickup must not bypass the in-progress cooldown.");
+            player.Tick(new FpsInputFrame { DigHeld = true }, interval * .5f);
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 1), "Pickup must not reset the remaining cooldown.");
+        }
+
+        private void PlacePickupCutFixture(BuriedFind find, bool nearby)
+        {
+            if (nearby) { Place(find, .65f); return; }
+            // Partial exposure permits aimed collection but excludes proximity pickup.
+            for (float height = -.1f; height < .3f; height += .001f)
+            {
+                Place(find, height);
+                if (find.Collectible && find.Exposure < .8f) return;
+            }
+            Assert.Fail("Could not place a collectible find with retained soil.");
+        }
+
+        private void AimPickupCutFixture(BuriedFind find, float horizontalOffset)
+        {
+            var cameraPosition = find.transform.position + new Vector3(0, 1.7f, -1.2f);
+            var target = find.WorldBounds.center + Vector3.up * find.WorldBounds.extents.y * .7f
+                + Vector3.right * horizontalOffset;
+            AimCutFixture(cameraPosition, target);
+        }
+
+        private void AimCutFixture(Vector3 cameraPosition, Vector3 target)
+        {
+            Vector3 direction = target - cameraPosition;
+            float yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            float pitch = -Mathf.Atan2(direction.y, new Vector2(direction.x, direction.z).magnitude) * Mathf.Rad2Deg;
+            var motor = player.GetComponent<CharacterController>();
+            motor.enabled = false;
+            player.transform.SetPositionAndRotation(cameraPosition - Vector3.up * 1.6f, Quaternion.Euler(0, yaw, 0));
+            player.ViewCamera.transform.localPosition = Vector3.up * 1.6f;
+            player.ViewCamera.transform.localRotation = Quaternion.Euler(pitch, 0, 0);
+            typeof(FpsPlayer).GetField("pitch", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(player, pitch);
+            motor.enabled = true;
+            Physics.SyncTransforms();
+        }
+
         [Test]
-        public void ScoopUncoversAndCollectsOneAimedIdentityForItsActualFuelCost()
+        public void ShavingUncoversAndCollectsOneAimedIdentityForItsActualFuelCost()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
             player.enabled = false;
             HalfCover(find); AimVisible(find);
             int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
-            for (int i = 0; i < 16 && !find.Collected; i++)
+            for (int i = 0; i < 80 && !find.Collected; i++)
             {
                 AimVisible(find);
                 player.Tick(new FpsInputFrame { DigHeld = true }, 1f);
@@ -28,27 +109,26 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void ScoopRevealsAnOffAimFindWithoutCollectingOrBypassingAFullBag()
+        public void ShavingRevealsAnOffAimFindWithoutCollectingOrBypassingAFullBag()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
             HalfCover(find);
-            player.ViewCamera.transform.position = find.transform.position + Vector3.up * 2f;
-            player.ViewCamera.transform.rotation = Quaternion.LookRotation(
-                find.transform.position + Vector3.right * (player.EffectiveShovel.Radius * .7f)
-                - player.ViewCamera.transform.position, Vector3.forward);
-            Physics.SyncTransforms();
+            AimCutFixture(find.transform.position + Vector3.up * 2f,
+                find.transform.position + Vector3.right * (player.EffectiveShovel.Radius * .7f));
             Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
             Assert.That(hit.collider.GetComponentInParent<TerrainVolume>(), Is.SameAs(terrain));
             Assert.That(player.TryPrimaryAction(), Is.True);
-            for (int i = 0; i < 4 && !find.Collectible; i++)
+            for (int i = 0; i < 80 && !find.Collectible; i++)
             {
                 Assert.That(find.Collected, Is.False, "The wide edge never grants off-aim collection.");
                 player.Tick(new FpsInputFrame { DigHeld = true }, 1f);
             }
             Assert.That(find.Collectible, Is.True); Assert.That(find.Collected, Is.False);
             while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count, "Carried", 1));
-            AimRock(find); float charge = player.Battery.Charge;
+            AimPickupCutFixture(find, 0); float charge = player.Battery.Charge;
+            Assert.That(player.TryGetTarget(player.EffectiveDigReach, out hit), Is.True);
+            Assert.That(hit.collider.GetComponentInParent<BuriedFind>(), Is.SameAs(find));
             Assert.That(player.TryPrimaryAction(), Is.False); Assert.That(find.Collected, Is.False);
             player.Inventory.TryRemove(player.Inventory.Items[0].InstanceId, out _);
             Assert.That(player.TryPrimaryAction(), Is.True); Assert.That(find.Collected, Is.True);
@@ -64,11 +144,17 @@ namespace SomethingDownThere.Tests
             HalfCover(find); AimVisible(find);
             int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
             var pose = find.Capture();
-            player.Tick(new FpsInputFrame { DigHeld = true, DigPressed = !automatic }, .01f);
+            for (int i = 0; i < 80 && !find.Collected; i++)
+            {
+                AimVisible(find);
+                player.Tick(new FpsInputFrame { DigHeld = true, DigPressed = !automatic && i == 0 }, player.EffectiveDigInterval);
+                Assert.That(find.Collected, Is.EqualTo(find.Exposure >= find.RequiredExposure),
+                    "The exact shave that reaches eligibility must also collect the aimed find.");
+            }
             Assert.That(find.Exposure, Is.GreaterThanOrEqualTo(find.RequiredExposure));
             Assert.That(find.Collected, Is.True, "The already-aimed revealing stroke must complete pickup.");
-            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 1));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.Tuning.DigEnergy));
+            Assert.That(player.SuccessfulStrokes, Is.GreaterThan(strokes));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - (player.SuccessfulStrokes - strokes) * player.EffectiveDigEnergy).Within(.001f));
             Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
             Assert.That(find.TryCollect(player), Is.False);
             Assert.That(find.Capture().Position, Is.EqualTo(pose.Position), "Cosmetic travel must not mutate the saved find pose.");

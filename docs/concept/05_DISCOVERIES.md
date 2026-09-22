@@ -81,6 +81,8 @@ collectible without requiring full cleaning or waiting for the player to name th
 Holding the digging action collects an eligible aimed find as soon as it becomes available,
 including while it falls and between digging strokes. Loose finds have a more generous pickup
 reach than anchored finds or physical lifting; clear aim, exposure and bag capacity still apply.
+Collection and its visual feedback never delay the next terrain cut. Held digging can collect
+and make its normally scheduled cut in the same frame, without adding a second cut or fuel charge.
 Automatic collection also reaches nearby, clearly uncovered finds in front of the player while
 walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.

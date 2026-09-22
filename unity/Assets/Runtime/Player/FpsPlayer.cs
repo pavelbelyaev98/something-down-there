@@ -72,6 +72,7 @@ namespace SomethingDownThere
         private ShovelProfile[] adminTuning;
         private bool unlimitedBattery;
         private bool adminXray;
+        private bool adminScoopComparison;
         private bool jetpackReadyInAir;
 
         public FpsTuning Tuning => tuning;
@@ -114,7 +115,8 @@ namespace SomethingDownThere
         public static bool AdminBuild => Debug.isDebugBuild;
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
-        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray);
+        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminScoopComparison);
+        public bool ShavingEnabled => ExcavationAvailable && (!AdminAvailable || !adminScoopComparison);
         public DiscoveryField Discoveries => discoveries;
         public bool AdminXray => AdminAvailable && adminXray && discoveries != null && discoveries.isActiveAndEnabled;
         public bool UnlimitedBattery => AdminAvailable && unlimitedBattery;
@@ -130,8 +132,11 @@ namespace SomethingDownThere
         public float EffectiveDigReach => DigReachAtLevel(EffectiveShovelLevel);
         public float MaximumPickupReach => Mathf.Max(tuning.InteractReach, tuning.LooseFindReach);
         public float PickupReach(BuriedFind find) => find != null && find.IsReleased ? MaximumPickupReach : tuning.InteractReach;
-        public float EffectiveDigInterval => tuning.DigInterval * EffectiveShovel.CadenceMultiplier;
-        public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy);
+        public float ScoopDigInterval => Mathf.Max(0.01f, tuning.DigInterval * EffectiveShovel.CadenceMultiplier);
+        public float DigIntervalAtLevel(int level) => Mathf.Max(0.01f, tuning.DigInterval * ProfileAt(level).CadenceMultiplier
+            * (ShavingEnabled ? EquipmentProgression.ShavingIntervalScale : 1f));
+        public float EffectiveDigInterval => DigIntervalAtLevel(EffectiveShovelLevel);
+        public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy) * EffectiveDigInterval / ScoopDigInterval;
         public float DigPulse { get; private set; }
         public int SuccessfulStrokes { get; private set; }
         public float LastScoopVolume { get; private set; }
@@ -245,7 +250,7 @@ namespace SomethingDownThere
             Trade = new StationTrade(Inventory, Wallet, Shovel, shovelUpgradeCosts, Battery);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = jetpackReadyInAir = false;
+            unlimitedBattery = adminXray = adminScoopComparison = jetpackReadyInAir = false;
             motor.enabled = false;
             transform.SetPositionAndRotation(snapshot.PlayerPosition, snapshot.PlayerRotation);
             crouch.Restore(snapshot.CrouchAmount);
@@ -362,7 +367,10 @@ namespace SomethingDownThere
             Vector3 previousFeet = FeetPosition;
             Move(frame.Move, frame.JumpPressed, frame.JetpackHeld, frame.CrouchHeld, frame.SprintHeld, deltaTime);
             if (TryAutomaticRescue()) return;
-            digCooldown = Mathf.Max(0f, digCooldown - deltaTime);
+            // Preserve the fractional frame remainder while holding, but never bank
+            // more than one cut or run a burst of terrain rebuilds after a hitch.
+            digCooldown = Mathf.Max(-EffectiveDigInterval, digCooldown - deltaTime);
+            if (!frame.DigHeld || frame.DigPressed) digCooldown = Mathf.Max(0f, digCooldown);
             primaryLockout = Mathf.Max(0f, primaryLockout - deltaTime);
             RefreshTargetPrompt();
             // Interaction wins a simultaneous press so opening a station cannot also dig.
@@ -386,11 +394,9 @@ namespace SomethingDownThere
             if (primaryLockout <= 0f && proximityCollection.Tick(previousFeet,
                 frame.Move.sqrMagnitude > .0001f, frame.DigHeld || frame.DigPressed))
             {
-                DelayDigAfterPickup();
                 RefreshTargetPrompt();
-                return;
             }
-            if (frame.DigPressed || frame.DigHeld) TryPrimaryAction();
+            if (frame.DigPressed || frame.DigHeld) TryPrimaryAction(frame.DigHeld);
         }
 
         private void ApplyLook(Vector2 delta)
@@ -493,7 +499,9 @@ namespace SomethingDownThere
         // stroke aimed at a visible find can finish that same find's collection.
         // Held and fresh input collect eligible aimed finds without the shovel timer.
         // Soil-only strokes never collect off-aim finds.
-        public bool TryPrimaryAction()
+        public bool TryPrimaryAction() => TryPrimaryAction(false);
+
+        private bool TryPrimaryAction(bool continueDiggingAfterPickup)
         {
             if (IsMenuOpen || !focused || HeldFind != null || primaryLockout > 0f
                 || (Persistence != null && Persistence.BlocksPlay)) return false;
@@ -504,12 +512,11 @@ namespace SomethingDownThere
                 {
                     if (digCooldown > 0f) return false;
                     bool uncovered = TryDig();
-                    digCooldown = Mathf.Max(0.01f, EffectiveDigInterval);
+                    ScheduleNextDig();
                     if (uncovered && find.Collectible)
                     {
                         bool finishedPickup = find.TryCollect(this);
                         blockedPickup = !finishedPickup && Inventory.IsFull ? find : null;
-                        if (finishedPickup) DelayDigAfterPickup();
                     }
                     RefreshTargetPrompt();
                     return uncovered;
@@ -518,9 +525,11 @@ namespace SomethingDownThere
                 if (Inventory.IsFull && blockedPickup == find) return false;
                 bool collected = find.TryCollect(this);
                 blockedPickup = !collected && Inventory.IsFull ? find : null;
-                if (collected)
+                if (collected && continueDiggingAfterPickup && digCooldown <= 0f)
                 {
-                    DelayDigAfterPickup();
+                    // Re-resolve the world ray after collection removes the collider.
+                    // Pickup never consumes or restarts the normal cutting cadence.
+                    if (TryDig()) ScheduleNextDig();
                 }
                 RefreshTargetPrompt();
                 return collected;
@@ -528,21 +537,16 @@ namespace SomethingDownThere
             blockedPickup = null;
             if (digCooldown > 0) return false;
             bool dug = TryDig();
-            digCooldown = Mathf.Max(0.01f, EffectiveDigInterval);
+            ScheduleNextDig();
             // The cut can reveal a different find on the same ray. Resolve it now,
             // then keep checking each held-input frame while the shovel recovers.
             if (dug && TryGetTarget(MaximumPickupReach, out var newlyExposed)
-                && Contract<BuriedFind>(newlyExposed.collider) is BuriedFind revealed
-                && revealed.TryCollect(this)) DelayDigAfterPickup();
+                && Contract<BuriedFind>(newlyExposed.collider) is BuriedFind revealed)
+                revealed.TryCollect(this);
             return dug;
         }
 
-        private void DelayDigAfterPickup()
-        {
-            // Collection never delays another eligible pickup. Only soil cutting
-            // waits, so holding on a falling find does not race a pickup timer.
-            digCooldown = Mathf.Max(digCooldown, EffectiveDigInterval);
-        }
+        private void ScheduleNextDig() => digCooldown = Mathf.Max(0.001f, digCooldown + EffectiveDigInterval);
 
         public bool TryDig()
         {
@@ -559,7 +563,11 @@ namespace SomethingDownThere
             }
             float cost = EffectiveDigEnergy;
             if (!UnlimitedBattery && !Battery.CanSpend(cost)) { ShowFeedback("Not enough charge to dig - return to recharge"); return false; }
-            bool accepted = target is TerrainVolume terrain ? terrain.TryDig(hit, EffectiveShovel.Radius) : target.TryDig(hit);
+            bool accepted = target is TerrainVolume terrain
+                ? ShavingEnabled
+                    ? terrain.TryShave(hit, EffectiveShovel.Radius, EffectiveShovel.Radius * EquipmentProgression.ShavingDepthRatio)
+                    : terrain.TryDig(hit, EffectiveShovel.Radius)
+                : target.TryDig(hit);
             if (!accepted) return false;
             SpendEnergy(cost);
             SuccessfulStrokes++;
@@ -594,6 +602,8 @@ namespace SomethingDownThere
             adminLevel = 0;
             unlimitedBattery = false;
             adminXray = false;
+            adminScoopComparison = false;
+            ResetDigComparisonInput();
             ShowFeedback("Normal rules restored");
             MenuChanged?.Invoke();
         }
@@ -604,6 +614,22 @@ namespace SomethingDownThere
             unlimitedBattery = !unlimitedBattery;
             ShowFeedback(unlimitedBattery ? "Unlimited battery enabled" : "Normal battery use restored");
             MenuChanged?.Invoke();
+        }
+
+        public void ToggleAdminShaving()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminScoopComparison = !adminScoopComparison;
+            ResetDigComparisonInput();
+            ShowFeedback(ShavingEnabled ? "Shaving motion ON" : "Shaving motion OFF - scoop digging");
+            MenuChanged?.Invoke();
+        }
+
+        private void ResetDigComparisonInput()
+        {
+            digCooldown = DigPulse = 0;
+            blockedPickup = null;
+            input?.SuppressHeldActions();
         }
 
         public void ToggleAdminXray()

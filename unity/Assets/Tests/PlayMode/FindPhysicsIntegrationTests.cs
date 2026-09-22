@@ -35,6 +35,10 @@ namespace SomethingDownThere.Tests
             yield return null; // Let generation finish before restoring the compact fixture.
             TestInputPreferences.RestoreSmallFindFixture(field);
             yield return null;
+            player.SetApplicationFocus(true);
+            if (player.IsMenuOpen) player.CloseMenu();
+            yield return null;
+            player.SetApplicationFocus(true);
         }
 
         [UnityTearDown]

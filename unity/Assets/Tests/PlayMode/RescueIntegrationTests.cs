@@ -50,6 +50,10 @@ namespace SomethingDownThere.Tests
             Place(new Vector3(-8, 3, 0));
             yield return null;
             yield return null;
+            player.SetApplicationFocus(true);
+            if (player.IsMenuOpen) player.CloseMenu();
+            yield return null;
+            player.SetApplicationFocus(true);
         }
 
         [UnityTearDown]
@@ -132,7 +136,7 @@ namespace SomethingDownThere.Tests
         {
             player.ViewCamera.transform.position = new Vector3(0, 1.5f, 0);
             player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down);
-            player.Battery.RestoreCharge(player.Tuning.DigEnergy);
+            player.Battery.RestoreCharge(player.EffectiveDigEnergy);
             int revision = terrain.Revision;
             Assert.That(player.TryDig(), Is.True);
             Assert.That(terrain.Revision, Is.GreaterThan(revision));

@@ -54,9 +54,14 @@ Absurdity is controlled and deadpan:
 
 ## 4. Dig feel
 
-Chunky, weighted and steady:
+Continuous and controlled; rapid contact should not excavate the ground too quickly:
 
-- Each bite removes a readable chunk; dust and crumbs follow.
+- Hold to rapidly shave shallow layers from the contacted surface, with an immediate response and
+  measured progress as the aim moves. Keep each layer thin enough to control the excavation and
+  notice emerging objects. Avoid a stop-start sequence of large scoops. Dust and crumbs
+  follow the cut when the feedback pass is implemented.
+- Collecting objects never pauses shaving or scoop digging, resets the cutting cadence, or waits
+  for the pickup animation. Held digging continues through collection.
 - The camera never shakes or jerks from digging. No motion effects are added just to have toggles
  for them.
 - Audio is per material: sand hisses, clay thumps, rock cracks, concrete grinds.

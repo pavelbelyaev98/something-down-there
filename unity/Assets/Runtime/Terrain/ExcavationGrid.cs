@@ -148,16 +148,23 @@ namespace SomethingDownThere
             && point.x < Extent.x && point.y < Extent.y && point.z < Extent.z && Sample(point) > 0;
 
         public bool RemoveSphere(Vector3 center, float radius, out BoundsInt changed)
-            => RemoveBrush(center, radius, Vector3.up, 0, 0, false, out changed);
+            => RemoveBrush(center, radius, Vector3.up, 0, 0, false, 0, out changed);
 
         public bool RemoveScoop(Vector3 center, float radius, int seed, float variation, out BoundsInt changed)
             => RemoveScoop(center, radius, Vector3.up, seed, variation, out changed);
 
         public bool RemoveScoop(Vector3 center, float radius, Vector3 normal, int seed, float variation, out BoundsInt changed)
-            => RemoveBrush(center, radius, normal, seed, variation, true, out changed);
+            => RemoveBrush(center, radius, normal, seed, variation, true, 0, out changed);
+
+        public bool RemoveShave(Vector3 surface, float radius, Vector3 normal, float depth, out BoundsInt changed)
+        {
+            changed = default;
+            if (!Finite(depth) || depth <= 0 || depth > radius) return false;
+            return RemoveBrush(surface, radius, normal, 0, 0, false, depth, out changed);
+        }
 
         private bool RemoveBrush(Vector3 center, float radius, Vector3 normal, int seed, float variation,
-            bool shovel, out BoundsInt changed)
+            bool shovel, float shaveDepth, out BoundsInt changed)
         {
             changed = default;
             LastRemovedVolume = LastDetachedVolume = 0;
@@ -216,7 +223,18 @@ namespace SomethingDownThere
                 Vector3 delta = new Vector3(x, y, z) * CellSize - center;
                 float cut;
 
-                if (shovel)
+                if (shaveDepth > 0)
+                {
+                    float height = Vector3.Dot(delta, normal);
+                    float radial = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
+                    float side = radial - radius;
+                    float floor = -height - shaveDepth;
+                    float rounding = Mathf.Min(radius * 0.18f, shaveDepth * 0.5f);
+                    float join = Mathf.Max(rounding - Mathf.Abs(side - floor), 0) / rounding;
+                    cut = Mathf.Max(side, floor) + join * join * rounding * 0.25f;
+                    cut = Mathf.Max(cut, height - radius);
+                }
+                else if (shovel)
                 {
                     float u = Vector3.Dot(delta, tangent), v = Vector3.Dot(delta, bitangent);
                     float height = Vector3.Dot(delta, normal);

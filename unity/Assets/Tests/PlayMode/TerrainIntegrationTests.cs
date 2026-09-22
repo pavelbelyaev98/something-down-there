@@ -49,6 +49,10 @@ namespace SomethingDownThere.Tests
             player.SetApplicationFocus(true);
             if (player.IsMenuOpen) player.CloseMenu();
             yield return null;
+            player.SetApplicationFocus(true);
+            if (player.IsMenuOpen) player.CloseMenu();
+            yield return null;
+            player.SetApplicationFocus(true);
             Physics.SyncTransforms();
         }
 
@@ -65,6 +69,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void ScoopsChargeOnceMatchCollisionAndRejectStaleHits()
         {
+            player.ToggleAdminShaving();
             player.enabled = true;
             for (int stroke = 0; stroke < 4; stroke++)
             {
@@ -108,6 +113,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void DetachedColumnDisappearsAcrossChunksInTheSamePaidStroke()
         {
+            player.ToggleAdminShaving();
             // A moat leaves a tall, narrow pillar supported from below. Its crown
             // crosses four chunk seams and lies well outside the final shovel brush.
             for (int i = 0; i < 24; i++)
@@ -145,7 +151,7 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.IsSolid(crown), Is.False);
             Assert.That(Hit(new Vector3(0, 2, 0), Vector3.down).point.y, Is.LessThan(-3),
                 "The crown's collider must disappear before the accepted dig returns.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(energy - severingStrokes * player.Tuning.DigEnergy));
+            Assert.That(player.Battery.Charge, Is.EqualTo(energy - severingStrokes * player.EffectiveDigEnergy).Within(.001f));
             Assert.That(terrain.Revision, Is.EqualTo(revision + severingStrokes));
             Assert.That(terrain.RemovedVolume - beforeStroke, Is.EqualTo(player.LastScoopVolume).Within(0.001f));
             Assert.That(terrain.GetComponentsInChildren<Rigidbody>(), Is.Empty);
@@ -193,7 +199,7 @@ namespace SomethingDownThere.Tests
             player.ViewCamera.transform.LookAt(new Vector3(0, -1, 0));
             RaycastHit stale = Hit(player.ViewCamera.transform.position, Vector3.down);
             Assert.That(player.TryDig(), Is.True);
-            Assert.That(player.Battery.Charge, Is.EqualTo(99));
+            Assert.That(player.Battery.Charge, Is.EqualTo(100 - player.EffectiveDigEnergy).Within(.001f));
             int remaining = terrain.RemainingCells;
             Assert.That(terrain.TryDig(stale), Is.False);
             Assert.That(terrain.RemainingCells, Is.EqualTo(remaining));
@@ -411,6 +417,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void AdminLevelsChargeEqualEnergyAndOverrideNeverChangesOwnedProgression()
         {
+            player.ToggleAdminShaving();
             Assert.That(player.AdminAvailable, Is.True);
             float previous = 0;
             for (int level = 1; level <= 6; level++)
@@ -423,7 +430,7 @@ namespace SomethingDownThere.Tests
                 player.ViewCamera.transform.LookAt(new Vector3(x, -1, 0));
                 float energy = player.Battery.Charge;
                 Assert.That(player.TryDig(), Is.True);
-                Assert.That(player.Battery.Charge, Is.EqualTo(energy - player.Tuning.DigEnergy));
+                Assert.That(player.Battery.Charge, Is.EqualTo(energy - player.EffectiveDigEnergy).Within(.001f));
                 if (previous > 0) Assert.That(player.LastScoopVolume / previous, Is.InRange(1.2f, 2.5f));
                 // The starter is deliberately weak (048 follow-up); the ceiling still
                 // guards against an explosive late-tier bite.
@@ -460,7 +467,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.TargetPrompt, Is.Empty, "Out-of-range digging remains silent.");
                 PlacePlayer(new Vector3(x, reach - 0.1f - 1.6f, 0));
                 Assert.That(player.TryDig(), Is.True, $"Level {level} must dig at its advertised range.");
-                Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.Tuning.DigEnergy));
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
                 previous = reach;
             }
             Assert.That(player.EffectiveDigReach, Is.EqualTo(4));
@@ -469,6 +476,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator AttachedRemnantClearsPlayerTraversalAndCollisionInOnePaidStroke()
         {
+            player.ToggleAdminShaving();
             InstallExcavatedSpikeFixture();
             var tip = new Vector3(0, -1.75f, 0);
             var feet = new Vector3(0, -1.94f, -1);
@@ -496,7 +504,7 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.LastRebuiltChunkCount, Is.InRange(4, 12));
             Assert.That(notifications, Is.EqualTo(1));
             Assert.That(notification.Contains(tip), Is.True, "Discovery exposure receives the cleared remnant bounds.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.Tuning.DigEnergy));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
             Assert.That(terrain.Revision, Is.EqualTo(1));
             Assert.That(player.LastScoopVolume, Is.EqualTo(terrain.RemovedVolume).Within(0.00001f));
             Assert.That(terrain.TryDig(oldTipHit), Is.False);
@@ -512,7 +520,7 @@ namespace SomethingDownThere.Tests
             for (int i = 0; i < 60; i++) player.Tick(new FpsInputFrame { Move = Vector2.up }, 1f / 60);
             Assert.That(player.transform.position.z, Is.GreaterThan(0.8f), "Walk across the former spike without a jump or jetpack.");
             Assert.That(player.FeetPosition.y, Is.InRange(-2.3f, -1.8f));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.Tuning.DigEnergy));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
         }
 
         private void InstallExcavatedSpikeFixture()

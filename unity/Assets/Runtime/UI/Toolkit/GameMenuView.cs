@@ -462,13 +462,11 @@ namespace SomethingDownThere
         {
             if (offer.Kind == EquipmentKind.Shovel)
             {
-                var current = player.Shovel.Current;
                 int level = offer.Complete ? offer.OwnedLevel : offer.NextLevel;
-                var next = player.Shovel.GetProfile(level);
                 string detail = "Reach " + Compared($"{player.DigReachAtLevel(offer.OwnedLevel):F1}",
                     $"{player.DigReachAtLevel(level):F1}", offer.Complete) + " m  |  Stroke "
-                    + Compared($"{player.Tuning.DigInterval * current.CadenceMultiplier:F2}",
-                        $"{player.Tuning.DigInterval * next.CadenceMultiplier:F2}", offer.Complete) + " s";
+                    + Compared($"{player.DigIntervalAtLevel(offer.OwnedLevel):F2}",
+                        $"{player.DigIntervalAtLevel(level):F2}", offer.Complete) + " s";
                 return player.HasAdminOverrides ? detail + "  |  DEVELOPER OVERRIDES ACTIVE" : detail;
             }
             return offer.Kind == EquipmentKind.Fuel ? "Refill sold separately" : "";
@@ -527,10 +525,11 @@ namespace SomethingDownThere
         {
             title.text = "Developer admin";
             subtitle.text = "Session overrides";
-            Text(scroll, "Body", $"Shovel {player.EffectiveShovelLevel}  |  {player.EffectiveDigReach:F1} m reach  |  {player.EffectiveShovel.Radius * 2:F2} m scoop\n"
+            Text(scroll, "Body", $"Shovel {player.EffectiveShovelLevel}  |  {player.EffectiveDigReach:F1} m reach  |  {player.EffectiveShovel.Radius * 2:F2} m cut width\n"
                 + $"This site: {player.SuccessfulStrokes} strokes, {player.ExcavatedVolume:F1} m³ removed."
                 + DensityLine(), "body");
             var grid = Element(scroll, "admin-actions");
+            Button(grid, "Shaving motion: " + (player.ShavingEnabled ? "ON" : "OFF (scoops)"), player.ToggleAdminShaving);
             for (int i = 1; i <= player.Shovel.LevelCount; i++)
             {
                 int level = i;

@@ -7,6 +7,8 @@ namespace SomethingDownThere
     {
         public const int LevelCount = 5;
         public const float FuelPerCredit = 100f;
+        public const float ShavingIntervalScale = 0.1f;
+        public const float ShavingDepthRatio = 0.05f;
         // One ladder for every track: tier 2 costs the same whether it buys bite, bag or
         // tank. The shovel runs one tier deeper, so it consumes the last entry too.
         public static readonly int[] TierPrices = { 10, 25, 55, 100, 180 };

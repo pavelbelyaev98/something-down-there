@@ -11,8 +11,8 @@
 ## 2. Terrain & Excavation (`unity/Assets/Runtime/Terrain/`)
 - **Voxel Engine:** Finite signed density field (24 × 24 × 100 m, authored by `SiteLayout`) running synchronized surface-net meshing (0.125 m resolution) with collision generation. Chunks are materialized on demand: 7,200 possible keys, 144 built on a fresh site, so startup and load cost do not scale with depth.
 - **Checkpoints:** dense density (~119 MB for the shipped site) validated and gzip-Fastest encoded on a worker thread, packed payload capped at 64 MB / 256 MB unpacked. Only the current format and excavation layout load; previous formats require a new game.
-- **Digging:** Ordinary organic scoop cuts, detached soil and local paper-thin strip cleanup within the stroke. Longer or multiply attached slivers crumble; thicker useful ledges and support crowns remain.
-- **Admin Tools:** Session-only debug panel (`Ctrl+Shift+F10`) with shovel tier selection, refill, and buried find markers.
+- **Digging:** Hold/toggle drives frequent, thin shaving cuts for controlled excavation, with sub-cell contact refinement and matching render/collision updates. Energy scales with cadence. Detached soil and local paper-thin strips clear within each cut; thicker useful ledges and support crowns remain. Collection preserves the cutting cadence in both shaving and scoop modes.
+- **Admin Tools:** Session-only debug panel (`Ctrl+Shift+F10`) with **Shaving motion: ON/OFF** for comparing shallow cuts with organic scoops, shovel tier selection, refill, and buried find markers. Shaving defaults ON; Restore normal rules and loading a session restore it.
 
 ## 3. Finds & Physics (`unity/Assets/Runtime/Interaction/`)
 - **Finds:** full-size plain rocks form a dense layer immediately beneath the turf, with the ore
@@ -22,7 +22,7 @@
   each band stays populated from its top. A separate lower-reservoir allocation continues the
   progression. Populations are authored in the source catalogs, apply to new games, and saved
   finds keep their positions. Model size and mass remain authored; retired content is deleted.
-- **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. `FindProximityCollection` also collects clear finds within a close camera-centred area in front of the player during walking or held digging, at any height, with direct visibility and throw/drop exclusion. Released/falling finds have longer aimed reach; station/lifting reach stays separate. Pickup recovery delays soil strokes only.
+- **Detection & Pickup:** Aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. `FindProximityCollection` also collects clear finds within a close camera-centred area in front of the player during walking or held digging, at any height, with direct visibility and throw/drop exclusion. Released/falling finds have longer aimed reach; station/lifting reach stays separate. Aimed and nearby collection can share a held-input frame with its scheduled terrain cut; neither collection nor its animation adds a delay.
 - **Release:** Nearly exposed finds with clear interiors and only shallow surface contact become dynamic; substantial burial still anchors them. Gravity and collision determine falling/settling.
 - **Handling:** Physical lift/drop (RMB) and throw (LMB). Carried finds track motion and settle physically on release; a slow creep on a slope counts as quiet, so finds stop instead of rolling away forever.
 - **Dense-world cost:** meshes enclosed by pristine soil stop rendering; conservative bounds and nearby terrain edits reactivate them before small fragments can be missed. Anchored physics callbacks sleep until a terrain change or explicit handling/restore; collision and save records remain intact.
@@ -50,8 +50,8 @@
    terrain; custom soil art/materials remain stored but unbound. Linear masks,
   preserved alpha, normal-map imports and the dry smoothness cap prevent white glare.
 - **Presentation:** approved pack sky and almost overhead midday sunlight; custom grass, clouds,
-  sun and trial-tool art/imports are deleted. No first-person rig, alternate digging modes,
-  experiment key or admin toggle remains. The full licensed vendor pack remains available.
+  sun and trial-tool art/imports are deleted. No first-person rig is present; the shaving/scoop
+  comparison lives in development admin. The full licensed vendor pack remains available.
   WindowsBuild always targets MainGame.
 - **Underground lighting:** `ExcavationDaylight` derives daylight from connected excavated air, with a generous early reach, stronger loss along sideways passages and no ambient brightness floor. Soil and adapted URP Lit finds/boundaries attenuate sun, sky fill and reflections together; sustained descents and long covered branches become near-black while local lights remain effective.
 

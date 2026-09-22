@@ -2,9 +2,9 @@
 
 ## Status
 
-- **Active Task:** `087` — rework the dig action into a drill-like hold-to-shave cut.
+- **Active Task:** `007` — material IDs and automatic tool response on the shaving dig pipeline.
 - **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; current-format saves only).
-- **Direction:** Dig action first (shaving cut), then materials, then testable content. `001` waits. Core functionality first; audio, ambience and feel polish live in their own late phases. Each mechanic ships with its own testable content (one unique, lamps, C4) before the next system is built.
+- **Direction:** Materials next, then testable content. `001` waits. Core functionality first; audio, ambience and feel polish live in their own late phases. Each mechanic ships with its own testable content (one unique, lamps, C4) before the next system is built.
 - **Completed history:** `docs/tasks/completed/` — one spec per finished task; each header carries the final-state summary.
 
 ---
@@ -20,7 +20,6 @@ Complete (`048`–`073`) — specs in `docs/tasks/completed/`.
 
 ### Next: current dig + first testable content
 
-- [ ] **`087` — Drill-Like Shaving Dig Action** (`04`, `09`, `14`): rework the dig from discrete scoop cuts into a continuous, fast shaving cut — hold, and the machine rapidly shaves ground away instead of removing chunk by chunk. It *is* the dig, not an alternate mode behind a keybind (04 §2); runs on the existing voxel engine and cleanup rules with no new machine model (`001` owns the rig). Supersedes the chunky-bite baseline in concept 09 §4 — update the concept once the feel is proven. Material resistance differences arrive with `007` right after.
 - [ ] **`007` — Material IDs & Tool Auto-Adaptation** (`03`, `04`): assign material IDs on the voxels that already exist. Soil, clay, and rock differ in shaving speed, resistance, and sound *hooks* (actual audio arrives with `028`). No mode switch, no new meshes; materials must read by shape, not color alone. Gravel and concrete follow in `074`.
 - [ ] **`086` — One Buried Unique, End-to-End** (`05`, `14`): author one unique — the gramophone, per `012`'s tier leaning — bury it, and prove the whole special-find chain with a single object: authored placement → deliberate exposure → recognition → zero-slot collection → safe storage → one yard stand → lore card reread → save/reload. One socket only; `018`/`019` grow it into the wall later. Detector, C4 survival and cluster tests all use this object afterward.
 - [ ] **`027` — World Marking & Placeable Work Lamps** (`03`, `04`): placeable, repositionable, reusable lamps that survive digging — the only underground light; every later deep-zone task depends on them. Free tool markings (arrow, home, return-here). No map, ever.

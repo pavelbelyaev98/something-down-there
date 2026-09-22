@@ -176,6 +176,12 @@ namespace SomethingDownThere
         public bool TryDig(RaycastHit hit) => TryDig(hit, digRadius);
 
         public bool TryDig(RaycastHit hit, float radius)
+            => TryCut(hit, radius, 0);
+
+        public bool TryShave(RaycastHit hit, float radius, float depth)
+            => ExcavationGrid.Finite(depth) && depth > 0 && depth <= radius && TryCut(hit, radius, depth);
+
+        private bool TryCut(RaycastHit hit, float radius, float shaveDepth)
         {
             LastRebuiltChunkCount = 0;
             LastDigMilliseconds = 0;
@@ -190,7 +196,8 @@ namespace SomethingDownThere
             // Recheck the actual mesh too, so its old hit cannot carve nearby soil.
             float hitTolerance = cellSize * 0.75f;
             if (!hit.collider.Raycast(new Ray(hit.point + hit.normal * hitTolerance, -hit.normal),
-                out _, hitTolerance * 2)) return false;
+                out var currentHit, hitTolerance * 2)
+                || (currentHit.point - hit.point).sqrMagnitude > cellSize * cellSize * 0.0001f) return false;
             int seed = unchecked(excavationSeed + grid.Revision * 486187739);
             uint depthHash = unchecked((uint)seed * 747796405u + 2891336453u);
             depthHash = unchecked(((depthHash >> (int)((depthHash >> 28) + 4)) ^ depthHash) * 277803737u);
@@ -199,8 +206,22 @@ namespace SomethingDownThere
             Vector3 normal = transform.InverseTransformDirection(hit.normal).normalized;
             Vector3 point = surface - normal * (radius * (0.12f + depthOffset));
             var timer = Stopwatch.StartNew();
-            if (!grid.RemoveScoop(point, radius, normal,
-                seed, scoopVariation, out BoundsInt changed)) return false;
+            BoundsInt changed;
+            if (shaveDepth > 0)
+            {
+                // Surface nets approximate the isosurface. Resolve the true contact so
+                // a cut shallower than a voxel keeps advancing on tilted faces too.
+                Vector3 inside = surface - normal * cellSize * 2;
+                Vector3 outside = surface + normal * cellSize * 2;
+                if (grid.Sample(inside) <= 0 || grid.Sample(outside) > 0) return false;
+                for (int i = 0; i < 12; i++)
+                {
+                    Vector3 middle = (inside + outside) * 0.5f;
+                    if (grid.Sample(middle) > 0) inside = middle; else outside = middle;
+                }
+                if (!grid.RemoveShave((inside + outside) * 0.5f, radius, normal, shaveDepth, out changed)) return false;
+            }
+            else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
             // The grid expands this region to include any detached components, even
             // beyond the brush/chunk. Rebuild visible surfaces and collision together.

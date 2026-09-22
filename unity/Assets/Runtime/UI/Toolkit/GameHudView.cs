@@ -65,7 +65,7 @@ namespace SomethingDownThere
             GameMenuView.Show(inventoryWarning, player.Inventory.IsFull);
             Root.EnableInClassList("stacked-warnings", player.Inventory.IsFull && !fuelWarning.ClassListContains("hidden"));
             shovelStatus.EnableInClassList("hidden", !player.ExcavationAvailable);
-            shovelStatus.text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m scoop"
+            shovelStatus.text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m cut"
                 + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.Depth:F1} m";
 
             adminHint.text = !player.AdminAvailable || !gameplay ? ""

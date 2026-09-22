@@ -24,8 +24,10 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
  sensitivity options; optional gyro.
 - No mashing, no QTEs, no rhythm inputs, anywhere in the game.
 
-The current playtest has ordinary scoop digging and no visible tool rig. The rejected rig and
-alternate-cut experiments, including their admin controls and key binding, are removed.
+The current playtest uses a drill-like shaving cut: holding steadily removes shallow layers as
+the aim moves across the ground. There is no visible tool rig yet. Developer admin provides a
+session-only shaving ON/OFF comparison with scoop digging while this feel is evaluated; ordinary
+play never requires switching cutting modes.
 
 ## 3. Automatic material adaptation (the mode model)
 

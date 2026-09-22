@@ -934,6 +934,6 @@ namespace SomethingDownThere.Tests
 
         // A stroke only lands once the tool's cooldown has elapsed, so the wait tracks
         // the live cadence instead of a value tuned to the old starter bite.
-        private IEnumerator WaitForDigReady() => new WaitForSecondsRealtime(player.EffectiveDigInterval + .1f);
+        private IEnumerator WaitForDigReady() => new WaitForSecondsRealtime(player.ScoopDigInterval + .1f);
     }
 }

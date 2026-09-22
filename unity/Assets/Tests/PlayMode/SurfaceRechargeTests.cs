@@ -85,13 +85,14 @@ namespace SomethingDownThere.Tests
             player.ViewCamera.transform.localRotation = Quaternion.Euler(85, 0, 0);
             Physics.SyncTransforms();
             Assert.That(player.TryDig(), Is.True);
-            Assert.That(player.Battery.Charge, Is.EqualTo(99));
+            float afterDig = player.Battery.Capacity - player.EffectiveDigEnergy;
+            Assert.That(player.Battery.Charge, Is.EqualTo(afterDig).Within(.001f));
             float removed = recharge.Terrain.RemovedVolume;
             player.Inventory.TryAdd(new InventoryItem("kept-find", "Rock", 2));
             player.Shovel.TryUpgradeTo(2);
             player.Tick(new FpsInputFrame { JetpackHeld = true }, .3f);
             Assert.That(player.IsJetpackActive, Is.True);
-            Assert.That(player.Battery.Charge, Is.LessThan(99));
+            Assert.That(player.Battery.Charge, Is.LessThan(afterDig));
             float charge = player.Battery.Charge;
             player.Tick(new FpsInputFrame { Move = Vector2.right }, .02f);
             player.Tick(default, .02f);
@@ -162,7 +163,7 @@ namespace SomethingDownThere.Tests
         }
 
         [TestCase(1, 80)] [TestCase(2, 130)]
-        public void MainGameDigBudgetLeavesTheSameFlightReserveAtStarterAndPaidCapacity(int level, int expectedStrokes)
+        public void MainGameDigBudgetLeavesTheSameFlightReserveAtStarterAndPaidCapacity(int level, int digEnergyBudget)
         {
             player.enabled = false;
             if (level == 2)
@@ -172,8 +173,9 @@ namespace SomethingDownThere.Tests
             }
             player.Battery.Recharge();
             Assert.That(player.Tuning.DigEnergy, Is.EqualTo(1));
+            int expectedStrokes = Mathf.RoundToInt(digEnergyBudget / player.EffectiveDigEnergy);
             int accepted = 0;
-            for (int i = 0; i < 400 && player.Battery.Charge >= 21; i++)
+            for (int i = 0; i < expectedStrokes * 3 && accepted < expectedStrokes; i++)
             {
                 int patch = i % 50;
                 player.ViewCamera.transform.position = new Vector3(-8 + patch % 10 * 1.5f,
@@ -183,8 +185,8 @@ namespace SomethingDownThere.Tests
                 if (player.TryDig()) accepted++;
             }
             Assert.That(accepted, Is.EqualTo(expectedStrokes));
-            Assert.That(player.Battery.Charge, Is.EqualTo(20));
-            Assert.That(player.Battery.Charge / player.Tuning.JetpackEnergyPerSecond, Is.EqualTo(2.5f));
+            Assert.That(player.Battery.Charge, Is.EqualTo(20).Within(.01f));
+            Assert.That(player.Battery.Charge / player.Tuning.JetpackEnergyPerSecond, Is.EqualTo(2.5f).Within(.002f));
             Assert.That(recharge.Terrain.RemovedVolume, Is.GreaterThan(0));
         }
 
