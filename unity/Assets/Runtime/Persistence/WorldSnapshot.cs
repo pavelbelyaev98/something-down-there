@@ -16,6 +16,7 @@ namespace SomethingDownThere
         public Quaternion TerrainRotation;
         public int ExcavationSeed, DiscoverySeed;
         public FindSnapshot[] Finds;
+        public ExtractionSnapshot Extraction;
         public ItemSnapshot[] Inventory;
         public int InventoryCapacity, Credits, ShovelLevel, SuccessfulStrokes;
         public int InventoryLevel = 1, FuelLevel = 1;
@@ -57,12 +58,35 @@ namespace SomethingDownThere
                 Require(!population.ContainsKey(find.Item.Id), "Duplicate discovery identity.");
                 population.Add(find.Item.Id, find);
             }
+            var uniques = new HashSet<string>(StringComparer.Ordinal);
+            var sockets = new HashSet<string>(StringComparer.Ordinal);
+            int extracting = 0;
+            foreach (var find in Finds)
+            {
+                Require(Enum.IsDefined(typeof(FindState),find.State), "Unknown find state.");
+                Require(Finite(find.DiscoveryDepth) && find.DiscoveryDepth>=0 && find.DiscoveryDepth<=Terrain.Size.y*Terrain.CellSize,
+                    "Invalid discovery depth.");
+                Require(find.DisplaySocket!=null && find.DisplaySocket.Length<=128, "Invalid display socket.");
+                if(find.Item.Kind==DiscoveryKind.Unique)
+                {
+                    Require(uniques.Add(find.ContentId) && find.State!=FindState.Collected,"Invalid unique ownership.");
+                    Require(!find.PhysicsReleased || find.State==FindState.World || find.State==FindState.Extracting,"Stored unique cannot be dynamic.");
+                    Require(find.State==FindState.World || find.DepthRecorded,"Recovered unique has no discovery record.");
+                    if(find.State==FindState.Extracting) extracting++;
+                    Require(find.State!=FindState.Displayed || !string.IsNullOrEmpty(find.DisplaySocket) && sockets.Add(find.DisplaySocket),"Duplicate exhibit socket.");
+                    Require(find.State==FindState.Displayed || find.DisplaySocket.Length==0,"Undisplayed find has a socket.");
+                }
+                else Require((find.State==FindState.World || find.State==FindState.Collected) && !find.DepthRecorded && find.DisplaySocket.Length==0,
+                    "Ordinary find has unique state.");
+            }
+            Require(extracting==(Extraction==null?0:1),"Extraction ownership is inconsistent.");
+            Extraction?.Validate(population,Terrain);
             var carried = new HashSet<string>(StringComparer.Ordinal);
             foreach (var item in Inventory)
             {
                 Require(item != null, "Missing carried item.");
                 item.Validate();
-                Require(carried.Add(item.Id) && population.TryGetValue(item.Id, out var find) && find.Collected
+                Require(item.Kind == DiscoveryKind.Common && carried.Add(item.Id) && population.TryGetValue(item.Id, out var find) && find.State == FindState.Collected
                     && item.Name == find.Item.Name && item.Value == find.Item.Value, "Carried item does not match a collected discovery.");
             }
         }
@@ -102,16 +126,21 @@ namespace SomethingDownThere
         public ItemSnapshot Item;
         public Vector3 Position, Scale;
         public Quaternion Rotation;
-        public bool Collected, PhysicsReleased;
+        public FindState State;
+        public bool Collected => State == FindState.Collected || State == FindState.Stored || State == FindState.Displayed;
+        public bool PhysicsReleased, DepthRecorded;
+        public float DiscoveryDepth;
+        public string DisplaySocket = "";
     }
 
     public sealed class ItemSnapshot
     {
         public string Id, Name;
         public int Value;
-        public static ItemSnapshot Capture(InventoryItem item) => new ItemSnapshot { Id = item.InstanceId, Name = item.DisplayName, Value = item.SaleValue };
-        public InventoryItem Restore() => new InventoryItem(Id, Name, Value);
+        public DiscoveryKind Kind;
+        public static ItemSnapshot Capture(InventoryItem item) => new ItemSnapshot { Id = item.InstanceId, Name = item.DisplayName, Value = item.SaleValue, Kind = item.Kind };
+        public InventoryItem Restore() => new InventoryItem(Id, Name, Value, Kind);
         internal void Validate() => WorldSnapshot.Require(!string.IsNullOrWhiteSpace(Id) && Id.Length <= 128
-            && !string.IsNullOrWhiteSpace(Name) && Name.Length <= 256 && Value >= 0, "Invalid item record.");
+            && !string.IsNullOrWhiteSpace(Name) && Name.Length <= 256 && Value >= 0 && (Kind == DiscoveryKind.Common || Kind == DiscoveryKind.Unique && Value == 0), "Invalid item record.");
     }
 }

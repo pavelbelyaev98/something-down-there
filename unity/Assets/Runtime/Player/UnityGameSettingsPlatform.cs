@@ -28,16 +28,22 @@ namespace SomethingDownThere
         public DisplaySelection CurrentDisplay => Application.isEditor ? editorDisplay
             : new DisplaySelection(Screen.width, Screen.height, Mode(Screen.fullScreenMode));
         public Vector2Int[] Resolutions { get; }
-        public DisplaySelection NativeDisplay { get; }
+        public DisplaySelection NativeDisplay
+        {
+            get
+            {
+                var monitor = Screen.mainWindowDisplayInfo;
+                return DesktopWindow.RecommendedDisplay(monitor.width, monitor.height);
+            }
+        }
         public bool RenderingAvailable => !applyToSystem || pipeline != null;
 
         public UnityGameSettingsPlatform(bool applyToSystem = true)
         {
             this.applyToSystem = applyToSystem;
-            NativeDisplay = DesktopWindow.RecommendedDisplay(Screen.currentResolution.width, Screen.currentResolution.height);
             editorDisplay = new DisplaySelection(Mathf.Max(960, Screen.width), Mathf.Max(540, Screen.height), 0);
             Resolutions = DesktopWindow.ResolutionOptions(Screen.resolutions.Select(r => new Vector2Int(r.width, r.height)),
-                new Vector2Int(Screen.currentResolution.width, Screen.currentResolution.height), new Vector2Int(Screen.width, Screen.height));
+                new Vector2Int(NativeDisplay.Width, NativeDisplay.Height), new Vector2Int(Screen.width, Screen.height));
             if (!applyToSystem) return;
             originalVSync = QualitySettings.vSyncCount; originalFrameLimit = Application.targetFrameRate;
             originalTextures = QualitySettings.globalTextureMipmapLimit; originalFiltering = QualitySettings.anisotropicFiltering;
@@ -65,7 +71,7 @@ namespace SomethingDownThere
             AudioListener.volume = values.MasterVolume / 100f;
             if (pipeline != null)
             {
-                if (!Mathf.Approximately(pipeline.renderScale, values.RenderScale / 100f)) pipeline.renderScale = values.RenderScale / 100f;
+                if (!Mathf.Approximately(pipeline.renderScale, 1f)) pipeline.renderScale = 1f;
                 if (pipeline.msaaSampleCount != values.Msaa) pipeline.msaaSampleCount = values.Msaa;
                 int shadows = values.Shadows;
                 pipeline.shadowDistance = shadows == 0 ? 0 : shadows == 3 ? authoredShadowDistance
@@ -79,6 +85,7 @@ namespace SomethingDownThere
 
         public void SetDisplay(DisplaySelection selection)
         {
+            if (selection.Mode == 0) selection = NativeDisplay;
             editorDisplay = selection;
             if (applyToSystem && !Application.isEditor)
                 Screen.SetResolution(selection.Width, selection.Height, selection.Mode == 0 ? FullScreenMode.FullScreenWindow

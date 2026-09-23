@@ -35,6 +35,16 @@ namespace SomethingDownThere
             var grass = player.ExcavationTerrain.GetComponent<SurfaceGrassRenderer>();
             while (!player.ExcavationTerrain.CanDig || player.ExcavationTerrain.IsRestoring) yield return null;
             var args = Environment.GetCommandLineArgs();
+            int recoveryReport = Array.IndexOf(args, "--recovery-report");
+            if (recoveryReport >= 0 && recoveryReport + 1 < args.Length)
+            {
+                int recoverySave = Array.IndexOf(args, "--recovery-save");
+                if (recoverySave < 0 || recoverySave + 1 >= args.Length)
+                    throw new InvalidOperationException("Provide --recovery-save with a disposable copied checkpoint.");
+                yield return MeasureRecovery(player, args[recoverySave + 1], args[recoveryReport + 1],
+                    Array.IndexOf(args, "--recovery-xray") >= 0);
+                yield break;
+            }
             int discoveryReport = Array.IndexOf(args, "--discovery-report");
             if (discoveryReport >= 0 && discoveryReport + 1 < args.Length)
             {

@@ -196,7 +196,7 @@ namespace SomethingDownThere.Tests
         {
             player.Tuning.Gravity = 0;
             int index = 0;
-            var appearances = field.Finds.GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
+            var appearances = field.Finds.Where(f => f.Kind == DiscoveryKind.Common).GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
             foreach (var find in appearances)
             {
                 bool partial = false;
@@ -322,7 +322,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator LargeFindVariantsFallSettleAndRestoreTheirExactAppearanceAndPose()
         {
-            var rocks = field.Finds.Where(f => f.Size == FindSize.Large).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
             Assert.That(rocks.Length, Is.EqualTo(3));
             for (int i = 0; i < rocks.Length; i++)
             {
@@ -362,7 +362,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator LargeFindsRequireSixtyPercentThenHeldAimAndLeaveFullBagOrOffAimFindsInPlace()
         {
-            var rocks = field.Finds.Where(f => f.Size == FindSize.Large).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
             player.Tuning.Gravity = 0;
             int index = 0;
             foreach (var find in rocks)
@@ -394,11 +394,14 @@ namespace SomethingDownThere.Tests
                 player.Tick(new FpsInputFrame { DigHeld = true }, .1f);
                 Assert.That(find.Collected, Is.False);
                 Assert.That(player.Inventory.TryRemove(player.Inventory.Items.First().InstanceId, out _), Is.True);
-                float charge = player.Battery.Charge;
+                float charge = player.Battery.Charge; int beforePickupStrokes = player.SuccessfulStrokes;
                 player.Tick(new FpsInputFrame { DigHeld = true }, .01f);
                 Assert.That(find.Collected, Is.True, "Already-held Dig must collect the directly aimed eligible rock.");
                 Assert.That(player.Inventory.Items.Count(item => item.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
-                Assert.That(player.Battery.Charge, Is.EqualTo(charge));
+                // Held input may perform its already-due cut after removing the aimed item.
+                int newStrokes = player.SuccessfulStrokes - beforePickupStrokes;
+                Assert.That(newStrokes, Is.InRange(0, 1));
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge - newStrokes * player.EffectiveDigEnergy).Within(.0001f));
                 foreach (var item in player.Inventory.Items.ToArray()) player.Inventory.TryRemove(item.InstanceId, out _);
                 player.Tick(new FpsInputFrame(), .5f);
             }

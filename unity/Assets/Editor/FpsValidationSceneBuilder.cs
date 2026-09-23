@@ -22,7 +22,6 @@ namespace SomethingDownThere.Editor
             PlayerSettings.defaultScreenHeight = 1080;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
             PlayerSettings.defaultIsNativeResolution = true;
-            PlayerSettings.defaultIsNativeResolution = false;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.runInBackground = false;
             CreateAndSave();

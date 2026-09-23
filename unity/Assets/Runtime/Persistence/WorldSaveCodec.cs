@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 7;
+        public const int Version = 9;
         // The packed payload is a few MB even for a carved 100 m world; the unpacked
         // bound covers the 24 x 100 x 24 m density plus headroom for the planned 200 m
         // step. The sample bound is the real allocation guard while reading.
@@ -42,7 +42,7 @@ namespace SomethingDownThere
                 w.Write(s.Finds.Length);
                 foreach (var f in s.Finds)
                 {
-                    WriteString(w, f.ContentId); Write(w, f.Item); Write(w, f.Position); Write(w, f.Rotation); Write(w, f.Scale); w.Write(f.Collected);
+                    WriteString(w, f.ContentId); Write(w, f.Item); Write(w, f.Position); Write(w, f.Rotation); Write(w, f.Scale); w.Write((byte)f.State); w.Write(f.DepthRecorded); w.Write(f.DiscoveryDepth); WriteString(w,f.DisplaySocket);
                 }
                 w.Write(s.Inventory.Length);
                 foreach (var item in s.Inventory) Write(w, item);
@@ -51,6 +51,14 @@ namespace SomethingDownThere
                 w.Write(s.CrouchAmount);
                 foreach (var find in s.Finds) w.Write(find.PhysicsReleased);
                 w.Write(s.InventoryLevel); w.Write(s.FuelLevel);
+                w.Write(s.Extraction!=null);
+                if(s.Extraction!=null)
+                {
+                    var e=s.Extraction; WriteString(w,e.FindId); w.Write((byte)e.Phase); Write(w,e.AttachLocal); Write(w,e.Outward);
+                    w.Write(e.Progress); w.Write(e.PhaseSeconds); w.Write(e.Attached); w.Write(e.Route.Length);
+                    foreach(var point in e.Route) Write(w,point);
+                    Write(w,e.LinearVelocity); Write(w,e.AngularVelocity);
+                }
             }
             using var hash = SHA256.Create();
             byte[] payload = packed.ToArray();
@@ -97,7 +105,7 @@ namespace SomethingDownThere
             s.Finds = new FindSnapshot[Count(r, DiscoveryField.MaximumPopulation)];
             for (int i = 0; i < s.Finds.Length; i++)
                 s.Finds[i] = new FindSnapshot { ContentId = ReadString(r), Item = ReadItem(r), Position = ReadVector(r),
-                    Rotation = ReadRotation(r), Scale = ReadVector(r), Collected = r.ReadBoolean() };
+                    Rotation = ReadRotation(r), Scale = ReadVector(r), State = (FindState)r.ReadByte(), DepthRecorded = r.ReadBoolean(), DiscoveryDepth = r.ReadSingle(), DisplaySocket = ReadString(r) };
             s.Inventory = new ItemSnapshot[Count(r, 256)];
             for (int i = 0; i < s.Inventory.Length; i++) s.Inventory[i] = ReadItem(r);
             int samples = Count(r, MaximumSamples);
@@ -105,6 +113,14 @@ namespace SomethingDownThere
             s.CrouchAmount = r.ReadSingle();
             foreach (var find in s.Finds) find.PhysicsReleased = r.ReadBoolean();
             s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32();
+            if(r.ReadBoolean())
+            {
+                var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r), Outward=ReadVector(r),
+                    Progress=r.ReadSingle(), PhaseSeconds=r.ReadSingle(), Attached=r.ReadBoolean(), Route=new Vector3[Count(r,ExtractionSnapshot.MaximumWaypoints)] };
+                for(int i=0;i<e.Route.Length;i++) e.Route[i]=ReadVector(r);
+                e.LinearVelocity=ReadVector(r); e.AngularVelocity=ReadVector(r);
+                s.Extraction=e;
+            }
             WorldSnapshot.Require(zip.ReadByte() == -1, "Unexpected checkpoint fields.");
             s.Validate();
             return s;
@@ -119,9 +135,9 @@ namespace SomethingDownThere
         private static string ReadString(BinaryReader r) => new UTF8Encoding(false, true).GetString(ReadExact(r, Count(r, 1024)));
         private static void Write(BinaryWriter w, Vector3 v) { w.Write(v.x); w.Write(v.y); w.Write(v.z); }
         private static void Write(BinaryWriter w, Quaternion q) { w.Write(q.x); w.Write(q.y); w.Write(q.z); w.Write(q.w); }
-        private static void Write(BinaryWriter w, ItemSnapshot i) { WriteString(w, i.Id); WriteString(w, i.Name); w.Write(i.Value); }
+        private static void Write(BinaryWriter w, ItemSnapshot i) { WriteString(w, i.Id); WriteString(w, i.Name); w.Write(i.Value); w.Write((byte)i.Kind); }
         private static Vector3 ReadVector(BinaryReader r) => new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
         private static Quaternion ReadRotation(BinaryReader r) => new Quaternion(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-        private static ItemSnapshot ReadItem(BinaryReader r) => new ItemSnapshot { Id = ReadString(r), Name = ReadString(r), Value = r.ReadInt32() };
+        private static ItemSnapshot ReadItem(BinaryReader r) => new ItemSnapshot { Id = ReadString(r), Name = ReadString(r), Value = r.ReadInt32(), Kind = (DiscoveryKind)r.ReadByte() };
     }
 }

@@ -32,7 +32,33 @@ namespace SomethingDownThere
         private readonly Dictionary<Vector3Int, Chunk> chunks = new Dictionary<Vector3Int, Chunk>();
         private ExcavationGrid grid;
         private readonly TerrainChunkMesh.Workspace meshing = new TerrainChunkMesh.Workspace();
+        private readonly TerrainExposureSampler exposure = new TerrainExposureSampler();
         private Transform chunkRoot;
+        private Material xrayMaterial;
+        public bool XrayEnabled { get; private set; }
+
+        public void SetXray(bool enabled)
+        {
+            if (XrayEnabled == enabled) return;
+            XrayEnabled = enabled;
+            if (enabled && xrayMaterial == null && soilMaterial != null)
+            {
+                xrayMaterial = new Material(soilMaterial) { name = "Transparent excavation ground", hideFlags = HideFlags.DontSave };
+                xrayMaterial.SetFloat("_GroundOpacity", .12f);
+                xrayMaterial.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                xrayMaterial.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                xrayMaterial.SetFloat("_ZWrite", 0);
+                xrayMaterial.SetOverrideTag("RenderType", "Transparent");
+                xrayMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                xrayMaterial.SetShaderPassEnabled("ShadowCaster", false);
+                xrayMaterial.SetShaderPassEnabled("DepthOnly", false);
+                xrayMaterial.SetShaderPassEnabled("DepthNormalsOnly", false);
+            }
+            foreach (var chunk in chunks.Values) chunk.Renderer.sharedMaterial = CurrentSoilMaterial;
+            if (TryGetComponent<ExcavationDaylight>(out var daylight)) daylight.RefreshShaderState();
+        }
+
+        private Material CurrentSoilMaterial => XrayEnabled && xrayMaterial != null ? xrayMaterial : soilMaterial;
         public Vector3Int Dimensions => dimensions;
         public float CellSize => cellSize;
         public float RemovedVolume => grid?.RemovedVolume ?? 0;
@@ -113,6 +139,10 @@ namespace SomethingDownThere
 
         public bool IsSolid(Vector3 worldPoint) => grid != null && grid.IsSolid(transform.InverseTransformPoint(worldPoint));
         public float SignedDensity(Vector3 worldPoint) => grid != null ? grid.Sample(transform.InverseTransformPoint(worldPoint)) : 0;
+        internal bool IsSolidLocal(Vector3 point) => grid != null && grid.IsSolid(point);
+        internal float SignedDensityLocal(Vector3 point) => grid != null ? grid.Sample(point) : 0;
+        internal float MeasureExposure(Vector3[] samples,Bounds hull,Matrix4x4 localToTerrain)
+            => grid==null?1:exposure.Measure(grid,samples,hull,localToTerrain);
 
         // Conservative visibility, independent of sparse find exposure samples. Pristine
         // soil wholly enclosing a mesh cannot show it. Any nearby modified sample wakes
@@ -223,6 +253,27 @@ namespace SomethingDownThere
             }
             else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
+            CommitEdit(changed);
+            LastMeshMilliseconds = timer.Elapsed.TotalMilliseconds - LastGridMilliseconds;
+            timer.Stop();
+            LastDigMilliseconds = timer.Elapsed.TotalMilliseconds;
+            LastDiscoveryMilliseconds = LastDigMilliseconds - LastGridMilliseconds - LastMeshMilliseconds;
+            return true;
+        }
+
+        public bool ClearLoadSweep(Vector3 from, Vector3 to, Quaternion rotation, Vector3 halfExtents)
+        {
+            using var profile = LoadSweepMarker.Auto();
+            if (!CanDig || IsRestoring) return false;
+            LastRebuiltChunkCount = 0;
+            if (grid.RemoveBoxSweep(transform.InverseTransformPoint(from), transform.InverseTransformPoint(to),
+                Quaternion.Inverse(transform.rotation) * rotation, halfExtents, out var changed)) CommitEdit(changed);
+            return true;
+        }
+
+        private void CommitEdit(BoundsInt changed)
+        {
+            using var profile = CommitMarker.Auto();
             // The grid expands this region to include any detached components, even
             // beyond the brush/chunk. Rebuild visible surfaces and collision together.
             // Two cells cover vertex topology plus finite-difference normals at seams.
@@ -239,12 +290,7 @@ namespace SomethingDownThere
                 if ((chunks.ContainsKey(key) || grid.AnyModified(key * chunkSize, chunkSize))
                     && Refresh(key)) LastRebuiltChunkCount++;
             }
-            LastMeshMilliseconds = timer.Elapsed.TotalMilliseconds - LastGridMilliseconds;
             NotifyChanged(changed);
-            timer.Stop();
-            LastDigMilliseconds = timer.Elapsed.TotalMilliseconds;
-            LastDiscoveryMilliseconds = LastDigMilliseconds - LastGridMilliseconds - LastMeshMilliseconds;
-            return true;
         }
 
         // Only the explicitly confirmed admin reset uses this. Reuse chunk objects
@@ -270,6 +316,7 @@ namespace SomethingDownThere
 
         private void NotifyChanged(BoundsInt samples)
         {
+            using var profile = NotifyMarker.Auto();
             StateRevision++;
             if (Changed == null) return;
             // Include the interpolation halo and detached soil beyond the scoop.
@@ -282,15 +329,24 @@ namespace SomethingDownThere
             Changed.Invoke(world);
         }
 
+        private static readonly Unity.Profiling.ProfilerMarker LoadSweepMarker = new Unity.Profiling.ProfilerMarker("Excavation.LoadSweep");
+        private static readonly Unity.Profiling.ProfilerMarker CommitMarker = new Unity.Profiling.ProfilerMarker("Excavation.Commit");
+        private static readonly Unity.Profiling.ProfilerMarker NotifyMarker = new Unity.Profiling.ProfilerMarker("Excavation.Notify");
+        private static readonly Unity.Profiling.ProfilerMarker MeshMarker = new Unity.Profiling.ProfilerMarker("Excavation.Mesh");
+        private static readonly Unity.Profiling.ProfilerMarker CollisionMarker = new Unity.Profiling.ProfilerMarker("Excavation.Collision");
+
         private bool Rebuild(Vector3Int key, Chunk chunk)
         {
             // Detach before mutating so PhysX cannot keep the previous cooked surface.
-            bool changed = TerrainChunkMesh.Rebuild(chunk.Mesh, grid, key * chunkSize, chunkSize, meshing,
-                chunk.DensityCache, chunk.BeforeMeshWrite);
+            bool changed;
+            using (MeshMarker.Auto())
+                changed = TerrainChunkMesh.Rebuild(chunk.Mesh, grid, key * chunkSize, chunkSize, meshing,
+                    chunk.DensityCache, chunk.BeforeMeshWrite);
             bool visible = chunk.Mesh.GetIndexCount(0) > 0;
             chunk.Renderer.enabled = visible;
             chunk.Collider.enabled = visible;
-            if (changed && visible) chunk.Collider.sharedMesh = chunk.Mesh;
+            if (changed && visible)
+                using (CollisionMarker.Auto()) chunk.Collider.sharedMesh = chunk.Mesh;
             return changed;
         }
 
@@ -311,7 +367,7 @@ namespace SomethingDownThere
             };
             root.GetComponent<MeshFilter>().sharedMesh = chunk.Mesh;
             chunk.BeforeMeshWrite = chunk.DetachCollider;
-            chunk.Renderer.sharedMaterial = soilMaterial;
+            chunk.Renderer.sharedMaterial = CurrentSoilMaterial;
             chunks.Add(key, chunk);
             return chunk;
         }
@@ -336,9 +392,12 @@ namespace SomethingDownThere
 
         private void OnDestroy()
         {
+            meshing.Dispose();
+            exposure.Dispose();
             foreach (var chunk in chunks.Values)
                 if (Application.isPlaying) Destroy(chunk.Mesh); else DestroyImmediate(chunk.Mesh);
             chunks.Clear();
+            if (xrayMaterial != null) Destroy(xrayMaterial);
         }
     }
 }

@@ -2,6 +2,8 @@
 
 Unity is pinned to `6000.6.0f1` with URP `17.6.0`. Runtime work belongs in `Assets/`; generated evidence stays under ignored `Logs/`.
 
+The runtime assembly references the Editor's bundled Burst, Collections and Mathematics assemblies for surface-net generation and local exposure sampling. Keep Burst enabled in players. Jobs complete before collision/render publication; `TerrainVolume` owns their reusable native buffers, while managed paged density retains save ownership.
+
 Follow [AGENTS.md](../AGENTS.md) for dependency and purchase policy: proactively request useful assets/utilities, and install justified free libraries with compatible licenses and pinned versions. Before release, only current code/data formats are supported; remove legacy readers, migrations, aliases and superseded assets instead of maintaining backward compatibility. Older saves may require New Game; current-format integrity and recovery still matter.
 
 ## Official Unity CLI and Pipeline
@@ -24,11 +26,12 @@ Keep the project open in Unity for live commands, or open it with `unity open ./
 - With the project open: `unity command menu --path 'Tools/Something Down There/Build Windows Player' --timeout 300 --project-path "$projectPath" --format json`. Allow 300 seconds; the default request timeout can expire while Unity continues.
 - With the Editor closed: `./tools/build-windows.ps1`.
 - `Build Windows Release Player` writes the same path without development admin access. `Debug.isDebugBuild` gates admin; release builds must exclude it (`22`). Keep Unity's `forceSingleInstance` disabled; repeated launches focus the existing window.
-- Development admin: **Ctrl+Shift+F10** opens the panel; **Shaving motion: ON/OFF** compares shaving with scoop digging. Close with **Resume digging** and press/hold dig again. Hold Ctrl+Shift with **1-6** to select a shovel, **R** refill, **X** buried-find markers, **Home** return. Session-only; Restore normal rules returns to shaving.
+- Development admin: **Ctrl+Shift+F10** opens the panel; **Shaving motion: ON/OFF** compares shaving with scoop digging. Close with **Resume digging** and press/hold dig again. Hold Ctrl+Shift with **1-6** to select a shovel, **R** refill, **X** transparent-ground X-ray, **Home** return. Session-only; Restore normal rules returns to shaving.
 - Tests with the Editor closed: `./tools/test-fps.ps1`, `./tools/test-terrain.ps1` (isolated copy). With the Editor open: `./tools/test-changed.ps1` runs the EditMode assembly plus only the PlayMode classes that own the changed files (`-Full` for everything, `-List` to print the plan, `-Path <file>` to scope it by hand). For a manual run: `unity command run_tests --mode editor --filter SomethingDownThere.EditModeTests --filter_type assembly --async_tests true --project-path "$projectPath" --format json`, then poll `test_status`; repeat with `--mode playmode --filter SomethingDownThere.PlayModeTests`. Save scene edits first.
 - HUD/menu inspection: `capture_game_view --source screen` in Play Mode (`screenshot` renders the camera and omits overlay UI). Save captures under `Logs/`, never in game assets.
 - Test scene preflight: save intentional authored changes, then run `unity command eval_file --file "$PWD/tools/prepare-editor-tests.cs" --project-path "$projectPath" --format json` from the repository root before a manual test run. `test-changed.ps1` does this automatically. It discards unsaved Editor scene changes under the user's standing permission and starts from an empty scene, preventing Unity's modal save prompt; it never writes scene files or deletes test scaffolding.
 - Saving fixture: **Tools > Something Down There > Validation > Build Save Performance Player** builds `builds/validation/saving/SavePerformance.exe`; `-saveProfileSeconds 5` is a smoke check, not a qualification run.
+- Recovery profiling: **Tools > Something Down There > Validation > Build Surface Performance Player**, then pass `--recovery-save <copied-world.sav> --recovery-report <report.json>` and optional `--recovery-xray`. It retries an obstructed copied recovery with the full population and a fixed camera, using the same recorded device frame cap for idle/haul. Reports include p99/peak frame times and per-stage costs for slow frames; it never owns or writes a game save.
 - Native Windows reviews share the user's desktop: announce input control, verify game focus, and repeat checks interrupted by user input. See [AGENTS.md](../AGENTS.md).
 
 ## Odin Inspector and Validator
@@ -68,5 +71,11 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 
 - The user-selected `Assets/Cosmic_Retro_Computer_1_FREE` import supplies computer 3 for the combined sell/upgrade/refill station. Keep the vendor prefab/material/GUIDs; author standing scale and interaction bounds through `SurfaceStationSetup`. See [asset card](../art/retro-computer/README.md).
 - `Tools > Something Down There > Configure Surface Computer` refreshes its visual/collider in MainGame. Save deliberate scene changes after running it.
+
+## Unique recovery authoring
+
+- `Tools > Something Down There > Sync Discovery Models` merges the common catalogs with `art/retro-computer/catalog.json`; `RetroComputerSetup` derives the centered computer 7 mesh, hull and prefab while preserving the trading computer and vendor import.
+- `Tools > Something Down There > Configure Unique Recovery` wires the winch, receiving pad, exhibit stand, hook and player references in the open MainGame. It preserves the existing `SalvageWinchSettings` asset so tuning survives setup reruns. Original fixture sources live under `art/salvage-winch`.
+- Tune hold/travel/clearance/search limits in `Assets/Content/Salvage/WinchSettings.asset`; item exposure, identity, lore and authored placement remain in the source catalog. `SalvageWinchValidator` checks the connected scene before builds.
 
 Runtime folder ownership is documented in [docs/architecture.md](../docs/architecture.md).

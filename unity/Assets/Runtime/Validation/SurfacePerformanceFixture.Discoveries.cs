@@ -78,7 +78,7 @@ namespace SomethingDownThere
                 startupLimit, appliedLimit, appliedVSync, capped = Summary(capped),
                 width = Screen.width, height = Screen.height, gpu = SystemInfo.graphicsDeviceName,
                 cpu = SystemInfo.processorType, population = field.Finds.Count,
-                renderScale = player.GameSettings.Values.RenderScale, msaa = player.GameSettings.Values.Msaa,
+                renderScale = (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)?.renderScale, msaa = player.GameSettings.Values.Msaa,
                 results
             }, Newtonsoft.Json.Formatting.Indented));
             Application.Quit();

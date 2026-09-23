@@ -2,7 +2,6 @@
     <ui:Style src="Theme.uss" />
     <ui:Style src="Hud.uss" />
     <ui:VisualElement name="hudRoot" class="hud-root" picking-mode="Ignore">
-        <ui:VisualElement name="Admin X-ray" class="hud-overlay hidden" picking-mode="Ignore" />
         <ui:VisualElement class="hud-resources">
             <ui:VisualElement name="batteryGroup" class="hud-battery">
                 <ui:Label name="Battery status" />

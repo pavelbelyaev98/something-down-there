@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "prefab": "Assets/Cosmic_Retro_Computer_1_FREE/Prefabs/Cosmic_Retro_Computer_7.prefab",
+  "position": { "x": 13.5, "y": 92.0, "z": 3.7 },
+  "euler": { "x": 0, "y": 202, "z": 0 },
+  "find": {
+    "content_id": "unique_reservoir_computer",
+    "display_name": "Reservoir Computer",
+    "tier": "unique",
+    "recovery": "rope",
+    "instances": 1,
+    "shallow_instances": 0,
+    "sale_value": 0,
+    "slots": 0,
+    "required_exposure": 0.6,
+    "detector_eligible": true,
+    "model_scale": 1.0,
+    "throw_speed": 8,
+    "lore": "The restart instructions did not mention draining the reservoir."
+  }
+}

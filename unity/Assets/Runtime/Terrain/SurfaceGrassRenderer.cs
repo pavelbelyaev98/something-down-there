@@ -270,7 +270,7 @@ namespace SomethingDownThere
         {
             if (camera.cameraType != CameraType.Game && camera.cameraType != CameraType.SceneView) return;
             LastDrawCalls = LastTriangles = LastVisibleClumps = LastFarClumps = 0;
-            if (terrain == null || terrain.IsRestoring || patches.Count == 0 || !SystemInfo.supportsInstancing) return;
+            if (terrain == null || terrain.IsRestoring || terrain.XrayEnabled || patches.Count == 0 || !SystemInfo.supportsInstancing) return;
             var start = Stopwatch.GetTimestamp();
             GeometryUtility.CalculateFrustumPlanes(camera, planes);
             foreach (var layer in activeLayers)

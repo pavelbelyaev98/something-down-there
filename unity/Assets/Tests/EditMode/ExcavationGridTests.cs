@@ -8,6 +8,69 @@ namespace SomethingDownThere.Tests
 {
     public sealed class ExcavationGridTests
     {
+        [Test]
+        public void BatchedExposureMatchesScalarSamplingAfterCutsRotationScalingAndRestore()
+        {
+            var grid = new ExcavationGrid(new Vector3Int(37, 20, 34), .125f);
+            var initial = grid.Capture();
+            var random = new System.Random(827);
+            var samples = new Vector3[512];
+            var bounds = new Bounds(new Vector3(.1f, -.2f, .15f), new Vector3(1.4f, .8f, 1.1f));
+            for (int i = 0; i < samples.Length; i++)
+                samples[i] = bounds.min + Vector3.Scale(bounds.size, new Vector3(
+                    (float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()));
+            // Include exact volume edges as well as fractional positions.
+            samples[0] = Vector3.zero;
+            using var sampler = new TerrainExposureSampler();
+            for (int phase = 0; phase < 3; phase++)
+            {
+                if (phase == 1) grid.RemoveSphere(new Vector3(2, 2, 2), .8f, out _);
+                if (phase == 2) grid.Restore(initial);
+                foreach (var position in new[] { Vector3.zero, new Vector3(2, 2, 2), grid.Extent, new Vector3(3, 2.5f, 1) })
+                foreach (var rotation in new[] { Quaternion.identity, Quaternion.Euler(40, 98, 33) })
+                foreach (var scale in new[] { Vector3.one, new Vector3(.3f, 2, 1.5f) })
+                {
+                    var matrix = Matrix4x4.TRS(position, rotation, scale);
+                    int clear = samples.Count(p => !grid.IsSolid(matrix.MultiplyPoint3x4(p)));
+                    Assert.That(sampler.Measure(grid, samples, bounds, matrix), Is.EqualTo(clear / (float)samples.Length));
+                }
+            }
+        }
+
+        [Test]
+        public void BulkSampleRowsMatchIndividualSamplesAcrossPagesAndEveryGhostBoundary()
+        {
+            var grid=new ExcavationGrid(new Vector3Int(37,20,34),.125f);
+            grid.RemoveSphere(new Vector3(2,2,2),.8f,out _);
+            var span=new Vector3Int(45,27,40);
+            foreach(var origin in new[]{new Vector3Int(-3,-3,-3),new Vector3Int(32,18,29),new Vector3Int(-50,0,0)})
+            {
+                var samples=new float[span.x*span.y*span.z];
+                grid.CopySamples(origin,span,samples);
+                int i=0;
+                for(int z=0;z<span.z;z++)for(int y=0;y<span.y;y++)for(int x=0;x<span.x;x++)
+                    Assert.That(samples[i++],Is.EqualTo(grid.Sample(origin.x+x,origin.y+y,origin.z+z)));
+            }
+        }
+
+        [Test]
+        public void InteriorFastSamplingPreservesTrilinearDensityAtCutsAndVolumeEdges()
+        {
+            var grid=new ExcavationGrid(new Vector3Int(37,20,34),.125f);
+            grid.RemoveSphere(new Vector3(2,2,2),.8f,out _);
+            var random=new System.Random(473);
+            for(int n=0;n<4000;n++)
+            {
+                var point=new Vector3((float)random.NextDouble()*5-.2f,(float)random.NextDouble()*3-.2f,(float)random.NextDouble()*5-.2f);
+                Vector3 p=point/grid.CellSize;var a=Vector3Int.FloorToInt(p);Vector3 t=p-(Vector3)a;
+                float low=Mathf.Lerp(Mathf.Lerp(grid.Sample(a.x,a.y,a.z),grid.Sample(a.x+1,a.y,a.z),t.x),
+                    Mathf.Lerp(grid.Sample(a.x,a.y+1,a.z),grid.Sample(a.x+1,a.y+1,a.z),t.x),t.y);
+                float high=Mathf.Lerp(Mathf.Lerp(grid.Sample(a.x,a.y,a.z+1),grid.Sample(a.x+1,a.y,a.z+1),t.x),
+                    Mathf.Lerp(grid.Sample(a.x,a.y+1,a.z+1),grid.Sample(a.x+1,a.y+1,a.z+1),t.x),t.y);
+                Assert.That(grid.Sample(point),Is.EqualTo(Mathf.Lerp(low,high,t.z)).Within(.000001f));
+            }
+        }
+
         [TestCase(0f, 1f, 0f)] [TestCase(1f, 0f, 0f)] [TestCase(1f, 1f, 1f)]
         public void ShavingAdvancesBelowVoxelSizeAndPreservesNearbySupport(float x, float y, float z)
         {
@@ -379,7 +442,7 @@ namespace SomethingDownThere.Tests
             var grid = new ExcavationGrid(new Vector3Int(24, 20, 24), 0.2f);
             var initial = grid.Capture();
             var mesh = new Mesh(); var expected = new Mesh();
-            var workspace = new TerrainChunkMesh.Workspace(); var cache = new TerrainChunkMesh.DensityCache();
+            using var workspace = new TerrainChunkMesh.Workspace(); var cache = new TerrainChunkMesh.DensityCache();
             var start = new Vector3Int(0, 12, 0); int writes = 0;
             try
             {

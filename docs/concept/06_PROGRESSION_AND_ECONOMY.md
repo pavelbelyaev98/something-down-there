@@ -41,7 +41,7 @@ Players have total freedom to invest in whichever tracks fit their personal play
 - Commons and repeatable distinctives sell for money; rare finds can pay for a major purchase.
  Uniques give display and story, without money or mechanical perks.
 - **Uniques and ending parts consume zero bag slots.** Players are never forced to sacrifice income for the discoveries the game most wants them to appreciate.
-- **Whole-object salvage payouts:** Claiming an oversized set piece via surface winch extraction yields a major lump-sum payout upon returning to the surface salvage pad.
+- **Whole-object salvage payouts:** Rope-recovered oversized set pieces yield a once-only lump-sum payout at the surface computer after arrival on the salvage pad. Rope-recovered uniques remain unsellable exhibits; the recovery method does not change their purpose.
 - A fixed price per item type: deeper zones contain richer types or mixes, but a gold bar always
  has the same price.
 - Depth pays through the mix, not through a price bonus: each type keeps one fixed price, and the

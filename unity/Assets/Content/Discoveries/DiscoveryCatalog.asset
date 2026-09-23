@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.DiscoveryCatalog
   Entries:
   - ItemId: common_rock
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 6474309712400341572, guid: 476de7c38fb18d44bb8103ea7ced1543, type: 3}
     AppearanceVariants:
     - {fileID: 98826337501060310, guid: 106b917856caab4489fc1324c86d9f45, type: 3}
@@ -33,6 +36,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_coal
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1574777764794235731, guid: 5b43cd0c70fde7e4c914f4e4c9c22aeb, type: 3}
     AppearanceVariants: []
     Count: 1200
@@ -50,6 +56,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_copper
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 4582630098943393868, guid: 639e718224a86954693289508c116355, type: 3}
     AppearanceVariants: []
     Count: 458
@@ -67,6 +76,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_iron
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 2564259689525694727, guid: 5da72b4cede10d64897000d7646f75de, type: 3}
     AppearanceVariants: []
     Count: 436
@@ -84,6 +96,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_silver
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1723953362618204297, guid: 9f59f9736d541ed4f8f663f9891e3d39, type: 3}
     AppearanceVariants: []
     Count: 438
@@ -101,6 +116,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_gold
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 5887150894810649546, guid: 9a260e874716482448f1cedad8255236, type: 3}
     AppearanceVariants: []
     Count: 1038
@@ -118,6 +136,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_emerald
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 6329973060314555801, guid: eb556f9a02aa83940a9607a270da09d2, type: 3}
     AppearanceVariants: []
     Count: 1270
@@ -135,6 +156,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_ruby
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 8312464020256252658, guid: 715919f0cdfaaae458c2b25297e021cd, type: 3}
     AppearanceVariants: []
     Count: 1142
@@ -152,6 +176,9 @@ MonoBehaviour:
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_diamond
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 8911235515186892685, guid: 1527e65ddc4f4224eb30348e8930992d, type: 3}
     AppearanceVariants: []
     Count: 1002
@@ -168,3 +195,23 @@ MonoBehaviour:
     DeepMaxDepth: 99.2
     LayOnSide: 0
     RandomOrientation: 1
+  - ItemId: unique_reservoir_computer
+    AuthoredPlacement: 1
+    AuthoredPosition: {x: 13.5, y: 92, z: 3.7}
+    AuthoredEuler: {x: 0, y: 202, z: 0}
+    Prefab: {fileID: 4858402737689321270, guid: 52f21077ee0957a4bab37a54275e22b1, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 0
+    MaxDepth: 0
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    DeepCount: 0
+    DeepMinDepth: 0
+    DeepMaxDepth: 0
+    LayOnSide: 0
+    RandomOrientation: 0

@@ -58,7 +58,7 @@ namespace SomethingDownThere
             Shader.SetGlobalVector(SizeId, (Vector3)grid.Size);
             Shader.SetGlobalVector(ExtentId, grid.Extent);
             Shader.SetGlobalMatrix(MatrixId, transform.worldToLocalMatrix);
-            Shader.SetGlobalFloat(EnabledId, 1);
+            RefreshShaderState();
             foreach (var receiver in receivers)
                 if (receiver.Renderer != null) receiver.Renderer.sharedMaterials = receiver.Adapted;
         }
@@ -144,6 +144,12 @@ namespace SomethingDownThere
 
         public float SampleAmbient(Vector3 worldPosition) =>
             grid.Sample(transform.InverseTransformPoint(worldPosition));
+
+        internal void RefreshShaderState()
+        {
+            if (Shader.GetGlobalTexture(MapId) == texture)
+                Shader.SetGlobalFloat(EnabledId, isActiveAndEnabled && !terrain.XrayEnabled ? 1 : 0);
+        }
 
         private void OnDisable()
         {

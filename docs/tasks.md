@@ -2,9 +2,9 @@
 
 ## Status
 
-- **Active Task:** `007` — material IDs and automatic tool response on the shaving dig pipeline.
+- **Next Task:** `007` — Material IDs & Tool Auto-Adaptation.
 - **Build:** `builds/windows/SomethingDownThere.exe` (MainGame; current-format saves only).
-- **Direction:** Materials next, then testable content. `001` waits. Core functionality first; audio, ambience and feel polish live in their own late phases. Each mechanic ships with its own testable content (one unique, lamps, C4) before the next system is built.
+- **Direction:** Materials next; `001` waits. Core functionality precedes audio/feel polish; each mechanic ships with testable content.
 - **Completed history:** `docs/tasks/completed/` — one spec per finished task; each header carries the final-state summary.
 
 ---
@@ -21,12 +21,11 @@ Complete (`048`–`073`) — specs in `docs/tasks/completed/`.
 ### Next: current dig + first testable content
 
 - [ ] **`007` — Material IDs & Tool Auto-Adaptation** (`03`, `04`): assign material IDs on the voxels that already exist. Soil, clay, and rock differ in shaving speed, resistance, and sound *hooks* (actual audio arrives with `028`). No mode switch, no new meshes; materials must read by shape, not color alone. Gravel and concrete follow in `074`.
-- [ ] **`086` — One Buried Unique, End-to-End** (`05`, `14`): author one unique — the gramophone, per `012`'s tier leaning — bury it, and prove the whole special-find chain with a single object: authored placement → deliberate exposure → recognition → zero-slot collection → safe storage → one yard stand → lore card reread → save/reload. One socket only; `018`/`019` grow it into the wall later. Detector, C4 survival and cluster tests all use this object afterward.
 - [ ] **`027` — World Marking & Placeable Work Lamps** (`03`, `04`): placeable, repositionable, reusable lamps that survive digging — the only underground light; every later deep-zone task depends on them. Free tool markings (arrow, home, return-here). No map, ever.
 - [ ] **`026` — Sticky C4 Charges: Tech** (`04`): valid/invalid placement preview, sticky landing, remote detonation, predictable blast volume and matching cleanup on the dig pipeline from `007`. Buried finds, the unique and lamps all survive a blast. Pricing lands with `001`; a charge's time-saved value is validated in `077`.
 - [ ] **`015` — Tool-Mounted Silent Visual Detector** (`05`): directional reticle cue for distance and broad direction to the nearest uncollected signaling find; target locking and release priority. Test target is `086`'s unique against the always-silent commons; `012` adds the rest. No value, no identity, no tool model. Oversized set pieces and ending parts also signal once they exist.
 - [ ] **`024` — Depth-Aware Return Warning** (`02`, `06`): the warning currently uses charge fractions; estimate return energy from depth and ascent route (safe/risky/critical). The estimator consumes the current jetpack tier, not hardcoded costs; keep HUD additions minimal — `032` consolidates the HUD later.
-- [ ] **`012` — Four Remaining Slice Finds** (`05`, `14`): the washing machine, hand drill, gearbox, and mammoth bone on the same chain as `086`'s gramophone, each with a pinned tier (distinctives sell; the unique case is settled) so `011` and detector eligibility agree. Wide-cut and C4 recognition tests run here against live content.
+- [ ] **`012` — Four Remaining Slice Finds** (`05`, `14`): the washing machine, hand drill, gearbox, and mammoth bone extend `086`'s discovery foundation, each with a pinned tier and recovery policy (distinctives sell; the computer's unique role is settled) so `011` and detector eligibility agree. Wide-cut and C4 recognition tests run here against live content.
 - [ ] **`001` — Evolving Motorized Tool Rig & 4-Tier Progression** (`04`, `06`): after the systems above. Visible motor-assisted machine with bolt-on attachments, and `ShovelState`/`EquipmentProgression` from 6 levels to 4 tiers. The spec carries the remap of `007`/`024` balance to the new ladder and the Detector-track decision (implement alongside `011` content, or cut the track from concept 06). No tier invalidates earlier investment or digs slower in ground the player already digs (tool-tier regression) — the forced-second-tool reset is the reference corpus's worst progression failure.
 
 ### Phase 1: Ground, Materials & Zones
@@ -43,8 +42,7 @@ Complete (`048`–`073`) — specs in `docs/tasks/completed/`.
 - [ ] **`013` — Buried Connections ("Follow the Thing") & Clusters** (`03`, `05`): physical connectors (cables, chains, pipes, tiles) leading to coherent buried scenes; first proof is one scene. Completes `009`'s multi-find acceptance.
 - [ ] **`014` — Crackable Buried Containers** (`05`): suitcases/toolboxes cracked open in the world with the machine, revealing nested discoveries.
 - [ ] **`076` — Large-Discovery Local Extraction & Bladder Assist** (`05`, `14`): the 3–5-per-run majors (car, appliance pile, machinery section): local release payoff, bladder unsticking, automatic surface transfer beneath ceilings, permanent-landmark cases. Concept 14 wants this tested early and separately from the winch.
-- [ ] **`075` — Oversized Salvage Set Pieces** (`05`): author and seed the handful of oversized winch targets the catalog defines in `011`, flagged for signaling and winch recovery.
-- [ ] **`002` — Salvage Winch & Pad** (`06`, `07`): rim winch hauls flagged set pieces up the shaft, carving dirt bottlenecks; payout at the surface computer; records feed `018`. After `075` — the winch has nothing to haul until then. (Absorbs the removed `017`.)
+- [ ] **`075` — Oversized Salvage Set Pieces & Cash-in** (`05`, `06`, `07`): author and seed `011`'s signaling oversized targets; reuse `002`'s marking/rope/pad system, add once-only surface-computer payout and records for `018`. Test larger load clearance and repeated recoveries without replacing the computer unique's unsellable destination. Includes the former `017` cash-in scope.
 - [ ] **`077` — Generation & Economy Pacing Validation** (`02`, `03`, `06`): reject candidate layouts that violate the pacing rules — noteworthy find within the first ten minutes, bounded dry spells, one major per zone, majors never clumped, novelty to the bottom. Also validate purchase cadence, the late economy: the final meaningful purchase lands near the end of the run, and money never dies halfway through (the maxed-out-halfway, cash-nowhere-to-spend failure recurs across the reference corpora) — and C4 charge value (time saved vs price, invalid placements never consuming a charge). Acceptance gate for the whole phase.
 
 ### Phase 3: Surface Yard & Display

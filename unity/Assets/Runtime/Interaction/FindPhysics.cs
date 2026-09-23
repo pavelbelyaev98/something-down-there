@@ -48,6 +48,7 @@ namespace SomethingDownThere
 
         public void TerrainChanged()
         {
+            if (find != null && find.State != FindState.World) { enabled = false; return; }
             enabled = true;
             supportDirty = true;
             recoveryHeld = false;
@@ -57,6 +58,8 @@ namespace SomethingDownThere
 
         private void FixedUpdate()
         {
+            using var profile = PhysicsMarker.Auto();
+            if (find != null && find.State != FindState.World) { enabled = false; return; }
             if (terrain == null || find.Collected || Held) return;
             if (terrain.IsRestoring)
             {
@@ -72,11 +75,7 @@ namespace SomethingDownThere
                 {
                     Released = false; StopMotion(); field?.NotifyMotion();
                 }
-                if (!Released && find.CanReleaseFromSoil())
-                {
-                    Released = true; safePosition = body.position; safeRotation = body.rotation;
-                    field?.NotifyMotion();
-                }
+                if (!Released) TryReleaseFromSoil();
             }
             // An anchored find cannot move until a terrain event or explicit restore.
             // Remove it from Unity's fixed-update list instead of polling every buried item.
@@ -114,10 +113,33 @@ namespace SomethingDownThere
                 && terrain.SignedDensity(body.position) < terrain.CellSize * .6f;
         }
 
+        internal bool TryReleaseFromSoil()
+        {
+            if (Held || terrain == null || terrain.IsRestoring || find.State != FindState.World || !find.CanReleaseFromSoil()) return false;
+            Released = true; supportDirty = recoveryHeld = false; enabled = true;
+            safePosition = observedPosition = body.position; safeRotation = observedRotation = body.rotation;
+            ResetSettling();
+            body.isKinematic = false; body.useGravity = true; body.WakeUp();
+            field?.NotifyMotion();
+            return true;
+        }
+
+        private static readonly Unity.Profiling.ProfilerMarker PhysicsMarker = new Unity.Profiling.ProfilerMarker("Discovery.Physics");
+
         private void StopMotion()
         {
             if (!body.isKinematic) { body.linearVelocity = Vector3.zero; body.angularVelocity = Vector3.zero; }
             body.isKinematic = true; body.useGravity = false;
+        }
+
+        internal void ClaimForRecovery()
+        {
+            // Winch owns the body until release/storage; terrain notifications must
+            // not freeze it again when its rotating hull clears another patch of soil.
+            transform.SetPositionAndRotation(body.position, body.rotation);
+            StopMotion();
+            Held = false; Released = true; enabled = false;
+            ResetSettling();
         }
 
         internal void BeginHold()

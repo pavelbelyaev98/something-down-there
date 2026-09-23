@@ -28,6 +28,10 @@ Shader "Something Down There/Ground Triplanar"
         _SurfaceHeight("Original surface height", Float) = 0
         _TurfDepth("Turf transition depth", Range(0.001, 0.1)) = 0.045
         _MacroVariation("Broad colour variation", Range(0, 0.4)) = 0.12
+        [HideInInspector] _GroundOpacity("Ground opacity", Float) = 1
+        [HideInInspector] _SrcBlend("Source blend", Float) = 1
+        [HideInInspector] _DstBlend("Destination blend", Float) = 0
+        [HideInInspector] _ZWrite("Depth write", Float) = 1
     }
     SubShader
     {
@@ -53,6 +57,7 @@ Shader "Something Down There/Ground Triplanar"
             float _ComparisonNormalStrength;
             float _ComparisonStoneNormalStrength;
             float _MaxSmoothness;
+            float _GroundOpacity;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -235,6 +240,8 @@ Shader "Something Down There/Ground Triplanar"
         {
             Name "GroundForward"
             Tags { "LightMode"="UniversalForwardOnly" }
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
             HLSLPROGRAM
             #pragma target 3.5
             #pragma vertex GroundVertex
@@ -279,6 +286,7 @@ Shader "Something Down There/Ground Triplanar"
                 surface.alpha = 1;
                 half4 result = UniversalFragmentPBR(lighting, surface);
                 result.rgb = MixFog(result.rgb, input.fogFactor);
+                result.a = _GroundOpacity;
                 return result;
             }
             ENDHLSL

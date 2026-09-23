@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SomethingDownThere
 {
     // Positive density is soil; zero is the surface. Samples are shared by all chunks.
-    public sealed class ExcavationGrid
+    public sealed partial class ExcavationGrid
     {
         // One shared bound for the grid, checkpoints and the save reader. It covers the
         // planned 200 m site (1600 cells) with headroom; the save payload cap is the
@@ -17,7 +17,7 @@ namespace SomethingDownThere
         private readonly List<int> severedSamples = new List<int>(4096);
         private readonly List<int> supportVisited = new List<int>(4096);
         private readonly List<int> supportPending = new List<int>(4096);
-        private byte[] supportState; // 0 unknown, 1 current search, 2 anchored in this stroke.
+        private readonly byte[] supportState; // 0 unknown, 1 current search, 2 anchored in this stroke.
         private readonly List<int> remnantSeeds = new List<int>(2048);
         private readonly List<int> remnantComponent = new List<int>(64);
         private readonly List<int> remnantAttachments = new List<int>(64);
@@ -52,6 +52,9 @@ namespace SomethingDownThere
             strideY = size.x + 1;
             strideZ = strideY * (size.y + 1);
             density = new PagedDensity(strideZ * (size.z + 1));
+            // Reserve the support-search workspace during loading, not on the
+            // first live cut (the full-depth site's buffer is tens of megabytes).
+            supportState = new byte[density.Length];
             Reset();
         }
 
@@ -103,6 +106,19 @@ namespace SomethingDownThere
             Vector3 p = point / CellSize;
             var a = Vector3Int.FloorToInt(p);
             Vector3 t = p - (Vector3)a;
+            if (a.x >= 0 && a.y >= 0 && a.z >= 0 && a.x < Size.x && a.y < Size.y && a.z < Size.z)
+            {
+                // Interior interpolation needs one bounds check and row address,
+                // not eight clamped coordinate lookups and seven clamped lerps.
+                int i = a.x + a.y * strideY + a.z * strideZ;
+                float d0=density[i], d1=density[i+1], d2=density[i+strideY], d3=density[i+strideY+1];
+                float d4=density[i+strideZ], d5=density[i+strideZ+1];
+                float d6=density[i+strideZ+strideY], d7=density[i+strideZ+strideY+1];
+                float x0=d0+(d1-d0)*t.x, x1=d2+(d3-d2)*t.x;
+                float x2=d4+(d5-d4)*t.x, x3=d6+(d7-d6)*t.x;
+                float y0=x0+(x1-x0)*t.y, y1=x2+(x3-x2)*t.y;
+                return y0+(y1-y0)*t.z;
+            }
             float bottom = Mathf.Lerp(
                 Mathf.Lerp(Sample(a.x, a.y, a.z), Sample(a.x + 1, a.y, a.z), t.x),
                 Mathf.Lerp(Sample(a.x, a.y + 1, a.z), Sample(a.x + 1, a.y + 1, a.z), t.x), t.y);
@@ -110,6 +126,30 @@ namespace SomethingDownThere
                 Mathf.Lerp(Sample(a.x, a.y, a.z + 1), Sample(a.x + 1, a.y, a.z + 1), t.x),
                 Mathf.Lerp(Sample(a.x, a.y + 1, a.z + 1), Sample(a.x + 1, a.y + 1, a.z + 1), t.x), t.y);
             return Mathf.Lerp(bottom, top, t.z);
+        }
+
+        // Mesh halos are contiguous rows. Preserve Sample's clamped side/bottom
+        // ghosts and analytic air above the surface without clamping every point.
+        public void CopySamples(Vector3Int first, Vector3Int span, float[] target)
+        {
+            if (span.x < 1 || span.y < 1 || span.z < 1 || target == null
+                || (long)span.x*span.y*span.z > target.Length) throw new ArgumentException("Invalid sample buffer.");
+            int left=Mathf.Clamp(-first.x,0,span.x);
+            int right=Mathf.Clamp(first.x+span.x-1-Size.x,0,span.x);
+            int middle=span.x-left-right, output=0;
+            for(int z=first.z;z<first.z+span.z;z++)
+            for(int y=first.y;y<first.y+span.y;y++)
+            {
+                if(y>Size.y) Array.Fill(target,-(y-Size.y)*CellSize,output,span.x);
+                else
+                {
+                    int row=Mathf.Clamp(y,0,Size.y)*strideY+Mathf.Clamp(z,0,Size.z)*strideZ;
+                    if(left>0) Array.Fill(target,density[row],output,left);
+                    if(middle>0) density.CopyTo(row+Mathf.Max(0,first.x),target,output+left,middle);
+                    if(right>0) Array.Fill(target,density[row+Size.x],output+span.x-right,right);
+                }
+                output+=span.x;
+            }
         }
 
         // Untouched samples are the analytic base field; digging only lowers them. A chunk
@@ -167,12 +207,7 @@ namespace SomethingDownThere
             bool shovel, float shaveDepth, out BoundsInt changed)
         {
             changed = default;
-            LastRemovedVolume = LastDetachedVolume = 0;
-            LastDetachedSamples = LastSupportVisitedSamples = 0;
-            LastRemnantSamples = LastRemnantCheckedSamples = 0;
-            LastRemnantVolume = 0;
-            severedSamples.Clear();
-            remnantSeeds.Clear();
+            BeginRemoval();
             if (!Finite(center.x) || !Finite(center.y) || !Finite(center.z)
                 || !Finite(radius) || radius <= 0f || radius > 1000f
                 || !Finite(variation) || variation < 0 || variation > 0.15f
@@ -280,15 +315,7 @@ namespace SomethingDownThere
                 changedMin = Vector3Int.Min(changedMin, sample);
                 changedMax = Vector3Int.Max(changedMax, sample);
             }
-            if (changedMax.x < 0) return false;
-            RemoveDetachedSoil(ref changedMin, ref changedMax);
-            RemovePaperThinSlivers(ref changedMin, ref changedMax);
-            RemoveTinyRemnants(ref changedMin, ref changedMax);
-            if (LastRemnantSamples > 0) RemoveDetachedSoil(ref changedMin, ref changedMax);
-            changed = new BoundsInt(changedMin, changedMax - changedMin + Vector3Int.one);
-            RemovedVolume += LastRemovedVolume;
-            Revision++;
-            return true;
+            return CompleteRemoval(changedMin, changedMax, out changed);
         }
 
         private void ClearSupportSearch()
@@ -514,7 +541,6 @@ namespace SomethingDownThere
         private void RemoveDetachedSoil(ref Vector3Int changedMin, ref Vector3Int changedMax)
         {
             if (severedSamples.Count == 0) return;
-            if (supportState == null) supportState = new byte[density.Length];
             ClearSupportSearch();
             // The initial field is connected. Deleting samples can only detach a
             // component next to a newly cut solid edge; no whole-site scan is needed.

@@ -48,7 +48,7 @@ namespace SomethingDownThere
                 () => Math.Max(0, Array.FindIndex(options, r => r.x == display.Width && r.y == display.Height)), index => {
                 var resolution = options[index];
                 settings.PreviewDisplay(new DisplaySelection(resolution.x, resolution.y, display.Mode), Time.realtimeSinceStartupAsDouble);
-            });
+            }, () => display.Mode != 0, "Desktop");
             rows.Toggle("vSync", "VSync", () => settings.Values.VSync, value => settings.Edit(v => v.VSync = value));
             rows.Choice("fpsLimit", "FPS limit", GamePreferences.FrameLimits.Select(v => v < 0 ? "Unlimited" : v.ToString()).ToArray(),
                 () => Array.IndexOf(GamePreferences.FrameLimits, settings.Values.FrameLimit), index =>
@@ -58,8 +58,6 @@ namespace SomethingDownThere
 
         private void BuildGraphics()
         {
-            rows.Slider("renderScale", "Render resolution", 50, 150, () => settings.Values.RenderScale,
-                value => settings.Edit(v => v.RenderScale = value), value => value + "%", () => settings.RenderingAvailable);
             rows.Choice("shadows", "Shadows", new[] { "Off", "Low", "Medium", "High" }, () => settings.Values.Shadows,
                 index => settings.Edit(v => v.Shadows = index), () => settings.RenderingAvailable);
             int[] samples = { 1, 2, 4, 8 };
@@ -70,7 +68,7 @@ namespace SomethingDownThere
                 () => 2 - settings.Values.TextureLimit, index => settings.Edit(v => v.TextureLimit = 2 - index));
             rows.Choice("textureFiltering", "Texture filtering", new[] { "Off", "Standard", "High" },
                 () => settings.Values.Filtering, index => settings.Edit(v => v.Filtering = index));
-            var help = new Label("Render resolution: 100% matches your selected resolution. Lower values can improve FPS; higher values make the image sharper at a higher cost. Menus stay sharp.\n\nLower shadows and anti-aliasing can improve FPS. Lower texture quality uses less graphics memory. Texture filtering keeps angled surfaces clearer.")
+            var help = new Label("Lower shadows and anti-aliasing can improve FPS. Lower texture quality uses less graphics memory. Texture filtering keeps angled surfaces clearer.")
                 { name = "graphicsHelp", pickingMode = PickingMode.Ignore };
             help.AddToClassList("settings-help");
             scroll.Add(help);

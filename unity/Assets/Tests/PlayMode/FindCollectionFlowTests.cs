@@ -182,7 +182,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator WalkingCollectsEveryUncoveredAppearanceWithoutAimOrDig()
         {
-            var variants = field.Finds.GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
+            var variants = field.Finds.Where(f => f.Kind == DiscoveryKind.Common).GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
             foreach (var find in variants)
             {
                 Place(find,.65f); yield return WaitForSimulation(1.5f);

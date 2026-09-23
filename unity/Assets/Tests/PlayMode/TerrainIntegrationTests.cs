@@ -237,6 +237,8 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.IsSolid(new Vector3(0.1f, -0.15f, 0.1f)), Is.False);
             int count = terrain.RemainingCells;
             // A physical walk along the surface must not initialize a new excavation.
+            // Keep this terrain fixture's walk clear of the permanent yard winch.
+            PlacePlayer(new Vector3(0, .1f, -8));
             for (int i = 0; i < 60; i++) player.Tick(new FpsInputFrame { Move = Vector2.right }, 1f / 60f);
             Assert.That(player.transform.position.x, Is.GreaterThan(3));
             terrain.gameObject.SetActive(false);

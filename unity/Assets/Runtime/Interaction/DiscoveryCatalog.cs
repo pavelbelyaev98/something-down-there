@@ -12,6 +12,8 @@ namespace SomethingDownThere
         [Serializable] public sealed class Entry
         {
             public string ItemId;
+            public bool AuthoredPlacement;
+            public Vector3 AuthoredPosition, AuthoredEuler;
             public BuriedFind Prefab;
             // One catalog item, several saved appearances with identical gameplay specifications.
             public BuriedFind[] AppearanceVariants = Array.Empty<BuriedFind>();
@@ -82,6 +84,11 @@ namespace SomethingDownThere
                     || e.DeepMinDepth < 0 || e.DeepMaxDepth < 0
                     || (e.DeepCount > 0 && (e.DeepMinDepth < e.MaxDepth || e.DeepMaxDepth <= e.DeepMinDepth)))
                     throw new InvalidDataException("Invalid discovery deep allocation.");
+                if (e.Prefab.Kind == DiscoveryKind.Unique && (!e.AuthoredPlacement || e.Count != 1 || e.ShallowCount != 0
+                    || e.Prefab.Recovery != RecoveryMethod.Rope || e.Prefab.SaleValue != 0 || !e.Prefab.DetectorEligible || !e.Prefab.HasLore))
+                    throw new InvalidDataException("Invalid unique discovery policy.");
+                if (e.AuthoredPlacement && (e.Count != 1 || e.ShallowCount != 0 || !WorldSnapshot.Valid(e.AuthoredPosition) || !WorldSnapshot.Valid(e.AuthoredEuler)))
+                    throw new InvalidDataException("Invalid authored discovery placement.");
                 shallow += e.ShallowCount;
                 if (!ExcavationGrid.Finite(e.ShallowMinCover) || !ExcavationGrid.Finite(e.ShallowMaxCover)
                     || e.ShallowMinCover < 0 || e.ShallowMaxCover < 0
@@ -95,6 +102,7 @@ namespace SomethingDownThere
                         || !ids.Add(appearance.SaveContentId) || appearance.DisplayName != e.Prefab.DisplayName
                         || appearance.SaleValue != e.Prefab.SaleValue || appearance.Size != e.Prefab.Size
                         || appearance.DetectorEligible != e.Prefab.DetectorEligible
+                        || appearance.Kind != e.Prefab.Kind || appearance.Recovery != e.Prefab.Recovery
                         || !Mathf.Approximately(appearance.RequiredExposure, e.Prefab.RequiredExposure))
                         throw new InvalidDataException("Item appearances must have unique save keys and matching gameplay specifications.");
                 }
@@ -116,7 +124,7 @@ namespace SomethingDownThere
             Validate();
             var shallow = new List<int>(); var remaining = new List<int>();
             for (int i = 0; i < Entries.Length; i++)
-                for (int n = 0; n < Entries[i].Count; n++)
+                for (int n = 0; n < (Entries[i].AuthoredPlacement ? 0 : Entries[i].Count); n++)
                     (n < Entries[i].ShallowCount ? shallow : remaining).Add(i);
             var random = new System.Random(unchecked(seed ^ 0x45A7123));
             var appearances = new System.Random(unchecked(seed ^ 0x72BD139));
@@ -152,7 +160,20 @@ namespace SomethingDownThere
                 }
                 else bands[i] = new Vector2(entry.MinDepth, entry.MaxDepth);
             }
-            var layout = DiscoveryField.Generate(extent, TotalCount, seed, ShallowCount, radii, bands, covers);
+            var reserved = new List<DiscoveryReservation>();
+            var authored = new List<DiscoveryPlacement>();
+            for (int i = 0; i < Entries.Length; i++)
+            {
+                var entry = Entries[i]; if (!entry.AuthoredPlacement) continue;
+                Vector3 p = entry.AuthoredPosition; float r = entryRadii[i] + DiscoveryField.SoilClearance;
+                if (p.x < r || p.y < r || p.z < r || p.x > extent.x-r || p.y > extent.y-r || p.z > extent.z-r)
+                    throw new InvalidDataException("Authored unique does not fit inside untouched soil.");
+                foreach (var other in reserved) if (Vector3.Distance(p,other.Position) < r+other.Radius)
+                    throw new InvalidDataException("Authored discoveries overlap.");
+                reserved.Add(new DiscoveryReservation(p,entryRadii[i]));
+                authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
+            }
+            var layout = DiscoveryField.Generate(extent, shallow.Count, seed, ShallowCount, radii, bands, covers, reserved.ToArray());
             for (int i = 0; i < layout.Length; i++)
             {
                 int index = shallow[i];
@@ -170,7 +191,7 @@ namespace SomethingDownThere
                 }
                 layout[i] = new DiscoveryPlacement(layout[i].Position, rotation, index, appearances.Next(Entries[index].AppearanceCount));
             }
-            return layout;
+            var result = new List<DiscoveryPlacement>(layout); result.AddRange(authored); return result.ToArray();
         }
 
         private static void Shuffle(List<int> values, System.Random random)

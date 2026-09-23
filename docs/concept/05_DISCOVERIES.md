@@ -34,6 +34,10 @@ Dense buried layers must keep excavation responsive. Hide meshes enclosed by unt
 and suspend anchored motion updates until digging reaches them; preserve every find's identity,
 size and physical behaviour when it emerges.
 
+Development X-ray makes excavation ground transparent and reveals nearby actual objects,
+with no dot markers. This session-only inspection aid never changes soil, exposure, collision
+or collection/extraction eligibility; turning it off restores normal concealment and lighting.
+
 The **top metre belongs to plain rocks** — the junk you meet while the starter machine is still weak —
 and the ore ladder starts just beneath it: coal first, then the rest in order. Rocks stay full size
 and form a dense layer just beneath the turf, so the first shallow scrapes reveal several nearby
@@ -78,12 +82,12 @@ The detector is passive equipment: the player never equips it. They simply dig.
 Small/common finds are quick: a bite or two, instant pickup, clear feedback so nothing is collected
 unseen. Interesting finds remain after wide cuts, support cleanup and C4; exposure makes them
 collectible without requiring full cleaning or waiting for the player to name them.
-Holding the digging action collects an eligible aimed find as soon as it becomes available,
+For ordinary bag finds, holding the digging action collects an eligible aimed find as soon as it becomes available,
 including while it falls and between digging strokes. Loose finds have a more generous pickup
 reach than anchored finds or physical lifting; clear aim, exposure and bag capacity still apply.
 Collection and its visual feedback never delay the next terrain cut. Held digging can collect
 and make its normally scheduled cut in the same frame, without adding a second cut or fuel charge.
-Automatic collection also reaches nearby, clearly uncovered finds in front of the player while
+Automatic collection also reaches nearby, clearly uncovered ordinary finds in front of the player while
 walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
 Soil, walls and partial burial still block it; a full bag stops all pickup (see §9). Deliberately dropped/thrown finds wait
@@ -99,17 +103,17 @@ Extensions of the cluster system where discoveries physically connect through th
 - **Keep it simple:** No wiring puzzles, cable inventory, or repair chores. Following the connection means doing more of what is fun: digging.
 - Built from authored, fully buried arrangements with preserved relationships, seeded and oriented as units.
 
-**Whole-object salvage (surface-operated winch extraction)**:
-For rare oversized discoveries (a small maintenance vehicle, an industrial pump, huge machinery) where collecting a mere fragment would feel unrewarding:
-- **Underground discovery:** The player excavates around the oversized object until it is fully exposed and flagged as ready for recovery.
-- **Surface winch operation:** The player ascends to the surface yard and walks up to the heavy winch machine sitting at the rim beside the salvage pad.
-- **Cable deployment:** The player presses the button on the winch. A heavy steel cable deploys down the shaft, following the carved route, and automatically attaches itself securely to the object at the bottom.
-- **The hauling spectacle:** The winch reverses and reels the cable back in. The player stands at the surface rim watching the entire sequence: the object gets hauled up through the carved shaft.
-- **Dynamic shaft clearance:** If the object encounters any narrow bottlenecks or tight corners, it **dynamically carves and clears away the obstructing dirt** as it ascends so it never gets wedged or stuck.
-- **Arrival & Cash-in:** The object breaches the rim into daylight and slams down onto the dedicated **salvage pad**. The surface computer registers the prize for a massive lump-sum payday, and a commemorative photo or miniature is added to the trophy wall.
+**Whole-object rope recovery (mark underground, haul automatically)**:
+The first proof is the unique buried retro computer; later oversized discoveries reuse the same mechanism.
+- **Deliberate exposure:** Excavate enough to meet the object's authored exposure requirement. Full cleaning is unnecessary. Rope targets remain in the world; digging, proximity pickup and physical grabbing cannot collect them.
+- **Mark anywhere on the visible object:** Aim at any unobstructed part within interaction reach and hold Interact (E by default). A short progress indicator confirms the mark; releasing or losing the target cancels the unfinished hold. No special attachment hotspot.
+- **Automatic deployment:** Marking starts the rim winch. The rope comes down through connected space in the player's excavation and visibly attaches. No surface-button trip or continued button hold is required.
+- **The haul:** Rope tension pulls a dynamic rigid body at the marked attachment point along that excavated route, including lateral passages and bends. The object swings, rotates and collides naturally; its pose is never locked to a rail. The player remains free to move and watch from underground or the rim; no camera takeover.
+- **Local clearance:** The load clears diggable ground ahead of the rope pull even while wedged or tilted. Common finds in direct contact are loosened from their surrounding soil and pushed aside physically, retaining their identities. It follows the existing route rather than drilling a fresh vertical shaft; unrelated terrain, permanent boundaries and other finds survive. An impossible route leaves the find recoverable.
+- **Arrival:** Lower the whole object onto the receiving pad. A unique is stored safely for individual display placement and never sold; oversized salvage becomes eligible for once-only cash-in at the surface computer and a display record.
+- **Continuity:** Full bags do not block recovery, the winch does not spend the player's battery, and saving mid-haul preserves the object, rope progress and changed terrain together. Dense finds and automatic ground clearance must keep movement and camera control responsive throughout the haul, including each fresh cut during ascent; a high average frame rate does not compensate for recurring stalls.
 
-**Moving discoveries**: objects respond physically as surrounding ground is removed,
-reinforcing the reveal feedback.
+**Moving discoveries**: objects, including unique rope targets, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig out a
 suitcase, expose and open it with the existing tool, then see coins or an odd keepsake inside.
@@ -130,7 +134,7 @@ The outside gives a clue; the contents deliver a second reveal and a small piece
 | Hand drill | Small handheld silhouette recognition |
 | Gearbox / engine block | Machine parts; natural lead-in to a cluster |
 | Mammoth bone / tusk | Organic curves; ties to the Danube bones inspiration |
-| Gramophone | Funny, display-worthy oddity with a distinctive horn |
+| Buried retro computer | Unique exhibit, recognizable computer silhouette and whole-object rope recovery; a different model from the trading terminal |
 
 These five are prototyped and reviewed before any large content batch.
 

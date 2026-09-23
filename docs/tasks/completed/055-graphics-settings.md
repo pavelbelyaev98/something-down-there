@@ -1,6 +1,6 @@
 # 055 — Graphics Settings
 
-**Status:** complete. Persistent render-resolution, shadow, MSAA, texture-quality and filtering controls with category reset; shadows adjust only the runtime URP clone while excavation daylight stays independent.
+**Status:** complete. Persistent shadow, MSAA, texture-quality and filtering controls use balanced defaults and category reset, with rendering fixed at 100%. Shadows adjust only the runtime URP clone while excavation daylight stays independent.
 
 ## Objective
 Expose useful, persistent performance controls in the existing Graphics tab, with clear labels and native rendering by default.
@@ -35,3 +35,9 @@ Legacy/corrupt preferences, unavailable URP, settings toggled repeatedly, resett
 - Actual Graphics controls and keyboard-submit Reset exercised in a disposable additive MainGame with in-memory preferences and no save owner. Menu captures reviewed at 720p with default and reduced rendering settings; UI stays sharp.
 - Live shadow-pass inspection confirmed Off takes the empty-shadow path and High restores the authored four-cascade atlas. The excavation daylight revision and sampled underground ambient remained unchanged.
 - Windows player rebuilt successfully with zero errors; the sole warning is the existing optional Pipeline runtime-configuration notice. MainGame restored clean; no source rendering assets or player saves changed.
+
+## Balanced defaults iteration
+- Replace quality-heavy startup/reset defaults with Medium shadows and 2× MSAA; retain full-resolution textures, High filtering and the existing frame cap. Rendering stays at 100%, with the scale row, help text and persisted field removed.
+- Apply the requested graphics reset to this device through `GamePreferences`, retaining controls, audio and world saves. Borderless uses the monitor's desktop size, as specified in [054](054-render-resolution-defaults.md).
+- Verify preference validation/reset/persistence, renderer ownership and fixed scale, display Keep/Revert, actual startup framing and the remaining Graphics controls before the Windows rebuild.
+- Verification: preference/display tests and focused settings/navigation PlayMode checks pass. Live review confirms the four remaining controls and native render scale, with the requested defaults applied to player and Editor preferences. Windows build succeeds with no script warnings or errors; only the existing optional Pipeline runtime warning remains.

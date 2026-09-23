@@ -18,6 +18,7 @@ namespace SomethingDownThere
         public bool CrouchHeld;
         public bool SprintHeld;
         public bool InteractPressed;
+        public bool InteractHeld;
         public bool InventoryPressed;
         public bool BackPressed;
         public bool AdminMenuPressed;
@@ -153,6 +154,7 @@ namespace SomethingDownThere
                 CrouchHeld = crouch.IsPressed(),
                 SprintHeld = gameplayActive && sprint.IsPressed(),
                 InteractPressed = interactArmed && interact.WasPressedThisFrame(),
+                InteractHeld = gameplayActive && interactArmed && interactHeld,
                 InventoryPressed = inventoryArmed && inventory.WasPressedThisFrame() && (gameplayActive || MenuShortcutAvailable(inventory, true)),
                 BackPressed = (backArmed && back.WasPressedThisFrame() && (gameplayActive || MenuShortcutAvailable(back, false)))
                     || (!gameplayActive && escapeArmed && escape.WasPressedThisFrame()),

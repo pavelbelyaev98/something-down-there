@@ -33,7 +33,7 @@ namespace SomethingDownThere
 
         public bool TryAdd(InventoryItem item)
         {
-            if (IsFull || item == null || IndexOf(item.InstanceId) >= 0) return false;
+            if (IsFull || item == null || !item.Sellable || IndexOf(item.InstanceId) >= 0) return false;
             items.Add(item);
             Revision++;
             return true;

@@ -142,7 +142,7 @@ namespace SomethingDownThere.Tests
             saved.Finds = Enumerable.Range(0, count).Select(i => new FindSnapshot {
                 ContentId = "common_rock_a", Item = new ItemSnapshot { Id = "saved-" + i, Name = "Rock", Value = 2 },
                 Position = new Vector3(i * .001f, .5f, .5f), Rotation = Quaternion.Euler(0, i % 360, 0),
-                Scale = Vector3.one, Collected = i % 7 == 0, PhysicsReleased = i % 3 == 0
+                Scale = Vector3.one, State = i % 7 == 0 ? FindState.Collected : FindState.World, PhysicsReleased = i % 3 == 0
             }).ToArray();
             using var stream = new MemoryStream();
             WorldSaveCodec.Write(stream, saved); stream.Position = 0;
@@ -298,7 +298,7 @@ namespace SomethingDownThere.Tests
                 Terrain = new ExcavationGrid(new Vector3Int(8, 8, 8), 0.125f).Capture(), TerrainRotation = Quaternion.identity,
                 ExcavationSeed = 2718, DiscoverySeed = 90127,
                 Finds = new[] { new FindSnapshot { ContentId = "blue-marble", Item = item, Position = Vector3.one * 0.5f,
-                    Rotation = Quaternion.identity, Scale = Vector3.one, Collected = true } },
+                    Rotation = Quaternion.identity, Scale = Vector3.one, State = FindState.Collected } },
                 Inventory = new[] { new ItemSnapshot { Id = item.Id, Name = item.Name, Value = item.Value } },
                 InventoryCapacity = 10, Credits = 17, ShovelLevel = 2, BatteryCapacity = 100, BatteryCharge = 37.25f,
                 PlayerPosition = new Vector3(0.1f, 1, 0.4f), PlayerRotation = Quaternion.Euler(0, 76, 0), Pitch = 42, VerticalSpeed = -2 };

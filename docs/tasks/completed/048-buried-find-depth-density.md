@@ -1,6 +1,6 @@
 # 048 — Buried Find Depth Density (Immediate Feel Pass)
 
-**Status:** complete. Depth changes the mix, not whether a metre of digging pays. Placement uses a deterministic spatial grid. The body records rejected attempts, including tiny finds and placer saturation. Do not re-run those, and do not treat any count in this file as current. Populations live in the source catalogs. The rule is `docs/concept/05_DISCOVERIES.md` §1.
+**Status:** complete. Depth changes the find mix while deterministic spatial placement preserves encounter density; current populations live in the source catalogs. Development X-ray reveals actual nearby finds through transparent ground.
 
 ## Objective
 
@@ -169,3 +169,10 @@ deep.
 - Concept updated in place: `05_DISCOVERIES.md` §1 and §7, `06_PROGRESSION_AND_ECONOMY.md` §3 now
   state the constant-rate / rising-mix rule instead of "commons stay worthwhile at any depth".
 - Windows build rebuilt after the iteration.
+
+### Transparent-ground X-ray iteration
+
+- Replace HUD dot markers with a runtime transparent soil material; new and rebuilt chunks share it, while colliders and signed density stay authoritative. Hide grass cover and bypass underground daylight attenuation while inspecting.
+- Reuse buried-mesh visibility with the existing local inspection range; do not change exposure, physics, marking or collection. Switching off, restoring normal rules, loading or disabling the owner restores normal presentation.
+- Remove marker UI and projection checks; retain chord/menu coverage and verify real meshes, soil occlusion, digging, and restoration in a disposable MainGame.
+- Verification: both focused Play Mode checks pass; rendered MainGame views confirm transparent ground and full restoration. The Windows player is rebuilt successfully; its only warning is the existing intentional absence of player-side Pipeline tooling.

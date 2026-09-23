@@ -872,17 +872,16 @@ namespace SomethingDownThere.Tests
             int shadowResolution = source.mainLightShadowmapResolution, shadowCascades = source.shadowCascadeCount;
             using (var preferences = new GamePreferences(new PreferencesStore { Contents = "{\"Version\":1,\"MasterVolume\":25,\"Muted\":true,\"MuteUnfocused\":true}" }, new UnityGameSettingsPlatform()))
             {
-                Assert.That(preferences.Values.RenderScale, Is.EqualTo(100));
                 Assert.That((float)QualitySettings.renderPipeline.GetType().GetProperty("renderScale").GetValue(QualitySettings.renderPipeline), Is.EqualTo(1f));
                 Assert.That(AudioListener.volume, Is.EqualTo(0.25f), "Removed legacy mute flags must have no hidden effect.");
-                preferences.Edit(v => { v.VSync = false; v.FrameLimit = 30; v.MasterVolume = 25; v.RenderScale = 75; v.Msaa = 2; v.TextureLimit = 1; v.Filtering = 2; });
+                preferences.Edit(v => { v.VSync = false; v.FrameLimit = 30; v.MasterVolume = 25; v.Msaa = 2; v.TextureLimit = 1; v.Filtering = 2; });
                 Assert.That(Application.targetFrameRate, Is.EqualTo(30)); Assert.That(QualitySettings.vSyncCount, Is.Zero);
                 Assert.That(AudioListener.volume, Is.EqualTo(0.25f));
                 Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(1));
                 Assert.That(QualitySettings.anisotropicFiltering, Is.EqualTo(AnisotropicFiltering.ForceEnable));
                 var pipeline = QualitySettings.renderPipeline;
                 Assert.That(pipeline, Is.Not.SameAs(original));
-                Assert.That((float)pipeline.GetType().GetProperty("renderScale").GetValue(pipeline), Is.EqualTo(0.75f));
+                Assert.That((float)pipeline.GetType().GetProperty("renderScale").GetValue(pipeline), Is.EqualTo(1f));
                 Assert.That((int)pipeline.GetType().GetProperty("msaaSampleCount").GetValue(pipeline), Is.EqualTo(2));
                 var runtime = (UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)pipeline;
                 foreach (int level in new[] { 0, 1, 2, 3, 0, 3 })

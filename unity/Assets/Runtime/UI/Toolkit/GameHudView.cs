@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -8,8 +7,7 @@ namespace SomethingDownThere
     {
         private readonly FpsPlayer player;
         private readonly Label reticle, status, walletStatus, prompt, feedback, shovelStatus, adminHint, batteryStatus, returnWarning, fuelWarning, inventoryWarning;
-        private readonly VisualElement batteryGroup, batteryFill, xrayRoot;
-        private readonly List<Label> xrayMarkers = new List<Label>();
+        private readonly VisualElement batteryGroup, batteryFill;
         private Battery displayedBattery;
         private readonly Label fps;
         private int frameSamples;
@@ -34,7 +32,6 @@ namespace SomethingDownThere
             inventoryWarning = Root.Q<Label>("Inventory warning");
             batteryGroup = Root.Q("batteryGroup");
             batteryFill = Root.Q("Charge");
-            xrayRoot = Root.Q("Admin X-ray");
             Root.Query<VisualElement>().ForEach(element => element.pickingMode = PickingMode.Ignore);
         }
 
@@ -71,11 +68,11 @@ namespace SomethingDownThere
             adminHint.text = !player.AdminAvailable || !gameplay ? ""
                 : "DEVELOPER ADMIN"
                     + (player.HasAdminOverrides ? "  |  Overrides active" : "")
-                    + (player.UnlimitedBattery ? "  |  Unlimited battery" : "");
+                    + (player.UnlimitedBattery ? "  |  Unlimited battery" : "")
+                    + (player.AdminXray ? "  |  X-ray: transparent ground" : "");
             float pulse = player.CameraSettings.SteadyCrosshair ? 0 : player.DigPulse;
             reticle.style.scale = new Scale(Vector3.one * (1 + pulse * 0.3f));
             reticle.style.color = Color.Lerp(Color.white, new Color(1, 0.82f, 0.35f), pulse);
-            UpdateXray(gameplay && player.AdminXray);
         }
 
         private void UpdateBattery()
@@ -100,32 +97,5 @@ namespace SomethingDownThere
                 && (recharge.IsPlayerInZone || (fraction < 1f && recharge.IsNearby)) ? "FUEL AT COMPUTER" : "";
         }
 
-        private void UpdateXray(bool visible)
-        {
-            xrayRoot.EnableInClassList("hidden", !visible);
-            if (!visible) return;
-            var finds = player.Discoveries.Finds;
-            while (xrayMarkers.Count < finds.Count)
-            {
-                var marker = new Label("o") { name = "Buried find marker", pickingMode = PickingMode.Ignore };
-                marker.AddToClassList("hud-marker");
-                xrayRoot.Add(marker);
-                xrayMarkers.Add(marker);
-            }
-            for (int i = 0; i < xrayMarkers.Count; i++)
-            {
-                var find = i < finds.Count ? finds[i] : null;
-                Vector3 view = find == null ? Vector3.zero : player.ViewCamera.WorldToViewportPoint(find.transform.position);
-                bool show = find != null && find.isActiveAndEnabled && !find.Collected && view.z > 0
-                    && Vector3.Distance(player.ViewCamera.transform.position, find.transform.position) <= 18
-                    && view.x > 0.02f && view.x < 0.98f && view.y > 0.12f && view.y < 0.85f;
-                var marker = xrayMarkers[i];
-                marker.EnableInClassList("hidden", !show);
-                if (!show) continue;
-                marker.style.left = Length.Percent(view.x * 100);
-                marker.style.top = Length.Percent((1 - view.y) * 100);
-                marker.EnableInClassList("collectible", find.Exposure > 0 && find.Collectible);
-            }
-        }
     }
 }

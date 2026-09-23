@@ -37,9 +37,17 @@ namespace SomethingDownThere.Editor
             finally
             {
                 PlayerSettings.enableFrameTimingStats = frameTimings;
-                EditorSceneManager.RestoreSceneManagerSetup(setup);
-                AssetDatabase.DeleteAsset(fixture);
-                AssetDatabase.SaveAssets();
+                try
+                {
+                    if (Array.Exists(setup, s => s.isLoaded && s.isActive && !string.IsNullOrEmpty(s.path)))
+                        EditorSceneManager.RestoreSceneManagerSetup(setup);
+                    else EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+                }
+                finally
+                {
+                    AssetDatabase.DeleteAsset(fixture);
+                    AssetDatabase.SaveAssets();
+                }
             }
         }
     }

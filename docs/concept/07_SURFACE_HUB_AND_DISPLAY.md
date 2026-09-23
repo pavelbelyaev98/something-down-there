@@ -10,7 +10,7 @@ no doors, no menu mazes, no NPCs.
 |---|---|---|
 | **The shaft** | The hole itself, physically changing as the player digs | The player sees their own excavation from the rim; the landmark that never repeats |
 | **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
-| **Winch & salvage pad** | Extract oversized finds | A heavy rim winch hauls unburied vehicles through tight dirt bottlenecks onto the salvage pad for payout |
+| **Winch & salvage pad** | Recover whole objects marked underground | A rim winch sends a rope along the excavated route, attaches and hauls through dirt bottlenecks; uniques are stored for display, oversized salvage awaits cash-in |
 | **Fuel point** | Battery refill | Amount and price shown before purchase; bigger tanks keep current fuel |
 | **Display wall** | Special unsellable exhibits and salvage records | Empty spaces visible; displays unique oddities plus miniatures/photos of whole-salvage finds |
 | **Lamp / charges shelf** | Buy reusable lamps and C4 | Supports remaining play |
@@ -66,6 +66,8 @@ filling.
 - **Spaces are pre-placed:** empty shelves/stands are visible, with no undiscovered silhouettes.
 - When a special find is collected, it is stored safely. At the yard the player brings it out and
  places it individually in any compatible spot — a small, satisfying physical interaction, not a menu.
+- A rope-recovered unique remains visibly secured on the receiving pad until the player places it
+ on a compatible stand. Recovery never automatically sells it or chooses its exhibit placement.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.
 - Placed objects support inspection and story rereading. First delivery stays for playtesting,
  leaning before placement.

@@ -17,14 +17,14 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog; catalog.Validate();
             var extent = SiteLayout.Extent; var layout = catalog.Generate(extent,seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed));
-            Assert.That(layout.Length,Is.EqualTo(12484));
-            CollectionAssert.AreEqual(new[] {5500,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Select(e=>e.Count));
+            Assert.That(layout.Length,Is.EqualTo(12485));
+            CollectionAssert.AreEqual(new[] {5500,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
                 Assert.That(layout.Count(p=>p.PrefabIndex==index),Is.EqualTo(entry.Count));
                 Assert.That(layout.Take(catalog.ShallowCount).Count(p=>p.PrefabIndex==index),Is.EqualTo(entry.ShallowCount));
-                Assert.That(entry.Prefab.DetectorEligible,Is.False);
+                Assert.That(entry.Prefab.DetectorEligible,Is.EqualTo(entry.Prefab.Kind == DiscoveryKind.Unique));
                 Assert.That(entry.Prefab.SurfaceSampleCount,Is.EqualTo(256));
                 Assert.That(entry.Prefab.RequiredExposure,Is.EqualTo(.6f));
                 Assert.That(entry.Prefab.GetComponent<FindPhysics>(),Is.Not.Null);
@@ -37,7 +37,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(mesh.bounds.center.magnitude,Is.LessThan(.0001f));
                 var renderer=entry.Prefab.GetComponent<MeshRenderer>();
                 Assert.That(renderer.sharedMaterial.GetTexture("_BaseMap"),Is.Not.Null);
-                Assert.That(renderer.sharedMaterial.GetTexture("_BumpMap"),Is.Not.Null);
+                if (entry.Prefab.Kind == DiscoveryKind.Common) Assert.That(renderer.sharedMaterial.GetTexture("_BumpMap"),Is.Not.Null);
                 bool buried = true;
                 foreach(var placement in layout.Where(p=>p.PrefabIndex==index))
                 {
@@ -61,7 +61,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(750));
-            CollectionAssert.AreEqual(new[] { 750, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 750, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
             for (int seed = 0; seed < 100; seed++)
             {
                 var layout = catalog.Generate(SiteLayout.Extent, seed);
@@ -70,7 +70,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(top.All(p => SiteLayout.Extent.y - p.Position.y >= radii[p.PrefabIndex] + catalog.Entries[p.PrefabIndex].ShallowMinCover - .0001f
                     && SiteLayout.Extent.y - p.Position.y <= radii[p.PrefabIndex] + catalog.Entries[p.PrefabIndex].ShallowMaxCover + .0001f), Is.True);
                 Assert.That(top.Count(p => p.Position.z <= 6), Is.GreaterThanOrEqualTo(50));
-                Assert.That(layout.Skip(catalog.ShallowCount).Count(), Is.EqualTo(11734));
+                Assert.That(layout.Skip(catalog.ShallowCount).Count(), Is.EqualTo(11735));
                 Assert.That(layout.Count(p => p.Position.y < 8.5f), Is.GreaterThanOrEqualTo(100));
                 // Sample walkable excavation locations, including lateral/back areas. This is a
                 // spatial bound on empty topsoil, not a claim about every player's encounter time.
@@ -124,7 +124,7 @@ namespace SomethingDownThere.Tests
         {
             // Bucket by the largest envelope any pair can require, so a 5,000 find carpet
             // stays linear instead of thirteen million pair checks per seed.
-            const float cell = 1.2f;
+            float cell = radii.Max() * 2 + DiscoveryField.SoilClearance;
             var buckets = new System.Collections.Generic.Dictionary<(int, int, int), System.Collections.Generic.List<int>>();
             for (int i = 0; i < layout.Length; i++)
             {
@@ -295,6 +295,7 @@ namespace SomethingDownThere.Tests
                 var accepted = catalog.Generate(SiteLayout.Extent, 90127).Take(catalog.ShallowCount).ToArray();
                 foreach (var entry in catalog.Entries)
                 {
+                    if (entry.AuthoredPlacement) continue;
                     entry.Count = entry.ShallowCount + (entry.Count - entry.ShallowCount - entry.DeepCount) / 2;
                     entry.DeepCount = 0;
                 }
@@ -360,7 +361,7 @@ namespace SomethingDownThere.Tests
             var layout = catalog.Generate(extent, 12);
             watch.Stop();
             Debug.Log($"Full population placement: {watch.Elapsed.TotalMilliseconds:F0} ms for {layout.Length} finds.");
-            Assert.That(layout.Length, Is.EqualTo(12484));
+            Assert.That(layout.Length, Is.EqualTo(12485));
             Assert.That(watch.Elapsed.TotalSeconds, Is.LessThan(1.0), "Placement must stay clear of the old all-pairs scan.");
         }
 

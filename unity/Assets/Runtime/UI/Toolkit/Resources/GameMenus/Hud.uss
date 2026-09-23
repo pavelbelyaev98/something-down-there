@@ -1,4 +1,4 @@
-.hud-root, .hud-overlay {
+.hud-root {
     position: absolute;
     left: 0; right: 0; top: 0; bottom: 0;
 }
@@ -46,5 +46,3 @@
 .hud-root .hud-resource-warning { padding: 7px 18px; margin: 4px 0 0; max-width: 100%; font-size: 21px; -unity-font-style: bold; letter-spacing: 1px; -unity-text-align: middle-center; white-space: normal; color: #ffd45c; background-color: rgba(19, 23, 26, 0.9); border-radius: 3px; }
 .hud-root .hud-resource-warning.critical { color: #ff625c; }
 .stacked-warnings .hud-feedback { bottom: 128px; }
-.hud-marker { position: absolute; width: 34px; height: 34px; margin-left: -17px; margin-top: -17px; font-size: 23px; color: #4defe6; -unity-text-align: middle-center; }
-.hud-marker.collectible { color: #80ff7a; }

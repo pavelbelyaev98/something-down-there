@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
+    public readonly struct DiscoveryReservation
+    {
+        public readonly Vector3 Position; public readonly float Radius;
+        public DiscoveryReservation(Vector3 position, float radius) { Position = position; Radius = radius; }
+    }
+
     public readonly struct DiscoveryPlacement
     {
         public readonly Vector3 Position;
@@ -28,6 +34,8 @@ namespace SomethingDownThere
         private readonly List<BuriedFind> finds = new List<BuriedFind>();
         private bool initialized;
         private bool generationDeferred;
+        private Camera xrayCamera;
+        private readonly Collider[] changedFinds = new Collider[256];
         public IReadOnlyList<BuriedFind> Finds => finds;
         public int Seed => seed;
         public long MotionRevision { get; private set; }
@@ -35,6 +43,8 @@ namespace SomethingDownThere
         internal void NotifyMotion() => MotionRevision++;
         public bool Initialized => initialized || (developmentContent && !FpsPlayer.AdminBuild);
         public void DeferGeneration() => generationDeferred = true;
+        public BuriedFind Find(string id) => finds.Find(f => f.Item.InstanceId == id);
+        public BuriedFind StoredUnique => finds.Find(f => f.State == FindState.Stored);
 
         public FindSnapshot[] Capture()
         {
@@ -48,7 +58,15 @@ namespace SomethingDownThere
             if (catalog != null)
             {
                 catalog.Validate();
-                foreach (var state in states) catalog.Resolve(state.ContentId);
+                foreach (var state in states)
+                {
+                    var source = catalog.Resolve(state.ContentId);
+                    if(source.Kind!=state.Item.Kind)
+                        throw new System.IO.InvalidDataException("Saved find policy differs from current content.");
+                }
+                foreach(var entry in catalog.Entries)
+                    if(entry.Prefab.Kind==DiscoveryKind.Unique && Array.FindAll(states,s=>s.ContentId==entry.Prefab.SaveContentId).Length!=1)
+                        throw new System.IO.InvalidDataException("The saved unique population is incomplete.");
                 return;
             }
             if (developmentContent && !FpsPlayer.AdminBuild && states.Length > 0)
@@ -86,6 +104,28 @@ namespace SomethingDownThere
         private void OnDisable()
         {
             if (terrain != null) terrain.Changed -= HandleExcavationChanged;
+            SetXray(false, null);
+        }
+
+        public void SetXray(bool enabled, Camera camera)
+        {
+            xrayCamera = enabled ? camera : null;
+            if (terrain != null) terrain.SetXray(xrayCamera != null);
+            UpdateXrayVisibility();
+        }
+
+        private void LateUpdate()
+        {
+            if (xrayCamera != null) UpdateXrayVisibility();
+        }
+
+        private void UpdateXrayVisibility()
+        {
+            // Keep the debug view local, like the former markers: rendering the
+            // entire deep population would submit thousands of detailed meshes.
+            Vector3 eye = xrayCamera != null ? xrayCamera.transform.position : Vector3.zero;
+            foreach (var find in finds)
+                if (find != null) find.SetXrayVisible(xrayCamera != null && (find.transform.position - eye).sqrMagnitude <= 18f * 18f);
         }
 
         private void Start()
@@ -120,9 +160,32 @@ namespace SomethingDownThere
 
         private void HandleExcavationChanged(Bounds changed)
         {
-            foreach (var find in finds)
-                if (!find.Collected && changed.Intersects(find.WorldBounds)) find.RefreshExposure();
+            using var profile = ExposureMarker.Auto();
+            // Every world find retains its collider even while soil hides its mesh.
+            // Reuse PhysX's spatial index instead of reading thousands of renderer
+            // bounds for every local cut. Synchronize moved/restored finds first.
+            int count;
+            using (QueryMarker.Auto())
+            {
+                Physics.SyncTransforms();
+                count = Physics.OverlapBoxNonAlloc(changed.center, changed.extents, changedFinds,
+                    Quaternion.identity, Physics.AllLayers, QueryTriggerInteraction.Collide);
+            }
+            if (count == changedFinds.Length)
+            {
+                // Full terrain reset/restore can cover the whole population. Never
+                // silently lose notifications when a bounded local query overflows.
+                foreach (var find in finds)
+                    if (!find.Collected && changed.Intersects(find.WorldBounds)) find.RefreshExposure();
+                return;
+            }
+            for (int i = 0; i < count; i++)
+                if (changedFinds[i].TryGetComponent<BuriedFind>(out var find) && find.GetComponentInParent<DiscoveryField>() == this
+                    && !find.Collected) find.RefreshExposure();
         }
+
+        private static readonly Unity.Profiling.ProfilerMarker ExposureMarker = new Unity.Profiling.ProfilerMarker("Discovery.TerrainChanged");
+        private static readonly Unity.Profiling.ProfilerMarker QueryMarker = new Unity.Profiling.ProfilerMarker("Discovery.BoundsQuery");
 
         // Separate deterministic stream from excavation. The enlarged starter forms
         // fit within 0.5 m of their centers in every rotation, with soil between them.
@@ -149,7 +212,7 @@ namespace SomethingDownThere
         public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands)
             => Generate(extent, total, placementSeed, shallowCount, radii, depthBands, null);
 
-        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers)
+        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null)
         {
             if (!ExcavationGrid.Finite(extent.x) || !ExcavationGrid.Finite(extent.y) || !ExcavationGrid.Finite(extent.z)
                 || extent.x < 8 || extent.y < 4 || extent.z < 8 || total < 1 || total > MaximumPopulation
@@ -170,7 +233,8 @@ namespace SomethingDownThere
             var targetDepths = DepthTargets(depthBands, shallowCount, extent.y, placementSeed);
             // Neighbourhood index: clearance is answered from the immediate cells, the
             // best-candidate spread metric from the closest occupied shell around them.
-            var grid = new PlacementGrid(extent, MinimumSpacing + .001f, total);
+            var grid = new PlacementGrid(extent, MinimumSpacing + .001f, total + (reserved?.Length ?? 0));
+            if (reserved != null) for (int r = 0; r < reserved.Length; r++) grid.Add(total + r, reserved[r].Position, reserved[r].Radius);
             float Range(float min, float max) => Mathf.Lerp(min, max, (float)random.NextDouble());
             for (int i = 0; i < total; i++)
             {
@@ -272,6 +336,8 @@ namespace SomethingDownThere
             private readonly int[] head, next;
             private readonly int width, height, depth;
             private readonly float cell, distantSquared;
+            private float largestRadius;
+            private readonly List<int> largeReservations = new List<int>();
 
             public PlacementGrid(Vector3 extent, float cellSize, int capacity)
             {
@@ -291,6 +357,9 @@ namespace SomethingDownThere
             {
                 positions[index] = position;
                 radii[index] = radius;
+                // A rare authored load must not enlarge every common-find bucket scan.
+                if (radius > MaximumFindRadius) { largeReservations.Add(index); return; }
+                largestRadius = Mathf.Max(largestRadius, radius);
                 int slot = Slot(position);
                 next[index] = head[slot];
                 head[slot] = index;
@@ -304,13 +373,19 @@ namespace SomethingDownThere
             {
                 clear = true;
                 nearest = distantSquared;
+                foreach (int other in largeReservations)
+                {
+                    float spacing = Mathf.Max(0, radius) + radii[other] + (banded ? BandedSoilClearance : SoilClearance);
+                    if ((positions[other] - position).sqrMagnitude < spacing * spacing) { clear = false; return; }
+                }
                 int cx = Mathf.Clamp((int)(position.x / cell), 0, width - 1);
                 int cy = Mathf.Clamp((int)(position.y / cell), 0, height - 1);
                 int cz = Mathf.Clamp((int)(position.z / cell), 0, depth - 1);
-                float best = Scan(position, radius, banded, cx, cy, cz, 1, 0, out bool found, out clear);
+                int clearanceRing = Mathf.Max(1, Mathf.CeilToInt((Mathf.Max(0, radius) + largestRadius + SoilClearance) / cell));
+                float best = Scan(position, radius, banded, cx, cy, cz, clearanceRing, 0, out bool found, out clear);
                 if (!clear) return;
                 if (found) { nearest = best; return; }
-                for (int ring = 2; ring <= MaximumRing; ring++)
+                for (int ring = clearanceRing + 1; ring <= MaximumRing; ring++)
                 {
                     best = Scan(position, radius, banded, cx, cy, cz, ring, ring, out found, out clear);
                     if (!clear) return;
@@ -335,7 +410,7 @@ namespace SomethingDownThere
                     for (int other = head[(x * height + y) * depth + z]; other >= 0; other = next[other])
                     {
                         var delta = positions[other] - position;
-                        if (distance <= 1)
+                        if (radius < 0 ? distance <= 1 : true)
                         {
                             float spacing = radius < 0 ? MinimumSpacing : radius + radii[other] + (banded ? BandedSoilClearance : SoilClearance);
                             if (delta.sqrMagnitude < spacing * spacing) { clear = false; return best; }

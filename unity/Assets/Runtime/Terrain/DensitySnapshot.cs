@@ -123,6 +123,18 @@ namespace SomethingDownThere
             CopiedBytes += pages[page].Length * sizeof(float);
         }
 
+        public void CopyTo(int source,float[] target,int destination,int count)
+        {
+            while(count>0)
+            {
+                int page=source>>DensitySnapshot.PageShift;
+                int offset=source&DensitySnapshot.PageMask;
+                int length=Math.Min(count,pages[page].Length-offset);
+                Array.Copy(pages[page],offset,target,destination,length);
+                source+=length;destination+=length;count-=length;
+            }
+        }
+
         public DensitySnapshot Capture()
         {
             var snapshot = new DensitySnapshot((float[][])pages.Clone(), Length);

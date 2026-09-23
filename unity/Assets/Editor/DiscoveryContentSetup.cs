@@ -20,7 +20,7 @@ namespace SomethingDownThere.Editor
         [Serializable] public sealed class Maps { public string BaseColor, Normal, Masks; }
         [Serializable] public sealed class SourceEntry
         {
-            public string content_id, display_name, atlas_group, tier, fbx, collision_fbx;
+            public string content_id, display_name, atlas_group, tier, fbx, collision_fbx, recovery, lore;
             public float[] dimensions_m;
             public int instances, shallow_instances, sale_value, slots;
             public bool detector_eligible, lay_on_side;
@@ -49,6 +49,7 @@ namespace SomethingDownThere.Editor
             if (catalog == null) { catalog = ScriptableObject.CreateInstance<DiscoveryCatalog>(); AssetDatabase.CreateAsset(catalog, CatalogPath); }
             PhotoRockSetup.AppendToCatalog(entries);
             MineralSetup.AppendToCatalog(entries);
+            RetroComputerSetup.AppendToCatalog(entries);
             catalog.Entries = entries.ToArray();
             catalog.Validate(); EditorUtility.SetDirty(catalog);
             ConfigureScene(catalog);
@@ -201,7 +202,7 @@ namespace SomethingDownThere.Editor
             finally { UnityEngine.Object.DestroyImmediate(model); }
         }
 
-        private static BuriedFind UpdatePrefab(SourceEntry entry, Mesh mesh, Mesh collisionMesh, Material material, string folder = Folder, bool large = false, float mass = .4f, float scale = 1f)
+        internal static BuriedFind UpdatePrefab(SourceEntry entry, Mesh mesh, Mesh collisionMesh, Material material, string folder = Folder, bool large = false, float mass = .4f, float scale = 1f)
         {
             string path = folder + "/Prefabs/" + entry.content_id + ".prefab";
             bool exists = AssetDatabase.LoadAssetAtPath<GameObject>(path) != null;
@@ -238,7 +239,11 @@ namespace SomethingDownThere.Editor
                 var data = new SerializedObject(find);
                 data.FindProperty("saveContentId").stringValue = entry.content_id; data.FindProperty("displayName").stringValue = entry.display_name;
                 data.FindProperty("saleValue").intValue = entry.sale_value; data.FindProperty("size").enumValueIndex = (int)(large ? FindSize.Large : FindSize.Small);
-                data.FindProperty("minor").boolValue = true; data.FindProperty("detectorEligible").boolValue = false;
+                data.FindProperty("minor").boolValue = entry.tier == "common";
+                data.FindProperty("detectorEligible").boolValue = entry.detector_eligible;
+                data.FindProperty("kind").enumValueIndex = (int)(entry.tier == "unique" ? DiscoveryKind.Unique : DiscoveryKind.Common);
+                data.FindProperty("recovery").enumValueIndex = (int)(entry.recovery == "rope" ? RecoveryMethod.Rope : RecoveryMethod.Bag);
+                data.FindProperty("lore").stringValue = entry.lore ?? "";
                 data.FindProperty("collectionThreshold").floatValue = entry.required_exposure;
                 var samples = SurfaceSamples(mesh, 256, !large); var serialized = data.FindProperty("exposureSamples"); serialized.arraySize = samples.Length;
                 for (int i = 0; i < samples.Length; i++) serialized.GetArrayElementAtIndex(i).vector3Value = samples[i];

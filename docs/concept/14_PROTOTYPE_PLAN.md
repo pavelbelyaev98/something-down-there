@@ -20,7 +20,8 @@ build curiosity about what they add up to.
 | Jetpack | Stable and usable from the start; ordinary falls are harmless |
 | Materials | 3 distinct families with different feel (e.g., soil, clay, rock) |
 | Detector | Tool reaction + edge hint, stable target; include one silent optional distinctive |
-| Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, gramophone; special exhibit/component placeholders for their interactions |
+| Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and rope recovery |
+| Rope recovery | Hold Interact on the exposed computer; rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks and preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
 | Hard pockets | One concrete plug diggable by the current tool; upgrades or C4 are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
@@ -101,7 +102,7 @@ without a transport shaft to the sky or cable clipping.
 
 1. **Feel prototype:** dig, materials, cleanup, jetpack, battery, recovery. No economy, no art.
 2. **Loop prototype:** sell, upgrade, display, detector, first object recognition.
-3. **Slice:** all vertical-slice elements above with placeholder art (custom models only).
+3. **Slice:** all vertical-slice elements above with approved existing assets or original placeholder art.
 4. **Pacing pass:** multiple seeds, measure the metrics, tune generation rules.
 5. **Content production:** zones 2–4, coherent places, connected major finds, full rosters and ending.
  Validate part relationships and the final object before committing the full content set.

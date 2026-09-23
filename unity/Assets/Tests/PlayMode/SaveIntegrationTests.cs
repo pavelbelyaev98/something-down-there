@@ -492,7 +492,7 @@ namespace SomethingDownThere.Tests
                 rocks[i].Rotation = Quaternion.Euler(19 + i * 27, 33 + i * 53, 71 + i * 31);
                 rocks[i].PhysicsReleased = true;
                 rocks[i].Item.Value = 7 + i;
-                rocks[i].Collected = i == 0;
+                rocks[i].State = i == 0 ? FindState.Collected : FindState.World;
             }
             snapshot.Inventory = new[] { rocks[0].Item };
             yield return SceneManager.UnloadSceneAsync(scene);

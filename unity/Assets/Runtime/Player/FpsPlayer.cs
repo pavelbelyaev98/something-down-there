@@ -56,6 +56,10 @@ namespace SomethingDownThere
         private FpsInput input;
         private PlayerCrouch crouch;
         private FindHandling findHandling;
+        [SerializeField] private SalvageWinch winch;
+        private FindExtractionInteraction extractionInteraction;
+        public SalvageWinch Winch => winch;
+        public float ExtractionMarkProgress => extractionInteraction?.Progress ?? 0;
         private FindProximityCollection proximityCollection;
         private FindPickupPresentation pickupPresentation;
         public BuriedFind HeldFind => findHandling?.HeldFind;
@@ -166,6 +170,7 @@ namespace SomethingDownThere
                     Application.isEditor ? "EditorPreferences" : "Preferences", "input-v1.ini")));
             input = new FpsInput(InputSettings);
             findHandling = new FindHandling(this);
+            extractionInteraction = new FindExtractionInteraction(this);
             proximityCollection = new FindProximityCollection(this, motor, worldMask);
             pickupPresentation = new FindPickupPresentation(transform, viewCamera);
             crouch = new PlayerCrouch(motor, viewCamera, tuning, worldMask);
@@ -251,6 +256,7 @@ namespace SomethingDownThere
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
             unlimitedBattery = adminXray = adminScoopComparison = jetpackReadyInAir = false;
+            discoveries?.SetXray(false, null);
             motor.enabled = false;
             transform.SetPositionAndRotation(snapshot.PlayerPosition, snapshot.PlayerRotation);
             crouch.Restore(snapshot.CrouchAmount);
@@ -264,6 +270,7 @@ namespace SomethingDownThere
             motor.enabled = true;
             Physics.SyncTransforms();
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
         }
 
         public void ShowPersistenceMenu() => ShowSessionMenu(PlayerMenu.Persistence);
@@ -277,6 +284,7 @@ namespace SomethingDownThere
             {
                 Menu = menu;
                 input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
                 transitionFrame = Time.frameCount;
                 MenuChanged?.Invoke();
             }
@@ -284,6 +292,7 @@ namespace SomethingDownThere
 
         private void OnEnable()
         {
+            discoveries?.SetXray(AdminXray, viewCamera);
             if (input == null) return;
             input.Enable();
             savedCursorLock = Cursor.lockState;
@@ -319,7 +328,8 @@ namespace SomethingDownThere
         // Exposed for deterministic simulation checks; device bindings remain in FpsInput.
         public void Tick(FpsInputFrame frame, float deltaTime)
         {
-            if (BindingCapture != null && BindingCapture.BlocksInput) return;
+            if (!GameplayActive) extractionInteraction?.Reset();
+            if (BindingCapture != null && BindingCapture.BlocksInput) { extractionInteraction?.Reset(); return; }
             if (Persistence != null && Persistence.BlocksPlay)
             {
                 if (focused && frame.BackPressed && transitionFrame != Time.frameCount)
@@ -373,6 +383,7 @@ namespace SomethingDownThere
             if (!frame.DigHeld || frame.DigPressed) digCooldown = Mathf.Max(0f, digCooldown);
             primaryLockout = Mathf.Max(0f, primaryLockout - deltaTime);
             RefreshTargetPrompt();
+            if (extractionInteraction.Tick(frame, deltaTime)) { RefreshTargetPrompt(); return; }
             // Interaction wins a simultaneous press so opening a station cannot also dig.
             if (frame.InteractPressed)
             {
@@ -488,7 +499,10 @@ namespace SomethingDownThere
             var find = Contract<BuriedFind>(hit.collider);
             var interactable = Contract<IInteractionTarget>(hit.collider);
             if (find != null && hit.distance <= PickupReach(find))
+            {
                 TargetPrompt = find.GetPrompt(this);
+                if (find.CanMark && ExtractionMarkProgress > 0) TargetPrompt += $"  {Mathf.CeilToInt(ExtractionMarkProgress * 100)}%";
+            }
             else if (hit.distance <= tuning.InteractReach && interactable != null)
                 TargetPrompt = interactable.GetPrompt(this);
             else if (hit.distance <= EffectiveDigReach && Contract<IDigTarget>(hit.collider) is IDigTarget target && !target.CanDig)
@@ -582,14 +596,16 @@ namespace SomethingDownThere
         {
             if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay)) return false;
             if (!findHandling.TryLiftOrDrop()) return false;
-            input?.SuppressHeldActions(); blockedPickup = null;
+            input?.SuppressHeldActions();
+            extractionInteraction?.Reset(); blockedPickup = null;
             RefreshTargetPrompt(); return true;
         }
 
         public bool TryThrow()
         {
             if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay) || !findHandling.Release(true)) return false;
-            input?.SuppressHeldActions(); blockedPickup = null;
+            input?.SuppressHeldActions();
+            extractionInteraction?.Reset(); blockedPickup = null;
             primaryLockout = .2f;
             RefreshTargetPrompt(); return true;
         }
@@ -602,6 +618,7 @@ namespace SomethingDownThere
             adminLevel = 0;
             unlimitedBattery = false;
             adminXray = false;
+            discoveries?.SetXray(false, null);
             adminScoopComparison = false;
             ResetDigComparisonInput();
             ShowFeedback("Normal rules restored");
@@ -630,6 +647,7 @@ namespace SomethingDownThere
             digCooldown = DigPulse = 0;
             blockedPickup = null;
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
         }
 
         public void ToggleAdminXray()
@@ -637,6 +655,7 @@ namespace SomethingDownThere
             if (!focused || !AdminAvailable || discoveries == null
                 || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
             adminXray = !adminXray;
+            discoveries.SetXray(AdminXray, viewCamera);
             MenuChanged?.Invoke();
         }
 
@@ -792,6 +811,7 @@ namespace SomethingDownThere
             motor.enabled = true;
             Physics.SyncTransforms();
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
         }
 
         private bool TryAutomaticRescue()
@@ -913,6 +933,7 @@ namespace SomethingDownThere
             Time.timeScale = 0f;
             ResetJetpackHold();
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
             transitionFrame = Time.frameCount;
             TargetPrompt = "";
             Cursor.lockState = CursorLockMode.None;
@@ -934,6 +955,7 @@ namespace SomethingDownThere
             StationNotice = "";
             Time.timeScale = savedTimeScale;
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
             transitionFrame = Time.frameCount;
             SetGameplayCursor();
             MenuChanged?.Invoke();
@@ -952,6 +974,7 @@ namespace SomethingDownThere
             Menu = category == SettingsCategory.Accessibility ? PlayerMenu.CameraComfort
                 : category == SettingsCategory.Controls ? PlayerMenu.InputSettings : PlayerMenu.DeviceSettings;
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
             transitionFrame = Time.frameCount;
             MenuChanged?.Invoke();
         }
@@ -968,6 +991,7 @@ namespace SomethingDownThere
             CameraSettings.Flush(); InputSettings.Flush(); GameSettings.Flush();
             Menu = Persistence != null && Persistence.AwaitingGameChoice ? PlayerMenu.MainMenu : PlayerMenu.Pause;
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
             transitionFrame = Time.frameCount;
             MenuChanged?.Invoke();
         }
@@ -999,6 +1023,7 @@ namespace SomethingDownThere
             focused = hasFocus;
             ResetJetpackHold();
             input?.SuppressHeldActions();
+            extractionInteraction?.Reset();
             if (!hasFocus && !IsMenuOpen) OpenMenu(PlayerMenu.Pause);
         }
 
@@ -1019,6 +1044,7 @@ namespace SomethingDownThere
 
         private void OnDisable()
         {
+            discoveries?.SetXray(false, null);
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
             GameSettings?.RevertDisplay();

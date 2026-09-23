@@ -43,7 +43,7 @@ persist immediately and across launches.
 | Dig / use tool | Hold left mouse / trigger | Hold-to-dig; toggle mode available |
 | Jetpack | Space / A or bumper | Simple input; stable handling; rebindable |
 | Crouch (precision) | Ctrl / stick click | Held; no stealth or stamina |
-| Interact (machines, placement) | E / face button | Context-obvious prompts |
+| Interact (machines, placement, extraction marking) | E / face button | Tap for machines/placement; hold on any visible part of an exposure-ready rope target to mark it |
 | C4: throw / detonate | Rebindable pair | Multiple charges; remote detonation |
 | Photo mode | Rebindable | Pause-only |
 
@@ -94,12 +94,15 @@ Motion comfort (FOV, bob, comfort preset), controls (rebinding with a one-click 
 audio (ambience/SFX levels, mute), UI (scale where applicable), gameplay toggles (hold/toggle dig; additional assist if useful), and save management. Options persist immediately; every effect that exists has a
 corresponding control.
 
-Render resolution defaults to 100% of the selected output resolution. The display list follows
-the player's supported monitor modes, including 4K and higher when reported, even if their
-desktop is currently set lower. Display changes retain timed Keep/Revert confirmation.
+Rendering stays at 100% of the selected output resolution; there is no render-scale setting.
+Start in borderless mode at the current monitor's desktop resolution, filling its aspect ratio
+without cinematic bars. Borderless always follows the monitor; manual output-resolution choices
+belong to fullscreen and windowed modes. Their display list includes reported 4K and higher modes,
+even if the desktop is currently set lower. Display changes retain timed Keep/Revert confirmation.
 
-Graphics exposes render resolution, shadow quality (including Off), anti-aliasing, texture quality,
-and texture filtering, with a category reset. Lower graphics settings affect presentation only;
+Graphics exposes shadow quality (including Off), anti-aliasing, texture quality and texture filtering,
+with a category reset. Default to Medium shadows, 2× anti-aliasing, full-resolution textures and High
+texture filtering, keeping the existing frame cap. Lower graphics settings affect presentation only;
 they never reduce finds, physics accuracy, or the darkness of deep tunnels. Texture options apply
 to replacement mipmapped assets through the renderer. Grass-specific controls follow the chosen
 grass implementation.

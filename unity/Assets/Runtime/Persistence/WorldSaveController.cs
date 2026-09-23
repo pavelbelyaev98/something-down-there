@@ -48,13 +48,13 @@ namespace SomethingDownThere
 
         private struct StateStamp
         {
-            public long Terrain, Inventory, Wallet, Finds, Battery;
+            public long Terrain, Inventory, Wallet, Finds, Battery, Extraction;
             public int Shovel, Strokes;
             public float Charge, Pitch, VerticalSpeed, CrouchAmount;
             public Vector3 Position;
             public Quaternion Rotation;
             public bool Same(StateStamp b) => Terrain == b.Terrain && Inventory == b.Inventory && Wallet == b.Wallet && Finds == b.Finds
-                && Battery == b.Battery && Shovel == b.Shovel && Strokes == b.Strokes && Charge == b.Charge && Pitch == b.Pitch && VerticalSpeed == b.VerticalSpeed
+                && Extraction == b.Extraction && Battery == b.Battery && Shovel == b.Shovel && Strokes == b.Strokes && Charge == b.Charge && Pitch == b.Pitch && VerticalSpeed == b.VerticalSpeed
                 && CrouchAmount == b.CrouchAmount && Position.Equals(b.Position) && Rotation.Equals(b.Rotation);
         }
 
@@ -131,6 +131,7 @@ namespace SomethingDownThere
                 {
                     snapshot.ValidateTerrain(terrain.Dimensions, terrain.CellSize, terrain.transform.position, terrain.transform.rotation);
                     discoveries.ValidateRestore(snapshot.Finds);
+                    player.Winch?.ValidateRestore(snapshot);
                 }
                 catch (Exception error) { validation = error; }
                 if (validation != null) { Fail(validation, true); yield break; }
@@ -145,7 +146,7 @@ namespace SomethingDownThere
                 }
                 if (validation == null)
                 {
-                    try { discoveries.Restore(snapshot.Finds, snapshot.DiscoverySeed); player.Restore(snapshot); }
+                    try { discoveries.Restore(snapshot.Finds, snapshot.DiscoverySeed); player.Restore(snapshot); player.Winch?.Restore(snapshot.Extraction); }
                     catch (Exception error) { validation = error; }
                 }
                 if (validation != null) { Fail(validation, true); yield break; }
@@ -176,7 +177,7 @@ namespace SomethingDownThere
         }
 
         private StateStamp Observe() => new StateStamp { Terrain = terrain.StateRevision, Finds = discoveries.MotionRevision, Inventory = player.Inventory.Revision,
-            Wallet = player.Wallet.Revision, Battery = player.Battery.Revision, Shovel = player.Shovel.Level, Strokes = player.SuccessfulStrokes, Charge = player.Battery.Charge,
+            Wallet = player.Wallet.Revision, Extraction = player.Winch != null ? player.Winch.Revision : 0, Battery = player.Battery.Revision, Shovel = player.Shovel.Level, Strokes = player.SuccessfulStrokes, Charge = player.Battery.Charge,
             Position = player.transform.position, Rotation = player.transform.rotation, Pitch = player.Pitch, VerticalSpeed = player.VerticalSpeed,
             CrouchAmount = player.CrouchAmount };
 
@@ -230,7 +231,7 @@ namespace SomethingDownThere
             }
             var snapshot = new WorldSnapshot { Sequence = sequence, UtcTicks = DateTime.UtcNow.Ticks, Terrain = cachedTerrain,
                 TerrainPosition = terrain.transform.position, TerrainRotation = terrain.transform.rotation,
-                ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = discoveries.Seed, Finds = discoveries.Capture() };
+                ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = discoveries.Seed, Finds = discoveries.Capture(), Extraction = player.Winch?.Capture() };
             player.Capture(snapshot);
             LastCaptureMilliseconds = timer.Elapsed.TotalMilliseconds;
             long allocationDelta = GC.GetAllocatedBytesForCurrentThread() - allocated;

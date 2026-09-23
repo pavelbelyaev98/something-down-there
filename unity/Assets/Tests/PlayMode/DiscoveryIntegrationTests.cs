@@ -547,7 +547,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator XrayUsesRealChordAndMenuButtonAndRestoreHidesMarkers()
+        public IEnumerator XrayUsesRealChordAndMenuButtonAndRestoresOpaqueGround()
         {
             Assert.That(player.AdminXray, Is.False);
             player.enabled = true;
@@ -564,6 +564,7 @@ namespace SomethingDownThere.Tests
             yield return null;
             Assert.That(player.AdminXray, Is.True);
             Assert.That(player.HasAdminOverrides, Is.True);
+            Assert.That(terrain.XrayEnabled, Is.True);
             yield return null;
             Assert.That(player.AdminXray, Is.True, "A held chord cannot toggle repeatedly.");
             player.enabled = false;
@@ -585,34 +586,49 @@ namespace SomethingDownThere.Tests
             Assert.That(player.AdminXray || player.HasAdminOverrides, Is.False);
             player.CloseMenu();
             yield return null;
-            Assert.That(UnityEngine.UIElements.UQueryExtensions.Q(player.GetComponent<FpsHud>().View.Root, "Admin X-ray").ClassListContains("hidden"), Is.True);
+            Assert.That(terrain.XrayEnabled, Is.False);
+            Assert.That(Shader.GetGlobalFloat("_ExcavationDaylightEnabled"), Is.EqualTo(1));
         }
 
         [UnityTest]
-        public IEnumerator ToolkitMarkersFollowCameraProjectionAndHideOutsideTheView()
+        public IEnumerator XrayRevealsRealFindsWithoutChangingSoilOrExposureAndRestoresAfterDigging()
         {
-            var find = field.Finds[0];
-            Aim(find.transform.position + new Vector3(0, 0, -4), find.transform.position + Vector3.up * 0.8f);
+            var find = field.Finds.First(f => f.RopeTarget);
+            Aim(new Vector3(find.transform.position.x, terrain.SurfaceHeight + 1.5f, find.transform.position.z), find.transform.position);
+            var visual = find.GetComponent<MeshRenderer>();
+            var chunks = terrain.transform.Find("Chunks");
+            var original = chunks.GetComponentInChildren<MeshRenderer>().sharedMaterial;
+            var revision = terrain.Revision;
+            Assert.That(visual.enabled, Is.False);
             player.ToggleAdminXray();
             yield return null; yield return null;
-            var hud = player.GetComponent<FpsHud>().View.Root;
-            var marker = hud.Q("Admin X-ray").Query<Label>().ToList()[0];
-            foreach (int fov in new[] { 55, 90 })
-            {
-                player.ViewCamera.fieldOfView = fov;
-                yield return null; yield return null;
-                var viewport = player.ViewCamera.WorldToViewportPoint(find.transform.position);
-                var expected = new Vector2(hud.worldBound.xMin + viewport.x * hud.worldBound.width,
-                    hud.worldBound.yMin + (1 - viewport.y) * hud.worldBound.height);
-                Assert.That(marker.ClassListContains("hidden"), Is.False);
-                Assert.That(Vector2.Distance(marker.worldBound.center, expected), Is.LessThanOrEqualTo(1f), "Projection agrees within one UI pixel, including layout rounding.");
-            }
-            player.ViewCamera.transform.Rotate(0, 180, 0);
+            Assert.That(visual.enabled, Is.True);
+            Assert.That(find.Exposure, Is.Zero);
+            Assert.That(find.CanMark, Is.False);
+            Assert.That(player.TryInteract(), Is.False);
+            Assert.That(terrain.Revision, Is.EqualTo(revision));
+            Assert.That(terrain.IsSolid(find.transform.position), Is.True);
+            Assert.That(Shader.GetGlobalFloat("_ExcavationDaylightEnabled"), Is.Zero);
+            var transparent = chunks.GetComponentInChildren<MeshRenderer>().sharedMaterial;
+            Assert.That(transparent, Is.Not.SameAs(original));
+            Assert.That(transparent.GetFloat("_GroundOpacity"), Is.InRange(.01f, .2f));
+            Assert.That(transparent.GetFloat("_ZWrite"), Is.Zero);
+            Assert.That(transparent.renderQueue, Is.EqualTo(3000));
+            Assert.That(transparent.GetShaderPassEnabled("ShadowCaster"), Is.False);
+            Assert.That(player.TryGetTarget(10, out var target), Is.True);
+            Assert.That(target.collider.GetComponentInParent<TerrainVolume>(), Is.SameAs(terrain));
+            Assert.That(player.TryDig(), Is.True);
             yield return null; yield return null;
-            Assert.That(marker.ClassListContains("hidden"), Is.True);
-            player.OpenMenu(PlayerMenu.Pause);
-            yield return null;
-            Assert.That(hud.ClassListContains("hidden"), Is.True);
+            Assert.That(terrain.Revision, Is.GreaterThan(revision));
+            Assert.That(chunks.GetComponentsInChildren<MeshRenderer>().All(r => r.sharedMaterial == transparent), Is.True);
+            player.ToggleAdminXray();
+            Assert.That(terrain.XrayEnabled, Is.False);
+            Assert.That(chunks.GetComponentsInChildren<MeshRenderer>().All(r => r.sharedMaterial == original), Is.True);
+            Assert.That(visual.enabled, Is.False, "A still-buried computer returns to normal renderer culling.");
+            player.ToggleAdminXray();
+            Assert.That(visual.enabled, Is.True);
+            field.enabled = false;
+            Assert.That(terrain.XrayEnabled || visual.enabled, Is.False);
         }
 
         [Test]
@@ -783,6 +799,24 @@ namespace SomethingDownThere.Tests
             Assert.That(find.GetComponent<MeshCollider>().enabled, Is.True);
         }
 
+        [Test]
+        public void LocalTerrainNotificationsFollowMovedFindsAndFullResetReburiesThem()
+        {
+            var find=field.Finds.First(f=>f.Kind==DiscoveryKind.Common);
+            var state=find.Capture();
+            state.Position=new Vector3(8,terrain.Dimensions.y*terrain.CellSize-7,8);
+            find.Restore(state);
+            Assert.That(find.Exposure,Is.Zero);
+            // No manual SyncTransforms: the notification must query the current pose.
+            var center=find.transform.TransformPoint(find.LocalHull.center);
+            var half=Vector3.Scale(find.LocalHull.extents,find.transform.lossyScale)+Vector3.one*.3f;
+            Assert.That(terrain.ClearLoadSweep(center,center,find.transform.rotation,half),Is.True);
+            Assert.That(find.Exposure,Is.EqualTo(1),"A local cut must refresh a moved find, including hidden meshes.");
+            terrain.ResetExcavation();
+            Assert.That(find.Exposure,Is.Zero,"The saturated whole-world query must not skip buried finds.");
+            Assert.That(find.GetComponent<MeshRenderer>().enabled,Is.False);
+        }
+
         [UnityTest]
         public IEnumerator DeeperScrapesRevealFreshFindsAfterEarlierObjectsAreRemoved()
         {
@@ -796,7 +830,7 @@ namespace SomethingDownThere.Tests
                 // fall into the next photograph and masquerade as newly buried finds.
                 foreach (var find in field.Finds.Where(f => seen.Contains(f.Item.InstanceId) && !f.Collected))
                 {
-                    var state = find.Capture(); state.Collected = true; find.Restore(state);
+                    var state = find.Capture(); state.State = FindState.Collected; find.Restore(state);
                 }
                 for (float x = 9; x <= 13; x += .3f) for (float z = 3; z <= 7; z += .3f)
                     grid.RemoveSphere(new Vector3(x, SiteLayout.Extent.y - depth + .6f, z), .6f, out _);

@@ -14,8 +14,8 @@ namespace SomethingDownThere
         public int Width, Height, WindowMode;
         public bool VSync, ShowFps;
         public int FrameLimit = GamePreferences.DefaultFrameLimit;
-        public int RenderScale = 100, Msaa = 8, TextureLimit, Filtering = 2;
-        public int Shadows = 3;
+        public int Msaa = 2, TextureLimit, Filtering = 2;
+        public int Shadows = 2;
         public int MasterVolume = 100;
         public int Sensitivity = 100;
         public bool InvertX, InvertY;
@@ -77,7 +77,7 @@ namespace SomethingDownThere
             }
             catch (Exception e) when (StorageFailure(e) || e is ArgumentException) { }
             platform.Apply(Values, focused);
-            LastDisplayResult = Values.Width > 0 && Supported(Values.Width, Values.Height)
+            LastDisplayResult = Values.WindowMode != 0 && Values.Width > 0 && Supported(Values.Width, Values.Height)
                 ? new DisplaySelection(Values.Width, Values.Height, Values.WindowMode) : platform.NativeDisplay;
             platform.SetDisplay(LastDisplayResult);
         }
@@ -99,7 +99,7 @@ namespace SomethingDownThere
                 switch (category)
                 {
                     case SettingsCategory.Display: v.VSync = defaults.VSync; v.FrameLimit = defaults.FrameLimit; v.ShowFps = false; break;
-                    case SettingsCategory.Graphics: v.RenderScale = defaults.RenderScale; v.Msaa = defaults.Msaa; v.TextureLimit = defaults.TextureLimit; v.Filtering = defaults.Filtering; v.Shadows = defaults.Shadows; break;
+                    case SettingsCategory.Graphics: v.Msaa = defaults.Msaa; v.TextureLimit = defaults.TextureLimit; v.Filtering = defaults.Filtering; v.Shadows = defaults.Shadows; break;
                     case SettingsCategory.Audio: v.MasterVolume = 100; break;
                     case SettingsCategory.Controls: v.Sensitivity = 100; v.InvertX = v.InvertY = false; break;
                 }
@@ -110,6 +110,7 @@ namespace SomethingDownThere
 
         public void PreviewDisplay(DisplaySelection selection, double now)
         {
+            if (selection.Mode == 0) selection = platform.NativeDisplay;
             if (PreviewingDisplay || !focused || !Supported(selection.Width, selection.Height) || selection.Mode < 0 || selection.Mode > 2) return;
             previousDisplay = platform.CurrentDisplay;
             if (previousDisplay.Same(selection)) return;
@@ -178,8 +179,7 @@ namespace SomethingDownThere
             v.Version = 1; v.WindowMode = Mathf.Clamp(v.WindowMode, 0, 2);
             if (v.Width < 960 || v.Width > 16384 || v.Height < 540 || v.Height > 8640) v.Width = v.Height = 0;
             if (Array.IndexOf(FrameLimits, v.FrameLimit) < 0) v.FrameLimit = DefaultFrameLimit;
-            v.RenderScale = Mathf.Clamp(v.RenderScale, 50, 150);
-            if (v.Msaa != 1 && v.Msaa != 2 && v.Msaa != 4 && v.Msaa != 8) v.Msaa = 4;
+            if (v.Msaa != 1 && v.Msaa != 2 && v.Msaa != 4 && v.Msaa != 8) v.Msaa = 2;
             v.TextureLimit = Mathf.Clamp(v.TextureLimit, 0, 2); v.Filtering = Mathf.Clamp(v.Filtering, 0, 2);
             v.Shadows = Mathf.Clamp(v.Shadows, 0, 3);
             v.MasterVolume = Mathf.Clamp(v.MasterVolume, 0, 100); v.Sensitivity = Mathf.Clamp(v.Sensitivity, 10, 300);

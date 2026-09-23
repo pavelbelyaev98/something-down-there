@@ -24,7 +24,7 @@ namespace SomethingDownThere
                 WalletRevision = owner.wallet.Revision;
                 var selected = new List<InventoryItem>();
                 foreach (var item in owner.inventory.Items)
-                    if (id == null || item.InstanceId == id) { selected.Add(item); Value += item.SaleValue; }
+                    if (item.Sellable && (id == null || item.InstanceId == id)) { selected.Add(item); Value += item.SaleValue; }
                 Items = selected.AsReadOnly();
             }
         }

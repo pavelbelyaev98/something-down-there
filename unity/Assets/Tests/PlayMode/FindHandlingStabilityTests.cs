@@ -15,7 +15,7 @@ namespace SomethingDownThere.Tests
         {
             // Stable ids and a fixed band keep every case's drop spot independent of
             // the layout order, on the flat yard the sibling settle test uses.
-            var rocks = field.Finds.Where(f => f.Size == FindSize.Large).GroupBy(f => f.SaveContentId)
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).GroupBy(f => f.SaveContentId)
                 .Select(g => g.First()).OrderBy(f => f.SaveContentId, System.StringComparer.Ordinal).ToArray();
             for (int i = 0; i < rocks.Length; i++)
             {
@@ -58,7 +58,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator SeededRockDropsRestWithoutDriftAndWakeWhenSupportIsDug()
         {
-            var rocks = field.Finds.Where(f => f.Size == FindSize.Large).Take(12).ToArray();
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).Take(12).ToArray();
             foreach (var find in rocks)
             {
                 int i = System.Array.IndexOf(rocks, find);
