@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 803d6a888f7a4758a73479a1f19661ce
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8574412962073106934
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 341976
+  packageName: 'Pure Nature 2 : Highlands'
+  packageVersion: 1.0
+  assetPath: Assets/BK/PureNature_Highlands/Textures/Surfaces/TerrainLayers/Mud_grass.terrainlayer
+  uploadId: 996818

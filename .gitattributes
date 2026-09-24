@@ -9,8 +9,9 @@ unity/Assets/BK/**/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/**/*.tga filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/**/*.exr filter=lfs diff=lfs merge=lfs -text
-unity/Assets/BK/PureNature_Mountains/Models/TerrainMountain.asset filter=lfs diff=lfs merge=lfs -text
-unity/Assets/BK/PureNature_Mountains/Scenes/Mountain_Demo/LightingData.asset filter=lfs diff=lfs merge=lfs -text
+# Terrain and baked lighting data are binary across BK packs.
+unity/Assets/BK/**/*Terrain*.asset filter=lfs diff=lfs merge=lfs -text
+unity/Assets/BK/**/LightingData.asset filter=lfs diff=lfs merge=lfs -text
 
 # Project texture copies retain the approved pack's binary storage policy.
 unity/Assets/Content/Nature/GroundTextures/Gravel_*.png filter=lfs diff=lfs merge=lfs -text

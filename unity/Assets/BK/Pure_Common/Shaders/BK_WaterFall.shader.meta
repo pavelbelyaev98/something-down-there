@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 26e13bf8edcdbbf41bf773cd53e524ea
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 341976
+  packageName: 'Pure Nature 2 : Highlands'
+  packageVersion: 1.0
+  assetPath: Assets/BK/Pure_Common/Shaders/BK_WaterFall.shader
+  uploadId: 996818

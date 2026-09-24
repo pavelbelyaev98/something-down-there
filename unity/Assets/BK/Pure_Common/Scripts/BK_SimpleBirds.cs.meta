@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 85da0c4ba78591142a1e0a25cd384f1c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 341976
+  packageName: 'Pure Nature 2 : Highlands'
+  packageVersion: 1.0
+  assetPath: Assets/BK/Pure_Common/Scripts/BK_SimpleBirds.cs
+  uploadId: 996818
