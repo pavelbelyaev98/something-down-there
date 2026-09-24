@@ -39,6 +39,7 @@ namespace SomethingDownThere
         public IReadOnlyList<BuriedFind> Finds => finds;
         public int Seed => seed;
         public long MotionRevision { get; private set; }
+        public long PopulationRevision { get; private set; }
         public Collider PlayerCollider { get; private set; }
         internal void NotifyMotion() => MotionRevision++;
         public bool Initialized => initialized || (developmentContent && !FpsPlayer.AdminBuild);
@@ -66,7 +67,7 @@ namespace SomethingDownThere
                 }
                 foreach(var entry in catalog.Entries)
                     if(entry.Prefab.Kind==DiscoveryKind.Unique && Array.FindAll(states,s=>s.ContentId==entry.Prefab.SaveContentId).Length!=1)
-                        throw new System.IO.InvalidDataException("The saved unique population is incomplete.");
+                        throw new System.IO.InvalidDataException("The saved discoveries differ from current content. Start a New Game.");
                 return;
             }
             if (developmentContent && !FpsPlayer.AdminBuild && states.Length > 0)
@@ -92,6 +93,7 @@ namespace SomethingDownThere
                 finds.Add(find);
             }
             initialized = true;
+            PopulationRevision++;
         }
 
         private void OnEnable()
@@ -156,6 +158,7 @@ namespace SomethingDownThere
                 finds.Add(find);
             }
             initialized = true;
+            PopulationRevision++;
         }
 
         private void HandleExcavationChanged(Bounds changed)

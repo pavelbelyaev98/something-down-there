@@ -67,7 +67,7 @@ namespace SomethingDownThere.Editor
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; body.interpolation = RigidbodyInterpolation.Interpolate; body.isKinematic = true;
                 var light = new GameObject("Diffuse lantern light", typeof(Light), typeof(UniversalAdditionalLightData)).GetComponent<Light>();
                 light.transform.SetParent(template.transform, false); light.transform.localPosition = new Vector3(0, .24f, 0);
-                light.type = LightType.Point; light.range = WorksiteTools.LightRange; light.intensity = 8;
+                light.type = LightType.Point; light.range = WorksiteTools.LightRange; light.intensity = 28;
                 light.color = new Color(.91f, .96f, 1);
                 light.shadows = LightShadows.Soft; light.shadowBias = .015f; light.shadowNormalBias = .04f; light.shadowNearPlane = .04f;
                 var data = light.GetComponent<UniversalAdditionalLightData>(); data.usePipelineSettings = false;

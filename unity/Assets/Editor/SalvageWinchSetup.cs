@@ -35,17 +35,29 @@ namespace SomethingDownThere.Editor
             var station=Child(root.Find("Surface"),"SalvageWinch");
             var winch=Get<SalvageWinch>(station.gameObject);
             var fixture=Visual(station,"WinchFixture",paint); fixture.localPosition=new Vector3(4,0,-13); fixture.localScale=Vector3.one*1.5f;
-            var pad=Visual(station,"RecoveryPad",steel); pad.localPosition=new Vector3(6.4f,0,-13);
-            var stand=Visual(station,"ExhibitStand",steel); stand.localPosition=new Vector3(8.4f,0,-10);
-            Box(pad,new Vector3(0,.12f,0),new Vector3(2.4f,.24f,1.7f));
-            Box(stand,new Vector3(0,.52f,0),new Vector3(1.55f,1.04f,1.1f));
             Box(fixture,new Vector3(0,.5f,0),new Vector3(1.5f,1,1.05f));
             var lift=Child(station,"LiftAnchor"); lift.localPosition=new Vector3(4,3.12f,-12.7f);
-            var landing=Child(station,"PadAnchor"); landing.localPosition=new Vector3(6.4f,.24f,-13);
-            var exhibit=Child(stand,"DisplayAnchor"); exhibit.localPosition=new Vector3(0,1.06f,0);
-            exhibit.localRotation=Quaternion.Euler(0,180,0);
-            var display=Get<UniqueDisplayStand>(stand.gameObject);
-            Set(display,"discoveries",field); Set(display,"displayAnchor",exhibit);
+            int capacity=field.Catalog.Entries.Count(e=>e.Prefab.Kind==DiscoveryKind.Unique);
+            var landings=new Transform[capacity]; var displays=new UniqueDisplayStand[capacity];
+            for(int i=0;i<capacity;i++)
+            {
+                string suffix=i==0?"":" "+(i+1);
+                var pad=Visual(station,"RecoveryPad"+suffix,steel,"RecoveryPad");
+                pad.localPosition=new Vector3(6.4f,0,-13-3.4f*i);
+                Box(pad,new Vector3(0,.12f,0),new Vector3(2.4f,.24f,1.7f));
+                var stand=Visual(station,"ExhibitStand"+suffix,steel,"ExhibitStand");
+                stand.localPosition=new Vector3(8.4f,0,-10-3.4f*i);
+                Box(stand,new Vector3(0,.52f,0),new Vector3(1.55f,1.04f,1.1f));
+                var landing=Child(station,"PadAnchor"+suffix); landing.localPosition=pad.localPosition+Vector3.up*.24f;
+                landings[i]=landing;
+                var exhibit=Child(stand,"DisplayAnchor"); exhibit.localPosition=new Vector3(0,1.06f,0);
+                exhibit.localRotation=Quaternion.Euler(0,180,0);
+                var display=Get<UniqueDisplayStand>(stand.gameObject);
+                Set(display,"discoveries",field); Set(display,"displayAnchor",exhibit);
+                using(var data=new SerializedObject(display))
+                { data.FindProperty("socketId").stringValue="exhibit-"+(i+1); data.ApplyModifiedPropertiesWithoutUndo(); }
+                displays[i]=display;
+            }
             var viewRoot=Child(station,"Rope"); var view=Get<WinchRopeView>(viewRoot.gameObject);
             var line=Get<LineRenderer>(viewRoot.gameObject); line.useWorldSpace=true; line.sharedMaterial=cable;
             line.startWidth=line.endWidth=settings.RopeRadius*2; line.numCapVertices=3; line.numCornerVertices=2;
@@ -53,7 +65,8 @@ namespace SomethingDownThere.Editor
             var hook=Visual(viewRoot,"Hook",steel); hook.gameObject.SetActive(false);
             Set(view,"rope",line); Set(view,"hook",hook);
             Set(winch,"terrain",terrain); Set(winch,"discoveries",field); Set(winch,"player",player); Set(winch,"settings",settings);
-            Set(winch,"liftAnchor",lift); Set(winch,"padAnchor",landing); Set(winch,"ropeView",view); Set(winch,"displayStand",display);
+            Set(winch,"liftAnchor",lift); Set(winch,"ropeView",view);
+            SetArray(winch,"padAnchors",landings); SetArray(winch,"displayStands",displays);
             ConfigureBreakFeedback(winch);
             Set(player,"winch",winch);
             EditorSceneManager.MarkSceneDirty(scene); AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
@@ -77,11 +90,11 @@ namespace SomethingDownThere.Editor
             var child=parent.Find(name); if(child!=null) return child;
             child=new GameObject(name).transform; child.SetParent(parent,false); return child;
         }
-        private static Transform Visual(Transform parent,string name,Material material)
+        private static Transform Visual(Transform parent,string name,Material material,string modelName=null)
         {
             var anchor=Child(parent,name); var old=anchor.Find("Visual");
             if(old!=null) UnityEngine.Object.DestroyImmediate(old.gameObject);
-            var model=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"/Models/"+name+".fbx"),anchor);
+            var model=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"/Models/"+(modelName??name)+".fbx"),anchor);
             model.name="Visual";
             foreach(var renderer in model.GetComponentsInChildren<Renderer>()) renderer.sharedMaterial=material;
             return anchor;
@@ -96,5 +109,11 @@ namespace SomethingDownThere.Editor
         private static void Box(Transform t,Vector3 center,Vector3 size) { var b=Get<BoxCollider>(t.gameObject); b.center=center; b.size=size; }
         private static void Set(UnityEngine.Object owner,string name,UnityEngine.Object value)
         { using var data=new SerializedObject(owner); data.FindProperty(name).objectReferenceValue=value; data.ApplyModifiedPropertiesWithoutUndo(); }
+        private static void SetArray(UnityEngine.Object owner,string name,UnityEngine.Object[] values)
+        {
+            using var data=new SerializedObject(owner); var property=data.FindProperty(name); property.arraySize=values.Length;
+            for(int i=0;i<values.Length;i++) property.GetArrayElementAtIndex(i).objectReferenceValue=values[i];
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
     }
 }

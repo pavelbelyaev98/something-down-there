@@ -12,9 +12,10 @@ namespace SomethingDownThere
         [SerializeField] private DiscoveryField discoveries;
         [SerializeField] private FpsPlayer player;
         [SerializeField] private SalvageWinchSettings settings;
-        [SerializeField] private Transform liftAnchor, padAnchor;
+        [SerializeField] private Transform liftAnchor;
+        [SerializeField] private Transform[] padAnchors;
         [SerializeField] private WinchRopeView ropeView;
-        [SerializeField] private UniqueDisplayStand displayStand;
+        [SerializeField] private UniqueDisplayStand[] displayStands;
         private ExtractionSnapshot job;
         private BuriedFind payload;
         private ExtractionRoutePlanner planner;
@@ -27,7 +28,9 @@ namespace SomethingDownThere
         public ExtractionSnapshot Capture() { CaptureMotion(); return job?.Copy(); }
         public bool Busy => job!=null;
         public bool Configured => terrain!=null && discoveries!=null && player!=null && settings!=null && settings.Valid
-            && liftAnchor!=null && padAnchor!=null && ropeView!=null && ropeView.Configured && displayStand!=null && displayStand.Configured
+            && liftAnchor!=null && padAnchors!=null && padAnchors.Length>0 && Array.TrueForAll(padAnchors,p=>p!=null)
+            && ropeView!=null && ropeView.Configured && displayStands!=null && displayStands.Length>0
+            && Array.TrueForAll(displayStands,s=>s!=null && s.Configured)
             && soilChipsMaterial!=null && soilDustMaterial!=null;
         public string Prompt => job==null ? "" : job.Phase switch
         {
@@ -105,7 +108,9 @@ namespace SomethingDownThere
                 path.Add(exit);
                 Vector3 lift=terrain.transform.InverseTransformPoint(liftAnchor.position);
                 path.Add(lift);
-                Vector3 landing=terrain.transform.InverseTransformPoint(padAnchor.position+Vector3.up*.08f);
+                var pad=FreeReceivingPad();
+                if(pad==null) { PlanningFailed("Place a recovered find on a display stand to free a receiving pad."); return; }
+                Vector3 landing=terrain.transform.InverseTransformPoint(pad.position+Vector3.up*.08f);
                 Vector3 abovePad=landing; abovePad.y=lift.y;
                 path.Add(abovePad);
                 path.Add(landing);
@@ -162,6 +167,26 @@ namespace SomethingDownThere
 
         private static readonly Unity.Profiling.ProfilerMarker PlanningMarker = new Unity.Profiling.ProfilerMarker("Winch.Planning");
 
+        private Transform FreeReceivingPad()
+        {
+            foreach(var pad in padAnchors)
+            {
+                // Arrival poses are authoritative saves; no extra pad ownership
+                // state is needed. Reserve the whole load's horizontal envelope.
+                bool occupied=false;
+                foreach(var find in discoveries.Finds)
+                {
+                    if(find==null || find.State!=FindState.Stored) continue;
+                    var bounds=find.WorldBounds;
+                    Vector3 delta=bounds.center-pad.position;
+                    if(Mathf.Abs(delta.x)<bounds.extents.x+HullHalf.magnitude
+                        && Mathf.Abs(delta.z)<bounds.extents.z+HullHalf.magnitude) { occupied=true; break; }
+                }
+                if(!occupied) return pad;
+            }
+            return null;
+        }
+
         private bool PayloadClear(Vector3 from,Vector3 to)
         {
             Vector3 half=HullHalf+Vector3.one*(settings.Clearance*.25f);
@@ -191,7 +216,7 @@ namespace SomethingDownThere
         {
             if(!Configured) throw new InvalidDataException("Recovery scene is incomplete.");
             foreach(var find in snapshot.Finds)
-                if(find.State==FindState.Displayed && find.DisplaySocket!=displayStand.SocketId)
+                if(find.State==FindState.Displayed && !Array.Exists(displayStands,s=>s.SocketId==find.DisplaySocket))
                     throw new InvalidDataException("Unknown exhibit socket.");
         }
         public void Restore(ExtractionSnapshot snapshot)

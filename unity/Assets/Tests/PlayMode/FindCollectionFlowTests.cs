@@ -9,6 +9,52 @@ namespace SomethingDownThere.Tests
 {
     public sealed partial class FindPhysicsIntegrationTests
     {
+        [TestCase(true)] [TestCase(false)]
+        public void FullBagKeepsCuttingThroughAnAimedFindAndCollectsWhenSpaceReturns(bool shaving)
+        {
+            var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(4);
+            if (!shaving) player.ToggleAdminShaving();
+            PlacePickupCutFixture(find, false); AimPickupCutFixture(find, 0);
+            while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count, "Carried", 1));
+            int count = player.Inventory.Count, strokes = player.SuccessfulStrokes;
+            string identity = find.Item.InstanceId; float charge = player.Battery.Charge;
+            Assert.That(player.TryPrimaryAction(), Is.True);
+            Assert.That(player.TryPrimaryAction(), Is.False, "A full bag must still respect the cutting cadence.");
+            player.Tick(new FpsInputFrame { DigHeld = true }, player.EffectiveDigInterval);
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 2));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - 2 * player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(player.Inventory.Count, Is.EqualTo(count));
+            Assert.That(find.Collected, Is.False); Assert.That(find.Item.InstanceId, Is.EqualTo(identity));
+            Assert.That(find.GetComponent<Collider>().enabled, Is.True);
+            player.Inventory.TryRemove(player.Inventory.Items[0].InstanceId, out _);
+            Assert.That(player.TryPrimaryAction(), Is.True, "Pickup resumes immediately, even during cut cooldown.");
+            Assert.That(find.Collected, Is.True);
+            Assert.That(player.Inventory.Items.Count(i => i.InstanceId == identity), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void FullBagDiggingStillStopsAtAnInterveningWall()
+        {
+            var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(4);
+            Place(find, .65f); AimPickupCutFixture(find, 0);
+            while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count, "Carried", 1));
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try
+            {
+                wall.transform.position = find.WorldBounds.center + Vector3.down * .4f;
+                wall.transform.localScale = new Vector3(3, .05f, 3); Physics.SyncTransforms();
+                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
+                Assert.That(hit.collider.GetComponentInParent<BuriedFind>(), Is.SameAs(find));
+                int revision = terrain.Revision; float charge = player.Battery.Charge;
+                Assert.That(player.TryPrimaryAction(), Is.False);
+                Assert.That(terrain.Revision, Is.EqualTo(revision));
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge)); Assert.That(find.Collected, Is.False);
+            }
+            finally { Object.DestroyImmediate(wall); }
+        }
+
         [TestCase(true, false)] [TestCase(false, false)]
         [TestCase(true, true)] [TestCase(false, true)]
         public void PickupKeepsTheReadyCutInTheSameHeldFrame(bool shaving, bool nearby)

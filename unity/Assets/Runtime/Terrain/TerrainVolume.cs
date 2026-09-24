@@ -87,6 +87,7 @@ namespace SomethingDownThere
         public double LastDiscoveryMilliseconds { get; private set; }
         public long SnapshotCopiedBytes => grid?.SnapshotCopiedBytes ?? 0;
         public event Action<Bounds> Changed;
+        public event Action<TerrainCutFeedback> ToolCut;
         public bool CanDig => isActiveAndEnabled && grid != null;
         public bool IsRestoring { get; private set; }
         public string DigPrompt => "";
@@ -107,8 +108,7 @@ namespace SomethingDownThere
         {
             if (grid != null) throw new InvalidOperationException("Cannot reconfigure an excavation session.");
             if (cellsPerChunk < 2 || cellsPerChunk > 24) throw new ArgumentOutOfRangeException(nameof(cellsPerChunk));
-            // Validate dimensions without keeping an independently mutable state instance.
-            new ExcavationGrid(size, metersPerCell);
+            ExcavationGrid.ValidateDimensions(size, metersPerCell);
             dimensions = size;
             cellSize = metersPerCell;
             chunkSize = cellsPerChunk;
@@ -124,7 +124,7 @@ namespace SomethingDownThere
             if (grid != null) return;
             if ((transform.lossyScale - Vector3.one).sqrMagnitude > 0.0001f)
                 throw new InvalidOperationException("TerrainVolume requires unit scale; configure its dimensions instead.");
-            grid = new ExcavationGrid(dimensions, cellSize);
+            grid = new ExcavationGrid(dimensions, cellSize, excavationSeed);
             if (untouchedPreview != null) untouchedPreview.SetActive(false);
             chunkRoot = new GameObject("Chunks").transform;
             chunkRoot.SetParent(transform, false);
@@ -139,6 +139,14 @@ namespace SomethingDownThere
 
         public bool IsSolid(Vector3 worldPoint) => grid != null && grid.IsSolid(transform.InverseTransformPoint(worldPoint));
         public float SignedDensity(Vector3 worldPoint) => grid != null ? grid.Sample(transform.InverseTransformPoint(worldPoint)) : 0;
+        public TerrainMaterialId MaterialAt(Vector3 worldPoint) => grid.MaterialAt(transform.InverseTransformPoint(worldPoint));
+        public TerrainMaterialId ToolMaterialAt(RaycastHit hit)
+        {
+            Vector3 surface = transform.InverseTransformPoint(hit.point);
+            Vector3 normal = transform.InverseTransformDirection(hit.normal).normalized;
+            RefineContact(ref surface, normal);
+            return grid.MaterialAt(surface - normal * (cellSize * .5f));
+        }
         internal bool IsSolidLocal(Vector3 point) => grid != null && grid.IsSolid(point);
         internal float SignedDensityLocal(Vector3 point) => grid != null ? grid.Sample(point) : 0;
         internal float MeasureExposure(Vector3[] samples,Bounds hull,Matrix4x4 localToTerrain)
@@ -211,7 +219,24 @@ namespace SomethingDownThere
         public bool TryShave(RaycastHit hit, float radius, float depth)
             => ExcavationGrid.Finite(depth) && depth > 0 && depth <= radius && TryCut(hit, radius, depth);
 
-        private bool TryCut(RaycastHit hit, float radius, float shaveDepth)
+        public bool TryToolCut(RaycastHit hit, float radius, bool shaving)
+            => TryCut(hit, radius, shaving ? radius * EquipmentProgression.ShavingDepthRatio : 0, true);
+
+        private bool RefineContact(ref Vector3 surface, Vector3 normal)
+        {
+            Vector3 inside = surface - normal * cellSize * 2;
+            Vector3 outside = surface + normal * cellSize * 2;
+            if (grid.Sample(inside) <= 0 || grid.Sample(outside) > 0) return false;
+            for (int i = 0; i < 12; i++)
+            {
+                Vector3 middle = (inside + outside) * .5f;
+                if (grid.Sample(middle) > 0) inside = middle; else outside = middle;
+            }
+            surface = (inside + outside) * .5f;
+            return true;
+        }
+
+        private bool TryCut(RaycastHit hit, float radius, float shaveDepth, bool adaptMaterials = false)
         {
             LastRebuiltChunkCount = 0;
             LastDigMilliseconds = 0;
@@ -237,27 +262,22 @@ namespace SomethingDownThere
             Vector3 point = surface - normal * (radius * (0.12f + depthOffset));
             var timer = Stopwatch.StartNew();
             BoundsInt changed;
+            var material = adaptMaterials ? ToolMaterialAt(hit) : TerrainMaterialId.Soil;
             if (shaveDepth > 0)
             {
                 // Surface nets approximate the isosurface. Resolve the true contact so
                 // a cut shallower than a voxel keeps advancing on tilted faces too.
-                Vector3 inside = surface - normal * cellSize * 2;
-                Vector3 outside = surface + normal * cellSize * 2;
-                if (grid.Sample(inside) <= 0 || grid.Sample(outside) > 0) return false;
-                for (int i = 0; i < 12; i++)
-                {
-                    Vector3 middle = (inside + outside) * 0.5f;
-                    if (grid.Sample(middle) > 0) inside = middle; else outside = middle;
-                }
-                if (!grid.RemoveShave((inside + outside) * 0.5f, radius, normal, shaveDepth, out changed)) return false;
+                if (!RefineContact(ref surface, normal)) return false;
+                if (!grid.RemoveShave(surface, radius, normal, shaveDepth, out changed, adaptMaterials, adaptMaterials ? seed : 0)) return false;
             }
-            else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed)) return false;
+            else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed, adaptMaterials)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
             CommitEdit(changed);
             LastMeshMilliseconds = timer.Elapsed.TotalMilliseconds - LastGridMilliseconds;
             timer.Stop();
             LastDigMilliseconds = timer.Elapsed.TotalMilliseconds;
             LastDiscoveryMilliseconds = LastDigMilliseconds - LastGridMilliseconds - LastMeshMilliseconds;
+            if (adaptMaterials) ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
             return true;
         }
 

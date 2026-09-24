@@ -16,6 +16,14 @@
         <ui:Label name="Return warning" class="hud-warning" />
         <ui:Label name="Developer controls" class="hud-admin" />
         <ui:Label name="Reticle" text="+" class="hud-reticle" />
+        <ui:VisualElement name="DetectorPanel" class="hud-detector hidden" picking-mode="Ignore">
+            <ui:Label text="DETECTOR" class="hud-detector-title" />
+            <ui:VisualElement class="hud-detector-strength">
+                <ui:VisualElement name="DetectorBar1" class="hud-detector-bar hud-detector-weak" />
+                <ui:VisualElement name="DetectorBar2" class="hud-detector-bar hud-detector-medium" />
+                <ui:VisualElement name="DetectorBar3" class="hud-detector-bar hud-detector-strong" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:Label name="Target" class="hud-target" />
         <ui:Label name="Feedback" class="hud-feedback" />
         <ui:VisualElement class="hud-resource-warning-anchor" picking-mode="Ignore">

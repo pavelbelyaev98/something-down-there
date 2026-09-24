@@ -13,6 +13,7 @@
 Commons include the mineral ladder (coal → copper → iron → silver → gold → emerald → ruby → diamond),
 bottles, plain stones, commonplace scrap, packaging and rubbish. "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
+During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.
 
 Each type has one purpose: ordinary and repeatable finds sell; a few special exhibits and keys are
@@ -53,17 +54,19 @@ force finds deeper or farther apart than necessary.
 
 The detector is passive equipment: the player never equips it. They simply dig.
 
-- **Silent and visual by default.** No default audio pings. Tool reaction plus a subtle screen-edge hint gives broad direction and proximity. (An explicit accessibility option allows optional audio pings or high-contrast cues).
-- **Communicates presence, never value:** It reveals **neither exact identity, exact rarity, nor sale price**. A large find may feel stronger due to geometry, but the detector never spoils the item or labels ordinary finds as waste.
-- **Stable target locking:** Holds the current target long enough to prevent flickering or jumping between nearby finds as the camera turns.
-- **Exposed items yield priority:** An already understood, fully exposed find does not dominate the signal indefinitely; the detector releases it so the player can seek the next lead.
+- **Silent and visual by default.** A separate HUD detector shows three signal levels as the player sweeps their aim: weak near the edge of a buried find's detection cone, medium when closer to its bearing, strongest when looking directly toward it. Bars communicate alignment, not distance. No direction arrows, turn instructions, height labels or target markers; the aiming reticle stays independent. Optional accessibility audio and high-contrast cues remain planned.
+- **Usually off:** The panel is completely hidden outside a close range or when looking away. Small angular and range margins prevent boundary flicker. A nearby object behind the player cannot light the detector; ordinary surface exploration stays quiet.
+- No activation, battery drain or bag space is required. Any later physical tool attachment follows this same quiet aiming behavior.
+- **Communicates presence, never value:** It reveals **neither exact identity, exact rarity, nor sale price**. Signal level follows aim alignment; the detector never spoils the item or labels ordinary finds as waste.
+- **Aim owns the signal:** Respond to the buried eligible find most closely aligned with the current view. Looking toward another find changes the reading immediately; no timed lock holds an off-axis target. Equal bearings resolve consistently.
+- **The reveal ends the hint:** As soon as any part of an object is uncovered, that object stops signaling, even before collection or extraction is available. Revealed objects never become fallback signals. A different, still-buried find can continue signaling if the player aims toward it.
 - **Useful baseline:** Provides useful starting guidance without requiring expensive upgrades to locate mandatory story content.
 - **Eligibility is authored per object**, never decided by price, size or metal content. Some
  distinctive finds deliberately do not signal, so that digging itself keeps rewarding the player
  outside signal-chasing.
 - Signals can always be ignored; required parts matter when the player chooses to finish the story.
-- Required finds have trails of related objects and the existing broad detector cues. Collected finds
- stop signaling; revealed but uncollected targets remain detectable. No required detector upgrade.
+- Required finds have trails of related objects and the existing broad detector cues. Revealed and
+ collected finds stop signaling. No required detector upgrade.
 
 ## 3. The reveal and recognition loop
 
@@ -209,6 +212,8 @@ a gold bar never receives a depth bonus. “Rare” describes a payout, not anot
  world, and can be retrieved on a later trip.
 - **Nothing is ever deleted.** No overflow teleport, no inventory destruction, no drop-on-death.
  Full capacity stops pickup, not digging or travel; excess valuables persist without blocking the route.
+ Aiming through a common find with a full bag still cuts the ground behind it within normal tool reach;
+ walls, equipment and unique objects retain their normal blocking behavior. Cutting keeps its fuel cost and cadence.
  Show a persistent inventory-full HUD banner in the same style as the low-fuel warning; both remain readable together.
  No discarding; sale, extraction and reload preserve discovery credit.
 - Uniques and ending components never consume capacity and are never lost.

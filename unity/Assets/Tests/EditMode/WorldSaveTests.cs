@@ -17,7 +17,7 @@ namespace SomethingDownThere.Tests
         [TestCase(1f)]
         public void WholeWorldRoundTripPreservesExactDensityItemsAndDeterministicNextCut(float stance)
         {
-            var grid = new ExcavationGrid(new Vector3Int(32, 24, 32), 0.125f);
+            var grid = new ExcavationGrid(new Vector3Int(32, 64, 32), 0.125f, 2718);
             grid.RemoveScoop(new Vector3(2, 2.95f, 2), 0.8f, Vector3.up, 72, 0.12f, out _);
             grid.RemoveScoop(new Vector3(2.3f, 2.7f, 2), 0.65f, Vector3.left, 73, 0.12f, out _);
             var state = Snapshot(1);
@@ -33,8 +33,8 @@ namespace SomethingDownThere.Tests
             var loadedGrid = new ExcavationGrid(grid.Size, grid.CellSize);
             loadedGrid.Restore(restored.Terrain);
             var center = new Vector3(2.4f, 2.5f, 2);
-            grid.RemoveScoop(center, 0.7f, Vector3.left, 74, 0.12f, out _);
-            loadedGrid.RemoveScoop(center, 0.7f, Vector3.left, 74, 0.12f, out _);
+            grid.RemoveScoop(center, 0.7f, Vector3.left, 74, 0.12f, out _, true);
+            loadedGrid.RemoveScoop(center, 0.7f, Vector3.left, 74, 0.12f, out _, true);
             Assert.That(loadedGrid.Capture().Density.ToArray(), Is.EqualTo(grid.Capture().Density.ToArray()));
             Assert.That(loadedGrid.RemovedVolume, Is.EqualTo(grid.RemovedVolume));
         }
@@ -317,6 +317,7 @@ namespace SomethingDownThere.Tests
         {
             Assert.That(actual.Sequence, Is.EqualTo(expected.Sequence));
             Assert.That(actual.Terrain.Density.ToArray(), Is.EqualTo(expected.Terrain.Density.ToArray()));
+            Assert.That(actual.Terrain.Materials.ToArray(), Is.EqualTo(expected.Terrain.Materials.ToArray()));
             Assert.That(actual.Terrain.Revision, Is.EqualTo(expected.Terrain.Revision));
             Assert.That(actual.Terrain.LowestCarvedY, Is.EqualTo(expected.Terrain.LowestCarvedY));
             Assert.That(actual.Terrain.RemovedVolume, Is.EqualTo(expected.Terrain.RemovedVolume));

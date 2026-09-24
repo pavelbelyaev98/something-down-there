@@ -5,6 +5,18 @@ Shader "Something Down There/Ground Triplanar"
         _SoilAlbedo("Soil colour", 2D) = "white" {}
         [Normal] _SoilNormal("Soil normal", 2D) = "bump" {}
         _SoilRoughness("Soil mask (see mask layout)", 2D) = "white" {}
+        _ClayAlbedo("Clay colour", 2D) = "white" {}
+        [Normal] _ClayNormal("Clay normal", 2D) = "bump" {}
+        _ClayMask("Clay occlusion (G)", 2D) = "white" {}
+        _ClayTint("Clay tint", Color) = (1,1,1,1)
+        _ClayTileMetres("Clay tile metres", Float) = 3
+        _ClayNormalStrength("Clay relief", Range(0, 2)) = 0.25
+        _RockAlbedo("Rock colour", 2D) = "white" {}
+        [Normal] _RockNormal("Rock normal", 2D) = "bump" {}
+        _RockMask("Rock occlusion (G)", 2D) = "white" {}
+        _RockTint("Rock tint", Color) = (0.4,0.4,0.4,1)
+        _RockTileMetres("Rock tile metres", Float) = 3
+        _RockNormalStrength("Rock relief", Range(0, 2)) = 0.65
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
@@ -58,6 +70,9 @@ Shader "Something Down There/Ground Triplanar"
             float _ComparisonStoneNormalStrength;
             float _MaxSmoothness;
             float _GroundOpacity;
+            float4 _ClayTint, _RockTint;
+            float _ClayTileMetres, _RockTileMetres;
+            float _ClayNormalStrength, _RockNormalStrength;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -68,12 +83,16 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_ComparisonAlbedo); SAMPLER(sampler_ComparisonAlbedo);
         TEXTURE2D(_ComparisonNormal); SAMPLER(sampler_ComparisonNormal);
         TEXTURE2D(_ComparisonRoughness); SAMPLER(sampler_ComparisonRoughness);
+        // Identical repeat/trilinear imports share sampler states across layers.
+        TEXTURE2D(_ClayAlbedo); TEXTURE2D(_ClayNormal); TEXTURE2D(_ClayMask);
+        TEXTURE2D(_RockAlbedo); TEXTURE2D(_RockNormal); TEXTURE2D(_RockMask);
         #include "../../Runtime/Terrain/ExcavationDaylight.hlsl"
 
         struct GroundAttributes
         {
             float4 positionOS : POSITION;
             float3 normalOS : NORMAL;
+            float2 materials : TEXCOORD2;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct GroundVaryings
@@ -82,6 +101,7 @@ Shader "Something Down There/Ground Triplanar"
             float3 positionWS : TEXCOORD0;
             half3 normalWS : TEXCOORD1;
             half fogFactor : TEXCOORD2;
+            half2 materials : TEXCOORD3;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -95,6 +115,7 @@ Shader "Something Down There/Ground Triplanar"
             output.positionCS = TransformWorldToHClip(output.positionWS);
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             output.fogFactor = ComputeFogFactor(output.positionCS.z);
+            output.materials = input.materials;
             return output;
         }
 
@@ -137,7 +158,7 @@ Shader "Something Down There/Ground Triplanar"
             return normalize(n + detail - n * dot(detail, n));
         }
 
-        void GroundSurface(float3 position, half3 geometricNormal,
+        void SoilSurface(float3 position, half3 geometricNormal, float3 positionDx, float3 positionDy,
             out half3 colour, out half3 normal, out half roughness, out half occlusion)
         {
             half3 n = normalize(geometricNormal);
@@ -152,7 +173,6 @@ Shader "Something Down There/Ground Triplanar"
             float normalStrength = useComparison ? _ComparisonNormalStrength : _NormalStrength;
             float stoneNormalStrength = useComparison ? _ComparisonStoneNormalStrength : _StoneNormalStrength;
             float3 p = position / soilTileMetres;
-            float3 positionDx = ddx(position), positionDy = ddy(position);
             float3 pDx = positionDx / soilTileMetres;
             float3 pDy = positionDy / soilTileMetres;
             // One world-space origin across chunks and rim meshes. No mesh UVs
@@ -234,6 +254,68 @@ Shader "Something Down There/Ground Triplanar"
                 occlusion = lerp(occlusion, lerp(0.65, 1, turfMask.g), turf);
             }
         }
+        void DepositSurface(TEXTURE2D_PARAM(albedoMap, albedoSampler),
+            TEXTURE2D_PARAM(normalMap, normalSampler), TEXTURE2D_PARAM(maskMap, maskSampler),
+            float3 position, float3 positionDx, float3 positionDy, half3 n,
+            float tileMetres, half3 tint, half strength, out half3 colour, out half3 normal, out half occlusion)
+        {
+            float scale = 1 / max(tileMetres, 0.05);
+            float3 p = position * scale, dx = positionDx * scale, dy = positionDy * scale;
+            half3 axis = abs(n), signs = half3(n.x < 0 ? -1 : 1, n.y < 0 ? -1 : 1, n.z < 0 ? -1 : 1);
+            half best = max(axis.x, max(axis.y, axis.z));
+            half3 weights = smoothstep(best - 0.16, best, axis);
+            weights /= max(dot(weights, 1.0), 0.0001);
+            float2 uvX = float2(p.z * signs.x, p.y), dxX = float2(dx.z * signs.x, dx.y), dyX = float2(dy.z * signs.x, dy.y);
+            float2 uvY = float2(p.x * signs.y, p.z), dxY = float2(dx.x * signs.y, dx.z), dyY = float2(dy.x * signs.y, dy.z);
+            float2 uvZ = float2(-p.x * signs.z, p.y), dxZ = float2(-dx.x * signs.z, dx.y), dyZ = float2(-dy.x * signs.z, dy.y);
+            colour = tint * (SAMPLE_TEXTURE2D_GRAD(albedoMap, albedoSampler, uvX, dxX, dyX).rgb * weights.x
+                + SAMPLE_TEXTURE2D_GRAD(albedoMap, albedoSampler, uvY, dxY, dyY).rgb * weights.y
+                + SAMPLE_TEXTURE2D_GRAD(albedoMap, albedoSampler, uvZ, dxZ, dyZ).rgb * weights.z);
+            half3 nx = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(normalMap, normalSampler, uvX, dxX, dyX), strength);
+            half3 ny = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(normalMap, normalSampler, uvY, dxY, dyY), strength);
+            half3 nz = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(normalMap, normalSampler, uvZ, dxZ, dyZ), strength);
+            normal = ProjectGroundNormal(n, weights, signs, nx, ny, nz);
+            occlusion = SAMPLE_TEXTURE2D_GRAD(maskMap, maskSampler, uvX, dxX, dyX).g * weights.x
+                + SAMPLE_TEXTURE2D_GRAD(maskMap, maskSampler, uvY, dxY, dyY).g * weights.y
+                + SAMPLE_TEXTURE2D_GRAD(maskMap, maskSampler, uvZ, dxZ, dyZ).g * weights.z;
+        }
+
+        void GroundSurface(float3 position, half3 geometricNormal, half2 materials,
+            out half3 colour, out half3 normal, out half roughness, out half occlusion)
+        {
+            half3 weights = saturate(half3(1 - materials.x - materials.y, materials));
+            weights /= max(dot(weights, 1.0), 0.0001);
+            half3 n = normalize(geometricNormal);
+            // Calculate gradients before the layer branches so boundary pixels keep stable mip levels.
+            float3 dx = ddx(position), dy = ddy(position);
+            colour = 0; normal = 0; roughness = 0; occlusion = 0;
+            half3 layerColour, layerNormal; half layerRoughness, layerOcclusion;
+            [branch] if (weights.x > 0.0001)
+            {
+                SoilSurface(position, geometricNormal, dx, dy, layerColour, layerNormal, layerRoughness, layerOcclusion);
+                colour += layerColour * weights.x; normal += layerNormal * weights.x;
+                roughness += layerRoughness * weights.x; occlusion += layerOcclusion * weights.x;
+            }
+            [branch] if (weights.y > 0.0001)
+            {
+                DepositSurface(TEXTURE2D_ARGS(_ClayAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_ClayNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ClayMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _ClayTileMetres, _ClayTint.rgb, _ClayNormalStrength,
+                    layerColour, layerNormal, layerOcclusion);
+                colour += layerColour * weights.y; normal += layerNormal * weights.y;
+                roughness += weights.y; occlusion += layerOcclusion * weights.y;
+            }
+            [branch] if (weights.z > 0.0001)
+            {
+                DepositSurface(TEXTURE2D_ARGS(_RockAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_RockNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_RockMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _RockTileMetres, _RockTint.rgb, _RockNormalStrength,
+                    layerColour, layerNormal, layerOcclusion);
+                colour += layerColour * weights.z; normal += layerNormal * weights.z;
+                roughness += weights.z; occlusion += layerOcclusion * weights.z;
+            }
+            normal = normalize(normal);
+        }
         ENDHLSL
 
         Pass
@@ -261,7 +343,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
                 InputData lighting = (InputData)0;
                 lighting.positionWS = input.positionWS;
                 lighting.positionCS = input.positionCS;
@@ -335,7 +417,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
                 #if defined(_GBUFFER_NORMALS_OCT)
                     float2 oct = PackNormalOctQuadEncode(normal);
                     return half4(PackFloat2To888(saturate(oct * 0.5 + 0.5)), 0);

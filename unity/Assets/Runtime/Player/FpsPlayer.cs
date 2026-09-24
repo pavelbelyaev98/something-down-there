@@ -56,6 +56,7 @@ namespace SomethingDownThere
         private FpsInput input;
         private PlayerCrouch crouch;
         private FindHandling findHandling;
+        public FindDetector Detector { get; private set; }
         [SerializeField] private SalvageWinch winch;
         [SerializeField] private WorksiteTools worksiteTools;
         public WorksiteTools WorksiteTools => worksiteTools;
@@ -67,6 +68,7 @@ namespace SomethingDownThere
         public BuriedFind HeldFind => findHandling?.HeldFind;
         internal Vector3 CarryVelocity => motor != null ? motor.velocity : Vector3.zero;
         private float pitch, verticalSpeed, digCooldown, savedTimeScale, jetpackHoldTime;
+        private float scheduledDigInterval;
         private CursorLockMode savedCursorLock;
         private bool savedCursorVisible, ownsPresentation, focused = true;
         private int transitionFrame = -1;
@@ -74,6 +76,7 @@ namespace SomethingDownThere
         private float primaryLockout;
         private float rescueRetryDelay;
         private BuriedFind blockedPickup;
+        private readonly RaycastHit[] fullBagDigHits = new RaycastHit[128];
         private int adminLevel;
         private ShovelProfile[] adminTuning;
         private bool unlimitedBattery;
@@ -143,6 +146,8 @@ namespace SomethingDownThere
             * (ShavingEnabled ? EquipmentProgression.ShavingIntervalScale : 1f));
         public float EffectiveDigInterval => DigIntervalAtLevel(EffectiveShovelLevel);
         public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy) * EffectiveDigInterval / ScoopDigInterval;
+        public TerrainMaterialId LastDigMaterial { get; private set; }
+        public float LastDigInterval { get; private set; }
         public float DigPulse { get; private set; }
         public int SuccessfulStrokes { get; private set; }
         public float LastScoopVolume { get; private set; }
@@ -172,6 +177,7 @@ namespace SomethingDownThere
                     Application.isEditor ? "EditorPreferences" : "Preferences", "input-v1.ini")));
             input = new FpsInput(InputSettings);
             findHandling = new FindHandling(this);
+            Detector = new FindDetector(this);
             extractionInteraction = new FindExtractionInteraction(this);
             proximityCollection = new FindProximityCollection(this, motor, worldMask);
             pickupPresentation = new FindPickupPresentation(transform, viewCamera);
@@ -237,6 +243,7 @@ namespace SomethingDownThere
 
         public void Restore(WorldSnapshot snapshot)
         {
+            Detector?.Reset();
             worksiteTools?.Cancel();
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
@@ -312,6 +319,7 @@ namespace SomethingDownThere
             BindingCapture.Tick();
             Tick(input.Read(GameplayActive && !BindingCapture.BlocksInput), Time.deltaTime);
             crouch.UpdateProjection();
+            Detector?.Tick();
             if (Time.unscaledTime >= feedbackUntil) Feedback = "";
             DigPulse = Mathf.MoveTowards(DigPulse, 0, Time.deltaTime * 5f);
         }
@@ -544,6 +552,15 @@ namespace SomethingDownThere
             if (TryGetTarget(Mathf.Max(EffectiveDigReach, MaximumPickupReach), out var hit)
                 && Contract<BuriedFind>(hit.collider) is BuriedFind find)
             {
+                if (Inventory.IsFull && find.Kind == DiscoveryKind.Common)
+                {
+                    if (blockedPickup != find) ShowFeedback("Inventory full - keep digging; find left in place");
+                    blockedPickup = find;
+                    if (digCooldown > 0f) return false;
+                    bool cut = TryDig();
+                    ScheduleNextDig();
+                    return cut;
+                }
                 if (!find.Collectible)
                 {
                     if (digCooldown > 0f) return false;
@@ -558,7 +575,6 @@ namespace SomethingDownThere
                     return uncovered;
                 }
                 if (hit.distance > PickupReach(find)) return false;
-                if (Inventory.IsFull && blockedPickup == find) return false;
                 bool collected = find.TryCollect(this);
                 blockedPickup = !collected && Inventory.IsFull ? find : null;
                 if (collected && continueDiggingAfterPickup && digCooldown <= 0f)
@@ -582,14 +598,40 @@ namespace SomethingDownThere
             return dug;
         }
 
-        private void ScheduleNextDig() => digCooldown = Mathf.Max(0.001f, digCooldown + EffectiveDigInterval);
+        private void ScheduleNextDig() => digCooldown = Mathf.Max(0.001f, digCooldown + scheduledDigInterval);
+
+        private bool TryGetDigTarget(out RaycastHit hit)
+        {
+            if (!TryGetTarget(EffectiveDigReach, out hit)) return false;
+            var find = Contract<BuriedFind>(hit.collider);
+            if (find == null) return true;
+            if (!Inventory.IsFull || find.Kind != DiscoveryKind.Common)
+                return find.TryGetCoveringSoil(this, worldMask, out hit);
+
+            // Bag capacity must never make common finds a barrier to excavation.
+            // Only this cutting ray ignores them; physical bodies and pickup stay intact.
+            int count = Physics.RaycastNonAlloc(viewCamera.transform.position, viewCamera.transform.forward,
+                fullBagDigHits, EffectiveDigReach, worldMask, QueryTriggerInteraction.Ignore);
+            hit = default;
+            if (count == fullBagDigHits.Length) return false;
+            float nearest = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                var candidate = fullBagDigHits[i];
+                if (candidate.distance >= nearest) continue;
+                var common = candidate.collider.GetComponentInParent<BuriedFind>();
+                if (common != null && common.isActiveAndEnabled && common.Kind == DiscoveryKind.Common
+                    && common.State == FindState.World && !common.IsHeld) continue;
+                hit = candidate; nearest = candidate.distance;
+            }
+            return hit.collider != null;
+        }
 
         public bool TryDig()
         {
+            scheduledDigInterval = EffectiveDigInterval;
             if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay) || HeldFind != null
-                || !TryGetTarget(EffectiveDigReach, out var hit)) return false;
-            var aimedFind = Contract<BuriedFind>(hit.collider);
-            if (aimedFind != null && !aimedFind.TryGetCoveringSoil(this, worldMask, out hit)) return false;
+                || !TryGetDigTarget(out var hit)) return false;
             var target = Contract<IDigTarget>(hit.collider);
             if (target == null || !target.CanDig)
             {
@@ -597,14 +639,18 @@ namespace SomethingDownThere
                 if (find == null) ShowFeedback(target?.DigPrompt ?? "Cannot dig here");
                 return false;
             }
-            float cost = EffectiveDigEnergy;
+            var terrain = target as TerrainVolume;
+            var material = terrain != null ? terrain.ToolMaterialAt(hit) : TerrainMaterialId.Soil;
+            float intervalScale = EquipmentProgression.MaterialResponse(material).Interval;
+            scheduledDigInterval *= intervalScale;
+            float cost = EffectiveDigEnergy * intervalScale;
             if (!UnlimitedBattery && !Battery.CanSpend(cost)) { ShowFeedback("Not enough charge to dig - return to recharge"); return false; }
-            bool accepted = target is TerrainVolume terrain
-                ? ShavingEnabled
-                    ? terrain.TryShave(hit, EffectiveShovel.Radius, EffectiveShovel.Radius * EquipmentProgression.ShavingDepthRatio)
-                    : terrain.TryDig(hit, EffectiveShovel.Radius)
+            bool accepted = terrain != null
+                ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled)
                 : target.TryDig(hit);
             if (!accepted) return false;
+            LastDigMaterial = material;
+            LastDigInterval = scheduledDigInterval;
             SpendEnergy(cost);
             SuccessfulStrokes++;
             LastScoopVolume = target is TerrainVolume volume ? volume.LastRemovedVolume : 0;

@@ -24,8 +24,8 @@ namespace SomethingDownThere.Tests
             long samples = ((long)SiteLayout.Size.x + 1) * (SiteLayout.Size.y + 1) * (SiteLayout.Size.z + 1);
             Assert.That(samples, Is.LessThanOrEqualTo(WorldSaveCodec.MaximumSamples),
                 "The shipped density must fit the save reader's sample bound.");
-            Assert.That(samples * sizeof(float), Is.LessThan(WorldSaveCodec.MaximumUnpackedBytes),
-                "The shipped density must fit the unpacked payload budget.");
+            Assert.That(samples * (sizeof(float) + sizeof(byte)), Is.LessThan(WorldSaveCodec.MaximumUnpackedBytes),
+                "The shipped density and material IDs must fit the unpacked payload budget.");
         }
     }
 }

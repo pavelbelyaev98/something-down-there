@@ -1,21 +1,87 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "prefab": "Assets/Cosmic_Retro_Computer_1_FREE/Prefabs/Cosmic_Retro_Computer_7.prefab",
-  "position": { "x": 13.5, "y": 92.0, "z": 3.7 },
-  "euler": { "x": 0, "y": 202, "z": 0 },
-  "find": {
-    "content_id": "unique_reservoir_computer",
-    "display_name": "Reservoir Computer",
-    "tier": "unique",
-    "recovery": "rope",
-    "instances": 1,
-    "shallow_instances": 0,
-    "sale_value": 0,
-    "slots": 0,
-    "required_exposure": 0.6,
-    "detector_eligible": true,
-    "model_scale": 1.0,
-    "throw_speed": 8,
-    "lore": "The restart instructions did not mention draining the reservoir."
-  }
+  "entries": [
+    {
+      "position": {
+        "x": 13.5,
+        "y": 92.0,
+        "z": 3.7
+      },
+      "euler": {
+        "x": 0,
+        "y": 202,
+        "z": 0
+      },
+      "find": {
+        "content_id": "unique_reservoir_computer",
+        "display_name": "Reservoir Computer",
+        "tier": "unique",
+        "recovery": "rope",
+        "instances": 1,
+        "shallow_instances": 0,
+        "sale_value": 0,
+        "slots": 0,
+        "required_exposure": 0.6,
+        "detector_eligible": true,
+        "model_scale": 1.0,
+        "throw_speed": 8,
+        "lore": "The restart instructions did not mention draining the reservoir."
+      }
+    },
+    {
+      "position": {
+        "x": 7.0,
+        "y": 86.5,
+        "z": 10.0
+      },
+      "euler": {
+        "x": 0,
+        "y": 115,
+        "z": 0
+      },
+      "find": {
+        "content_id": "unique_survey_computer",
+        "display_name": "Survey Computer",
+        "tier": "unique",
+        "recovery": "rope",
+        "instances": 1,
+        "shallow_instances": 0,
+        "sale_value": 0,
+        "slots": 0,
+        "required_exposure": 0.6,
+        "detector_eligible": true,
+        "model_scale": 1.0,
+        "throw_speed": 8,
+        "lore": "The last survey was saved under a file called final_final."
+      }
+    },
+    {
+      "position": {
+        "x": 18.0,
+        "y": 79.0,
+        "z": 17.0
+      },
+      "euler": {
+        "x": 0,
+        "y": -25,
+        "z": 0
+      },
+      "find": {
+        "content_id": "unique_pump_computer",
+        "display_name": "Pump Computer",
+        "tier": "unique",
+        "recovery": "rope",
+        "instances": 1,
+        "shallow_instances": 0,
+        "sale_value": 0,
+        "slots": 0,
+        "required_exposure": 0.6,
+        "detector_eligible": true,
+        "model_scale": 1.0,
+        "throw_speed": 8,
+        "lore": "Its maintenance reminder was set to repeat after the next flood."
+      }
+    }
+  ]
 }

@@ -56,6 +56,7 @@ namespace SomethingDownThere.Editor
             sediment.SetFloat("_SoilTileMetres", 4.2f);
             sediment.SetFloat("_NormalStrength", .45f);
             sediment.SetFloat("_StoneNormalStrength", .55f);
+            ConfigureDeposits(sediment);
             sediment.SetFloat("_SoilComparison", 0);
             sediment.SetFloat("_SoilSplitX", terrain.transform.TransformPoint(
                 new Vector3(terrain.Dimensions.x * terrain.CellSize * .5f, 0, 0)).x);
@@ -95,6 +96,45 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_TurfDepth", .045f);
             material.SetFloat("_MaxSmoothness", .15f);
             material.SetFloat("_MacroVariation", .06f);
+        }
+
+        [MenuItem("Tools/Something Down There/Configure Ground Deposits")]
+        public static void ConfigureDeposits()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(SedimentPath);
+            if (material == null || ShaderUtil.ShaderHasError(material.shader))
+                throw new InvalidOperationException("The active ground material must compile first.");
+            ConfigureDeposits(material);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void ConfigureDeposits(Material material)
+        {
+            // Fine packed grains read as sediment; fractured rock has its own relief.
+            material.SetTexture("_ClayAlbedo", PackTexture("Gravel", "Albedo"));
+            material.SetTexture("_ClayNormal", PackTexture("Gravel", "Normal"));
+            material.SetTexture("_ClayMask", PackTexture("Gravel", "Roughness"));
+            material.SetColor("_ClayTint", new Color(.92f, .46f, .27f));
+            material.SetFloat("_ClayTileMetres", 2.8f);
+            material.SetFloat("_ClayNormalStrength", .22f);
+            material.SetTexture("_RockAlbedo", RockDetail("Albedo"));
+            material.SetTexture("_RockNormal", RockDetail("Normal"));
+            material.SetTexture("_RockMask", null);
+            material.SetColor("_RockTint", new Color(.4f, .4f, .4f));
+            material.SetFloat("_RockTileMetres", 3.2f);
+            material.SetFloat("_RockNormalStrength", .6f);
+            EditorUtility.SetDirty(material);
+        }
+
+        private static Texture2D RockDetail(string channel)
+        {
+            string file = "_RockDetail_" + (channel == "Albedo" ? "a" : "n") + ".png";
+            string path = PackTextureFolder + file;
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null && !AssetDatabase.CopyAsset(
+                "Assets/BK/PureNature_Mountains/Models/Rocks/Textures/" + file, path))
+                throw new InvalidOperationException("Missing approved rock texture: " + file);
+            ConfigureImport(path, channel, false);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         private static Texture2D PackTexture(string surface, string channel)

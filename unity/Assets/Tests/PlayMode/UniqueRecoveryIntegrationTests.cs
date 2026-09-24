@@ -74,7 +74,7 @@ namespace SomethingDownThere.Tests
                 typeof(SalvageWinch).GetField("settings",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
                     .SetValue(winch,tuningOverride);
             }
-            var find = player.Discoveries.Finds.Single(f => f.Kind == DiscoveryKind.Unique);
+            var find = player.Discoveries.Finds.Single(f => f.SaveContentId == "unique_reservoir_computer");
             foreach (var common in player.Discoveries.Finds.Where(f => f.Kind == DiscoveryKind.Common)) common.gameObject.SetActive(false);
             var state = find.Capture(); state.State = FindState.Extracting; find.Restore(state);
             var physical = find.GetComponent<FindPhysics>();
@@ -261,7 +261,7 @@ namespace SomethingDownThere.Tests
             player.SetApplicationFocus(true); player.CloseMenu();
             yield return null;
             player.SetApplicationFocus(true);
-            var find = field.Finds.Single(f => f.Kind == DiscoveryKind.Unique);
+            var find = field.Finds.Single(f => f.SaveContentId == "unique_reservoir_computer");
             var identities=field.Finds.Select(f=>f.Item.InstanceId).ToArray();
             string identity = find.Item.InstanceId;
             Assert.That(find.Exposure, Is.Zero);
@@ -432,7 +432,7 @@ namespace SomethingDownThere.Tests
             Assert.That(stand.TryInteract(player), Is.True);
             Assert.That(find.State, Is.EqualTo(FindState.Displayed));
             Assert.That(stand.TryInteract(player), Is.True, "Inspecting again must not create a second object.");
-            Assert.That(field.Finds.Count(f => f.Kind == DiscoveryKind.Unique), Is.EqualTo(1));
+            Assert.That(field.Finds.Count(f => f.Item.InstanceId == identity), Is.EqualTo(1));
             CollectionAssert.AreEquivalent(identities,field.Finds.Select(f=>f.Item.InstanceId), "Recovery never deletes finds in its way.");
             Assert.That(find.Item.InstanceId, Is.EqualTo(identity));
             Assert.That(find.DepthRecorded && find.DiscoveryDepth > 0, Is.True);

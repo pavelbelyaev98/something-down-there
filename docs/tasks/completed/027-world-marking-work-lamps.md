@@ -1,6 +1,6 @@
 # 027 — World Marking & Placeable Work Lamps
 
-Reusable diffuse lanterns illuminate in every direction with local occlusion, attach to solid scenery or fall freely, and save with the world. Free arrow, home and return-here markings conform to worked surfaces; placement, rotation, retrieval and erasing use rebindable controls.
+Reusable diffuse lanterns illuminate a broad area in every direction with local occlusion and bounded near brightness, attach to solid scenery or fall freely, and save with the world. Free arrow, home and return-here markings conform to worked surfaces; placement, rotation, retrieval and erasing use rebindable controls.
 
 ## Objective
 Make covered excavation readable with reusable work lights and recognizable route marks, available from the beginning of the playtest. Complete the lamp/marking task without coupling it to material response work; task 007 remains independent and pending.
@@ -49,3 +49,7 @@ Make covered excavation readable with reusable work lights and recognizable rout
 - Replace the harsh, directional work beam and front-facing art with a compact neutral lantern, soft point-light shadows and bounded near-field irradiance shared by ground and find shaders. The shadow atlas accommodates every kit light without shrinking its faces.
 - Accept fixed scenery, walls and ceilings; lift the small base clear of rough patches. Open-air placement and moving props release a physical lamp instead of rejecting the placement or leaving it floating.
 - Verification: placement, support loss, motion persistence and retrieval checks pass. Live close-up and room views preserve soil texture; the same point light is blocked by a separating wall and illuminates the next chamber when that wall is removed, even with sun shadows Off.
+
+## Wider illumination playtest iteration
+- Increase useful lantern reach by pairing range and output with a larger finite-source falloff. Near brightness stays bounded while distant walls receive more light; extend distance culling to match. Retain the same point-light count, local shadows and vivid global grade.
+- Verification: lamp lifecycle checks pass. Live close-up and sealed-tunnel review retain texture, illuminate a wider work area and preserve complete occlusion behind a solid wall; the fresh Windows build succeeds.

@@ -8,6 +8,8 @@ namespace SomethingDownThere
         private readonly FpsPlayer player;
         private readonly Label reticle, status, walletStatus, prompt, feedback, shovelStatus, adminHint, batteryStatus, returnWarning, fuelWarning, inventoryWarning;
         private readonly VisualElement batteryGroup, batteryFill;
+        private readonly VisualElement detectorPanel;
+        private readonly VisualElement[] detectorBars;
         private Battery displayedBattery;
         private readonly Label fps;
         private int frameSamples;
@@ -20,6 +22,8 @@ namespace SomethingDownThere
             fps = document.Q<Label>("FpsReadout");
             Root = document.Q("hudRoot");
             reticle = Root.Q<Label>("Reticle");
+            detectorPanel = Root.Q("DetectorPanel");
+            detectorBars = new[] { Root.Q("DetectorBar1"), Root.Q("DetectorBar2"), Root.Q("DetectorBar3") };
             status = Root.Q<Label>("Status");
             walletStatus = Root.Q<Label>("Wallet");
             prompt = Root.Q<Label>("Target");
@@ -50,6 +54,11 @@ namespace SomethingDownThere
             else { sampleSeconds = 0; frameSamples = 0; fps.text = ""; }
             bool gameplay = !player.IsMenuOpen;
             Root.EnableInClassList("hidden", !gameplay);
+            var detector = player.Detector;
+            int signalLevel = player.GameplayActive && detector != null ? detector.SignalLevel : 0;
+            GameMenuView.Show(detectorPanel, signalLevel > 0);
+            for (int i = 0; i < detectorBars.Length; i++)
+                detectorBars[i].EnableInClassList("active", i < signalLevel);
             prompt.text = gameplay ? player.TargetPrompt : "";
             feedback.text = player.Feedback;
             status.text = "FINDS  " + player.Inventory.Count + " / " + player.Inventory.Capacity;

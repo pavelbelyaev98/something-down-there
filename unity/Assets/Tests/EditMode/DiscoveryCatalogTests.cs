@@ -17,7 +17,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog; catalog.Validate();
             var extent = SiteLayout.Extent; var layout = catalog.Generate(extent,seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed));
-            Assert.That(layout.Length,Is.EqualTo(12485));
+            Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
             CollectionAssert.AreEqual(new[] {5500,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
@@ -70,7 +70,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(top.All(p => SiteLayout.Extent.y - p.Position.y >= radii[p.PrefabIndex] + catalog.Entries[p.PrefabIndex].ShallowMinCover - .0001f
                     && SiteLayout.Extent.y - p.Position.y <= radii[p.PrefabIndex] + catalog.Entries[p.PrefabIndex].ShallowMaxCover + .0001f), Is.True);
                 Assert.That(top.Count(p => p.Position.z <= 6), Is.GreaterThanOrEqualTo(50));
-                Assert.That(layout.Skip(catalog.ShallowCount).Count(), Is.EqualTo(11735));
+                Assert.That(layout.Skip(catalog.ShallowCount).Count(), Is.EqualTo(catalog.TotalCount - catalog.ShallowCount));
                 Assert.That(layout.Count(p => p.Position.y < 8.5f), Is.GreaterThanOrEqualTo(100));
                 // Sample walkable excavation locations, including lateral/back areas. This is a
                 // spatial bound on empty topsoil, not a claim about every player's encounter time.
@@ -361,7 +361,7 @@ namespace SomethingDownThere.Tests
             var layout = catalog.Generate(extent, 12);
             watch.Stop();
             Debug.Log($"Full population placement: {watch.Elapsed.TotalMilliseconds:F0} ms for {layout.Length} finds.");
-            Assert.That(layout.Length, Is.EqualTo(12485));
+            Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount));
             Assert.That(watch.Elapsed.TotalSeconds, Is.LessThan(1.0), "Placement must stay clear of the old all-pairs scan.");
         }
 

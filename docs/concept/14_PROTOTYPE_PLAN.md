@@ -19,7 +19,7 @@ build curiosity about what they add up to.
 | Tool | One machine, 2–3 meaningful upgrade levels with visible bolt-on changes, hold/toggle digging, automatic material adaptation stub |
 | Jetpack | Stable and usable from the start; ordinary falls are harmless |
 | Materials | 3 distinct families with different feel (e.g., soil, clay, rock) |
-| Detector | Tool reaction + edge hint, stable target; include one silent optional distinctive |
+| Detector | Separate HUD instrument with three aim-alignment signal levels; off outside close range, when looking away and after partial reveal; include one silent optional distinctive |
 | Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and rope recovery |
 | Rope recovery | Hold Interact on the exposed computer; rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks and preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
@@ -32,10 +32,15 @@ build curiosity about what they add up to.
 | Saving | Autosave + restore exact hole, position, charge, finds and display |
 | Story | One anachronistic junk object for the mystery trail |
 
+Mechanics can be tested first with independent unique computer identities sharing the approved model. The detector initially uses the HUD; its physical attachment follows with the tool rig. New slice objects and the connected scene remain required before the playable-slice acceptance gate.
+
 Explicitly out of the slice: zones 2–4, the full roster, the ending, achievements, photo mode, late
-sinks and finished large-object content. Test local extraction (including bladder-assisted release
-and mud unsticking) beneath an overhang separately and early; the whole-object payoff must work
-without a transport shaft to the sky or cable clipping.
+sinks and finished large-object content. First test the accepted winch on a larger load through
+bends and beneath an overhang. Use that evidence to decide whether bladder-assisted release and
+mud unsticking need a separate mechanic; the whole-object payoff must work without a transport
+shaft to the sky or cable clipping. Gate bulk content on a fresh slice playthrough, early economy
+pacing and frame pacing during digging, hauling, lamps and checkpoint writes; retain full-run
+and long-session validation before release.
 
 ## 3. Experiments (numbers to discover)
 
@@ -45,7 +50,7 @@ without a transport shaft to the sky or cable clipping.
 - Starting shovel speed vs. frustration; fewer stronger upgrade steps and output on familiar ground.
 - Battery drain per powered action vs. outing length; recovery frequency and empty-wallet restart.
 - Bag capacity vs. trip length; where the hard stop actually lands.
-- Detector range, frequency, quiet intervals; how often players follow cues.
+- Detector range, aim bands and reveal cutoff; how often players follow cues.
 - Recognition: exposure percentage at which players identify each of the five objects; test late
  wide cuts and C4 too. Full-bag overflow and interesting finds must survive.
 - Cluster spacing: how far players search after finding one related object.

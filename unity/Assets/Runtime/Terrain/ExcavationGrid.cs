@@ -8,10 +8,11 @@ namespace SomethingDownThere
     public sealed partial class ExcavationGrid
     {
         // One shared bound for the grid, checkpoints and the save reader. It covers the
-        // planned 200 m site (1600 cells) with headroom; the save payload cap is the
-        // real memory guard.
+        // depth axis with headroom; the combined density/material sample budget is
+        // the allocation guard.
         public const int MaximumCellsPerAxis = 2048;
         private readonly PagedDensity density;
+        private TerrainMaterialSnapshot materials;
         private readonly int strideY, strideZ;
         private readonly float band;
         private readonly List<int> severedSamples = new List<int>(4096);
@@ -40,18 +41,27 @@ namespace SomethingDownThere
         public int LastRemnantCheckedSamples { get; private set; }
         public long SnapshotCopiedBytes => density.CopiedBytes;
 
-        public ExcavationGrid(Vector3Int size, float cellSize)
+        public static void ValidateDimensions(Vector3Int size, float cellSize)
         {
             if (size.x < 1 || size.y < 1 || size.z < 1
                 || size.x > MaximumCellsPerAxis || size.y > MaximumCellsPerAxis || size.z > MaximumCellsPerAxis)
                 throw new ArgumentOutOfRangeException(nameof(size), $"Use 1-{MaximumCellsPerAxis} cells per axis.");
             if (!Finite(cellSize) || cellSize <= 0f) throw new ArgumentOutOfRangeException(nameof(cellSize));
+            if ((long)(size.x + 1) * (size.y + 1) * (size.z + 1) > WorldSaveCodec.MaximumSamples)
+                throw new ArgumentOutOfRangeException(nameof(size), "Terrain exceeds the supported sample budget.");
+        }
+
+        public ExcavationGrid(Vector3Int size, float cellSize, int? materialSeed = null)
+        {
+            ValidateDimensions(size, cellSize);
             Size = size;
             CellSize = cellSize;
             band = cellSize * 2f;
             strideY = size.x + 1;
             strideZ = strideY * (size.y + 1);
             density = new PagedDensity(strideZ * (size.z + 1));
+            materials = materialSeed.HasValue ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value)
+                : TerrainMaterialSnapshot.Uniform(density.Length);
             // Reserve the support-search workspace during loading, not on the
             // first live cut (the full-depth site's buffer is tens of megabytes).
             supportState = new byte[density.Length];
@@ -59,13 +69,14 @@ namespace SomethingDownThere
         }
 
         public GridSnapshot Capture() => new GridSnapshot { Size = Size, CellSize = CellSize, Revision = Revision,
-            RemovedVolume = RemovedVolume, LowestCarvedY = lowestCarvedY, Density = density.Capture() };
+            RemovedVolume = RemovedVolume, LowestCarvedY = lowestCarvedY, Density = density.Capture(), Materials = materials };
 
         public void Restore(GridSnapshot snapshot)
         {
             snapshot.Validate();
             if (snapshot.Size != Size || snapshot.CellSize != CellSize) throw new ArgumentException("Terrain size differs from this checkpoint.");
             density.Restore(snapshot.Density);
+            materials = snapshot.Materials;
             Revision = snapshot.Revision;
             RemovedVolume = snapshot.RemovedVolume;
             lowestCarvedY = snapshot.LowestCarvedY;
@@ -99,6 +110,33 @@ namespace SomethingDownThere
             if (y > Size.y) return -(y - Size.y) * CellSize;
             return density[Mathf.Clamp(x, 0, Size.x) + Mathf.Clamp(y, 0, Size.y) * strideY
                 + Mathf.Clamp(z, 0, Size.z) * strideZ];
+        }
+
+        public TerrainMaterialId MaterialAt(int x, int y, int z) => materials[Mathf.Clamp(x, 0, Size.x)
+            + Mathf.Clamp(y, 0, Size.y) * strideY + Mathf.Clamp(z, 0, Size.z) * strideZ];
+
+        public TerrainMaterialId MaterialAt(Vector3 point)
+        {
+            var sample = Vector3Int.RoundToInt(point / CellSize);
+            return MaterialAt(sample.x, sample.y, sample.z);
+        }
+
+        internal TerrainMaterialSnapshot MaterialField => materials;
+
+        internal void CopyMaterials(Vector3Int first, Vector3Int span, byte[] target)
+        {
+            int left = Mathf.Clamp(-first.x, 0, span.x);
+            int right = Mathf.Clamp(first.x + span.x - 1 - Size.x, 0, span.x);
+            int middle = span.x - left - right, output = 0;
+            for (int z = first.z; z < first.z + span.z; z++)
+            for (int y = first.y; y < first.y + span.y; y++)
+            {
+                int row = Mathf.Clamp(y, 0, Size.y) * strideY + Mathf.Clamp(z, 0, Size.z) * strideZ;
+                if (left > 0) Array.Fill(target, (byte)materials[row], output, left);
+                if (middle > 0) materials.CopyTo(row + Mathf.Max(0, first.x), target, output + left, middle);
+                if (right > 0) Array.Fill(target, (byte)materials[row + Size.x], output + span.x - right, right);
+                output += span.x;
+            }
         }
 
         public float Sample(Vector3 point)
@@ -193,18 +231,20 @@ namespace SomethingDownThere
         public bool RemoveScoop(Vector3 center, float radius, int seed, float variation, out BoundsInt changed)
             => RemoveScoop(center, radius, Vector3.up, seed, variation, out changed);
 
-        public bool RemoveScoop(Vector3 center, float radius, Vector3 normal, int seed, float variation, out BoundsInt changed)
-            => RemoveBrush(center, radius, normal, seed, variation, true, 0, out changed);
+        public bool RemoveScoop(Vector3 center, float radius, Vector3 normal, int seed, float variation, out BoundsInt changed,
+            bool adaptMaterials = false)
+            => RemoveBrush(center, radius, normal, seed, variation, true, 0, out changed, adaptMaterials);
 
-        public bool RemoveShave(Vector3 surface, float radius, Vector3 normal, float depth, out BoundsInt changed)
+        public bool RemoveShave(Vector3 surface, float radius, Vector3 normal, float depth, out BoundsInt changed,
+            bool adaptMaterials = false, int seed = 0)
         {
             changed = default;
             if (!Finite(depth) || depth <= 0 || depth > radius) return false;
-            return RemoveBrush(surface, radius, normal, 0, 0, false, depth, out changed);
+            return RemoveBrush(surface, radius, normal, seed, 0, false, depth, out changed, adaptMaterials);
         }
 
         private bool RemoveBrush(Vector3 center, float radius, Vector3 normal, int seed, float variation,
-            bool shovel, float shaveDepth, out BoundsInt changed)
+            bool shovel, float shaveDepth, out BoundsInt changed, bool adaptMaterials = false)
         {
             changed = default;
             BeginRemoval();
@@ -231,7 +271,11 @@ namespace SomethingDownThere
             Vector3 phase = new Vector3(Next01(ref random), Next01(ref random), Next01(ref random)) * (2 * Mathf.PI);
             normal.Normalize();
             Vector3 tangent = Vector3.Cross(normal, Mathf.Abs(normal.y) < 0.95f ? Vector3.up : Vector3.forward).normalized;
-            tangent = Quaternion.AngleAxis(Next01(ref random) * 360, normal) * tangent;
+            // A continuously held material shave retains its footprint. Spinning an
+            // ellipse or faceted chip every tick accumulates into a circular bore and
+            // erases the material's shape. Organic scoop strokes keep their variation.
+            if (!adaptMaterials || shaveDepth <= 0)
+                tangent = Quaternion.AngleAxis(Next01(ref random) * 360, normal) * tangent;
 
             Vector3 bitangent = Vector3.Cross(normal, tangent);
             float width = radius * Mathf.Lerp(1.02f, 1.14f, Next01(ref random));
@@ -256,6 +300,8 @@ namespace SomethingDownThere
                 float before = density[index];
                 if (before <= -band) continue;
                 Vector3 delta = new Vector3(x, y, z) * CellSize - center;
+                var material = adaptMaterials ? materials[index] : TerrainMaterialId.Soil;
+                var response = EquipmentProgression.MaterialResponse(material);
                 float cut;
 
                 if (shaveDepth > 0)
@@ -263,7 +309,17 @@ namespace SomethingDownThere
                     float height = Vector3.Dot(delta, normal);
                     float radial = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
                     float side = radial - radius;
-                    float floor = -height - shaveDepth;
+                    float floor = -height - shaveDepth * response.Penetration;
+                    if (material != TerrainMaterialId.Soil)
+                    {
+                        float u = Vector3.Dot(delta, tangent) / response.Width;
+                        float v = Vector3.Dot(delta, bitangent) / response.Length;
+                        side = material == TerrainMaterialId.Rock
+                            ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f))) - radius
+                            : Mathf.Sqrt(u * u + v * v) - radius;
+                        // A shallow faceted chip, versus the clay's smooth elliptical shave.
+                        if (material == TerrainMaterialId.Rock) floor += Mathf.Abs(u * .3f + v * .2f) * shaveDepth / radius;
+                    }
                     float rounding = Mathf.Min(radius * 0.18f, shaveDepth * 0.5f);
                     float join = Mathf.Max(rounding - Mathf.Abs(side - floor), 0) / rounding;
                     cut = Mathf.Max(side, floor) + join * join * rounding * 0.25f;
@@ -271,9 +327,9 @@ namespace SomethingDownThere
                 }
                 else if (shovel)
                 {
-                    float u = Vector3.Dot(delta, tangent), v = Vector3.Dot(delta, bitangent);
+                    float u = Vector3.Dot(delta, tangent) / response.Width, v = Vector3.Dot(delta, bitangent) / response.Length;
                     float height = Vector3.Dot(delta, normal);
-                    float floor = -height - depth + u * tiltX + v * tiltZ;
+                    float floor = -height - depth * response.Penetration + u * tiltX + v * tiltZ;
                     float cap = height - radius * 0.8f;
                     if (Mathf.Max(floor, cap) - amplitude >= before) continue;
                     // A broad, slanted fracture face instead of a spherical bottom.
@@ -284,7 +340,9 @@ namespace SomethingDownThere
                     // The superellipse is at least max(a,b). Reject unchanged samples
                     // with that cheap bound before powers/noise, especially in deep pits.
                     if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
-                    float side = (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
+                    float side = material == TerrainMaterialId.Rock ? (Mathf.Max(a, b) - 1) * length
+                        : material == TerrainMaterialId.Clay ? (Mathf.Sqrt(a * a + b * b) - 1) * length
+                        : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
                     side = Mathf.Max(side, (u * 0.72f + v * 0.69f - radius * 0.98f) * 0.9f);
                     side = Mathf.Max(side, (-u * 0.86f - v * 0.51f - radius * 0.94f) * 0.9f);
                     float join = Mathf.Max(bevel - Mathf.Abs(side - floor), 0) / bevel;

@@ -108,6 +108,20 @@ namespace SomethingDownThere
         public float CellSize, RemovedVolume;
         public int Revision, LowestCarvedY;
         public DensitySnapshot Density;
+        public TerrainMaterialSnapshot Materials;
+
+        public int SampleCount
+        {
+            get
+            {
+                WorldSnapshot.Require(Size.x > 0 && Size.y > 0 && Size.z > 0
+                    && Size.x <= ExcavationGrid.MaximumCellsPerAxis && Size.y <= ExcavationGrid.MaximumCellsPerAxis
+                    && Size.z <= ExcavationGrid.MaximumCellsPerAxis, "Invalid terrain dimensions.");
+                long count = (long)(Size.x + 1) * (Size.y + 1) * (Size.z + 1);
+                WorldSnapshot.Require(count <= WorldSaveCodec.MaximumSamples, "Terrain exceeds the supported sample budget.");
+                return (int)count;
+            }
+        }
 
         public void Validate()
         {
@@ -115,7 +129,8 @@ namespace SomethingDownThere
                 && Size.x <= ExcavationGrid.MaximumCellsPerAxis && Size.y <= ExcavationGrid.MaximumCellsPerAxis
                 && Size.z <= ExcavationGrid.MaximumCellsPerAxis
                 && WorldSnapshot.Finite(CellSize) && CellSize > 0 && CellSize <= 10, "Invalid terrain dimensions.");
-            WorldSnapshot.Require(Density != null && Density.Length == (Size.x + 1) * (Size.y + 1) * (Size.z + 1)
+            WorldSnapshot.Require(Density != null && Density.Length == SampleCount
+                && Materials != null && Materials.Length == Density.Length
                 && Revision >= 0 && LowestCarvedY >= 0 && LowestCarvedY <= Size.y
                 && WorldSnapshot.Finite(RemovedVolume) && RemovedVolume >= 0
                 && RemovedVolume <= Size.x * (double)Size.y * Size.z * CellSize * CellSize * CellSize + 1, "Invalid terrain state.");

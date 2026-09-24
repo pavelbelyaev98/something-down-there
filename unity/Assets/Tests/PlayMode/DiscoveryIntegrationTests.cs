@@ -668,10 +668,12 @@ namespace SomethingDownThere.Tests
             player.enabled = true; player.SetApplicationFocus(true); yield return null; yield return null;
             devices.Press(mouse.rightButton, queueEventOnly: true); yield return null; yield return null;
             devices.Release(mouse.rightButton, queueEventOnly: true); yield return null;
-            float charge = player.Battery.Charge; int revision = terrain.Revision;
+            float charge = player.Battery.Charge; int revision = terrain.Revision, strokes = player.SuccessfulStrokes;
             yield return new WaitForSecondsRealtime(0.5f);
-            Assert.That(find.Collected, Is.False); Assert.That(player.Battery.Charge, Is.EqualTo(charge));
-            Assert.That(terrain.Revision, Is.EqualTo(revision));
+            Assert.That(find.Collected, Is.False);
+            Assert.That(player.SuccessfulStrokes, Is.GreaterThan(strokes), "Toggled digging continues through a full-bag find.");
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - (player.SuccessfulStrokes - strokes) * player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(terrain.Revision, Is.GreaterThan(revision));
             LookAt(player.ViewCamera.transform.position + Vector3.up);
             player.Inventory.TryRemove("full-0", out var removed);
             yield return new WaitForSeconds(.3f);

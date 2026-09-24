@@ -11,7 +11,7 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Battery** | Current charge; the shared dig + jetpack resource |
 | **Return warning** | Adaptive safe / risky / critical estimate based on depth and ascent energy |
 | **Lamp kit** | Available reusable lamps, with a compact placement shortcut |
-| **Detector** | Diegetic tool reaction plus a subtle screen-edge direction hint; silent by default (optional accessibility audio toggle available) |
+| **Detector** | Separate compact HUD with three signal bars based on aim alignment: strongest when looking directly toward a nearby buried find. Hidden when looking away, out of range or once any part is uncovered. No direction/height hints; the aiming reticle stays independent. Silent by default; optional accessibility audio remains planned. |
 
 Not on the HUD: minimap, compass, ore counters, objective list, damage numbers, news ticker, or any
 permanent tutorial text.

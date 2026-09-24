@@ -99,10 +99,13 @@ namespace SomethingDownThere
             body.WakeUp();
             job.Progress=distance; Revision++;
 
+            // The chosen destination is already part of the saved route, including
+            // when other computers are waiting on earlier receiving pads.
+            Vector3 padPosition=terrain.transform.TransformPoint(job.Route[job.Route.Length-1])-Vector3.up*.08f;
             bool onPad=job.Phase==ExtractionPhase.Delivering && Vector3.Distance(body.worldCenterOfMass,
-                new Vector3(padAnchor.position.x,body.worldCenterOfMass.y,padAnchor.position.z))<.8f
-                && payload.HitCollider.bounds.min.y<=padAnchor.position.y+.15f
-                && payload.HitCollider.bounds.min.y>=padAnchor.position.y-.1f;
+                new Vector3(padPosition.x,body.worldCenterOfMass.y,padPosition.z))<.8f
+                && payload.HitCollider.bounds.min.y<=padPosition.y+.15f
+                && payload.HitCollider.bounds.min.y>=padPosition.y-.1f;
             if(onPad && body.linearVelocity.sqrMagnitude<.09f && body.angularVelocity.sqrMagnitude<1f)
                 settledSeconds+=dt;
             else settledSeconds=0;

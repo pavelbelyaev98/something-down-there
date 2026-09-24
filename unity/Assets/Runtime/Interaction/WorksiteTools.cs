@@ -9,7 +9,7 @@ namespace SomethingDownThere
     public sealed class WorksiteTools : MonoBehaviour
     {
         public const int LampCapacity = 8, MaximumMarks = 96;
-        public const float LightRange = 9, LightCullDistance = 24;
+        public const float LightRange = 16, LightCullDistance = 36;
         public static readonly Vector3 LampCenter = new Vector3(0, .25f, 0);
         public static readonly Vector3 LampHalfSize = new Vector3(.145f, .245f, .145f);
         [SerializeField] private FpsPlayer player;

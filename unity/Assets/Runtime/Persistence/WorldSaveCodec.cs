@@ -13,13 +13,12 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 10;
-        // The packed payload is a few MB even for a carved 100 m world; the unpacked
-        // bound covers the 24 x 100 x 24 m density plus headroom for the planned 200 m
-        // step. The sample bound is the real allocation guard while reading.
+        public const int Version = 11;
+        // Bound combined density + material storage, reserving room for the other
+        // checkpoint records. Deeper future sites must explicitly revisit this budget.
         public const int MaximumPackedBytes = 64 * 1024 * 1024;
         public const int MaximumUnpackedBytes = 256 * 1024 * 1024;
-        public const int MaximumSamples = MaximumUnpackedBytes / sizeof(float);
+        public const int MaximumSamples = (MaximumUnpackedBytes - 16 * 1024 * 1024) / (sizeof(float) + sizeof(byte));
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("SDTSAVE\0");
 
         public static SaveWriteMetrics Write(Stream destination, WorldSnapshot s)
@@ -48,6 +47,8 @@ namespace SomethingDownThere
                 foreach (var item in s.Inventory) Write(w, item);
                 w.Write(g.Density.Length);
                 g.Density.Write(w);
+                w.Write(g.Materials.Length);
+                g.Materials.Write(w);
                 w.Write(s.CrouchAmount);
                 foreach (var find in s.Finds) w.Write(find.PhysicsReleased);
                 w.Write(s.InventoryLevel); w.Write(s.FuelLevel);
@@ -119,7 +120,11 @@ namespace SomethingDownThere
             s.Inventory = new ItemSnapshot[Count(r, 256)];
             for (int i = 0; i < s.Inventory.Length; i++) s.Inventory[i] = ReadItem(r);
             int samples = Count(r, MaximumSamples);
+            WorldSnapshot.Require(samples == s.Terrain.SampleCount, "Density count does not match terrain dimensions.");
             s.Terrain.Density = DensitySnapshot.Read(r, samples);
+            int materialSamples = Count(r, MaximumSamples);
+            WorldSnapshot.Require(materialSamples == samples, "Material count does not match terrain dimensions.");
+            s.Terrain.Materials = TerrainMaterialSnapshot.Read(r, materialSamples);
             s.CrouchAmount = r.ReadSingle();
             foreach (var find in s.Finds) find.PhysicsReleased = r.ReadBoolean();
             s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32();

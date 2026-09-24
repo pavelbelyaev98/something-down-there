@@ -13,18 +13,29 @@ namespace SomethingDownThere.Editor
         {
             public int schema_version;
             public string prefab;
+            public AuthoredFind[] entries;
+        }
+        [Serializable] private sealed class AuthoredFind
+        {
             public Vector3 position,euler;
             public DiscoveryContentSetup.SourceEntry find;
         }
         internal static void AppendToCatalog(List<DiscoveryCatalog.Entry> entries)
         {
             var source=JsonUtility.FromJson<Source>(File.ReadAllText(Path.GetFullPath(Path.Combine(Application.dataPath,"../../art/retro-computer/catalog.json"))));
-            var e=source?.find;
-            if(source==null || source.schema_version!=1 || e==null || e.tier!="unique" || e.recovery!="rope"
-                || e.instances!=1 || e.shallow_instances!=0 || e.slots!=0 || e.sale_value!=0 || !e.detector_eligible
-                || string.IsNullOrWhiteSpace(e.lore) || e.required_exposure<=0 || e.required_exposure>1
+            if(source==null || source.schema_version!=2 || source.entries==null || source.entries.Length==0
                 || source.prefab==SurfaceStationSetup.ComputerPrefabPath)
                 throw new InvalidDataException("Invalid buried computer source.");
+            var identities=new HashSet<string>(StringComparer.Ordinal);
+            foreach(var authored in source.entries)
+            {
+                var e=authored?.find;
+                if(e==null || string.IsNullOrWhiteSpace(e.content_id) || !identities.Add(e.content_id)
+                    || e.tier!="unique" || e.recovery!="rope" || e.instances!=1 || e.shallow_instances!=0
+                    || e.slots!=0 || e.sale_value!=0 || !e.detector_eligible || string.IsNullOrWhiteSpace(e.lore)
+                    || e.required_exposure<=0 || e.required_exposure>1)
+                    throw new InvalidDataException("Invalid authored computer identity or policy.");
+            }
             foreach(string suffix in new[]{"","/Meshes","/Materials","/Prefabs"}) EnsureFolder(Folder+suffix);
             var sourcePrefab=AssetDatabase.LoadAssetAtPath<GameObject>(source.prefab);
             if(sourcePrefab==null) throw new InvalidDataException("Missing approved computer prefab.");
@@ -60,9 +71,13 @@ namespace SomethingDownThere.Editor
             material.SetColor("_EmissionColor",Color.black);
             material.globalIlluminationFlags=MaterialGlobalIlluminationFlags.EmissiveIsBlack;
             EditorUtility.SetDirty(material);
-            var prefab=DiscoveryContentSetup.UpdatePrefab(e,centered,hull,material,Folder,true,18,e.model_scale);
-            entries.Add(new DiscoveryCatalog.Entry { ItemId=e.content_id, Prefab=prefab, Count=e.instances,
-                AuthoredPlacement=true, AuthoredPosition=source.position, AuthoredEuler=source.euler });
+            foreach(var authored in source.entries)
+            {
+                var e=authored.find;
+                var prefab=DiscoveryContentSetup.UpdatePrefab(e,centered,hull,material,Folder,true,18,e.model_scale);
+                entries.Add(new DiscoveryCatalog.Entry { ItemId=e.content_id, Prefab=prefab, Count=e.instances,
+                    AuthoredPlacement=true, AuthoredPosition=authored.position, AuthoredEuler=authored.euler });
+            }
         }
         internal static void EnsureFolder(string path)
         {

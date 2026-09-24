@@ -12,6 +12,10 @@ unity/Assets/BK/**/*.exr filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/PureNature_Mountains/Models/TerrainMountain.asset filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/PureNature_Mountains/Scenes/Mountain_Demo/LightingData.asset filter=lfs diff=lfs merge=lfs -text
 
+# Project texture copies retain the approved pack's binary storage policy.
+unity/Assets/Content/Nature/GroundTextures/Gravel_*.png filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Content/Nature/GroundTextures/_RockDetail_*.png filter=lfs diff=lfs merge=lfs -text
+
 # Purchased Odin tooling: preserve vendor binaries in the private repository via LFS.
 unity/Assets/Plugins/Sirenix/**/*.dll filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Plugins/Sirenix/**/*.pdb filter=lfs diff=lfs merge=lfs -text

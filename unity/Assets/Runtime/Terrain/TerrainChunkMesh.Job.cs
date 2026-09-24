@@ -17,15 +17,17 @@ namespace SomethingDownThere
             public float CellSize;
             public int SampleStrideY,SampleStrideZ;
             [ReadOnly] public NativeArray<float> Samples;
+            [ReadOnly] public NativeArray<byte> Materials;
             public NativeArray<int> Indices;
             public NativeArray<float> Corners;
             public NativeList<Vector3> Vertices,Normals;
             public NativeList<Vector2> UVs;
+            public NativeList<Vector2> MaterialWeights;
             public NativeList<int> Triangles;
 
             public void Execute()
             {
-                Vertices.Clear();Normals.Clear();UVs.Clear();Triangles.Clear();
+                Vertices.Clear();Normals.Clear();UVs.Clear();Triangles.Clear();MaterialWeights.Clear();
                 int cells=Span.x*Span.y*Span.z;
                 for(int i=0;i<cells;i++)Indices[i]=-1;
                 for(int z=Low.z;z<=End.z;z++)
@@ -52,6 +54,7 @@ namespace SomethingDownThere
                     float3 vertex=math.clamp((new float3(x,y,z)+sum/crossings)*CellSize,0,(float3)Size*CellSize);
                     Indices[Index(new int3(x,y,z))]=Vertices.Length;
                     Vertices.Add(vertex);Normals.Add(SurfaceNormal(vertex));UVs.Add(new Vector2(vertex.x,vertex.z));
+                    MaterialWeights.Add(SurfaceMaterials(vertex));
                 }
                 for(int z=Start.z;z<=End.z;z++)
                 for(int y=Start.y;y<=End.y;y++)
@@ -96,6 +99,26 @@ namespace SomethingDownThere
                 var dx=new float3(h,0,0);var dy=new float3(0,h,0);var dz=new float3(0,0,h);
                 float3 gradient=new float3(Sample(point+dx)-Sample(point-dx),Sample(point+dy)-Sample(point-dy),Sample(point+dz)-Sample(point-dz));
                 return math.lengthsq(gradient)>1e-12f?-math.normalize(gradient):new float3(0,1,0);
+            }
+
+            private Vector2 SurfaceMaterials(float3 point)
+            {
+                float3 p = point / CellSize;
+                int3 cell = (int3)math.floor(p);
+                float3 t = p - cell;
+                int index = SampleIndex(cell);
+                float2 result = 0;
+                for (int c = 0; c < 8; c++)
+                {
+                    int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
+                    float weight = (x == 0 ? 1-t.x : t.x) * (y == 0 ? 1-t.y : t.y) * (z == 0 ? 1-t.z : t.z);
+                    byte material = Materials[index + x + y * SampleStrideY + z * SampleStrideZ];
+                    if (material == (byte)TerrainMaterialId.Clay) result.x += weight;
+                    else if (material == (byte)TerrainMaterialId.Rock) result.y += weight;
+                }
+                result = math.saturate(result);
+                result /= math.max(1f, result.x + result.y);
+                return new Vector2(result.x, result.y);
             }
 
             private void Triangle(int a,int b,int c)

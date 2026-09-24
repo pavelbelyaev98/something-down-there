@@ -1,6 +1,6 @@
 # 087 — Drill-Like Shaving Dig Action
 
-Held digging uses controlled, thin voxel cuts, and collection never interrupts the normal shaving or scoop cadence. Development admin retains a session-only shaving/scoop comparison for playtest evaluation.
+Held digging uses controlled, thin voxel cuts; collection and full bags never interrupt the normal shaving or scoop cadence. Development admin retains a session-only shaving/scoop comparison for playtest evaluation.
 
 ## Objective
 
@@ -59,3 +59,7 @@ Make held digging continuously shave the contacted surface with frequent shallow
 - Remove the pickup recovery timer and the nearby-pickup early return. Held aimed collection rechecks the ray and uses a due cut immediately; collection during an existing cooldown preserves its deadline. A revealing cut still runs only once, and pickup adds no fuel cost.
 - Retain the admin comparison so both actions can be checked. Core regressions cover aimed/nearby pickups sharing a ready cut and pickups preserving an in-progress cut deadline in both modes.
 - Validation passes for shallow-cut progress, collision/restore, cadence, both pickup paths, held/remapped-toggle input, exposure, full bags and blocked collection. MainGame review confirms slower cutting with increasing output across tool tiers; the fresh Windows development build succeeds without compiler warnings or errors, retaining only the existing Pipeline runtime-configuration warning.
+
+## Full-bag digging playtest iteration
+- A full bag keeps common finds in the world while the cutting ray reaches ordinary ground behind them. Preserve tool reach, cadence, fuel and permanent obstructions; capacity becoming available restores immediate collection. Bounded nonallocating ray queries affect digging only, leaving item physics and identity intact.
+- Verification: both cutting modes and held/remapped-toggle input continue through full-bag commons, consume fuel per cut, respect cooldown and walls, and collect once space returns. Terrain/shaving checks and the fresh Windows build pass.

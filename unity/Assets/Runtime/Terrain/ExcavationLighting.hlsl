@@ -28,7 +28,7 @@ Light ExcavationMainLight() { return GetMainLight(); }
 // Distant falloff, range and URP shadow occlusion remain intact for both receivers.
 Light ExcavationDiffuseLight(Light light)
 {
-    light.distanceAttenuation /= 1.0 + 4.0 * light.distanceAttenuation;
+    light.distanceAttenuation /= 1.0 + 14.0 * light.distanceAttenuation;
     return light;
 }
 

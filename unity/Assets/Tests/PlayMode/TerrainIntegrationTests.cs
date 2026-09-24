@@ -139,19 +139,22 @@ namespace SomethingDownThere.Tests
             // The weaker top tier may need a few paid strokes to cut the pillar through;
             // whichever stroke severs it must clear the column inside that same stroke.
             int severingStrokes = 0;
-            while (terrain.LastDetachedVolume <= 0 && severingStrokes < 4)
+            float paidEnergy = 0;
+            // Mixed deposits can shed a small chip before the crown itself detaches.
+            while (terrain.IsSolid(crown) && severingStrokes < 10)
             {
                 beforeStroke = terrain.RemovedVolume;
                 Assert.That(player.TryDig(), Is.True);
+                paidEnergy += player.EffectiveDigEnergy * EquipmentProgression.MaterialResponse(player.LastDigMaterial).Interval;
                 severingStrokes++;
             }
-            Assert.That(severingStrokes, Is.LessThanOrEqualTo(4), "The top tier must sever the pillar in a few paid strokes.");
+            Assert.That(severingStrokes, Is.LessThanOrEqualTo(10), "Even a mixed hard pillar must yield to the top tier.");
             Assert.That(terrain.LastDetachedSamples, Is.GreaterThan(0));
             Assert.That(terrain.LastDetachedVolume, Is.GreaterThan(0));
             Assert.That(terrain.IsSolid(crown), Is.False);
             Assert.That(Hit(new Vector3(0, 2, 0), Vector3.down).point.y, Is.LessThan(-3),
                 "The crown's collider must disappear before the accepted dig returns.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(energy - severingStrokes * player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(player.Battery.Charge, Is.EqualTo(energy - paidEnergy).Within(.001f));
             Assert.That(terrain.Revision, Is.EqualTo(revision + severingStrokes));
             Assert.That(terrain.RemovedVolume - beforeStroke, Is.EqualTo(player.LastScoopVolume).Within(0.001f));
             Assert.That(terrain.GetComponentsInChildren<Rigidbody>(), Is.Empty);
@@ -506,7 +509,8 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.LastRebuiltChunkCount, Is.InRange(4, 12));
             Assert.That(notifications, Is.EqualTo(1));
             Assert.That(notification.Contains(tip), Is.True, "Discovery exposure receives the cleared remnant bounds.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy
+                * EquipmentProgression.MaterialResponse(player.LastDigMaterial).Interval).Within(.001f));
             Assert.That(terrain.Revision, Is.EqualTo(1));
             Assert.That(player.LastScoopVolume, Is.EqualTo(terrain.RemovedVolume).Within(0.00001f));
             Assert.That(terrain.TryDig(oldTipHit), Is.False);
@@ -514,6 +518,7 @@ namespace SomethingDownThere.Tests
             foreach (var collider in terrain.GetComponentsInChildren<MeshCollider>().Where(c => c.enabled))
                 Assert.That(collider.sharedMesh, Is.SameAs(collider.GetComponent<MeshFilter>().sharedMesh));
 
+            float chargeAfterCut = player.Battery.Charge;
             player.ViewCamera.transform.localPosition = Vector3.up * 1.6f;
             player.ViewCamera.transform.localRotation = Quaternion.identity;
             player.transform.rotation = Quaternion.identity;
@@ -522,7 +527,7 @@ namespace SomethingDownThere.Tests
             for (int i = 0; i < 60; i++) player.Tick(new FpsInputFrame { Move = Vector2.up }, 1f / 60);
             Assert.That(player.transform.position.z, Is.GreaterThan(0.8f), "Walk across the former spike without a jump or jetpack.");
             Assert.That(player.FeetPosition.y, Is.InRange(-2.3f, -1.8f));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(player.Battery.Charge, Is.EqualTo(chargeAfterCut).Within(.001f));
         }
 
         private void InstallExcavatedSpikeFixture()
@@ -766,6 +771,63 @@ namespace SomethingDownThere.Tests
             Assert.That(restored.point.y, Is.EqualTo(hit.point.y).Within(.02f));
             TestContext.WriteLine($"100 m MainGame: {strokes} largest-shovel cuts; slowest cut {maximumMilliseconds:F2} ms; "
                 + $"busiest {busiest} chunks; capture {timer.Elapsed.TotalMilliseconds:F2} ms.");
+        }
+
+        [UnityTest]
+        public IEnumerator ToolAdaptsToActualContactWithMatchingFuelFeedbackAndCollision()
+        {
+            var snapshot = terrain.Capture();
+            byte[] ids = snapshot.Materials.ToArray();
+            int stride = snapshot.Size.x + 1, plane = stride * (snapshot.Size.y + 1);
+            // Shallow strips exercise the real MainGame player without tunnelling past
+            // the find population or depending on one generated deposit's location.
+            for (int z = 0; z <= snapshot.Size.z; z++)
+            for (int y = snapshot.Size.y - 4; y <= snapshot.Size.y; y++)
+            for (int x = 0; x <= snapshot.Size.x; x++)
+                ids[x + y * stride + z * plane] = (byte)Mathf.Min(2, x * 3 / snapshot.Size.x);
+            snapshot.Materials = TerrainMaterialSnapshot.CopyFrom(ids);
+            yield return terrain.Restore(snapshot, terrain.ExcavationSeed);
+            int notifications = 0;
+            TerrainCutFeedback feedback = default;
+            terrain.ToolCut += value => { notifications++; feedback = value; };
+            for (int i = 0; i < 3; i++)
+            {
+                player.ViewCamera.transform.position = new Vector3(-6 + i * 6, 1.5f, -4);
+                player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
+                Physics.SyncTransforms();
+                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
+                var material = (TerrainMaterialId)i;
+                Assert.That(terrain.ToolMaterialAt(hit), Is.EqualTo(material));
+                float charge = player.Battery.Charge;
+                Assert.That(player.TryDig(), Is.True);
+                float scale = EquipmentProgression.MaterialResponse(material).Interval;
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy * scale).Within(.001f));
+                Assert.That(player.LastDigInterval, Is.EqualTo(player.EffectiveDigInterval * scale).Within(.00001f));
+                Assert.That(player.LastDigMaterial, Is.EqualTo(material));
+                Assert.That(notifications, Is.EqualTo(i + 1));
+                Assert.That(feedback.Material, Is.EqualTo(material));
+                Assert.That(feedback.RemovedVolume, Is.EqualTo(terrain.LastRemovedVolume).And.GreaterThan(0));
+                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var after), Is.True);
+                Assert.That(after.point.y, Is.LessThan(hit.point.y));
+                Assert.That(terrain.TryToolCut(hit, player.EffectiveShovel.Radius, true), Is.False);
+                Assert.That(notifications, Is.EqualTo(i + 1), "Rejected stale cuts publish nothing.");
+            }
+            Vector3 cameraPosition = player.ViewCamera.transform.position;
+            Quaternion cameraRotation = player.ViewCamera.transform.rotation;
+            Assert.That(player.TryPrimaryAction(), Is.True);
+            int strokes = player.SuccessfulStrokes;
+            player.Tick(default, player.EffectiveDigInterval * 1.1f);
+            player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
+            Assert.That(player.TryPrimaryAction(), Is.False, "Rock cadence must outlast the soil interval.");
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
+            player.Tick(default, player.EffectiveDigInterval * .4f);
+            player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
+            Assert.That(player.TryPrimaryAction(), Is.True, "The next rock cut must resume automatically after its interval.");
+            float paid = player.Battery.Charge;
+            player.OpenMenu(PlayerMenu.Pause);
+            Assert.That(player.TryDig(), Is.False);
+            Assert.That(player.Battery.Charge, Is.EqualTo(paid));
+            Assert.That(notifications, Is.EqualTo(5));
         }
 
         private void PlacePlayer(Vector3 position)

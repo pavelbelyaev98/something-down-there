@@ -40,6 +40,14 @@
     font-size: 24px; color: white;
     -unity-text-align: middle-center;
 }
+.hud-detector { position: absolute; right: 24px; bottom: 24px; width: 116px; padding: 10px 12px; background-color: rgba(19, 25, 31, 0.9); border-radius: 3px; border-bottom-width: 1px; border-bottom-color: var(--line); }
+.hud-detector-title { font-size: 12px; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+.hud-detector-strength { flex-direction: row; align-items: flex-end; height: 18px; }
+.hud-detector-bar { flex-grow: 1; margin-right: 4px; background-color: #3e4851; }
+.hud-detector-weak { height: 6px; }
+.hud-detector-medium { height: 12px; }
+.hud-detector-strong { height: 18px; margin-right: 0; }
+.hud-detector-bar.active { background-color: var(--paper); }
 .hud-target { position: absolute; left: 15%; right: 15%; top: 50%; margin-top: 32px; font-size: 19px; -unity-text-align: middle-center; white-space: normal; }
 .hud-feedback { position: absolute; left: 15%; right: 15%; bottom: 78px; -unity-text-align: middle-center; white-space: normal; }
 .hud-resource-warning-anchor { position: absolute; left: 15%; right: 15%; bottom: 24px; align-items: center; }

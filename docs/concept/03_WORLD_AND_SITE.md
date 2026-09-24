@@ -70,6 +70,12 @@ groups. Each family differs in **behavior**, not just color:
 - rock chips and cracks;
 - concrete sparks and resists, but the starting tool always makes visible progress.
 
+The first playable material pass uses broad rounded soil cuts, narrower smooth clay shavings,
+and smaller faceted rock chips. Resistance belongs to the ground inside the cut, including mixed
+seams; aiming at a soft patch does not turn its hard neighbor into soft soil. Deposits keep their
+identity when excavated and saved. Distinct soil grain, compacted clay and fractured rock textures
+follow these deposits across cut faces, with narrow blended boundaries. Debris reinforces the response as it is added.
+
 The tool adapts automatically to the material (see [Tool and Movement](04_TOOL_AND_MOVEMENT.md)); materials reward the
 right behavior but never lock it out. These are cutting responses and visual debris, not a global
 collapse hazard. Power growth outpaces tougher ground over the campaign.
@@ -160,6 +166,7 @@ as no solution.
   charge; lost support leaves them recoverable nearby. Digging and C4 cannot destroy them.
 - **Diffuse all-around lamps:** a neutral lantern illuminates every direction. Nearby soil retains
   texture instead of becoming an orange-white hotspot; solid ground still blocks the light.
+  One lamp lights a useful stretch of tunnel or chamber with a broad, gradual falloff, not just a small pool beside its housing.
 - **No personal light.** The tool does not act as a headlamp; that is what makes lamps the way you
   see and the way you remember the hole.
 - **Zone lighting moods:** warm daylight near the surface → shade in covered shallow ground → true
