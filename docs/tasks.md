@@ -38,7 +38,7 @@ Next: **001 — Evolving Motorized Tool Rig**. Queue order is priority; complete
 - [ ] **`035` — Directional Sound Captions** (`10`): captions for hearing accessibility; rides the audio phase's content.
 - [ ] **`036` — Photo Mode** (`08`): pause-only — hide HUD, FOV, filters, watermark. No free camera (concept 08 §6): the player composes from their own view.
 - [ ] **`038` — Anachronistic Mystery Trail Oddities** (`01`, `11`): subtle oddities with visible impossibility establishing curiosity.
-- [ ] **`039` — Zone 4 Ancient Constructed Structure** (`03`, `11`): anomalous architecture at the reservoir floor, clearly unlike bedrock.
+- [ ] **`039` — Zone 4 Ancient Constructed Structure** (`03`, `11`): anomalous architecture at the bottom of the dig, clearly unlike bedrock.
 - [ ] **`040` — Ancient Material Contact Signature** (`09`, `11`): clean surgical cuts, glass-like resonance, too-neat dust; no threat cues.
 - [ ] **`041` — Finale Components & Assembly Sockets** (`11`): 3–4 components with recoverable physical leads; owned parts auto-insert into sockets. Components signal — covered by `015`'s eligibility.
 - [ ] **`042` — Final Object Presentation Cutscene** (`01`, `11`): reveal the ancient junk fabrication machine; normal tools, no genre switch.

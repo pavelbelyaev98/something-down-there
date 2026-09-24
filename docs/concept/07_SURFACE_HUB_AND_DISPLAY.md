@@ -2,7 +2,7 @@
 
 ## 1. The yard
 
-A compact, authored worksite at the edge of the drained reservoir. Everything the player needs
+A compact, authored worksite on the drained lakebed beside the dig area. Everything the player needs
 between trips is within roughly ten seconds of the shaft mouth. No walking through buildings,
 no doors, no menu mazes, no NPCs.
 

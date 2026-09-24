@@ -13,6 +13,9 @@ unity/Assets/BK/**/*.exr filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/**/*Terrain*.asset filter=lfs diff=lfs merge=lfs -text
 unity/Assets/BK/**/LightingData.asset filter=lfs diff=lfs merge=lfs -text
 
+# Generated lakebed terrain data is binary even in Force Text mode.
+unity/Assets/Content/Lakebed/*Terrain*.asset filter=lfs diff=lfs merge=lfs -text
+
 # Project texture copies retain the approved pack's binary storage policy.
 unity/Assets/Content/Nature/GroundTextures/Gravel_*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Content/Nature/GroundTextures/_RockDetail_*.png filter=lfs diff=lfs merge=lfs -text

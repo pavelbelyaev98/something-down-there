@@ -38,8 +38,13 @@ namespace SomethingDownThere.Tests
                 Assert.That(recharge.Player.SurfaceRecharge, Is.SameAs(recharge));
                 Assert.That(recharge.Terrain, Is.SameAs(root.GetComponentInChildren<TerrainVolume>()));
                 Assert.That(recharge.transform, Is.SameAs(root.Find("Surface/RechargeZone")));
-                Assert.That(recharge.transform.position.z + recharge.Footprint.y * 0.5f, Is.LessThan(-12f),
-                    "Recharge must stay on the permanent rim, outside excavatable soil.");
+                for (int corner = 0; corner < 4; corner++)
+                {
+                    var local = new Vector3((corner & 1) == 0 ? -.5f : .5f, 0, (corner & 2) == 0 ? -.5f : .5f);
+                    var point = recharge.transform.TransformPoint(Vector3.Scale(local, new Vector3(recharge.Footprint.x, 0, recharge.Footprint.y)));
+                    Assert.That(new Vector2(point.x, point.z).magnitude, Is.GreaterThan(SiteLayout.OpeningRadius),
+                        "Recharge must stay on the permanent rim, outside excavatable soil.");
+                }
                 Assert.That(root.GetComponentsInChildren<Camera>(true).Length, Is.EqualTo(1));
                 var camera = root.GetComponentInChildren<Camera>();
                 Assert.That(camera.GetUniversalAdditionalCameraData().cameraStack, Is.Empty);
@@ -55,8 +60,8 @@ namespace SomethingDownThere.Tests
                 StringAssert.StartsWith("Assets/Content/", AssetDatabase.GetAssetPath(sky.material));
                 Assert.That(root.Find("Clouds"), Is.Null);
                 // Clear flags are Skybox, so backgroundColor never renders; what matters is
-                // that the demo's haze is on, since the peaks are read through it.
-                Assert.That(RenderSettings.fog, Is.False);
+                // that the demo's haze is on, since the canyon and peaks are read through it.
+                Assert.That(RenderSettings.fog, Is.True);
                 Assert.That(Vector3.Angle(root.Find("Sun").forward, Vector3.down), Is.LessThan(3f));
                 Assert.That(RenderSettings.fogMode, Is.EqualTo(FogMode.Exponential));
                 Assert.That(RenderSettings.fogDensity, Is.InRange(.001f, .006f));
@@ -154,7 +159,8 @@ namespace SomethingDownThere.Tests
                     Transform anchor = root.Find("Surface/" + name);
                     Assert.That(anchor, Is.Not.Null, name);
                     Assert.That(anchor.position.y, Is.InRange(0, 0.2f));
-                    Assert.That(Vector3.Distance(anchor.position, new Vector3(0, 0, -12)), Is.LessThan(5), name);
+                    Assert.That(new Vector2(anchor.position.x, anchor.position.z).magnitude,
+                        Is.InRange(SiteLayout.OpeningRadius + .5f, SiteLayout.OpeningRadius + 6), name + " stands beside the opening.");
                 }
                 Assert.That(root.Find("Bedrock").GetComponentsInChildren<PermanentTerrainBoundary>().Length, Is.EqualTo(5));
                 Assert.That(root.Find("Perimeter"), Is.Null,
@@ -165,30 +171,91 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void RoundOpeningHasPermanentGravelAndOnlyStoresAroundIt()
+        public void DrainedLakebedFramesTheOpeningWithPermanentGroundAndStations()
         {
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
             try
             {
                 var root = scene.GetRootGameObjects().Single().transform;
-                Assert.That(root.Find("Environment"), Is.Null);
-                Assert.That(root.GetComponentsInChildren<Terrain>(true), Is.Empty);
-                var apron = root.Find("Surface/Walking apron");
-                Assert.That(apron, Is.Not.Null);
-                Assert.That(apron.GetComponent<PermanentTerrainBoundary>().CanDig, Is.False);
-                var collider = apron.GetComponent<MeshCollider>();
-                Assert.That(collider.sharedMesh, Is.SameAs(apron.GetComponent<MeshFilter>().sharedMesh));
-                var material = apron.GetComponent<Renderer>().sharedMaterial;
-                Assert.That(material.GetFloat("_Smoothness"), Is.Zero);
-                StringAssert.Contains("Gravel", AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap")));
+                Physics.SyncTransforms();
+                var environment = root.Find("Environment");
+                Assert.That(environment, Is.Not.Null);
+                Assert.That(environment.GetComponent<PermanentTerrainBoundary>().CanDig, Is.False);
+                var terrain = root.GetComponentsInChildren<Terrain>(true).Single();
+                Assert.That(terrain.transform.IsChildOf(environment), Is.True);
+                Assert.That(AssetDatabase.GetAssetPath(terrain.terrainData), Is.EqualTo(LakebedSiteSetup.TerrainDataPath));
+                Assert.That(terrain.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off),
+                    "Terrain shadow casters ignore holes and would shade the whole shaft.");
+                var ground = terrain.GetComponent<TerrainCollider>();
+                Assert.That(ground.terrainData, Is.SameAs(terrain.terrainData));
+                var rim = root.Find("Surface/Excavation rim");
+                Assert.That(rim.GetComponent<PermanentTerrainBoundary>().CanDig, Is.False);
+                var collar = rim.GetComponent<MeshCollider>();
+                Assert.That(collar.sharedMesh, Is.SameAs(rim.GetComponent<MeshFilter>().sharedMesh));
                 for (int i = 0; i < 72; i++)
                 {
                     Vector3 direction = Quaternion.Euler(0, i * 5, 0) * Vector3.forward;
-                    Assert.That(collider.Raycast(new Ray(direction * (SiteLayout.OpeningRadius - .1f) + Vector3.up * 2, Vector3.down), out _, 3), Is.False);
-                    Assert.That(collider.Raycast(new Ray(direction * (SiteLayout.OpeningRadius + .1f) + Vector3.up * 2, Vector3.down), out _, 3), Is.True);
+                    Ray Down(float radius) => new Ray(direction * radius + Vector3.up * 2, Vector3.down);
+                    Assert.That(collar.Raycast(Down(SiteLayout.OpeningRadius - .1f), out _, 3), Is.False, "The rim never caps the opening.");
+                    Assert.That(collar.Raycast(Down(SiteLayout.OpeningRadius + .1f), out var lip, 3), Is.True);
+                    Assert.That(lip.point.y, Is.EqualTo(SiteLayout.RimTop).Within(.002f));
+                    Assert.That(ground.Raycast(Down(SiteLayout.OpeningRadius - .1f), out _, 3), Is.False, "The terrain is open over the dig ground.");
+                    Assert.That(ground.Raycast(Down(SiteLayout.RimOuterRadius + .5f), out var beyond, 3), Is.True);
+                    Assert.That(beyond.point.y, Is.EqualTo(SiteLayout.GroundTop).Within(.02f), "Flat permanent ground surrounds the rim.");
                 }
-                foreach (var station in root.GetComponentsInChildren<StationTarget>())
-                    Assert.That(collider.Raycast(new Ray(station.transform.position + Vector3.up * 2, Vector3.down), out _, 3), Is.True);
+                // Scenery, water and colliders stay out of the dig column.
+                var column = Physics.OverlapCapsule(Vector3.down * 99, Vector3.up * 3, SiteLayout.OpeningRadius - .05f);
+                Assert.That(column.Where(c => c.transform.IsChildOf(environment)), Is.Empty);
+                foreach (var renderer in environment.GetComponentsInChildren<Renderer>())
+                {
+                    // Edit-mode particle bounds collapse to the origin; the waterfall splashes are far away.
+                    // The lake surface spans the canyon; its triangles are checked below.
+                    if (renderer is ParticleSystemRenderer || renderer.name == "Lake surface" || renderer.name == "Border stones") continue;
+                    var bounds = renderer.bounds;
+                    float dx = Mathf.Max(0, Mathf.Abs(bounds.center.x) - bounds.extents.x), dz = Mathf.Max(0, Mathf.Abs(bounds.center.z) - bounds.extents.z);
+                    Assert.That(Mathf.Sqrt(dx * dx + dz * dz), Is.GreaterThan(SiteLayout.OpeningRadius - .3f), renderer.name);
+                }
+                Assert.That(environment.GetComponentsInChildren<Transform>(true)
+                    .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
+                    "Runtime static batching of the vendor scenery exhausts memory on every scene load.");
+                var lake = environment.Find("Water/Lake surface");
+                Assert.That(lake.GetComponent<Renderer>().sharedMaterial.shader.name, Is.EqualTo("BK/Water"));
+                Assert.That(lake.GetComponent<Collider>(), Is.Null, "The water surface is not walkable.");
+                Assert.That(lake.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => new Vector2(v.x, v.z).magnitude),
+                    Is.GreaterThan(SiteLayout.RimRadius), "Water never reaches the dig column or rim.");
+                var border = environment.Find("Dig boundary/Border stones");
+                Assert.That(border.GetComponent<Collider>(), Is.Null, "Border pebbles never snag the player.");
+                Assert.That(border.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => new Vector2(v.x, v.z).magnitude),
+                    Is.GreaterThan(SiteLayout.OpeningRadius), "The pebble border stays outside the diggable circle.");
+                var probe = environment.GetComponentInChildren<ReflectionProbe>();
+                Assert.That(probe.mode, Is.EqualTo(UnityEngine.Rendering.ReflectionProbeMode.Custom));
+                StringAssert.StartsWith("Assets/BK/PureNature_Highlands/", AssetDatabase.GetAssetPath(probe.customBakedTexture),
+                    "Water reflects the demo's baked canyon cubemap.");
+                Assert.That(new Bounds(probe.transform.position + probe.center, probe.size).Contains(Vector3.up), Is.True);
+                // The play area keeps the player on the drained section, below a flight ceiling.
+                var area = LakebedSiteSetup.PlayArea();
+                var playBounds = environment.Find("Play area bounds");
+                foreach (var wall in playBounds.GetComponentsInChildren<Collider>())
+                    Assert.That(wall.gameObject.layer, Is.EqualTo(LayerMask.NameToLayer("Ignore Raycast")), "Aim, digging and lamps ignore the bounds.");
+                Assert.That(playBounds.Find("Flight ceiling").GetComponent<Collider>().bounds.min.y,
+                    Is.EqualTo(LakebedSiteSetup.FlightCeiling + 1.9f).Within(.05f));
+                Assert.That(Physics.Raycast(new Vector3(0, 30, -16), Vector3.down, out var skyHit, 40), Is.True);
+                Assert.That(skyHit.point.y, Is.LessThan(1f), "Default rays pass through the flight ceiling.");
+                // Only elevated demo ponds keep their walkable surface; nothing collides at lake level.
+                float lakeTop = lake.GetComponent<Renderer>().bounds.max.y;
+                Assert.That(environment.GetComponentsInChildren<Collider>().Where(c => c.name.StartsWith("Water") && c.enabled && c.bounds.max.y < lakeTop + 5), Is.Empty);
+                // Stations stand on permanent ground around the opening.
+                foreach (var station in root.GetComponentsInChildren<StationTarget>().Select(s => s.transform)
+                    .Concat(new[] { root.Find("Surface/SalvageWinch/WinchFixture"), root.Find("Surface/RechargeZone"), root.Find("Player") }))
+                {
+                    var position = station.position;
+                    Assert.That(new Vector2(position.x, position.z).magnitude, Is.InRange(SiteLayout.OpeningRadius, SiteLayout.RimRadius + 6), station.name);
+                    var support = Physics.RaycastAll(position + Vector3.up * 2.5f, Vector3.down, 4, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                        .Where(h => h.collider.GetComponentInParent<PermanentTerrainBoundary>() != null).ToArray();
+                    Assert.That(support, Is.Not.Empty, station.name + " stands on permanent ground.");
+                    Assert.That(LakebedSiteSetup.InPlayArea(area, new Vector2(position.x, position.z)), Is.True, station.name + " is inside the play area.");
+                    Assert.That(support.Max(h => h.point.y), Is.InRange(SiteLayout.GroundTop - .02f, SiteLayout.RimTop + .01f), station.name);
+                }
                 var grass = new SerializedObject(root.GetComponentInChildren<SurfaceGrassRenderer>());
                 Assert.That(grass.FindProperty("surfaceRadius").floatValue, Is.EqualTo(SiteLayout.OpeningRadius));
             }

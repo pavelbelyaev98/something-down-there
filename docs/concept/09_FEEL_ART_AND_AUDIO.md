@@ -10,7 +10,7 @@ or lifting the black level in deep tunnels.
 Preserve the established vivid color grade across the game. Improve underground readability
 through the excavation daylight and ground response, without flattening surface colors.
 Lanterns light a broad work area with gradual falloff, without bleaching nearby textures or changing the surface grade.
-The reservoir crust and freshly dug soil read as dry, rough ground: no mirror-like white
+The lakebed crust and freshly dug soil read as dry, rough ground: no mirror-like white
 glare or crystal sparkles. Preserve texture relief and contact shadows without a wet sheen.
 The whole round diggable surface is a meadow using approved pack plants: low grass,
 white/blue daisies, taller white/yellow/pink flowers and occasional ferns, with small clearings.
@@ -25,8 +25,9 @@ retain the custom soil art as an inactive option for later, without applying it 
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - Soil, clay and rock use distinct grain and relief patterns matching their saved deposits; texture scale stays consistent on floors, walls and ceilings.
 - **Objects read by silhouette**, because recognition is the core reward.
-- Pure Nature 2 supplies the meadow plants, ground textures and sky. Keep the surrounding yard
-  plain gravel with stores only; the valley composition and all scenery are retired.
+- Pure Nature 2: Mountains supplies the meadow plants and dig-ground textures; Pure Nature 2:
+  Highlands supplies the canyon, lake and lakebed around the dig area, with its demo's sky, haze and
+  baked water reflections.
 - Custom grass clump, cloud and sun art and the rejected first-person tool experiments are removed.
   Preserve the full licensed pack for future use; tune project-owned copies.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.

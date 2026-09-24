@@ -106,6 +106,8 @@ namespace SomethingDownThere.Tests
         public IEnumerator MaximumJetpackAscentKeepsRockInHandThroughLookChanges()
         {
             var find = field.Finds.First(f => f.Size == FindSize.Large);
+            // This measures hand stability over a long climb, not the play area's flight ceiling.
+            player.transform.root.Find("Environment/Play area bounds").gameObject.SetActive(false);
             PrepareNaturalHold(find, 0);
             player.enabled = true; player.SetApplicationFocus(true);
             yield return WaitForSimulation(.8f);

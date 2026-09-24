@@ -13,9 +13,9 @@ namespace SomethingDownThere.Editor
     public static class SunPresentationSetup
     {
         public const string Folder = "Assets/Content/Environment/";
-        public const string SkyPath = Folder + "ReservoirSky.mat";
+        public const string SkyPath = Folder + "LakebedSky.mat";
         public const string PostPath = Folder + "ReservoirPostProcess.asset";
-        private const string VendorSky = "Assets/BK/PureNature_Mountains/Textures/Sky/Sky_Mountains.mat";
+        private const string VendorSky = "Assets/BK/PureNature_Highlands/Textures/Sky/Sky_Highlands.mat";
         private const string VendorPost = "Assets/BK/PureNature_Mountains/Settings/Mountains_PostProcess.asset";
 
         [MenuItem("Tools/Something Down There/Configure Approved Sun")]
@@ -29,8 +29,9 @@ namespace SomethingDownThere.Editor
             var sun = root.transform.Find("Sun").GetComponent<Light>();
             Undo.RecordObjects(new UnityEngine.Object[] { sun, sun.transform }, "Set approved midday site sunlight");
             sun.transform.rotation = Quaternion.Euler(88, 45, 0);
-            sun.color = new Color(1, 1, 1);
-            sun.intensity = 1.2f;
+            // Highlands demo sun colour and strength; the site keeps its near-overhead noon angle.
+            sun.color = new Color(1, .964f, .836f);
+            sun.intensity = 1;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .9f;
             var sunData = sun.GetComponent<UniversalAdditionalLightData>();
@@ -42,12 +43,13 @@ namespace SomethingDownThere.Editor
             EditorUtility.SetDirty(sun);
             RenderSettings.sun = sun;
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(.622f, .639f, .657f);
-            RenderSettings.ambientIntensity = 1.2f;
-            RenderSettings.fog = false;
+            RenderSettings.ambientLight = new Color(.736f, .736f, .736f);
+            RenderSettings.ambientIntensity = 1;
+            // The Highlands demo's aerial haze carries the lakebed canyon and distant peaks.
+            RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
-            RenderSettings.fogColor = new Color(.162f, .459f, .591f);
-            RenderSettings.fogDensity = .003f;
+            RenderSettings.fogColor = new Color(.359f, .519f, .783f);
+            RenderSettings.fogDensity = .001f;
             var sky = SkyMaterial();
             RenderSettings.skybox = sky;
             var skybox = camera.GetComponent<Skybox>();

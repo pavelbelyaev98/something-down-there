@@ -2,17 +2,27 @@
 
 ## 1. The site
 
-The reservoir excavation is a single contained worksite.
+The lakebed excavation is a single contained worksite.
 
-- **Surface:** one round meadow opening with grass and flowers, surrounded by permanent
-  non-grass gravel walking ground. Only the existing stores stand around it. No mountains,
-  trees, decorative boulders, streams, lakes, waterfalls or other surrounding scenery.
-- **Dimensions:** `SiteLayout` owns the opening, apron and subsurface allocation. Depth remains
+- **Setting:** the river canyon of the approved Pure Nature 2: Highlands demo, kept close to the
+  demo's terrain and asset placement. The river is widened into a former lake that still holds
+  water along the canyon, with a waterfall at its southern end; a bathtub band marks the old shoreline.
+- **Drained section:** one large exposed section of the lakebed against the east cliff: mud,
+  rubble, stranded boulders and sparse re-growing grass, sloping gently into the remaining water.
+- **Dig area:** one round meadow opening with grass and flowers inside the drained section. A narrow
+  soil rim carrying a continuous border of small stones marks exactly where digging stops; outside
+  it the meadow continues as grass that thins raggedly into the drained mud, with a few larger
+  stones. The stations stand on its south rim, looking north up the canyon.
+- **Play area:** the player stays on the drained section: invisible walls follow its edge at the
+  water line and a flight ceiling stops the jetpack about 16 m above the ground. Scenery that can
+  never be seen from inside this volume is left out.
+- **Dimensions:** `SiteLayout` owns the opening, rim and subsurface allocation. Depth remains
   at least 100 m; the footprint leaves useful lateral room for branches.
-- **Boundary:** the gravel apron cannot be dug from above. The saved rectangular subsurface
-  grid remains accessible beneath it for lateral digging.
+- **Boundary:** the rim and lakebed ground cannot be dug from above. The saved rectangular
+  subsurface grid remains accessible beneath them for lateral digging.
 - **Lighting:** solar-noon presentation with the sun almost directly overhead and short shadows.
-  Use the approved pack sky; custom sun/cloud artwork is retired.
+  Use the Highlands demo's sky, ambient colour, sun colour and baked canyon reflections; custom
+  sun/cloud artwork is retired.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
 - **No pre-existing caves or tunnels:** every opening in the ground is one the player made.
 
@@ -35,8 +45,9 @@ Permanent boundaries must look categorically different from any diggable materia
 - **Sides:** concrete retaining walls, dam infrastructure, steel pilings — industrial, cracked,
   obviously not soil.
 - **Bottom:** solid bedrock shelf.
-- **One edge:** natural bedrock shelf. No water, no swimming, no flooding — the drained
-  reservoir's edge reads as ground meeting stone, with no fake-water interaction problems.
+- **Surface edge:** the drained lakebed, canyon cliffs and remaining lake frame the dig area.
+  No swimming or flooding: the play area ends at the water line, the lake is never a hazard, and water
+  never enters the excavation.
 
 Rule: never use the same material look for "tough but diggable" and "eternal wall". Players must
 know at a glance what will eventually yield. If the buried-structure direction is used, it is never

@@ -62,10 +62,17 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 - Keep vendor paths/GUIDs stable. Use material copies or prefab variants in `Assets/Content` for game tuning; apply publisher updates separately and check the local `art/pure-nature-mountains/README.md` patch note after reimporting.
 - `Tools > Something Down There > Configure Approved Surface Grass` rebinds grass and required URP settings. The existing renderer owns soil support/culling; BK's environment manager owns wind globals with all lighting overrides disabled. Validate excavation, restored terrain, shaders and the Windows player after updates.
 - Keep demo scenes available as references; the build includes MainGame and its dependencies. Purchased surface shaders need explicit integration before use as underground finds with excavation darkness.
-- Open `Assets/Scenes/MainGame.unity` to author the playable scene. It contains the excavation and shared sell/upgrade computer; the user now designs the surroundings manually. Keep `MainGameRoot`'s player, camera, excavation, computer and save references intact.
+- Open `Assets/Scenes/MainGame.unity` to author the playable scene. It contains the excavation, stations and the generated Highlands lakebed (see below). Keep `MainGameRoot`'s player, camera, excavation, computer and save references intact.
 - The original `Assets/BK` demo is available as a reference. Duplicate vendor assets into project-owned folders before editing shared data.
 - Terrain and Terrain Physics modules remain available for manual terrain work. Keep new TerrainColliders outside the excavation opening so they cannot cap digging.
 - `Tools > Something Down There > Build Windows Player` always builds MainGame regardless of the active Editor scene.
+
+## Lakebed site
+
+- `Tools > Something Down There > Configure Lakebed Excavation Site` regenerates `MainGameRoot/Environment`, `Surface/Excavation rim` and the camp placement from the unmodified Highlands demo (`LakebedSiteSetup`). It replaces earlier environment edits, so tune the recipe constants rather than hand-editing generated objects. It opens the demo additively; discard the vendor auto-upgrade diffs it leaves (URP asset, two particle materials).
+- Generated assets live in `Assets/Content/Lakebed`; the binary `LakebedTerrain.asset` (~60 MB) is stored in Git LFS. Vendor scenery stays prefab instances with the demo's overrides.
+- The terrain has a hole under the rim collar; keep any new TerrainCollider or scenery out of the 24 m dig column. `MainGameSceneTests` checks the rim, terrain hole, column clearance, water, probe, play-area bounds and station support.
+- The play area (walls + flight ceiling, Ignore Raycast layer) is generated from the drained-section outline. Setup then removes scenery and terrain trees that no viewpoint inside it can see; rerun setup after changing the outline, ceiling or window, otherwise newly visible gaps can appear.
 
 ## Surface computer
 

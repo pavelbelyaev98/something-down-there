@@ -274,6 +274,29 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
+        public void PlayerStaysOnTheDrainedSectionAndBelowTheFlightCeiling()
+        {
+            var bounds = scene.GetRootGameObjects()[0].transform.Find("Environment/Play area bounds");
+            var walls = bounds.Cast<Transform>().Where(w => w.name.StartsWith("Wall")).Select(w => new Vector2(w.position.x, w.position.z)).ToArray();
+            float feetCeiling = bounds.Find("Flight ceiling").GetComponent<Collider>().bounds.min.y - 1.9f;
+            PlacePlayer(new Vector3(0, .2f, -17));
+            for (int i = 0; i < 900; i++)
+            {
+                player.Battery.Recharge();
+                player.Tick(new FpsInputFrame { Move = Vector2.left, JetpackHeld = true }, 1f / 60f);
+            }
+            var position = new Vector2(player.transform.position.x, player.transform.position.z);
+            bool inside = false;
+            for (int i = 0, j = walls.Length - 1; i < walls.Length; j = i++)
+                if ((walls[i].y > position.y) != (walls[j].y > position.y)
+                    && position.x < (walls[j].x - walls[i].x) * (position.y - walls[i].y) / (walls[j].y - walls[i].y) + walls[i].x)
+                    inside = !inside;
+            Assert.That(inside, Is.True, "Invisible walls keep the player on the drained lakebed.");
+            Assert.That(walls.Min(w => Vector2.Distance(w, position)), Is.LessThan(3f), "The walk reached the western wall.");
+            Assert.That(player.transform.position.y, Is.InRange(feetCeiling - 1, feetCeiling + .1f), "The jetpack stops at the flight ceiling.");
+        }
+
+        [Test]
         public void LargeRepeatedCutsExposeButNeverRemoveFloorOrSideBoundaries()
         {
             terrain.DigRadius = 4;
@@ -629,7 +652,8 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.Revision, Is.Zero);
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(Hit(new Vector3(0, 2, 0), Vector3.down).point.y, Is.EqualTo(0).Within(0.001f));
-            Assert.That(player.transform.position.z, Is.LessThan(-12));
+            var anchor = scene.GetRootGameObjects()[0].transform.Find("Surface/ReturnAnchor").position;
+            Assert.That(Vector2.Distance(new Vector2(player.transform.position.x, player.transform.position.z), new Vector2(anchor.x, anchor.z)), Is.LessThan(1f));
             Assert.That(player.Battery.Charge, Is.EqualTo(100));
             Assert.That(player.EffectiveShovelLevel, Is.EqualTo(3));
             Assert.That(player.Shovel.Level, Is.EqualTo(1));
@@ -763,7 +787,7 @@ namespace SomethingDownThere.Tests
             {
                 var bounds = root.Find("Bedrock/" + side).GetComponent<Collider>().bounds;
                 Assert.That(bounds.min.y, Is.EqualTo(-SiteLayout.Extent.y).Within(.001f));
-                Assert.That(bounds.max.y, Is.EqualTo(SiteLayout.ApronBottom).Within(.001f));
+                Assert.That(bounds.max.y, Is.EqualTo(SiteLayout.RimBottom).Within(.001f));
             }
             var timer = System.Diagnostics.Stopwatch.StartNew();
             var snapshot = terrain.Capture(); timer.Stop();
@@ -838,7 +862,8 @@ namespace SomethingDownThere.Tests
         {
             var motor = player.GetComponent<CharacterController>();
             motor.enabled = false;
-            player.transform.position = position;
+            // Fixture moves are relative to +z, independent of the authored spawn heading.
+            player.transform.SetPositionAndRotation(position, Quaternion.identity);
             motor.enabled = true;
             Physics.SyncTransforms();
         }

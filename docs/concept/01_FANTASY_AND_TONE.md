@@ -2,13 +2,13 @@
 
 ## 1. The setting
 
-A **drained river-fed reservoir** in a fictional country somewhere in Eastern Europe. The water
-level fell — a dam release plus a dry season — exposing a vast muddy floor between concrete retaining
-walls, leftover waterworks and the reservoir's drowned shore. Among the first things found on the
-exposed bed: bones. Old bones. Valuable-looking things. The news reported it.
+A **drained highland lake** in a fictional country somewhere in Eastern Europe. A river once
+widened into a lake between canyon cliffs; the water level fell and one large section of the
+lakebed dried out, exposing a muddy floor below the old shoreline. Among the first things found on
+the exposed bed: bones. Old bones. Valuable-looking things. The news reported it.
 
-The site is believable as a place people once cared about and then forgot: waterline stains,
-rusted ladders, valve houses, cracked concrete, stranded river junk. The excavation happens in the
+The site is believable as a place people once cared about and then forgot: waterline stains on the
+cliffs, stranded boulders, old waterworks and river junk in the mud. The excavation happens in the
 open air, in daylight, with the sky visible above the hole.
 
 **A buried place with a history**: drowned workshops, household remains and old waterworks.

@@ -25,7 +25,7 @@ namespace SomethingDownThere.Editor
             {
                 anchor = new GameObject("ComputerStation").transform;
                 anchor.SetParent(surface, false);
-                anchor.localPosition = new Vector3(-3, SiteLayout.ApronTop, -14);
+                anchor.localPosition = LakebedSiteSetup.Camp(new Vector3(-3, 0, -14));
                 Undo.RegisterCreatedObjectUndo(anchor.gameObject, "Install surface computer");
             }
             var previous = anchor.Find("Station visual");

@@ -31,6 +31,8 @@ namespace SomethingDownThere.Tests
             var root = scene.GetRootGameObjects()[0];
             terrain = root.GetComponentInChildren<TerrainVolume>(); field = root.GetComponentInChildren<DiscoveryField>();
             player = root.GetComponentInChildren<FpsPlayer>(); player.enabled = false; player.SetApplicationFocus(true);
+            // Aim helpers turn the player toward +z targets; start from that heading, not the authored spawn.
+            player.transform.rotation = Quaternion.identity;
             if (player.IsMenuOpen) player.CloseMenu();
             yield return null; // Let generation finish before restoring the compact fixture.
             TestInputPreferences.RestoreSmallFindFixture(field);

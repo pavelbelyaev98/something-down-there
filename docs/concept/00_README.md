@@ -5,7 +5,7 @@ undecided choices are collected in [Open Questions](13_OPEN_QUESTIONS.md).
 
 ## The game in one paragraph
 
-A first-person excavation game. You arrive at a drained river-fed reservoir in a fictional
+A first-person excavation game. You arrive at a drained highland lake in a fictional
 Eastern-European country after seeing a news story about valuables and bones exposed by falling
 water, and you conclude — reasonably — that there must be more down there. You dig a free-form voxel
 hole with one evolving, increasingly ridiculous machine, follow silent detector cues toward buried

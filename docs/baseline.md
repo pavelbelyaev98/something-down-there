@@ -45,16 +45,30 @@
 - **Resolution:** rendering is fixed at 100%, with no scale control or stored scale preference. Borderless startup and switching use the current monitor's desktop resolution and aspect ratio; its resolution row reads Desktop. Fullscreen/windowed modes retain supported output choices, including 4K and higher, with timed Keep/Revert confirmation.
 - **Graphics settings:** sun shadows (Off/Low/Medium/High), MSAA, texture mip quality and anisotropic filtering apply immediately and persist as device preferences. Defaults and Graphics reset use High sun shadows, 4× MSAA, full-resolution textures and High filtering. Optional sun shadows use the runtime URP clone and sun light; local lamp occlusion and the excavation daylight field remain active at every quality level.
 - **Computer screens:** selling and upgrades share the existing fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`) — money-only header, categories in their own columns, one clickable row per upgrade track, refill service or carried find. One click buys; nothing is selected first and nothing resizes.
-- **Round worksite:** `RoundSiteSetup` authors a circular meadow opening and permanent dry-gravel
-  walking apron with the shared computer. Valley scenery and generated terrain are removed.
-  The voxel grid extends beneath the apron for lateral digging.
+- **Drained lakebed site:** `LakebedSiteSetup` regenerates the surroundings from a 1000 m window
+  of the Pure Nature 2: Highlands demo's river canyon: demo terrain, cliffs, peaks, boulders,
+  rubble, ruins, trees, rivers and waterfall as vendor prefab instances. The canyon floor is
+  flooded into a widened lake with an exposed bathtub band; one drained mud section on the east
+  shelf holds the round meadow opening. A terrain hole under a narrow soil collar
+  (`Surface/Excavation rim`, the dig meadow's own material) keeps an exact circular edge and a closed
+  roof above the grid corners, which stay reachable for lateral digging. One merged mesh of small
+  pebbles borders the circle; a tinted copy of the Highlands grass layer and sparse terrain grass
+  fade from the rim into the mud, with a few larger stones. One generated lake surface replaces the
+  demo's sea-level planes and never crosses the dig column; the demo's baked box-projected probe
+  lights the water. Walls and a 16 m flight ceiling on the Ignore Raycast layer keep the player on
+  the drained section; scenery objects and terrain trees unseen from that volume are removed at
+  setup (ID-colour renders plus terrain line-of-sight). Scenery reports the permanent-boundary
+  prompt; terrain shadow casting is off because its casters ignore holes, and pixel error is 3.
+  The computer, recharge, return anchor, winch, pads and stands keep their tested cluster on the
+  south rim, lifted onto the lakebed ground; the spawn looks north up the canyon over the opening.
 - **Meadow and soil:** eleven pack grass/flower/fern layers, seeded in change-driven instanced
   batches. Root support removes uprooted plants; a change-driven surface-density mask clips
   wind-displaced foliage over openings without clearing intact neighbours. The project grass
    shader also clips the round perimeter. Pack turf uses continuous top projection and a soft,
    textured soil transition; noon shadow bias prevents a tessellated self-shadow rim. Pack soil covers the top layer; compacted clay and fractured rock use separate approved texture/normal sets below it. Custom soil art/materials remain stored but unbound. Linear masks,
   preserved alpha, normal-map imports and the dry smoothness cap prevent white glare.
-- **Presentation:** approved pack sky and almost overhead midday sunlight; custom grass, clouds,
+- **Presentation:** the Highlands demo's sky, flat ambient, warm sun colour and exponential haze,
+  a 3 km camera range and almost overhead midday sunlight; custom grass, clouds,
   sun and trial-tool art/imports are deleted. No first-person rig is present; the shaving/scoop
   transition follows the tool level, with a comparison override in development admin. The full licensed vendor pack remains available.
   The project color profile preserves the vivid ACES grade, warm soil and rich surface colors.
