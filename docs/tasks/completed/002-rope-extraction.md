@@ -1,6 +1,6 @@
 # 002 — Hold-to-Mark Rope Extraction
 
-> Exposure-ready finds use held Interact to dispatch a guided rope through excavated air. A spring connection pulls the dynamic load with reusable local clearance, compiled terrain/exposure calculations and bounded route planning; swing, rotation, blocking-find release and whole-world checkpoints preserve physical recovery.
+> **Complete and accepted for v1:** exposure-ready finds use held Interact to dispatch a physically simulated cable through excavated air and recover the whole load automatically. Persistent jams build stronger pull and chip actual retaining contacts into a physical surge with debris; there is no manual clearance or retry state.
 
 ## Objective and scope
 
@@ -130,7 +130,7 @@ Job phases: `Planning → Deploying → Attaching → Hauling → Delivering →
 ## Physics recovery iteration
 
 - Replace the original kinematic, fixed-orientation haul with a dynamic payload and spring connection to a guided winch point. The earlier kinematic choice is superseded. Preserve the accepted route bends; do not teleport the load or overwrite its rotation.
-- Clear only the current and predicted rotating hull through the shared terrain path before each physics step. Permanent colliders remain physical obstacles; persistent stalls pause for retry.
+- Superseded clearance attempt: pre-clearing the predicted rotating hull avoids jams but removes dirt before contact. The contact-first iteration below replaces this behavior. Permanent colliders remain physical obstacles; persistent stalls pause for retry.
 - Uncovered unique finds use ordinary release/gravity before marking. The winch temporarily secures a mark during deployment, owns dynamics once attached, and secures the final physical resting pose at the receiving pad.
 - Pause and restore retain linear/angular motion alongside guide progress and the actual find pose. Save validation permits bounded rope stretch rather than requiring an exact rail pose; only the current save format is supported.
 - Verify falling before marking, rotation and contacts during a bent haul, no soil edits on pause, mid-haul velocity/pose restore, pad arrival and one exhibit identity.
@@ -139,7 +139,7 @@ Job phases: `Planning → Deploying → Attaching → Hauling → Delivering →
 ## Wedged-load clearance correction
 
 - The reproduced stall had a tilted payload pinned between partly buried, kinematic coal pieces. Velocity-only prediction repeatedly recut the same cavity once motion stopped.
-- Clearance follows the intended pull as well as actual velocity, includes voxel mesh tolerance, and locally frees soil around common finds in direct contact with the current or predicted payload. Ordinary support/release rules then make those finds dynamic; no finds are deleted or collected by the winch.
+- Superseded clearance attempt: following the intended pull and padded rotating hull frees wedges but cuts ground too eagerly. Keep blocking-common release through ordinary support rules, now gated by sustained actual contact; no finds are deleted or collected by the winch.
 - Keep actual rigid-body rotation, the accepted tunnel route, permanent obstacle blocking and checkpoint ownership. Verify the copied stalled world with its real surrounding population as well as populated angled-passage regression coverage.
 - Verification: populated angled, top/side attachment and ordinary release-threshold checks pass. Retrying the copied stalled player checkpoint reaches the pad with the same unique identity and unchanged population size. The Windows player is rebuilt; the current save format is unchanged, and already-paused jobs use the existing Interact retry.
 
@@ -161,3 +161,46 @@ Job phases: `Planning → Deploying → Attaching → Hauling → Delivering →
 - Acceptance: check peak and p99 frames during the same populated, normal-rendering ascent; verify density interpolation/ghost rows, winding/seam normals, same-stroke collider updates, player digging, physical recovery and save/load. Keep current saves and all find identities intact.
 - Verification: the copied populated ascent with X-ray off, fixed camera, 1080p and the same device cap improves p99 from 26.7 to 13.6 ms and peak from 66.5 to 29.2 ms; frames above 16.7 ms fall from 64 to 3. The first pull retains a smaller one-off spike. Storage identity, population and removed volume match the original replay. This measures the local machine, not minimum-hardware qualification.
 - All EditMode tests and focused terrain, discovery, physical recovery and release/wake PlayMode checks pass. The fresh Windows player includes the compiled native jobs and passes MainGame build validation with no script warnings or errors; its only build warning is the existing optional disabled Pipeline runtime connection.
+
+## Contact-first recovery iteration
+
+- Goal: let the load swing, slide and turn through normal collision response before breaking soil. No predicted or padded hull may authorize excavation.
+- `FindPhysics` forwards actual collision contacts while the winch owns the body. `SalvageWinch` consumes fresh contacts once per physics step, rejects separated/speculative contacts, and measures sustained tension without useful translation or rotation. Losing contact, making progress, pausing or restoring resets the pressure interval.
+- After a persistent jam, remove one bounded patch at the blocking terrain contact through the existing synchronous density/mesh/collision commit. A directly blocking common may instead have its own retaining soil loosened. Prefer buried side blockers over already loose rocks resting on the load; moving rocks get time to move away. Resume physical pulling and require a fresh interval before another break.
+- Treat alternating contacts in a stationary pile as one continuous jam. If an already freed rock has no soil left to remove, try another actual contact within the same bounded attempt; stop after the first committed edit. Never widen the payload's predicted route or erase an unrelated neighbour to guarantee progress.
+- Preserve route bends, physical pad arrival, static obstruction/retry, save ownership and the existing frame budgets. Remove the superseded clearance cache; no new save fields or compatibility paths.
+- Acceptance: nearby free swings, brief touches and successful sliding remove no dirt; a sustained terrain jam breaks locally after a visible delay; a permanent obstacle stays intact. Bent and populated recovery, pause/resume and mid-haul reload still finish with the same unique and all neighbouring finds. Verify live gameplay and rebuild Windows.
+- Verification: all five recovery cases, fifteen extraction/route/save cases and the focused soil-release and settle/wake regressions pass. A disposable MainGame review shows free travel with no cuts, sustained roof contact before the first small break, and a fresh pressure interval afterward. The broader find-physics suite was cancelled after it stopped progressing; it is not counted as passed.
+- Script compilation and MainGame build validation pass; the fresh Windows player builds with zero errors and only the existing optional Pipeline runtime warning. No player checkpoint or recovery scene is changed.
+
+## Tension and release iteration
+
+- Increase normal hauling pace and shorten the blocked-contact interval. Build spring strength through that interval, retain it at soil release, and ease back to normal so the off-centre attachment produces physical acceleration and swing. Do not assign a recoil velocity or move the body directly.
+- Keep real contact, useful-progress resets, one local break per pressure interval, bounded speed, route bends and permanent obstacles. Pause, restore and rig replacement discard transient extra tension; existing pose and velocity checkpoints retain motion without new save fields.
+- Acceptance: force grows before breakage, free travel has no extra force, release preserves the body pose/velocity until physics advances, and the released spring accelerates the load. Brief touches, populated/bent routes, pause/reload and pad delivery retain their existing checks. Verify live recoil and rebuild Windows.
+- Verification: recovery checks and extraction/route/save tests pass. A disposable MainGame review confirms increasing pull during contact, small local breaks, and immediate physical acceleration and rotation as retaining soil gives way. Script compilation and MainGame validation pass; the rebuilt Windows player has no errors and only the existing optional Pipeline runtime warning.
+
+## Loaded reel speed and soil feedback
+
+- The earlier stiffness ramp left guide speed constant and repeated a full wait after every chip. Drive reel speed, allowed stretch and the bounded load-speed ceiling from the same contact-built charge, carry that charge into release, then ease back to cruise. Keep ordinary lowering speed at the pad and preserve bend guards.
+- Shorten the first blocked-contact attempt and use a shorter retry when a break leaves the same load wedged. Useful progress, lost contact, pause or rig replacement ends that continuing jam. Keep actual-contact authorization, local patches and one committed terrain edit per attempt.
+- Warm bounded crumb/dust particle pools at startup, emit only after changed density, and clear them on world/job restore. Use project-authored shader silhouettes and serialized material references; no external content, rigid-body debris, particle collision, extra lights or per-break objects. Intensity is authored in the winch settings.
+- Acceptance: actual reeling speeds up before breakage and the released body exceeds cruise speed through physics; continued wedging retries sooner without cutting during free swings or brief contact. Debris appears at real breaks and remains readable and bounded. Preserve populated/bent routes, static blocking, pause/reload and pad delivery; verify in MainGame and rebuild Windows.
+- Verification: recovery and extraction/route/save tests pass, including actual guide acceleration, a physical release above cruising speed, and debris emission only after a real edit. MainGame review confirms faster continued-contact retries and bounded, visible crumb bursts. Scripts and shader compile cleanly; MainGame validation and the fresh Windows build pass with only the existing optional Pipeline runtime warning.
+
+## Dynamic cable iteration
+
+- Replace the route-vertex line with a bounded position-based particle rope. Gravity, retained velocity, distance/reach constraints and real terrain/scene contacts determine its intermediate shape; only the rim and hook/load attachments are prescribed. Seed from the existing excavated route once, then preserve the live curve and velocity while changing resolution during payout/reeling.
+- `WinchRopeView` owns collision queries, interpolation and hook alignment; `RopeDynamics` owns integration and constraints. Density projection tracks fresh digging and segment-midpoint checks protect tunnel lips. Rope contact never excavates; existing payload contact rules remain the sole break authorization.
+- Keep the working load spring, burst, local break effects and checkpoint ownership. The cable follows the physical load endpoint; it does not replace the load solver with a chain of PhysX bodies. Transient cable oscillation is reconstructed from the accepted route on load; pause freezes its simulation.
+- Acceptance: slack sags, reeling straightens it, endpoint motion leaves continued interior motion, and removing ground support lets it fall. Bent recovery keeps rope particles outside soil, pause freezes them, and reload/delivery preserve the unique. Bound particle/query work, inspect its timing and visible motion in MainGame, and rebuild Windows.
+- Verification: rope-dynamics tests and all recovery cases pass, including tunnel clearance and pause/reload. MainGame review shows gravity sag, continued swing after the endpoint stops, and straightening under tension; tested recovery simulation averages roughly a fraction of a millisecond per physics step on the local machine. Script compilation and MainGame validation pass; the rebuilt Windows player has no errors and only the existing optional Pipeline runtime warning.
+
+## Automatic jam recovery
+
+- Supersede the manual obstruction/retry policy above: a marked load never freezes and asks the player to clear it. `Retensioning` is an active physics phase that builds stronger spring force during persistent lack of forward progress, preserves it through release and resumes automatically from a checkpoint. Remove the retry interaction and hard stall timeout.
+- Keep the accepted route and physical attachment. A guide stalled at a bend may reel into the next span; it never teleports the payload. Reuse ordinary find collision-mode hysteresis so slow contacts are exact while fast motion retains continuous collision protection.
+- Measure useful progress toward the guide; sideways rocking alone cannot restart the contact timer. A permanent contact cannot veto an actual soil contact. Pinned common finds remain eligible even while jittering; one bounded committed edit and pooled debris still require sustained real contact.
+- The copied player checkpoint exposes a mounted work lamp wedged against the computer. Portable lamps are no longer permanent planner obstacles: sustained payload contact releases their mount through `WorkLamp`, preserving the physical lamp and kit slot without inventing a soil edit or dust burst.
+- Acceptance: a sustained jam increases force beyond ordinary chipping, reload resumes without input, brief/free contact never excavates, and the copied stalled populated checkpoint reaches storage autonomously. Preserve permanent geometry, identity, pause, physical recoil, rope cost and pad delivery; rebuild Windows.
+- Verification: recovery, extraction/save and lamp support/retrieval checks pass. The copied player checkpoint resumes directly, releases its blocking lamp and reaches the pad under normal fixed-step physics without input, preserving every find identity and the lamp slot. MainGame review, clean script compilation and build validation pass; the fresh Windows player has no errors and only the existing optional disabled Pipeline runtime warning.

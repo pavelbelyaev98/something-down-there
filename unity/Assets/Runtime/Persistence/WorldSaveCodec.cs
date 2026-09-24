@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 9;
+        public const int Version = 10;
         // The packed payload is a few MB even for a carved 100 m world; the unpacked
         // bound covers the 24 x 100 x 24 m density plus headroom for the planned 200 m
         // step. The sample bound is the real allocation guard while reading.
@@ -59,6 +59,16 @@ namespace SomethingDownThere
                     foreach(var point in e.Route) Write(w,point);
                     Write(w,e.LinearVelocity); Write(w,e.AngularVelocity);
                 }
+                w.Write(s.Worksite.Lamps.Length);
+                foreach (var lamp in s.Worksite.Lamps)
+                {
+                    w.Write(lamp.Slot); Write(w, lamp.Position); Write(w, lamp.Rotation); w.Write(lamp.Anchored);
+                    Write(w, lamp.SupportPoint); Write(w, lamp.SupportNormal);
+                    Write(w, lamp.LinearVelocity); Write(w, lamp.AngularVelocity);
+                }
+                w.Write(s.Worksite.Marks.Length);
+                foreach (var mark in s.Worksite.Marks)
+                { w.Write((byte)mark.Kind); Write(w, mark.Position); Write(w, mark.Rotation); }
             }
             using var hash = SHA256.Create();
             byte[] payload = packed.ToArray();
@@ -121,6 +131,14 @@ namespace SomethingDownThere
                 e.LinearVelocity=ReadVector(r); e.AngularVelocity=ReadVector(r);
                 s.Extraction=e;
             }
+            s.Worksite.Lamps = new LampSnapshot[Count(r, WorksiteTools.LampCapacity)];
+            for (int i = 0; i < s.Worksite.Lamps.Length; i++)
+                s.Worksite.Lamps[i] = new LampSnapshot { Slot = r.ReadInt32(), Position = ReadVector(r), Rotation = ReadRotation(r),
+                    Anchored = r.ReadBoolean(), SupportPoint = ReadVector(r), SupportNormal = ReadVector(r),
+                    LinearVelocity = ReadVector(r), AngularVelocity = ReadVector(r) };
+            s.Worksite.Marks = new MarkSnapshot[Count(r, WorksiteTools.MaximumMarks)];
+            for (int i = 0; i < s.Worksite.Marks.Length; i++)
+                s.Worksite.Marks[i] = new MarkSnapshot { Kind = (WorldMarkKind)r.ReadByte(), Position = ReadVector(r), Rotation = ReadRotation(r) };
             WorldSnapshot.Require(zip.ReadByte() == -1, "Unexpected checkpoint fields.");
             s.Validate();
             return s;

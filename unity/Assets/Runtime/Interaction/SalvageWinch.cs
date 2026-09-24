@@ -27,16 +27,17 @@ namespace SomethingDownThere
         public ExtractionSnapshot Capture() { CaptureMotion(); return job?.Copy(); }
         public bool Busy => job!=null;
         public bool Configured => terrain!=null && discoveries!=null && player!=null && settings!=null && settings.Valid
-            && liftAnchor!=null && padAnchor!=null && ropeView!=null && ropeView.Configured && displayStand!=null && displayStand.Configured;
+            && liftAnchor!=null && padAnchor!=null && ropeView!=null && ropeView.Configured && displayStand!=null && displayStand.Configured
+            && soilChipsMaterial!=null && soilDustMaterial!=null;
         public string Prompt => job==null ? "" : job.Phase switch
         {
             ExtractionPhase.Planning => "Preparing rope route…",
             ExtractionPhase.Deploying => "Rope on its way",
             ExtractionPhase.Attaching => "Attaching rope",
-            ExtractionPhase.Obstructed => $"Recovery paused  |  Clear the obstruction and press {player.InputSettings.Display(PlayerBinding.Interact)} to retry",
+            ExtractionPhase.Retensioning => "Pulling through the obstruction",
             _ => "Hauling to the surface"
         };
-        private void Start() { if(Configured) ropeView.Initialize(terrain); }
+        private void Start() { if(Configured) { ropeView.Initialize(terrain, settings); InitializeBreakFeedback(); } }
         private void FixedUpdate()
         {
             // A slow frame can contain several physics steps. Give planning at
@@ -66,13 +67,6 @@ namespace SomethingDownThere
                 AttachLocal=find.transform.InverseTransformPoint(hit), Outward=terrain.transform.InverseTransformDirection(normal).normalized };
             BeginSearch(); Checkpoint(); return true;
         }
-        public bool Retry(BuriedFind find)
-        {
-            if(job==null || job.Phase!=ExtractionPhase.Obstructed || payload!=find || !player.GameplayActive) return false;
-            ReleaseRig();
-            job.Phase=ExtractionPhase.Planning; job.Route=Array.Empty<Vector3>(); job.Progress=job.PhaseSeconds=0;
-            BeginSearch(); Checkpoint(); return true;
-        }
         private Vector3 AttachWorld => LoadBody.position + Offset;
         private Vector3 Offset => LoadBody.rotation * Vector3.Scale(payload.transform.lossyScale, job.AttachLocal);
         private Vector3 HullHalf => Vector3.Scale(payload.LocalHull.extents,payload.transform.lossyScale);
@@ -92,6 +86,7 @@ namespace SomethingDownThere
         public void Tick(float deltaTime)
         {
             if(job==null || payload==null || !Configured) return;
+            if(!ropeView.Initialized) ropeView.Initialize(terrain, settings);
             if(!player.GameplayActive || terrain.IsRestoring) { SuspendLoad(); return; }
             if(deltaTime<=0 || !float.IsFinite(deltaTime)) return;
             // A hitch cannot bank a large terrain edit or an uncontrolled load jump.
@@ -139,17 +134,19 @@ namespace SomethingDownThere
                     if(job.PhaseSeconds>=settings.AttachSeconds) { job.Attached=true; job.PhaseSeconds=0; SetPhase(ExtractionPhase.Hauling); }
                     break;
                 case ExtractionPhase.Hauling:
+                case ExtractionPhase.Retensioning:
                 case ExtractionPhase.Delivering:
-                    HaulPhysics(dt, job.Phase==ExtractionPhase.Hauling?haulLength:fullLength);
+                    HaulPhysics(dt, job.Phase==ExtractionPhase.Delivering?fullLength:haulLength);
                     break;
             }
+            if (job != null) ropeView.Simulate(dt, payload.HitCollider, tensionCharge);
         }
 
         private void PlanningFailed(string error)
         {
             search=null; planner=null;
-            if(job.Attached) SetPhase(ExtractionPhase.Obstructed);
-            else { payload.Transition(FindState.Extracting,FindState.World); payload.GetComponent<FindPhysics>().Restore(false); job=null; payload=null; Checkpoint(); }
+            payload.Transition(FindState.Extracting,FindState.World);
+            payload.GetComponent<FindPhysics>().Restore(false); job=null; payload=null; Checkpoint();
             player.ShowFeedback(error);
         }
         private void Complete()
@@ -185,6 +182,7 @@ namespace SomethingDownThere
         {
             if(collider.GetComponentInParent<PermanentTerrainBoundary>()!=null) return true;
             if(collider.GetComponentInParent<TerrainVolume>()==terrain || collider.GetComponentInParent<FpsPlayer>()==player) return false;
+            if(collider.GetComponentInParent<WorkLamp>()!=null) return false;
             var find=collider.GetComponentInParent<BuriedFind>();
             if(find!=null) return find!=payload && find.Kind==DiscoveryKind.Unique;
             return true;
@@ -198,7 +196,9 @@ namespace SomethingDownThere
         }
         public void Restore(ExtractionSnapshot snapshot)
         {
+            if(!ropeView.Initialized) ropeView.Initialize(terrain, settings);
             ReleaseRig();
+            ClearBreakFeedback();
             (search as IDisposable)?.Dispose(); search=null; planner=null;
             job=snapshot?.Copy(); payload=job==null?null:discoveries.Find(job.FindId); Revision++;
             ropeView.Hide();

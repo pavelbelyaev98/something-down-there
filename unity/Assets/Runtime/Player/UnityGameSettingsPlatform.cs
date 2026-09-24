@@ -24,6 +24,8 @@ namespace SomethingDownThere
         private readonly int originalVSync, originalFrameLimit, originalTextures;
         private readonly AnisotropicFiltering originalFiltering;
         private readonly float originalVolume;
+        private readonly Light sun;
+        private readonly LightShadows originalSunShadows;
         private DisplaySelection editorDisplay;
         public DisplaySelection CurrentDisplay => Application.isEditor ? editorDisplay
             : new DisplaySelection(Screen.width, Screen.height, Mode(Screen.fullScreenMode));
@@ -48,6 +50,7 @@ namespace SomethingDownThere
             originalVSync = QualitySettings.vSyncCount; originalFrameLimit = Application.targetFrameRate;
             originalTextures = QualitySettings.globalTextureMipmapLimit; originalFiltering = QualitySettings.anisotropicFiltering;
             originalVolume = AudioListener.volume;
+            sun = RenderSettings.sun; originalSunShadows = sun != null ? sun.shadows : LightShadows.None;
             originalPipeline = QualitySettings.renderPipeline;
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset source)
             {
@@ -74,8 +77,11 @@ namespace SomethingDownThere
                 if (!Mathf.Approximately(pipeline.renderScale, 1f)) pipeline.renderScale = 1f;
                 if (pipeline.msaaSampleCount != values.Msaa) pipeline.msaaSampleCount = values.Msaa;
                 int shadows = values.Shadows;
-                pipeline.shadowDistance = shadows == 0 ? 0 : shadows == 3 ? authoredShadowDistance
-                    : Mathf.Min(authoredShadowDistance, shadows == 1 ? 25f : 35f);
+                // Local occlusion is gameplay: a work lamp must not shine through sealed soil.
+                // Only sun shadow quality is optional; reserve the short lamp shadow range.
+                if (sun != null) sun.shadows = shadows == 0 ? LightShadows.None : originalSunShadows;
+                pipeline.shadowDistance = Mathf.Max(WorksiteTools.LightCullDistance + WorksiteTools.LightRange,
+                    shadows == 0 ? 0 : shadows == 3 ? authoredShadowDistance : Mathf.Min(authoredShadowDistance, shadows == 1 ? 25f : 35f));
                 pipeline.mainLightShadowmapResolution = shadows == 3 ? authoredShadowResolution
                     : Mathf.Min(authoredShadowResolution, shadows <= 1 ? 1024 : 2048);
                 pipeline.shadowCascadeCount = shadows == 3 ? authoredShadowCascades
@@ -100,6 +106,7 @@ namespace SomethingDownThere
             QualitySettings.vSyncCount = originalVSync; Application.targetFrameRate = originalFrameLimit;
             QualitySettings.globalTextureMipmapLimit = originalTextures; QualitySettings.anisotropicFiltering = originalFiltering;
             AudioListener.volume = originalVolume;
+            if (sun != null) sun.shadows = originalSunShadows;
             if (pipeline != null)
             {
                 if (QualitySettings.renderPipeline == pipeline) QualitySettings.renderPipeline = originalPipeline;

@@ -7,14 +7,14 @@ using UnityEngine.InputSystem;
 
 namespace SomethingDownThere
 {
-    public enum PlayerBinding { Forward, Backward, Left, Right, Dig, Jump, Crouch, Interact, Inventory, Pause, Sprint, Grab }
+    public enum PlayerBinding { Forward, Backward, Left, Right, Dig, Jump, Crouch, Interact, Inventory, Pause, Sprint, Grab, Lamp, Mark, RotatePlacement }
 
     public sealed class InputPreferences
     {
-        public const int BindingCount = 12;
-        private static readonly string[] ids = { "forward", "backward", "left", "right", "dig", "jump", "crouch", "interact", "inventory", "pause", "sprint", "grab" };
-        private static readonly string[] labels = { "Move forward", "Move backward", "Move left", "Move right", "Dig / collect / throw", "Jump / jetpack", "Hold to crouch", "Interact", "Inventory", "Pause", "Hold to sprint", "Lift / drop find" };
-        private static readonly string[] defaults = { "<Keyboard>/w", "<Keyboard>/s", "<Keyboard>/a", "<Keyboard>/d", "<Mouse>/leftButton", "<Keyboard>/space", "<Keyboard>/leftCtrl", "<Keyboard>/e", "<Keyboard>/tab", "<Keyboard>/escape", "<Keyboard>/leftShift", "<Mouse>/rightButton" };
+        public const int BindingCount = 15;
+        private static readonly string[] ids = { "forward", "backward", "left", "right", "dig", "jump", "crouch", "interact", "inventory", "pause", "sprint", "grab", "lamp", "mark", "rotatePlacement" };
+        private static readonly string[] labels = { "Move forward", "Move backward", "Move left", "Move right", "Dig / collect / place", "Jump / jetpack", "Hold to crouch", "Interact / retrieve", "Inventory", "Pause", "Hold to sprint", "Lift / drop / cancel placement", "Place work lamp", "Mark / next symbol", "Rotate placement" };
+        private static readonly string[] defaults = { "<Keyboard>/w", "<Keyboard>/s", "<Keyboard>/a", "<Keyboard>/d", "<Mouse>/leftButton", "<Keyboard>/space", "<Keyboard>/leftCtrl", "<Keyboard>/e", "<Keyboard>/tab", "<Keyboard>/escape", "<Keyboard>/leftShift", "<Mouse>/rightButton", "<Keyboard>/l", "<Keyboard>/m", "<Keyboard>/r" };
         private static readonly Dictionary<string, string> supportedPaths = CreatePaths();
         private readonly IDevicePreferencesStore store;
         private string[] paths = (string[])defaults.Clone();
@@ -125,26 +125,6 @@ namespace SomethingDownThere
             var used = new HashSet<string>();
             for (int i = 0; i < candidate.Length; i++)
             {
-                // Sprint is an additive v1 field. Keep every binding in older maps;
-                // prefer either Shift, then an unused ordinary key if both are taken.
-                if (i == (int)PlayerBinding.Sprint && !fields.ContainsKey(ids[i]))
-                {
-                    foreach (string key in new[] { "leftShift", "rightShift", "r", "f", "g", "q", "c", "v", "b", "n", "m" })
-                    {
-                        string available = "<Keyboard>/" + key;
-                        if (used.Add(available)) { candidate[i] = available; break; }
-                    }
-                    continue;
-                }
-                if (i == (int)PlayerBinding.Grab && !fields.ContainsKey(ids[i]))
-                {
-                    // Preserve old maps that already used RMB, choosing an unused
-                    // control for the additive action without rewriting the file.
-                    foreach (string available in new[] { "<Mouse>/rightButton", "<Keyboard>/f", "<Keyboard>/g", "<Keyboard>/q", "<Mouse>/middleButton", "<Mouse>/backButton", "<Mouse>/forwardButton", "<Keyboard>/v", "<Keyboard>/b", "<Keyboard>/n", "<Keyboard>/m", "<Keyboard>/p" })
-                        if (used.Add(available)) { candidate[i] = available; break; }
-                    continue;
-                }
-
                 if (!fields.TryGetValue(ids[i], out string path) || !TryNormalize(path, out candidate[i])
                     || !used.Add(candidate[i])) return;
             }

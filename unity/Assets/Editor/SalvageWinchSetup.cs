@@ -54,9 +54,23 @@ namespace SomethingDownThere.Editor
             Set(view,"rope",line); Set(view,"hook",hook);
             Set(winch,"terrain",terrain); Set(winch,"discoveries",field); Set(winch,"player",player); Set(winch,"settings",settings);
             Set(winch,"liftAnchor",lift); Set(winch,"padAnchor",landing); Set(winch,"ropeView",view); Set(winch,"displayStand",display);
+            ConfigureBreakFeedback(winch);
             Set(player,"winch",winch);
             EditorSceneManager.MarkSceneDirty(scene); AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
             Debug.Log("Unique recovery configured in MainGame.");
+        }
+        public static void ConfigureBreakFeedback(SalvageWinch winch)
+        {
+            var shader=Shader.Find("Something Down There/Soil Break");
+            if(shader==null) throw new InvalidOperationException("Missing soil-break shader.");
+            foreach(bool dust in new[]{false,true})
+            {
+                string path=Folder+(dust ? "/SoilDust.mat" : "/SoilCrumbs.mat");
+                var material=AssetDatabase.LoadAssetAtPath<Material>(path);
+                if(material==null) { material=new Material(shader); AssetDatabase.CreateAsset(material,path); }
+                material.SetFloat("_Dust",dust ? 1 : 0); EditorUtility.SetDirty(material);
+                Set(winch,dust ? "soilDustMaterial" : "soilChipsMaterial",material);
+            }
         }
         private static Transform Child(Transform parent,string name)
         {

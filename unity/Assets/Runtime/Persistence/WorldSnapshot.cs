@@ -17,6 +17,7 @@ namespace SomethingDownThere
         public int ExcavationSeed, DiscoverySeed;
         public FindSnapshot[] Finds;
         public ExtractionSnapshot Extraction;
+        public WorksiteSnapshot Worksite = new WorksiteSnapshot();
         public ItemSnapshot[] Inventory;
         public int InventoryCapacity, Credits, ShovelLevel, SuccessfulStrokes;
         public int InventoryLevel = 1, FuelLevel = 1;
@@ -38,6 +39,8 @@ namespace SomethingDownThere
             Require(SiteId == "main-site-v1", "Unknown excavation site.");
             Require(Terrain != null, "Missing excavation.");
             Terrain.Validate();
+            Require(Worksite != null, "Missing worksite equipment.");
+            Worksite.Validate();
             Require(Valid(TerrainPosition) && Valid(TerrainRotation) && Valid(PlayerPosition) && Valid(PlayerRotation), "Invalid world position.");
             Require(Finite(Pitch) && Math.Abs(Pitch) < 90 && Finite(VerticalSpeed), "Invalid player movement.");
             Require(Finite(CrouchAmount) && CrouchAmount >= 0f && CrouchAmount <= 1f, "Invalid saved crouch stance.");

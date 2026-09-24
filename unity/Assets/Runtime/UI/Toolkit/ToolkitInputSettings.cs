@@ -18,7 +18,8 @@ namespace SomethingDownThere
         private readonly PlayerBinding[] displayOrder = {
             PlayerBinding.Forward, PlayerBinding.Backward, PlayerBinding.Left, PlayerBinding.Right,
             PlayerBinding.Sprint, PlayerBinding.Crouch, PlayerBinding.Jump,
-            PlayerBinding.Dig, PlayerBinding.Grab, PlayerBinding.Interact, PlayerBinding.Inventory, PlayerBinding.Pause
+            PlayerBinding.Dig, PlayerBinding.Grab, PlayerBinding.Interact, PlayerBinding.Lamp, PlayerBinding.Mark,
+            PlayerBinding.RotatePlacement, PlayerBinding.Inventory, PlayerBinding.Pause
         };
         private BindingCaptureState displayedState;
         public VisualElement First => mouseRows.First;

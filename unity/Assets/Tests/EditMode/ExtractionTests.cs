@@ -66,59 +66,12 @@ namespace SomethingDownThere.Tests
             Assert.That(grid.LastRemovedVolume, Is.GreaterThan(0));
         }
 
-        [Test]
-        public void CachedClearanceRejectsRotatedCornersAndTranslationEvenAtTheSameCenter()
-        {
-            var center=new Vector3(3,2,1);
-            var rotation=Quaternion.Euler(17,31,12);
-            var outer=new ExcavationGrid.SweptBox(center,center,rotation,new Vector3(1,.5f,.25f));
-            var half=new Vector3(.85f,.4f,.15f);
-            Assert.That(outer.Contains(new ExcavationGrid.SweptBox(center,center,rotation,half)),Is.True);
-            Assert.That(outer.Contains(new ExcavationGrid.SweptBox(center,center,
-                rotation*Quaternion.Euler(0,20,0),half)),Is.False,"The center fits but the rotating long edge does not.");
-            Assert.That(outer.Contains(new ExcavationGrid.SweptBox(center,center+rotation*Vector3.right*.2f,
-                rotation,half)),Is.False,"The whole sweep must fit, including its far endpoint.");
-        }
-
-        [Test]
-        public void ReusingOneCellOfClearanceReducesCutsWhileEveryMovingHullCornerStaysClear()
-        {
-            var grid=new ExcavationGrid(new Vector3Int(64,48,48),.125f);
-            var cleared=default(ExcavationGrid.SweptBox);
-            int cuts=0;
-            for(int step=0;step<80;step++)
-            {
-                var from=new Vector3(2+step*.025f,3,3);
-                var to=from+new Vector3(.05f,.02f,0);
-                var rotation=Quaternion.Euler(15,step*.4f,8);
-                var half=new Vector3(.35f,.3f,.24f);
-                // Match the production separation between the real hull and its
-                // clearance envelope: interpolation can round an SDF box corner.
-                var clearance=half+Vector3.one*grid.CellSize*2;
-                var required=new ExcavationGrid.SweptBox(from,to,rotation,clearance);
-                if(cuts==0 || !cleared.Contains(required))
-                {
-                    cleared=new ExcavationGrid.SweptBox(from,to,rotation,clearance+Vector3.one*grid.CellSize);
-                    Assert.That(grid.RemoveBoxSweep(from,to,rotation,clearance+Vector3.one*grid.CellSize,out _),Is.True);
-                    cuts++;
-                }
-                for(int endpoint=0;endpoint<2;endpoint++)
-                for(int corner=0;corner<8;corner++)
-                {
-                    var sign=new Vector3((corner&1)==0?-1:1,(corner&2)==0?-1:1,(corner&4)==0?-1:1);
-                    var point=(endpoint==0?from:to)+rotation*Vector3.Scale(half,sign);
-                    Assert.That(grid.Sample(point),Is.LessThanOrEqualTo(0),$"Pose {step}, corner {corner}");
-                }
-            }
-            Assert.That(cuts,Is.LessThan(27),"Slow travel must not remesh at the physics rate.");
-        }
-
         [TestCase(ExtractionPhase.Planning)]
         [TestCase(ExtractionPhase.Deploying)]
         [TestCase(ExtractionPhase.Attaching)]
         [TestCase(ExtractionPhase.Hauling)]
         [TestCase(ExtractionPhase.Delivering)]
-        [TestCase(ExtractionPhase.Obstructed)]
+        [TestCase(ExtractionPhase.Retensioning)]
         public void JobAndSingleOwnerRoundTripTogether(ExtractionPhase phase)
         {
             var state = Snapshot();

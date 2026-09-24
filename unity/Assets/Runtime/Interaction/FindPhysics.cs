@@ -24,6 +24,7 @@ namespace SomethingDownThere
         public bool Held { get; private set; }
         public float ThrowSpeed => Mathf.Clamp(throwSpeed, 1f, 12f);
         public Rigidbody Body => body;
+        internal event System.Action<Collision> RecoveryContact;
 
         public void Initialize(TerrainVolume owner, DiscoveryField population)
         {
@@ -222,8 +223,13 @@ namespace SomethingDownThere
             return target;
         }
 
+        private void OnCollisionEnter(Collision collision) => RecoveryContact?.Invoke(collision);
+
         private void OnCollisionStay(Collision collision)
         {
+            // Unity sends contact callbacks even while normal find motion is
+            // disabled for recovery. The winch, not this component, owns the pull.
+            RecoveryContact?.Invoke(collision);
             if (Held || !Released) return;
             var supportBody = collision.rigidbody;
             if (supportBody != null && (supportBody.linearVelocity.sqrMagnitude > .0025f
@@ -239,7 +245,7 @@ namespace SomethingDownThere
 
         private void ResetSettling() { quietSeconds = 0; supported = false; }
 
-        private void UpdateCollisionMode()
+        internal void UpdateCollisionMode()
         {
             // Speculative CCD adds distant predicted contacts on the irregular hull.
             // Near rest those contacts can sustain rocking instead of letting it sleep.

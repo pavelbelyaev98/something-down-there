@@ -58,7 +58,7 @@ namespace SomethingDownThere
 
         private void BuildGraphics()
         {
-            rows.Choice("shadows", "Shadows", new[] { "Off", "Low", "Medium", "High" }, () => settings.Values.Shadows,
+            rows.Choice("shadows", "Sun shadows", new[] { "Off", "Low", "Medium", "High" }, () => settings.Values.Shadows,
                 index => settings.Edit(v => v.Shadows = index), () => settings.RenderingAvailable);
             int[] samples = { 1, 2, 4, 8 };
             rows.Choice("antiAliasing", "Anti-aliasing", new[] { "Off", "2×", "4×", "8×" },

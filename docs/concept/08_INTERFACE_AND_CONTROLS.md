@@ -10,6 +10,7 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Bag** | Count / capacity; turns a warning color as it fills |
 | **Battery** | Current charge; the shared dig + jetpack resource |
 | **Return warning** | Adaptive safe / risky / critical estimate based on depth and ascent energy |
+| **Lamp kit** | Available reusable lamps, with a compact placement shortcut |
 | **Detector** | Diegetic tool reaction plus a subtle screen-edge direction hint; silent by default (optional accessibility audio toggle available) |
 
 Not on the HUD: minimap, compass, ore counters, objective list, damage numbers, news ticker, or any
@@ -44,6 +45,9 @@ persist immediately and across launches.
 | Jetpack | Space / A or bumper | Simple input; stable handling; rebindable |
 | Crouch (precision) | Ctrl / stick click | Held; no stealth or stamina |
 | Interact (machines, placement, extraction marking) | E / face button | Tap for machines/placement; hold on any visible part of an exposure-ready rope target to mark it |
+| Work lamp | L | Preview; primary places, secondary cancels, Interact retrieves |
+| World marking | M | Preview arrow/home/return-here; repeat to change symbol, Interact erases |
+| Rotate placement | R | Rotate the current lamp or marking preview |
 | C4: throw / detonate | Rebindable pair | Multiple charges; remote detonation |
 | Photo mode | Rebindable | Pause-only |
 
@@ -100,10 +104,11 @@ without cinematic bars. Borderless always follows the monitor; manual output-res
 belong to fullscreen and windowed modes. Their display list includes reported 4K and higher modes,
 even if the desktop is currently set lower. Display changes retain timed Keep/Revert confirmation.
 
-Graphics exposes shadow quality (including Off), anti-aliasing, texture quality and texture filtering,
-with a category reset. Default to Medium shadows, 2× anti-aliasing, full-resolution textures and High
+Graphics exposes sun-shadow quality (including Off), anti-aliasing, texture quality and texture filtering,
+with a category reset. Default to High shadows, 4× anti-aliasing, full-resolution textures and High
 texture filtering, keeping the existing frame cap. Lower graphics settings affect presentation only;
-they never reduce finds, physics accuracy, or the darkness of deep tunnels. Texture options apply
+they never reduce finds, physics accuracy, or the darkness of deep tunnels. Lamp occlusion remains
+active even with sun shadows disabled so light cannot pass through sealed ground. Texture options apply
 to replacement mipmapped assets through the renderer. Grass-specific controls follow the chosen
 grass implementation.
 

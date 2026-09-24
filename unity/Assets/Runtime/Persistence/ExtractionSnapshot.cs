@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    public enum ExtractionPhase { Planning, Deploying, Attaching, Hauling, Delivering, Obstructed }
+    public enum ExtractionPhase { Planning, Deploying, Attaching, Hauling, Delivering, Retensioning }
 
     public sealed class ExtractionSnapshot
     {
@@ -34,7 +34,7 @@ namespace SomethingDownThere
                 && WorldSnapshot.Valid(AngularVelocity) && AngularVelocity.sqrMagnitude<=100, "Invalid extraction motion.");
             WorldSnapshot.Require(Attached || LinearVelocity==Vector3.zero && AngularVelocity==Vector3.zero,
                 "Unattached extraction has rope motion.");
-            bool hasRoute=Phase!=ExtractionPhase.Planning && Phase!=ExtractionPhase.Obstructed;
+            bool hasRoute=Phase!=ExtractionPhase.Planning;
             WorldSnapshot.Require(!hasRoute || Route.Length>=4,"Extraction route is missing.");
             WorldSnapshot.Require(Route.Length==0 || Route.Length>=4,"Extraction route is incomplete.");
             Vector3 extent=(Vector3)terrain.Size*terrain.CellSize;
@@ -43,12 +43,12 @@ namespace SomethingDownThere
                 "Extraction waypoint outside the site.");
             WorldSnapshot.Require(Progress<=Length(Route)+.001f,"Extraction progress exceeds its route.");
             float haulLength = Route.Length < 4 ? 0 : Length(Route, AnchorIndex);
-            WorldSnapshot.Require(Phase != ExtractionPhase.Planning || (Route.Length == 0 && Progress == 0), "Planning has stale route progress.");
+            WorldSnapshot.Require(Phase != ExtractionPhase.Planning || (!Attached && Route.Length == 0 && Progress == 0), "Invalid route planning.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Deploying || (!Attached && Progress <= haulLength), "Invalid rope deployment.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Attaching || (!Attached && Progress == 0), "Invalid rope attachment.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Hauling || (Attached && Progress <= haulLength + .001f), "Invalid haul progress.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Delivering || (Attached && Progress >= haulLength - .001f), "Invalid pad delivery.");
-            WorldSnapshot.Require(Phase != ExtractionPhase.Obstructed || Attached, "An unattached failed mark must return to the world.");
+            WorldSnapshot.Require(Phase != ExtractionPhase.Retensioning || (Attached && Progress <= haulLength + .001f), "Invalid automatic tension recovery.");
             if (Route.Length >= 4)
             {
                 var find = population[FindId];

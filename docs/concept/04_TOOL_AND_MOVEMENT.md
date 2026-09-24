@@ -73,6 +73,10 @@ each purchase noticeably improves the next outing and applies without a blocking
 
 The machine performs two clean auxiliary interactions without switching tools:
 - **World-space marking:** Applies simple, reusable chalk/spray symbols to walls (arrow, home, return-here) to aid navigation.
+- **Worksite placement:** Lamp and marking actions open a preview; primary confirms,
+  secondary cancels, and rotate changes orientation. Interact retrieves a lamp or erases an aimed
+  marking. Placement consumes the input without cutting behind the preview; ordinary digging
+  resumes after a fresh press. Menus, focus loss, recovery and loading cancel placement.
 - **Salvage tagging:** Attaches a recovery clamp/tag to exposed oversized set pieces, claiming them for surface salvage transfer.
 
 ## 8. C4

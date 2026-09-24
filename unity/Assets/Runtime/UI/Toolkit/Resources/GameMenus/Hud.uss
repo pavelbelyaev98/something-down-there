@@ -30,7 +30,7 @@
 .critical .hud-charge { background-color: var(--danger); }
 .unlimited .hud-charge { background-color: #8ce0ff; }
 .hud-equipment { position: absolute; left: 24px; top: 116px; font-size: 17px; }
-.hud-warning { position: absolute; left: 24px; top: 172px; max-width: 600px; white-space: normal; }
+.hud-warning { position: absolute; left: 24px; top: 194px; max-width: 600px; white-space: normal; }
 .hud-admin { position: absolute; right: 24px; top: 24px; max-width: 38%; font-size: 15px; color: var(--muted); -unity-text-align: upper-right; white-space: normal; }
 .hud-reticle {
     position: absolute;

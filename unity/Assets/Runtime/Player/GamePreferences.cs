@@ -14,8 +14,8 @@ namespace SomethingDownThere
         public int Width, Height, WindowMode;
         public bool VSync, ShowFps;
         public int FrameLimit = GamePreferences.DefaultFrameLimit;
-        public int Msaa = 2, TextureLimit, Filtering = 2;
-        public int Shadows = 2;
+        public int Msaa = 4, TextureLimit, Filtering = 2;
+        public int Shadows = 3;
         public int MasterVolume = 100;
         public int Sensitivity = 100;
         public bool InvertX, InvertY;
@@ -179,7 +179,7 @@ namespace SomethingDownThere
             v.Version = 1; v.WindowMode = Mathf.Clamp(v.WindowMode, 0, 2);
             if (v.Width < 960 || v.Width > 16384 || v.Height < 540 || v.Height > 8640) v.Width = v.Height = 0;
             if (Array.IndexOf(FrameLimits, v.FrameLimit) < 0) v.FrameLimit = DefaultFrameLimit;
-            if (v.Msaa != 1 && v.Msaa != 2 && v.Msaa != 4 && v.Msaa != 8) v.Msaa = 2;
+            if (v.Msaa != 1 && v.Msaa != 2 && v.Msaa != 4 && v.Msaa != 8) v.Msaa = 4;
             v.TextureLimit = Mathf.Clamp(v.TextureLimit, 0, 2); v.Filtering = Mathf.Clamp(v.Filtering, 0, 2);
             v.Shadows = Mathf.Clamp(v.Shadows, 0, 3);
             v.MasterVolume = Mathf.Clamp(v.MasterVolume, 0, 100); v.Sensitivity = Mathf.Clamp(v.Sensitivity, 10, 300);

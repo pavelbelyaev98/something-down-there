@@ -31,7 +31,7 @@ Keep the project open in Unity for live commands, or open it with `unity open ./
 - HUD/menu inspection: `capture_game_view --source screen` in Play Mode (`screenshot` renders the camera and omits overlay UI). Save captures under `Logs/`, never in game assets.
 - Test scene preflight: save intentional authored changes, then run `unity command eval_file --file "$PWD/tools/prepare-editor-tests.cs" --project-path "$projectPath" --format json` from the repository root before a manual test run. `test-changed.ps1` does this automatically. It discards unsaved Editor scene changes under the user's standing permission and starts from an empty scene, preventing Unity's modal save prompt; it never writes scene files or deletes test scaffolding.
 - Saving fixture: **Tools > Something Down There > Validation > Build Save Performance Player** builds `builds/validation/saving/SavePerformance.exe`; `-saveProfileSeconds 5` is a smoke check, not a qualification run.
-- Recovery profiling: **Tools > Something Down There > Validation > Build Surface Performance Player**, then pass `--recovery-save <copied-world.sav> --recovery-report <report.json>` and optional `--recovery-xray`. It retries an obstructed copied recovery with the full population and a fixed camera, using the same recorded device frame cap for idle/haul. Reports include p99/peak frame times and per-stage costs for slow frames; it never owns or writes a game save.
+- Recovery profiling: **Tools > Something Down There > Validation > Build Surface Performance Player**, then pass `--recovery-save <copied-world.sav> --recovery-report <report.json>` and optional `--recovery-xray`. It resumes an attached copied recovery automatically with the full population, saved lamps and a fixed camera, using the same recorded device frame cap for idle/haul. Reports include p99/peak frame times and per-stage costs for slow frames; it never owns or writes a game save.
 - Native Windows reviews share the user's desktop: announce input control, verify game focus, and repeat checks interrupted by user input. See [AGENTS.md](../AGENTS.md).
 
 ## Odin Inspector and Validator
@@ -79,3 +79,10 @@ The Blender Lab `MCP` extension 1.0.0 runs in Blender 5.2 on `127.0.0.1:9876`. I
 - Tune hold/travel/clearance/search limits in `Assets/Content/Salvage/WinchSettings.asset`; item exposure, identity, lore and authored placement remain in the source catalog. `SalvageWinchValidator` checks the connected scene before builds.
 
 Runtime folder ownership is documented in [docs/architecture.md](../docs/architecture.md).
+
+## Worksite lamps and markings
+
+- **L** previews a reusable work lamp; **M** previews/cycles a route symbol; **R** rotates. Primary places, secondary cancels, and Interact retrieves a lamp or erases an aimed mark. All actions appear in Controls.
+- `Tools > Something Down There > Configure Work Lamps and Markings` refreshes the MainGame kit references and original Blender-derived assets under `Assets/Content/WorksiteTools`; the source recipe and license card live in `art/work-lamps`.
+- The save format includes equipment ownership, physics and route marks with terrain. Older development checkpoints require New Game; tools never convert or silently replace them.
+- Lanterns emit soft local light in every direction, retaining ground occlusion with sun shadows Off. Setup sizes the existing URP additional-light atlas for the kit and merges geometry by material; no extra render package is required.

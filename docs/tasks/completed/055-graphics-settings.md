@@ -1,6 +1,6 @@
 # 055 — Graphics Settings
 
-**Status:** complete. Persistent shadow, MSAA, texture-quality and filtering controls use balanced defaults and category reset, with rendering fixed at 100%. Shadows adjust only the runtime URP clone while excavation daylight stays independent.
+**Status:** complete. Persistent sun-shadow, MSAA, texture-quality and filtering controls use High shadows and 4× anti-aliasing by default, with rendering fixed at 100%. Sun quality is optional; lamp occlusion and excavation daylight remain independent gameplay requirements.
 
 ## Objective
 Expose useful, persistent performance controls in the existing Graphics tab, with clear labels and native rendering by default.
@@ -41,3 +41,10 @@ Legacy/corrupt preferences, unavailable URP, settings toggled repeatedly, resett
 - Apply the requested graphics reset to this device through `GamePreferences`, retaining controls, audio and world saves. Borderless uses the monitor's desktop size, as specified in [054](054-render-resolution-defaults.md).
 - Verify preference validation/reset/persistence, renderer ownership and fixed scale, display Keep/Revert, actual startup framing and the remaining Graphics controls before the Windows rebuild.
 - Verification: preference/display tests and focused settings/navigation PlayMode checks pass. Live review confirms the four remaining controls and native render scale, with the requested defaults applied to player and Editor preferences. Windows build succeeds with no script warnings or errors; only the existing optional Pipeline runtime warning remains.
+
+## Work-lamp integration
+- The shadow control now names the sun explicitly. Off disables sun shadow casting while retaining a bounded local shadow distance so work lamps cannot illuminate through sealed ground. Runtime teardown restores the authored sun state and pipeline.
+
+## Higher-quality default iteration
+- Raise startup and Graphics reset to High sun shadows and 4× MSAA, retaining full-resolution textures, High filtering, native rendering and the frame cap. Apply the requested Graphics reset to this device while preserving other settings.
+- Verification: preference/reset and runtime settings checks pass; saved player and Editor preferences use the raised defaults. The established world color profile is preserved; underground daylight and lamp tuning are independent.

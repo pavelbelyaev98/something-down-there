@@ -57,6 +57,8 @@ namespace SomethingDownThere
         private PlayerCrouch crouch;
         private FindHandling findHandling;
         [SerializeField] private SalvageWinch winch;
+        [SerializeField] private WorksiteTools worksiteTools;
+        public WorksiteTools WorksiteTools => worksiteTools;
         private FindExtractionInteraction extractionInteraction;
         public SalvageWinch Winch => winch;
         public float ExtractionMarkProgress => extractionInteraction?.Progress ?? 0;
@@ -230,10 +232,12 @@ namespace SomethingDownThere
             snapshot.VerticalSpeed = verticalSpeed;
             snapshot.CrouchAmount = CrouchAmount;
             snapshot.SuccessfulStrokes = SuccessfulStrokes;
+            snapshot.Worksite = worksiteTools != null ? worksiteTools.Capture() : new WorksiteSnapshot();
         }
 
         public void Restore(WorldSnapshot snapshot)
         {
+            worksiteTools?.Cancel();
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
             findHandling?.Release(false);
@@ -271,6 +275,7 @@ namespace SomethingDownThere
             Physics.SyncTransforms();
             input?.SuppressHeldActions();
             extractionInteraction?.Reset();
+            worksiteTools?.Restore(snapshot.Worksite);
         }
 
         public void ShowPersistenceMenu() => ShowSessionMenu(PlayerMenu.Persistence);
@@ -328,6 +333,7 @@ namespace SomethingDownThere
         // Exposed for deterministic simulation checks; device bindings remain in FpsInput.
         public void Tick(FpsInputFrame frame, float deltaTime)
         {
+            if (!GameplayActive) worksiteTools?.Cancel();
             if (!GameplayActive) extractionInteraction?.Reset();
             if (BindingCapture != null && BindingCapture.BlocksInput) { extractionInteraction?.Reset(); return; }
             if (Persistence != null && Persistence.BlocksPlay)
@@ -350,6 +356,8 @@ namespace SomethingDownThere
             }
             if (frame.BackPressed)
             {
+                if (GameplayActive && worksiteTools != null && worksiteTools.IsPlacing)
+                { worksiteTools.Cancel(); SuppressWorldActions(); return; }
                 if (Menu == PlayerMenu.DeviceSettings) BackFromSettings();
                 else if (Menu == PlayerMenu.InputSettings) BackFromInputSettings();
                 else if (Menu == PlayerMenu.CameraComfort) BackFromCameraComfort();
@@ -383,6 +391,7 @@ namespace SomethingDownThere
             if (!frame.DigHeld || frame.DigPressed) digCooldown = Mathf.Max(0f, digCooldown);
             primaryLockout = Mathf.Max(0f, primaryLockout - deltaTime);
             RefreshTargetPrompt();
+            if (worksiteTools != null && worksiteTools.HandleInput(frame)) { RefreshTargetPrompt(); return; }
             if (extractionInteraction.Tick(frame, deltaTime)) { RefreshTargetPrompt(); return; }
             // Interaction wins a simultaneous press so opening a station cannot also dig.
             if (frame.InteractPressed)
@@ -490,6 +499,8 @@ namespace SomethingDownThere
         public void RefreshTargetPrompt()
         {
             TargetPrompt = "";
+            if (!IsMenuOpen && worksiteTools != null && worksiteTools.IsPlacing)
+            { TargetPrompt = worksiteTools.PlacementPrompt; return; }
             if (!IsMenuOpen && HeldFind != null)
             {
                 TargetPrompt = $"{HeldFind.DisplayName}  |  {InputSettings.Display(PlayerBinding.Dig)} to throw  |  {InputSettings.Display(PlayerBinding.Grab)} to drop";
@@ -507,6 +518,17 @@ namespace SomethingDownThere
                 TargetPrompt = interactable.GetPrompt(this);
             else if (hit.distance <= EffectiveDigReach && Contract<IDigTarget>(hit.collider) is IDigTarget target && !target.CanDig)
                 TargetPrompt = target.DigPrompt;
+            if (find == null && interactable == null && worksiteTools != null)
+            {
+                string markPrompt = worksiteTools.MarkPrompt();
+                if (!string.IsNullOrEmpty(markPrompt)) TargetPrompt = markPrompt;
+            }
+        }
+
+        internal void SuppressWorldActions()
+        {
+            input?.SuppressHeldActions(); extractionInteraction?.Reset();
+            blockedPickup = null; digCooldown = primaryLockout = 0;
         }
 
         // Aimed pickup uses the centre ray, independently of shovel radius. A terrain
@@ -796,6 +818,7 @@ namespace SomethingDownThere
 
         private void ReturnToSurface()
         {
+            worksiteTools?.Cancel();
             pickupPresentation?.Clear();
             findHandling?.Release(false);
             motor.enabled = false;
@@ -882,6 +905,7 @@ namespace SomethingDownThere
         public bool TryInteract()
         {
             if (IsMenuOpen || !focused || !TryGetTarget(tuning.InteractReach, out var hit)) return false;
+            if (worksiteTools != null && worksiteTools.TryEraseMark()) { RefreshTargetPrompt(); return true; }
             var target = Contract<IInteractionTarget>(hit.collider);
             if (target == null) return false;
             bool accepted = target.TryInteract(this);

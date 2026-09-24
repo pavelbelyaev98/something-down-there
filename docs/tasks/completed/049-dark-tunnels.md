@@ -1,6 +1,6 @@
 # 049 — Darkness in Deep and Lateral Tunnels
 
-**Status:** complete. Removed the ambient brightness floor and applied the connected-air daylight field to direct sun, sky fill and reflections, so sustained descents and long covered branches become near-black while local lamps stay effective.
+**Status:** complete. Connected-air daylight fades gradually through excavations while sealed rooms receive no sky fill. Underground readability uses local daylight transport and lamps, preserving the established vivid global color grade.
 
 ## Objective and concept
 
@@ -58,3 +58,12 @@ bright surface and entrance. This is the requested playtest fix ahead of task 00
 - C# and both shaders compile cleanly. Windows build succeeded; its sole warning
   is the existing optional Pipeline runtime configuration notice (Editor tooling
   is available; the player does not include a Pipeline server).
+
+## Brighter excavation playtest iteration
+- Extend the connected-air fade through shallow and middle depths and short branches; preserve sealed-room occlusion and eventual deep darkness. The existing rebuild budget and derived-cache ownership remain unchanged.
+- Rejected attempt: neutral tonemapping, reduced contrast and removed bloom/vignette flattened the entire game's colors. Do not repeat a global grade change to brighten underground soil.
+- Verification: daylight transport and GPU receiver checks pass. Live MainGame views confirm readable shaft walls at depth, textured ground beside a lamp, and no light in a sealed chamber until its wall opens.
+
+## Restore surface color after playtest
+- Restore the exact previous project color profile and remove the setup override that replaced it. Keep the slower underground daylight fade and bounded lamp falloff; higher graphics defaults remain intact.
+- Review: live MainGame surface, shaft and close lamp captures confirm restored colors with the existing local lighting improvements. The material and global ambient/sun settings are unchanged.

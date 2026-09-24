@@ -82,6 +82,12 @@ namespace SomethingDownThere.Tests
             player.enabled = false;
             Assert.That(Physics.Raycast(new Vector3(-8, 2, -8), Vector3.down, out var hit, 5), Is.True);
             Assert.That(terrain.TryDig(hit, .6f), Is.True);
+            Assert.That(Physics.Raycast(new Vector3(-6, 2, -6), Vector3.down, out var lampFloor, 4), Is.True);
+            var lamp = player.WorksiteTools.PlaceLamp(lampFloor.point, lampFloor.normal, Quaternion.identity);
+            Assert.That(lamp, Is.Not.Null);
+            Vector3 lampPosition = lamp.transform.position;
+            Assert.That(player.WorksiteTools.PlaceMark(new MarkSnapshot { Kind = WorldMarkKind.Home,
+                Position = new Vector3(-5, terrain.SurfaceHeight, -6), Rotation = Quaternion.LookRotation(Vector3.up, Vector3.forward) }), Is.True);
             var density = terrain.Capture().Density.ToArray();
             var population = discoveries.Capture().Select(f => f.Item.Id).ToArray();
             int owned = player.Shovel.Level; float charge = player.Battery.Charge;
@@ -91,6 +97,11 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Shovel.Level, Is.EqualTo(owned)); Assert.That(player.Battery.Charge, Is.EqualTo(charge));
             Assert.That(terrain.Capture().Density.ToArray(), Is.EqualTo(density));
             Assert.That(discoveries.Capture().Select(f => f.Item.Id), Is.EqualTo(population));
+            Assert.That(player.WorksiteTools.Lamps.Count, Is.EqualTo(1));
+            Assert.That(player.WorksiteTools.Lamps[0].transform.position, Is.EqualTo(lampPosition));
+            Assert.That(player.WorksiteTools.Lamps[0].Anchored, Is.True);
+            Assert.That(player.WorksiteTools.AvailableLamps, Is.EqualTo(WorksiteTools.LampCapacity - 1));
+            Assert.That(player.WorksiteTools.MarkCount, Is.EqualTo(1));
         }
 
         [UnityTest]

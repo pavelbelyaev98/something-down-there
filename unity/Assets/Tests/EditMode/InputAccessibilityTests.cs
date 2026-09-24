@@ -47,8 +47,8 @@ namespace SomethingDownThere.Tests
         [Test]
         public void AllBindingsRoundTripAndConflictsSwapWithoutLosingAnAction()
         {
-            var keys = new[] { "i", "k", "j", "l", "q", "r", "c", "f", "b", "p", "o", "u", "h" };
-            for (int i = 0; i < InputPreferences.BindingCount; i++) Assert.That(settings.Bind((PlayerBinding)i, "<Keyboard>/" + keys[i]), Is.True);
+            var keys = new[] { "i", "k", "j", "l", "q", "r", "c", "f", "b", "p", "o", "u", "h", "n", "v" };
+            for (int i = 0; i < InputPreferences.BindingCount; i++) Assert.That(settings.Bind((PlayerBinding)i, "<Keyboard>/" + keys[i], true), Is.True);
             Assert.That(settings.Bind(PlayerBinding.Dig, "<Keyboard>/r"), Is.False);
             Assert.That(settings.Bind(PlayerBinding.Dig, "<Keyboard>/r", true), Is.True);
             Assert.That(settings.Path(PlayerBinding.Jump), Is.EqualTo("<Keyboard>/q"));
@@ -153,27 +153,17 @@ namespace SomethingDownThere.Tests
                 Assert.That(reloaded.Path((PlayerBinding)i), Is.EqualTo(restored.Path((PlayerBinding)i)));
         }
 
-        [TestCase(0, "leftShift")]
-        [TestCase(1, "rightShift")]
-        [TestCase(2, "r")]
-        public void LegacyMapsGainSprintWithoutChangingExistingBindingsOrOverwritingTheFile(int shiftsUsed, string sprintKey)
+        [Test]
+        public void IncompleteBindingMapsAreRejectedWithoutAPartialToggleState()
         {
             settings.SetToggleDig(true);
-            if (shiftsUsed > 0) settings.Bind(PlayerBinding.Dig, "<Keyboard>/leftShift", true);
-            if (shiftsUsed > 1) settings.Bind(PlayerBinding.Jump, "<Keyboard>/rightShift");
+            settings.Bind(PlayerBinding.Dig, "<Keyboard>/q");
             settings.Flush();
-            int sprintLine = store.Text.IndexOf("sprint=", StringComparison.Ordinal);
-            store.Text = store.Text.Substring(0, sprintLine);
-            string legacy = store.Text;
+            store.Text = store.Text.Substring(0, store.Text.IndexOf("rotatePlacement=", StringComparison.Ordinal));
             var restored = new InputPreferences(store);
-            for (int i = 0; i < (int)PlayerBinding.Sprint; i++)
-                Assert.That(restored.Path((PlayerBinding)i), Is.EqualTo(settings.Path((PlayerBinding)i)));
-            Assert.That(restored.Path(PlayerBinding.Sprint), Is.EqualTo("<Keyboard>/" + sprintKey));
-            Assert.That(restored.ToggleDig, Is.True);
-            restored.Flush(); Assert.That(store.Text, Is.EqualTo(legacy));
-            restored.SetToggleDig(false); restored.Flush();
-            Assert.That(new InputPreferences(store).Path(PlayerBinding.Sprint), Is.EqualTo(restored.Path(PlayerBinding.Sprint)));
-            restored.Reset(); Assert.That(restored.Path(PlayerBinding.Sprint), Is.EqualTo("<Keyboard>/leftShift"));
+            Assert.That(restored.ToggleDig, Is.False);
+            for (int i = 0; i < InputPreferences.BindingCount; i++)
+                Assert.That(restored.Path((PlayerBinding)i), Is.EqualTo(InputPreferences.DefaultPath((PlayerBinding)i)));
         }
 
         [Test]
@@ -194,7 +184,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void RemappedMovementAndEveryButtonUseTheirActiveBindings()
         {
-            settings.Bind(PlayerBinding.Forward, "<Keyboard>/i"); settings.Bind(PlayerBinding.Right, "<Keyboard>/l");
+            settings.Bind(PlayerBinding.Forward, "<Keyboard>/i"); settings.Bind(PlayerBinding.Right, "<Keyboard>/l", true);
             settings.Bind(PlayerBinding.Dig, "<Mouse>/rightButton", true); settings.Bind(PlayerBinding.Jump, "<Mouse>/middleButton");
             settings.Bind(PlayerBinding.Crouch, "<Keyboard>/c"); settings.Bind(PlayerBinding.Interact, "<Mouse>/backButton");
             settings.Bind(PlayerBinding.Inventory, "<Mouse>/forwardButton"); settings.Bind(PlayerBinding.Pause, "<Keyboard>/p");
@@ -269,19 +259,18 @@ namespace SomethingDownThere.Tests
             Assert.That(input.Read().DigHeld, Is.False);
         }
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void LegacyMapsGainGrabWithoutChangingExistingBindings(bool rmbOccupied)
+        [Test]
+        public void PlacementBindingsRespectRebindSuppressionAndMenuGates()
         {
-            settings.SetToggleDig(true);
-            if (rmbOccupied) settings.Bind(PlayerBinding.Dig, "<Mouse>/rightButton", true);
-            settings.Flush(); store.Text = store.Text.Substring(0, store.Text.IndexOf("grab=", StringComparison.Ordinal));
-            string legacy = store.Text;
-            var restored = new InputPreferences(store);
-            for (int i = 0; i < (int)PlayerBinding.Grab; i++)
-                Assert.That(restored.Path((PlayerBinding)i), Is.EqualTo(settings.Path((PlayerBinding)i)));
-            Assert.That(restored.Path(PlayerBinding.Grab), Is.EqualTo(rmbOccupied ? "<Keyboard>/f" : "<Mouse>/rightButton"));
-            restored.Flush(); Assert.That(store.Text, Is.EqualTo(legacy));
+            settings.Bind(PlayerBinding.Lamp, "<Keyboard>/q"); InputSystem.Update(); input.Read();
+            Press(keyboard.qKey); Assert.That(input.Read().LampPressed, Is.True);
+            Assert.That(input.Read(false).LampPressed, Is.False);
+            input.SuppressHeldActions(); Assert.That(input.Read().LampPressed, Is.False);
+            Release(keyboard.qKey); input.Read(); Press(keyboard.qKey); Assert.That(input.Read().LampPressed, Is.True);
+            Press(keyboard.mKey); Assert.That(input.Read().MarkPressed, Is.True);
+            Press(keyboard.rKey); Assert.That(input.Read().RotatePlacementPressed, Is.True);
+            input.SuppressHeldActions();
+            Assert.That(input.Read().MarkPressed || input.Read().RotatePlacementPressed, Is.False);
         }
 
         [Test]

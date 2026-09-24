@@ -282,7 +282,7 @@ namespace SomethingDownThere
         {
             if (player == null || !player.GameplayActive) return false;
             if (State == FindState.Displayed) { player.ShowFeedback(LoreCard); return true; }
-            return State == FindState.Extracting && player.Winch != null && player.Winch.Retry(this);
+            return false;
         }
     }
 }

@@ -17,6 +17,7 @@ namespace SomethingDownThere.Tests
         private Scene scene;
         private InputTestFixture devices;
         private SimulationMode originalSimulation;
+        private SalvageWinchSettings tuningOverride;
 
         [SetUp] public void RememberPhysics() => originalSimulation=Physics.simulationMode;
 
@@ -26,6 +27,7 @@ namespace SomethingDownThere.Tests
             SceneManager.sceneLoaded -= TestInputPreferences.Configure;
             if (scene.IsValid()) yield return SceneManager.UnloadSceneAsync(scene);
             devices?.TearDown();
+            if(tuningOverride!=null) UnityEngine.Object.Destroy(tuningOverride);
             Physics.simulationMode=originalSimulation;
             Time.timeScale = 1;
         }
@@ -38,6 +40,206 @@ namespace SomethingDownThere.Tests
 
         [UnityTest]
         public IEnumerator PopulatedAngledPassageLoosensBlockingFindsAndRecoversComputer() => Recover(true, true);
+
+        [UnityTest]
+        public IEnumerator SwingNearSoilCutsOnlyAfterSustainedPhysicalContact() => ContactRecovery(false);
+
+        [UnityTest]
+        public IEnumerator BriefContactThatPullsFreeLeavesSoilIntact() => ContactRecovery(true);
+
+        [UnityTest]
+        public IEnumerator PersistentJamRestoresAndPullsThroughWithoutPlayerInput() => ContactRecovery(false, true);
+
+        [UnityTest]
+        public IEnumerator MountedLampIsKnockedLooseByContactWithoutLosingItsSlot() => ContactRecovery(false, false, true);
+
+        private IEnumerator ContactRecovery(bool pullFree, bool persistentJam = false, bool lampObstacle = false)
+        {
+            devices = new InputTestFixture(); devices.Setup();
+            InputSystem.AddDevice<Keyboard>(); InputSystem.AddDevice<Mouse>();
+            SceneManager.sceneLoaded += TestInputPreferences.Configure;
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/MainGame.unity", new LoadSceneParameters(LoadSceneMode.Additive));
+            SceneManager.sceneLoaded -= TestInputPreferences.Configure;
+            scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
+            var player = scene.GetRootGameObjects()[0].GetComponentInChildren<FpsPlayer>();
+            yield return null; // Let startup generate the population.
+            player.Tuning.Gravity = 0;
+            player.SetApplicationFocus(true); player.CloseMenu();
+            var terrain = player.ExcavationTerrain;
+            var winch = player.Winch; winch.enabled = false;
+            if(persistentJam)
+            {
+                tuningOverride=UnityEngine.Object.Instantiate(winch.Settings);
+                tuningOverride.ContactStallSeconds=2f;
+                typeof(SalvageWinch).GetField("settings",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
+                    .SetValue(winch,tuningOverride);
+            }
+            var find = player.Discoveries.Finds.Single(f => f.Kind == DiscoveryKind.Unique);
+            foreach (var common in player.Discoveries.Finds.Where(f => f.Kind == DiscoveryKind.Common)) common.gameObject.SetActive(false);
+            var state = find.Capture(); state.State = FindState.Extracting; find.Restore(state);
+            var physical = find.GetComponent<FindPhysics>();
+            var body = physical.Body;
+            Physics.SyncTransforms();
+            var bounds = find.GetComponent<Collider>().bounds;
+            var grid = new ExcavationGrid(terrain.Dimensions, terrain.CellSize);
+            var local = terrain.transform.InverseTransformPoint(bounds.center);
+            // The real collider fits. The old predictive clearance box would
+            // already erase these nearby walls on the very first winch tick.
+            var half = bounds.extents + new Vector3(.18f, .9f, .18f);
+            grid.RemoveBoxSweep(local, local, Quaternion.identity, half, out _);
+            // Air above a thin retaining ceiling lets us measure the released
+            // load's real speed, instead of keeping it inside endless solid soil.
+            var above = local + Vector3.up * (half.y + .25f + 2f);
+            grid.RemoveBoxSweep(above, above, Quaternion.identity, new Vector3(half.x + .5f, 2f, half.z + .5f), out _);
+            yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
+            player.SetApplicationFocus(true); player.CloseMenu();
+            Vector3 attach = find.LocalHull.center + Vector3.up * find.LocalHull.extents.y;
+            Vector3 start = terrain.transform.InverseTransformPoint(find.transform.TransformPoint(attach));
+            var job = new ExtractionSnapshot { FindId = find.Item.InstanceId, Phase = ExtractionPhase.Hauling,
+                AttachLocal = attach, Outward = Vector3.up, Attached = true, AngularVelocity = Vector3.up * 1.5f,
+                Route = new[] { start, start + Vector3.up * 4, start + Vector3.up * 5,
+                    start + Vector3.up * 5 + Vector3.right, start + Vector3.up * 4 + Vector3.right } };
+            winch.Restore(job);
+            Physics.simulationMode = SimulationMode.Script;
+            if(lampObstacle)
+            {
+                Assert.That(Physics.Raycast(bounds.center+Vector3.up*(bounds.extents.y+.05f),Vector3.up,out var ceiling,2f), Is.True);
+                var lamp=player.WorksiteTools.PlaceLamp(ceiling.point,ceiling.normal,Quaternion.FromToRotation(Vector3.up,ceiling.normal));
+                Assert.That(lamp, Is.Not.Null); Assert.That(lamp.Anchored, Is.True);
+                Physics.SyncTransforms();
+                yield return PullPastLamp(player,find,lamp);
+                yield break;
+            }
+            long revision = terrain.StateRevision;
+            float volume = terrain.RemovedVolume, elapsed = 0;
+            var contactProbe = find.gameObject.AddComponent<RecoveryContactProbe>();
+            contactProbe.Terrain = terrain;
+            Quaternion initialRotation = body.rotation;
+            float rotation = 0, strongestBlockedPull = 0, fastestLoadedGuide = 0;
+            bool redirected = false, retensionRestored = false;
+            winch.Tick(.02f);
+            Assert.That(terrain.StateRevision, Is.EqualTo(revision), "No physical simulation/contact has happened: nearby soil must stay intact.");
+            float ordinaryPull = body.mass * winch.Settings.SpringAcceleration;
+            Assert.That(find.GetComponent<SpringJoint>().spring, Is.EqualTo(ordinaryPull), "Free travel does not wind up extra pulling force.");
+            Assert.That(winch.GetComponentsInChildren<ParticleSystem>().Sum(p => p.particleCount), Is.Zero, "No break means no soil particles.");
+            for (int step = 0; step < 700; step++)
+            {
+                elapsed += .02f; contactProbe.SimulationSeconds = elapsed; Physics.Simulate(.02f);
+                rotation = Mathf.Max(rotation, Quaternion.Angle(initialRotation, body.rotation));
+                float firstContact = contactProbe.FirstContactSeconds;
+                if (pullFree && firstContact >= 0 && !redirected)
+                {
+                    var retreat = winch.Capture();
+                    var hook = terrain.transform.InverseTransformPoint(body.position + body.rotation * Vector3.Scale(find.transform.lossyScale, attach));
+                    retreat.Progress = 0; retreat.LinearVelocity = retreat.AngularVelocity = Vector3.zero;
+                    retreat.Route = new[] { hook, start, start, start, start };
+                    winch.Restore(retreat); redirected = true;
+                }
+                player.SetApplicationFocus(true);
+                Vector3 beforePosition = body.position, beforeVelocity = body.linearVelocity;
+                Quaternion beforeRotation = body.rotation;
+                float beforeGuide = winch.Capture().Progress;
+                winch.Tick(.02f);
+                fastestLoadedGuide = Mathf.Max(fastestLoadedGuide, (winch.Capture().Progress - beforeGuide) / .02f);
+                Assert.That(body.isKinematic, Is.False, "A jam must never secure the load and wait for the player.");
+                Assert.That(winch.Prompt, Does.Not.Contain("retry").And.Not.Contain("Clear"));
+                if(persistentJam && !retensionRestored && winch.Capture().Phase==ExtractionPhase.Retensioning)
+                {
+                    var stalled=winch.Capture();
+                    winch.Restore(stalled);
+                    yield return null; // Finish destroying the previous joint.
+                    player.SetApplicationFocus(true); player.CloseMenu();
+                    winch.Tick(.02f);
+                    Assert.That(body.isKinematic, Is.False, "Saved automatic recovery resumes without Interact.");
+                    retensionRestored=true;
+                }
+                if (terrain.StateRevision != revision)
+                {
+                    Assert.That(pullFree, Is.False, "A brief impact followed by a successful pull must not excavate.");
+                    Assert.That(firstContact, Is.GreaterThanOrEqualTo(0));
+                    Assert.That(elapsed - firstContact, Is.GreaterThanOrEqualTo(winch.Settings.ContactStallSeconds - .02f),
+                        "The load must physically try to escape before breaking the contacted ground.");
+                    Assert.That(terrain.RemovedVolume - volume, Is.InRange(.0001f, .25f), "Break a local patch, not a load-sized cavity.");
+                    Assert.That(terrain.IsSolid(contactProbe.LastPoint + Vector3.right * 1.4f), Is.True, "Distant soil stays intact.");
+                    Assert.That(strongestBlockedPull, Is.GreaterThan(ordinaryPull * 1.5f), "The rope must pull harder before the soil breaks.");
+                    Assert.That(fastestLoadedGuide, Is.GreaterThan(winch.Settings.HaulSpeed * 1.5f), "A jam must speed up actual reeling, not only increase spring stiffness.");
+                    Assert.That(winch.GetComponentsInChildren<ParticleSystem>().Sum(p => p.particleCount), Is.GreaterThan(0), "A committed local break emits visible soil debris.");
+                    Assert.That(body.position, Is.EqualTo(beforePosition), "Soil release must not teleport the body.");
+                    Assert.That(body.rotation, Is.EqualTo(beforeRotation));
+                    Assert.That(body.linearVelocity, Is.EqualTo(beforeVelocity), "The loaded spring, not a scripted velocity kick, produces recoil.");
+                    float releasedPull = find.GetComponent<SpringJoint>().spring;
+                    Assert.That(releasedPull, Is.GreaterThanOrEqualTo(strongestBlockedPull), "Do not discard tension at the instant soil gives way.");
+                    float blockedSpeed = beforeVelocity.magnitude, releaseAge = 0, fastestRelease = 0;
+                    bool recoiled = false, burst = false;
+                    // One shallow chip may leave other corners pinned. Check
+                    // the response when enough retaining contacts actually let
+                    // go, still within the loaded spring's release interval.
+                    for (int releaseStep = 0; releaseStep < 300; releaseStep++)
+                    {
+                        Physics.Simulate(.02f);
+                        releaseAge += .02f;
+                        fastestRelease = Mathf.Max(fastestRelease, body.linearVelocity.magnitude);
+                        if (releaseAge <= winch.Settings.TensionReleaseSeconds
+                            && body.linearVelocity.magnitude > blockedSpeed + .1f)
+                            recoiled = true;
+                        if (body.linearVelocity.magnitude > winch.Settings.HaulSpeed * 1.5f) burst = true;
+                        if (recoiled && burst) break;
+                        long beforeRelease = terrain.StateRevision;
+                        float speed = body.linearVelocity.magnitude;
+                        winch.Tick(.02f);
+                        if (terrain.StateRevision != beforeRelease) { releaseAge = 0; blockedSpeed = speed; }
+                        if (releaseStep % 20 == 0) yield return null;
+                    }
+                    Assert.That(recoiled, Is.True, "When the retaining soil gives way, the loaded spring must accelerate the body.");
+                    Assert.That(burst, Is.True, $"Release must visibly exceed cruising speed; peak was {fastestRelease:F2}.");
+                    break;
+                }
+                strongestBlockedPull = Mathf.Max(strongestBlockedPull, find.GetComponent<SpringJoint>().spring);
+                if (pullFree && redirected && elapsed > firstContact + 2f) break;
+                if (step % 20 == 0) yield return null;
+            }
+            Assert.That(contactProbe.FirstContactSeconds, Is.GreaterThanOrEqualTo(0), "The fixture must exercise a real terrain collision.");
+            Assert.That(rotation, Is.GreaterThan(5), "The payload is free to turn near the soil.");
+            if (pullFree)
+            {
+                Assert.That(terrain.StateRevision, Is.EqualTo(revision));
+                Assert.That(winch.GetComponentsInChildren<ParticleSystem>().Sum(p => p.particleCount), Is.Zero, "Brief contact must not fake soil destruction.");
+            }
+            else Assert.That(terrain.StateRevision, Is.GreaterThan(revision), "A persistent loaded contact eventually chips the obstruction.");
+            if(persistentJam)
+            {
+                Assert.That(retensionRestored, Is.True, "Exercise a genuine sustained jam and its restore path.");
+                Assert.That(strongestBlockedPull, Is.GreaterThan(ordinaryPull*winch.Settings.BlockedPullMultiplier),
+                    "A persistent jam automatically builds more pull than an ordinary chip.");
+            }
+        }
+
+        private static IEnumerator PullPastLamp(FpsPlayer player, BuriedFind find, WorkLamp lamp)
+        {
+            var winch=player.Winch;var terrain=player.ExcavationTerrain;
+            var probe=find.gameObject.AddComponent<RecoveryContactProbe>();
+            probe.WatchedCollider=lamp.GetComponent<Collider>();
+            long revision=terrain.StateRevision;
+            int slot=lamp.Slot;
+            float elapsed=0;
+            for(int step=0;step<500 && lamp.Anchored;step++)
+            {
+                player.SetApplicationFocus(true);player.CloseMenu();
+                elapsed+=.02f;probe.SimulationSeconds=elapsed;
+                winch.Tick(.02f);Physics.Simulate(.02f);
+                if(step%20==0) yield return null;
+            }
+            Assert.That(probe.FirstContactSeconds, Is.GreaterThanOrEqualTo(0), "The load must actually hit the mounted lamp.");
+            Assert.That(elapsed-probe.FirstContactSeconds, Is.GreaterThanOrEqualTo(winch.Settings.ContactStallSeconds-.02f));
+            Assert.That(lamp.Anchored, Is.False, "An anchored work lamp cannot be an immovable recovery barrier.");
+            Assert.That(lamp.Body.isKinematic, Is.False);
+            Assert.That(terrain.StateRevision, Is.EqualTo(revision), "Knocking a mount loose does not authorize a fake dirt cut.");
+            Assert.That(winch.GetComponentsInChildren<ParticleSystem>().Sum(p=>p.particleCount), Is.Zero);
+            var saved=player.WorksiteTools.Capture();
+            Assert.That(saved.Lamps.Single().Slot, Is.EqualTo(slot));
+            Assert.That(saved.Lamps.Single().Anchored, Is.False);
+            Assert.That(player.WorksiteTools.AvailableLamps, Is.EqualTo(WorksiteTools.LampCapacity-1));
+        }
 
         private IEnumerator Recover(bool sideAttachment, bool populated = false)
         {
@@ -107,6 +309,9 @@ namespace SomethingDownThere.Tests
             var phases = new System.Collections.Generic.HashSet<ExtractionPhase>();
             bool reloaded = false;
             double worstPlanning = 0, worstHaul = 0;
+            var rope = root.GetComponentInChildren<WinchRopeView>();
+            bool ropeChecked = false;
+            double ropeCost = 0; int ropeSteps = 0;
             var timer = new System.Diagnostics.Stopwatch();
             float initialVolume = terrain.Capture().RemovedVolume;
             Quaternion initialRotation=find.GetComponent<Rigidbody>().rotation;
@@ -114,8 +319,11 @@ namespace SomethingDownThere.Tests
             bool pauseChecked=false;
             GameObject wall=null;
             bool wallPlaced=populated, wallChecked=populated;
+            float wallSeconds=0;
             Physics.simulationMode=SimulationMode.Script;
-            for (int frame = 0; frame < 6000 && winch.Busy; frame++)
+            // This deliberately undersized tunnel now needs physical jam/retry
+            // intervals at each bottleneck instead of being pre-cleared at speed.
+            for (int frame = 0; frame < 15000 && winch.Busy; frame++)
             {
                 player.SetApplicationFocus(true);
                 var job = winch.Capture(); phases.Add(job.Phase);
@@ -128,18 +336,20 @@ namespace SomethingDownThere.Tests
                     wall.transform.localScale=new Vector3(.15f,4,4);
                     Physics.SyncTransforms(); wallPlaced=true;
                 }
-                if(job.Phase==ExtractionPhase.Obstructed && wall!=null)
+                if(wall!=null && job.Phase==ExtractionPhase.Retensioning)
                 {
+                    wallSeconds+=.02f;
                     Assert.That(find.GetComponent<Rigidbody>().position.x, Is.LessThan(wall.transform.position.x),
                         "Physical contacts stop the computer at an undiggable wall.");
-                    Assert.That(find.GetComponent<Rigidbody>().isKinematic, Is.True, "A stalled load is secured for retry.");
-                    wall.SetActive(false); UnityEngine.Object.Destroy(wall); wall=null;
-                    Assert.That(winch.Retry(find), Is.True);
-                    wallChecked=true;
-                    yield return null;
-                    continue;
+                    Assert.That(find.GetComponent<Rigidbody>().isKinematic, Is.False, "Even a permanent obstruction cannot put the winch into a manual pause.");
+                    // Keep this temporary fixture barrier beyond the former hard
+                    // timeout. Its removal changes the world, never the job/input.
+                    if(wallSeconds>4f)
+                    {
+                        wall.SetActive(false); UnityEngine.Object.Destroy(wall); wall=null;
+                        wallChecked=true;
+                    }
                 }
-                Assert.That(job.Phase, Is.Not.EqualTo(ExtractionPhase.Obstructed), winch.Prompt);
                 if (job.Phase == ExtractionPhase.Hauling && job.Progress > .4f && !reloaded)
                 {
                     Vector3 before = find.GetComponent<Rigidbody>().position;
@@ -164,8 +374,24 @@ namespace SomethingDownThere.Tests
                 }
                 timer.Restart();
                 winch.Tick(.02f);
-                if(winch.Busy && job.Phase==ExtractionPhase.Hauling && winch.Capture().Phase==ExtractionPhase.Hauling)
+                if(winch.Busy && (job.Phase==ExtractionPhase.Hauling || job.Phase==ExtractionPhase.Retensioning)
+                    && (winch.Capture().Phase==ExtractionPhase.Hauling || winch.Capture().Phase==ExtractionPhase.Retensioning))
                 {
+                    Assert.That(rope.ParticleCount, Is.InRange(2, RopeDynamics.Capacity));
+                    Assert.That(rope.LastSimulationMilliseconds, Is.GreaterThan(0));
+                    ropeCost += rope.LastSimulationMilliseconds; ropeSteps++;
+                    // Exclude the attachment's immediate neighbours: marking can
+                    // start on a partly embedded surface of the rigid load.
+                    if (job.Progress > .6f && frame % 20 == 0 && rope.ParticleCount > 4)
+                    {
+                        for (int i = 1; i < rope.ParticleCount - 3; i++)
+                        {
+                            var p = rope.ParticlePosition(i);
+                            Assert.That(float.IsFinite(p.x) && float.IsFinite(p.y) && float.IsFinite(p.z), Is.True);
+                            Assert.That(terrain.SignedDensity(p), Is.LessThan(terrain.CellSize * .15f), "The cable must stay in the dug air around route bends.");
+                        }
+                        ropeChecked = true;
+                    }
                     Assert.That(find.GetComponent<Rigidbody>().isKinematic, Is.False);
                     Assert.That(find.GetComponent<Rigidbody>().constraints, Is.EqualTo(RigidbodyConstraints.None));
                     largestRotation=Mathf.Max(largestRotation,Quaternion.Angle(initialRotation,find.GetComponent<Rigidbody>().rotation));
@@ -173,11 +399,13 @@ namespace SomethingDownThere.Tests
                     {
                         var before=find.GetComponent<Rigidbody>().position;
                         var beforeTerrain=terrain.Revision;
+                        Vector3 ropeBefore = rope.ParticlePosition(rope.ParticleCount / 2);
                         player.SetApplicationFocus(false);
                         winch.Tick(.02f);
                         for(int i=0;i<10;i++) Physics.Simulate(.02f);
                         Assert.That(find.GetComponent<Rigidbody>().position, Is.EqualTo(before));
                         Assert.That(terrain.Revision, Is.EqualTo(beforeTerrain));
+                        Assert.That(rope.ParticlePosition(rope.ParticleCount / 2), Is.EqualTo(ropeBefore), "Paused cable dynamics do not continue under gravity.");
                         player.SetApplicationFocus(true); player.CloseMenu();
                         pauseChecked=true;
                     }
@@ -188,10 +416,11 @@ namespace SomethingDownThere.Tests
                 else worstHaul = Math.Max(worstHaul, timer.Elapsed.TotalMilliseconds);
                 if (frame % 20 == 0) yield return null;
             }
-            Assert.That(winch.Busy, Is.False, "Recovery must finish in bounded time.");
+            Assert.That(winch.Busy, Is.False, winch.Busy ? DescribeHaul(winch, find, terrain) : "Recovery finished.");
             Assert.That(reloaded, Is.True, player.Feedback + " phases: " + string.Join(",", phases));
             Assert.That(pauseChecked, Is.True);
-            Assert.That(wallChecked, Is.True, "A blocked physical haul must pause and remain recoverable.");
+            Assert.That(wallChecked, Is.True, "A blocked haul keeps pulling and resumes automatically when free.");
+            Assert.That(ropeChecked, Is.True);
             Assert.That(largestRotation, Is.GreaterThan(10f), "The marked point pulls a rotating physical load.");
             CollectionAssert.IsSubsetOf(new[] { ExtractionPhase.Deploying, ExtractionPhase.Attaching,
                 ExtractionPhase.Hauling, ExtractionPhase.Delivering }, phases);
@@ -209,6 +438,44 @@ namespace SomethingDownThere.Tests
             Assert.That(find.DepthRecorded && find.DiscoveryDepth > 0, Is.True);
             Assert.That(stand.GetPrompt(player), Does.Contain(find.DisplayName));
             Debug.Log($"Recovery fixture worst planning/haul substep: {worstPlanning:F1}/{worstHaul:F1} ms.");
+            Debug.Log($"Recovery rope mean simulation: {ropeCost / System.Math.Max(1, ropeSteps):F3} ms.");
+        }
+
+        private static string DescribeHaul(SalvageWinch winch, BuriedFind find, TerrainVolume terrain)
+        {
+            var job = winch.Capture(); var body = find.GetComponent<Rigidbody>();
+            const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            string fields = string.Join(", ", new[] { "pressureSeconds", "pressureObstacle", "pressurePosition", "contactCount", "stalledSeconds" }
+                .Select(name => name + "=" + typeof(SalvageWinch).GetField(name, flags)?.GetValue(winch)));
+            var contacts = (ContactPoint[])typeof(SalvageWinch).GetField("loadContacts", flags).GetValue(winch);
+            string lastContacts = string.Join("; ", contacts.Take(4).Select(c => {
+                var other = c.otherCollider?.GetComponentInParent<BuriedFind>();
+                var otherBody = other?.GetComponent<Rigidbody>();
+                return $"{c.otherCollider?.name}/{c.thisCollider?.name}: sep {c.separation:F4} normal {c.normal}, kin {otherBody?.isKinematic}, exposure {other?.Exposure}, speed {otherBody?.linearVelocity}, spin {otherBody?.angularVelocity}";
+            }));
+            return $"Recovery {job.Phase} progress {job.Progress:F2}/{ExtractionSnapshot.Length(job.Route):F2}; position {body.position}, velocity {body.linearVelocity}, spin {body.angularVelocity}; removed {terrain.RemovedVolume:F2}; {fields}; {lastContacts}";
+        }
+    }
+
+    public sealed class RecoveryContactProbe : MonoBehaviour
+    {
+        public TerrainVolume Terrain;
+        public Collider WatchedCollider;
+        public float SimulationSeconds, FirstContactSeconds = -1;
+        public Vector3 LastPoint;
+        private void OnCollisionEnter(Collision collision) => Record(collision);
+        private void OnCollisionStay(Collision collision) => Record(collision);
+        private void Record(Collision collision)
+        {
+            if (WatchedCollider != null ? collision.collider != WatchedCollider
+                : collision.collider.GetComponentInParent<TerrainVolume>() != Terrain) return;
+            for (int i = 0; i < collision.contactCount; i++)
+            {
+                var contact = collision.GetContact(i);
+                if (contact.separation > .011f) continue;
+                if (FirstContactSeconds < 0) FirstContactSeconds = SimulationSeconds;
+                LastPoint = contact.point;
+            }
         }
     }
 }

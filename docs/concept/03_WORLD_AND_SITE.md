@@ -135,9 +135,18 @@ as no solution.
 - **Inherently vertical navigation (why this differs from _Meltopia_):** In _Meltopia_, players suffered navigation fatigue because the world was a sprawling, flat maze of identical horizontal tunnels. _Something Down There_ is fundamentally different: **it is vertical**. Near the surface, looking up reveals the open sky and the shaft of daylight; deeper down, the lamps you leave behind become the way home. The player's own carved shaft always points straight up.
 - **Optional world markings:** For complex lateral branches off the main vertical shaft, the tool can apply simple, free, reusable chalk/spray symbols (arrow, home, return-here) readable by shape.
 - **Early route lighting:** Basic placeable lamps are available at the first major branch to illuminate lateral chambers and photography spots.
+- The starter kit is available immediately. Preview placement on exposed ground or permanent
+  any solid worksite surface, including rough ground, walls, ceilings and props, then retrieve
+  the lamp to place it again. A lamp released into open space falls and remains recoverable. Lamp ownership is
+  separate from the find bag. The preview emits no light; only a placed lamp illuminates the work.
+- Markings conform to the worked surface, can be rotated and erased for free, and save with the
+  hole. Excavating their painted surface removes them. Lamps release physically when their
+  support disappears, remain lit nearby, and retain their kit ownership. Sustained contact from a
+  winched load can knock a mounted lamp loose; portable lighting never permanently blocks recovery.
 - **Sky light reaches down open shafts** and fades with depth.
-- **A gentle early fade:** shallow excavation stays comfortably readable; strong darkness
-  arrives after a sustained descent or a long covered route, rather than the first few digs.
+- **A generous daylight reach:** shallow and middle-depth excavation stay comfortably readable,
+  including short covered branches. Darkness develops gradually along substantially deeper or
+  longer routes; the first underground work area must not immediately need a lamp.
 - **Sideways travel loses daylight faster.** Brightness follows the open route from
   the surface, so a long covered branch can become near-black even at shallow depth.
   There is no permanent ambient fill keeping soil or finds visible in unlit ground.
@@ -149,6 +158,8 @@ as no solution.
 - **Placeable lamps are the light.** They are the only light underground: place them to work, reveal
   finds and hold the route home. Owned lamps are reusable, repositionable and do not expire or drain
   charge; lost support leaves them recoverable nearby. Digging and C4 cannot destroy them.
+- **Diffuse all-around lamps:** a neutral lantern illuminates every direction. Nearby soil retains
+  texture instead of becoming an orange-white hotspot; solid ground still blocks the light.
 - **No personal light.** The tool does not act as a headlamp; that is what makes lamps the way you
   see and the way you remember the hole.
 - **Zone lighting moods:** warm daylight near the surface → shade in covered shallow ground → true

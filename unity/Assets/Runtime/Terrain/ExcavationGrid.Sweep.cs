@@ -4,32 +4,6 @@ namespace SomethingDownThere
 {
     public sealed partial class ExcavationGrid
     {
-        public readonly struct SweptBox
-        {
-            public readonly Vector3 Center, Half;
-            public readonly Quaternion Rotation;
-
-            public SweptBox(Vector3 from, Vector3 to, Quaternion rotation, Vector3 half)
-            {
-                Center = (from + to) * .5f;
-                Rotation = rotation;
-                Half = half + Abs(Quaternion.Inverse(rotation) * (to - from) * .5f);
-            }
-
-            // Project every axis of the inner box into this box's frame. Checking
-            // the full support extents also covers rotating corners, not just centers.
-            public bool Contains(SweptBox other)
-            {
-                var inverse = Quaternion.Inverse(Rotation);
-                var relative = inverse * other.Rotation;
-                Vector3 extent = Abs(inverse * (other.Center - Center))
-                    + Abs(relative * Vector3.right) * other.Half.x
-                    + Abs(relative * Vector3.up) * other.Half.y
-                    + Abs(relative * Vector3.forward) * other.Half.z;
-                return extent.x <= Half.x && extent.y <= Half.y && extent.z <= Half.z;
-            }
-        }
-
         // Conservative extrusion of a fixed-orientation load over a bounded substep.
         // Inflating each local axis by half its travel covers every intermediate pose.
         public bool RemoveBoxSweep(Vector3 from, Vector3 to, Quaternion rotation, Vector3 half, out BoundsInt changed)
@@ -40,9 +14,8 @@ namespace SomethingDownThere
                 || half.magnitude > 8 || Vector3.Distance(from,to) > 1) return false;
             BeginRemoval();
             var inverse = Quaternion.Inverse(rotation);
-            var sweep = new SweptBox(from, to, rotation, half);
-            Vector3 center = sweep.Center;
-            half = sweep.Half;
+            Vector3 center = (from + to) * .5f;
+            half += Abs(inverse * (to - from) * .5f);
             Vector3 axes = Abs(rotation*Vector3.right)*half.x + Abs(rotation*Vector3.up)*half.y + Abs(rotation*Vector3.forward)*half.z;
             Vector3 influence=axes+Vector3.one*band;
             var first=Vector3Int.Max(Vector3Int.zero,Vector3Int.FloorToInt((center-influence)/CellSize));

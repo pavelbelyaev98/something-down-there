@@ -7,6 +7,9 @@ cohesive art direction across custom and licensed assets. Bright and readable, n
 Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid grass,
 warm soil and a blue sky with soft clouds. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
+Preserve the established vivid color grade across the game. Improve underground readability
+through the excavation daylight and ground response, without flattening surface colors.
+Lanterns light the work area without bleaching nearby textures.
 The reservoir crust and freshly dug soil read as dry, rough ground: no mirror-like white
 glare or crystal sparkles. Preserve texture relief and contact shadows without a wet sheen.
 The whole round diggable surface is a meadow using approved pack plants: low grass,
@@ -115,6 +118,7 @@ Ambience and feedback only. **No music. No voice acting**.
 Comfort-safe effects:
 
 - Dust, crumbs, sparkles, smoke from C4, splash from water-adjacent areas.
+- Winch soil breaks eject a brief local burst of dirt crumbs and soft dust at the retaining contact, only when ground is actually removed. Keep the load and nearby excavation readable through the effect.
 - No screen shake, no blood or gore, no full-screen flashes, no chromatic aberration,
  no forced bloom.
 - Particles never collide and never deal damage.

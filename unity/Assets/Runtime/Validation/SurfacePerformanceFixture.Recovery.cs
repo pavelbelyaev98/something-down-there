@@ -18,10 +18,11 @@ namespace SomethingDownThere
             var winch=player.Winch;
             winch.enabled=false;
             var snapshot=WorldSaveStore.Read(Path.GetFullPath(input));
-            if(snapshot.Extraction==null || snapshot.Extraction.Phase!=ExtractionPhase.Obstructed)
-                throw new InvalidOperationException("Provide a copied obstructed recovery to exercise normal Retry.");
+            if(snapshot.Extraction==null || !snapshot.Extraction.Attached)
+                throw new InvalidOperationException("Provide a copied attached recovery to exercise automatic hauling.");
             yield return terrain.Restore(snapshot.Terrain,snapshot.ExcavationSeed);
             player.Discoveries.Restore(snapshot.Finds,snapshot.DiscoverySeed);
+            player.WorksiteTools.Restore(snapshot.Worksite);
             winch.Restore(snapshot.Extraction);
             Physics.SyncTransforms();
             yield return new WaitForFixedUpdate();
@@ -59,13 +60,11 @@ namespace SomethingDownThere
             using(var notify=ProfilerRecorder.StartNew(ProfilerCategory.Scripts,"Discovery.TerrainChanged",1))
             using(var simulate=ProfilerRecorder.StartNew(ProfilerCategory.Physics,"Physics.Simulate",1))
             {
-                if(!winch.Retry(find))throw new InvalidOperationException("Recovery retry refused.");
                 double start=Time.realtimeSinceStartupAsDouble;
                 while(winch.Busy && Time.realtimeSinceStartupAsDouble-start<90)
                 {
                     player.SetApplicationFocus(true);player.CloseMenu();
                     player.ViewCamera.transform.SetPositionAndRotation(eyePosition,eyeRotation);
-                    if(winch.Capture().Phase==ExtractionPhase.Obstructed)break;
                     FrameTimingManager.CaptureFrameTimings();
                     yield return null;
                     frames.Add(Time.unscaledDeltaTime*1000.0);

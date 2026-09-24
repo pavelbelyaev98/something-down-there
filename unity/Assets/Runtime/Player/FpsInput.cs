@@ -26,6 +26,7 @@ namespace SomethingDownThere
         public bool RefillPressed;
         public bool ReturnPressed;
         public bool XrayPressed;
+        public bool LampPressed, MarkPressed, RotatePlacementPressed;
     }
 
     public sealed class FpsInput : IDisposable
@@ -33,6 +34,8 @@ namespace SomethingDownThere
         private readonly InputActionMap actions = new InputActionMap("FPS");
         private readonly InputAction move, look, dig, grab, jetpack, crouch, sprint, interact, inventory, back, escape;
         private readonly InputAction refill, returnToSurface, adminMenu, adminCtrl, adminShift, xray;
+        private readonly InputAction lamp, mark, rotatePlacement;
+        private bool lampArmed, markArmed, rotateArmed;
         private readonly InputAction[] adminLevels = new InputAction[6];
         private bool digArmed, grabArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
         private InputPreferences preferences;
@@ -54,6 +57,9 @@ namespace SomethingDownThere
             sprint = actions.AddAction("Sprint", InputActionType.Button, "<Keyboard>/leftShift");
             sprint.wantsInitialStateCheck = true;
             interact = actions.AddAction("Interact", InputActionType.Button, "<Keyboard>/e");
+            lamp = actions.AddAction("Lamp", InputActionType.Button, "<Keyboard>/l");
+            mark = actions.AddAction("Mark", InputActionType.Button, "<Keyboard>/m");
+            rotatePlacement = actions.AddAction("RotatePlacement", InputActionType.Button, "<Keyboard>/r");
             inventory = actions.AddAction("Inventory", InputActionType.Button, "<Keyboard>/tab");
             back = actions.AddAction("Back", InputActionType.Button, "<Keyboard>/escape");
             escape = actions.AddAction("MenuEscape", InputActionType.Button, "<Keyboard>/escape");
@@ -94,6 +100,9 @@ namespace SomethingDownThere
             interact.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Interact));
             inventory.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Inventory));
             back.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Pause));
+            lamp.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Lamp));
+            mark.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Mark));
+            rotatePlacement.ApplyBindingOverride(0, preferences.Path(PlayerBinding.RotatePlacement));
             preferenceRevision = preferences.Revision;
             SuppressHeldActions();
             if (enabled) actions.Enable();
@@ -110,6 +119,7 @@ namespace SomethingDownThere
         public void SuppressHeldActions()
         {
             digArmed = grabArmed = jetpackArmed = interactArmed = false;
+            lampArmed = markArmed = rotateArmed = false;
             inventoryArmed = !inventory.IsPressed();
             backArmed = !back.IsPressed();
             escapeArmed = !escape.IsPressed();
@@ -129,6 +139,9 @@ namespace SomethingDownThere
             if (!inventory.IsPressed()) inventoryArmed = true;
             if (!back.IsPressed()) backArmed = true;
             if (!escape.IsPressed()) escapeArmed = true;
+            if (!lamp.IsPressed()) lampArmed = true;
+            if (!mark.IsPressed()) markArmed = true;
+            if (!rotatePlacement.IsPressed()) rotateArmed = true;
             bool toggle = preferences != null && preferences.ToggleDig;
             bool digPressed = digArmed && dig.WasPressedThisFrame();
             if (!gameplayActive) toggleIntent = false;
@@ -162,7 +175,10 @@ namespace SomethingDownThere
                 AdminLevel = adminLevel,
                 RefillPressed = adminChord && refill.WasPressedThisFrame(),
                 ReturnPressed = adminChord && returnToSurface.WasPressedThisFrame(),
-                XrayPressed = adminChord && xray.WasPressedThisFrame()
+                XrayPressed = adminChord && xray.WasPressedThisFrame(),
+                LampPressed = gameplayActive && !adminChord && lampArmed && lamp.WasPressedThisFrame(),
+                MarkPressed = gameplayActive && !adminChord && markArmed && mark.WasPressedThisFrame(),
+                RotatePlacementPressed = gameplayActive && !adminChord && rotateArmed && rotatePlacement.WasPressedThisFrame()
             };
         }
 

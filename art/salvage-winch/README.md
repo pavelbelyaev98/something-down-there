@@ -4,4 +4,4 @@
 - Source/license: original project geometry created through Blender MCP; no external content.
 - Source files: `create_assets.py` and `recovery-fixtures.blend` reproduce the exported models.
 - Unity path: `Assets/Content/Salvage`; scene wiring belongs to `SalvageWinchSetup`.
-- Status: imported FBX meshes with project-owned URP materials and recovery settings.
+- Status: imported FBX meshes with project-owned URP materials/settings; soil-break particles use original procedural shader silhouettes without imported textures.
