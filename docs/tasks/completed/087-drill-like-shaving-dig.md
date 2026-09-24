@@ -1,6 +1,6 @@
 # 087 — Drill-Like Shaving Dig Action
 
-Held digging uses controlled, thin voxel cuts; collection and full bags never interrupt the normal shaving or scoop cadence. Development admin retains a session-only shaving/scoop comparison for playtest evaluation.
+Shaving and shovel scoops share voxel cutting, collection and full-bag behavior without pickup delays. The equipment level selects normal motion; development admin retains a session-only comparison.
 
 ## Objective
 
@@ -63,3 +63,7 @@ Make held digging continuously shave the contacted surface with frequent shallow
 ## Full-bag digging playtest iteration
 - A full bag keeps common finds in the world while the cutting ray reaches ordinary ground behind them. Preserve tool reach, cadence, fuel and permanent obstructions; capacity becoming available restores immediate collection. Bounded nonallocating ray queries affect digging only, leaving item physics and identity intact.
 - Verification: both cutting modes and held/remapped-toggle input continue through full-bag commons, consume fuel per cut, respect cooldown and walls, and collect once space returns. Terrain/shaving checks and the fresh Windows build pass.
+
+## Progression iteration
+
+The user requested an ordinary shovel start and a later drill milestone. Normal motion now follows the owned tool level, with stronger continuous cuts from the milestone onward; the comparison remains transient. The progression task owns the shared ladder and its validation.

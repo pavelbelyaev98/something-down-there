@@ -13,7 +13,7 @@
 - **The final meaningful purchase lands near the end** of the run so its power is used
  (target ~75–85% of first completion; prototype-tuned).
 
-## 2. Upgrade tracks (six)
+## 2. Upgrade tracks (five)
 
 | Track | What it improves | Meaningful changes (cadence prototype-tuned) |
 |---|---|---|
@@ -21,18 +21,23 @@
 | **Battery** | Capacity and efficiency of the shared dig+jetpack battery | Longer expeditions; efficiency that makes old trips trivial |
 | **Jetpack** | Speed, efficiency, assists | Sustained ascent, steering assists, hover hold |
 | **Bag capacity** | Bag capacity | Strong steps; a full trip becomes a real haul |
-| **Detector** | Range, cue clarity, broad direction | Confident long-range hunches |
 | **C4** | Blast size, pack size, efficiency | Room-clearing blasts; cheaper demolition |
 
-Per-track level count is flexible; use **fewer, stronger steps**. Every purchase must noticeably
+**Every track has ten levels**, including its starter level, with nine sequential purchases. Every purchase must noticeably
 improve the next outing — no "invisible +5%" upgrades or cosmetic bolts standing in for power.
-Purchases apply immediately, without a blocking animation.
+Purchases apply immediately, without a blocking animation. The tool uses shovel scoops through
+level six and gains continuous drill motion at level seven; subsequent levels strengthen it.
+
+The silent detector is fixed starter equipment, not a paid track. Its eligible slice content is
+the authored computer uniques; retain the existing aim-based hunch without selling speculative
+range or direction upgrades. Jetpack and C4 tracks enter the shop with their mechanics, not as
+placeholder purchases.
 
 ### Complete player upgrade freedom
 Players have total freedom to invest in whichever tracks fit their personal playstyle:
 - If a player wants to pour all their earnings into creating an absurdly overpowered machine cutter while keeping a starter backpack, they can.
 - If a player prioritizes an enormous battery for deep endurance runs, or maxing bag slots first, the game fully supports it.
-- No forced synchronization or locked track dependencies; all 6 tracks are independent, sequential, and additive.
+- No forced synchronization or locked track dependencies; all five tracks are independent, sequential, and additive.
 - **Power outpaces resistance:** Returning to earlier layers visibly demonstrates overwhelming cutting power, while deeper ground introduces distinct material behavior without ever resetting the player's speed back to square one.
 - **Final major tool timing:** The final major machine upgrade arrives around the last third of the campaign (~70–75%), leaving substantial deep excavation to enjoy its full power.
 
@@ -53,7 +58,7 @@ Players have total freedom to invest in whichever tracks fit their personal play
 
 ## 4. Money out (including late game)
 
-Primary: the six tracks.
+Primary: the five tracks.
 
 Late-game sinks support remaining discoveries and optional decoration after the tracks are maxed:
 
@@ -123,7 +128,7 @@ extra upkeep or repeated chores are added just to sustain spending.
 | Metric | Target |
 |---|---|
 | First purchase | affordable from the first sale; within the first minutes |
-| Median time between milestone (capability) purchases | prototype-tuned for fewer, stronger steps; 30–45 min is a working hypothesis |
+| Median time between milestone (capability) purchases | prototype-tuned across ten levels; major capability milestones remain more widely spaced than ordinary purchases |
 | Purchases affordable at any moment | ≥ 3 |
 | Maxed tracks before credits | 50–85% of players (i.e., some left for Continue Playing) |
 | Rare find value | ≈ one big upgrade, never several |

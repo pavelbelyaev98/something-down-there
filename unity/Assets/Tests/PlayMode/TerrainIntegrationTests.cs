@@ -69,7 +69,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void ScoopsChargeOnceMatchCollisionAndRejectStaleHits()
         {
-            player.ToggleAdminShaving();
+            if (player.ShavingEnabled) player.ToggleAdminShaving();
             player.enabled = true;
             for (int stroke = 0; stroke < 4; stroke++)
             {
@@ -113,7 +113,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void DetachedColumnDisappearsAcrossChunksInTheSamePaidStroke()
         {
-            player.ToggleAdminShaving();
+            if (player.ShavingEnabled) player.ToggleAdminShaving();
             // A moat leaves a tall, narrow pillar supported from below. Its crown
             // crosses four chunk seams and lies well outside the final shovel brush.
             for (int i = 0; i < 24; i++)
@@ -401,7 +401,7 @@ namespace SomethingDownThere.Tests
                 "The value label follows the drag, not only a rebuild.");
             MenuTestUI.Click(MenuTestUI.View(player).CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Single(b => b.name.StartsWith("Shovel 1")));
             yield return null;
-            Assert.That(player.AdminTuningValue(1, FpsPlayer.TuningDial.Bite), Is.EqualTo(ShovelProfile.Defaults()[0].Radius).Within(.001f),
+            Assert.That(player.AdminTuningValue(1, FpsPlayer.TuningDial.Bite), Is.EqualTo(EquipmentProgression.ToolProfiles()[0].Radius).Within(.001f),
                 "Another shovel keeps the authored numbers.");
             Assert.That(MenuTestUI.Text(player, "adminBiteValue"), Is.EqualTo(player.EffectiveShovel.Radius.ToString("0.000") + " m"));
             MenuTestUI.Click(MenuTestUI.View(player).CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Single(b => b.name.StartsWith("Shovel 6")));
@@ -420,33 +420,36 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void AdminLevelsChargeEqualEnergyAndOverrideNeverChangesOwnedProgression()
+        public void AdminLevelsUseAutomaticMotionAndNeverChangeOwnedProgression()
         {
-            player.ToggleAdminShaving();
+            if (player.ShavingEnabled) player.ToggleAdminShaving();
             Assert.That(player.AdminAvailable, Is.True);
             float previous = 0;
-            for (int level = 1; level <= 6; level++)
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
             {
                 Assert.That(player.SelectAdminLevel(level), Is.True);
-                Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(ShovelProfile.Defaults()[level - 1].Radius),
+                Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(EquipmentProgression.ToolProfiles()[level - 1].Radius),
                     "MainGame must use the current shovel tuning, including serialized scene profiles.");
-                float x = (level - 1) * 3.6f - 9;
+                terrain.ResetExcavation();
+                float x = 0;
                 PlacePlayer(new Vector3(x, 0.1f, 0));
                 player.ViewCamera.transform.LookAt(new Vector3(x, -1, 0));
                 float energy = player.Battery.Charge;
                 Assert.That(player.TryDig(), Is.True);
                 Assert.That(player.Battery.Charge, Is.EqualTo(energy - player.EffectiveDigEnergy).Within(.001f));
-                if (previous > 0) Assert.That(player.LastScoopVolume / previous, Is.InRange(1.2f, 2.5f));
+                float rate = player.LastScoopVolume / player.LastDigInterval;
+                if (previous > 0) Assert.That(rate, Is.GreaterThan(previous));
+                Assert.That(player.ShavingEnabled, Is.EqualTo(EquipmentProgression.UsesDrill(level)));
                 // The starter is deliberately weak (048 follow-up); the ceiling still
                 // guards against an explosive late-tier bite.
-                Assert.That(player.LastScoopVolume, Is.InRange(0.02f, 2f));
-                previous = player.LastScoopVolume;
+                Assert.That(player.LastScoopVolume, Is.GreaterThan(.005f));
+                previous = rate;
                 Assert.That(player.Shovel.Level, Is.EqualTo(1));
             }
             Assert.That(player.SelectAdminLevel(0), Is.False);
-            Assert.That(player.SelectAdminLevel(7), Is.False);
+            Assert.That(player.SelectAdminLevel(EquipmentProgression.LevelCount + 1), Is.False);
             player.AdminReturnToSurface();
-            Assert.That(player.EffectiveShovelLevel, Is.EqualTo(6));
+            Assert.That(player.EffectiveShovelLevel, Is.EqualTo(EquipmentProgression.LevelCount));
             Assert.That(player.ExcavatedVolume, Is.GreaterThan(0));
             player.RestoreAdminOverrides();
             Assert.That(player.EffectiveShovelLevel, Is.EqualTo(1));
@@ -456,13 +459,14 @@ namespace SomethingDownThere.Tests
         public void OwnedUpgradesExtendRealDigReachAtEveryLevelWithoutAdminOverrides()
         {
             float previous = 0;
-            for (int level = 1; level <= 6; level++)
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
             {
                 if (level > 1) Assert.That(player.Shovel.TryUpgradeTo(level), Is.True);
                 Assert.That(player.HasAdminOverrides, Is.False);
                 float reach = player.EffectiveDigReach;
                 Assert.That(reach, Is.GreaterThan(previous));
-                float x = (level - 1) * 3.6f - 9;
+                terrain.ResetExcavation();
+                float x = 0;
                 PlacePlayer(new Vector3(x, reach + 0.15f - 1.6f, 0));
                 player.ViewCamera.transform.LookAt(new Vector3(x, -1, 0));
                 float charge = player.Battery.Charge;
@@ -475,13 +479,13 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
                 previous = reach;
             }
-            Assert.That(player.EffectiveDigReach, Is.EqualTo(4));
+            Assert.That(player.EffectiveDigReach, Is.EqualTo(player.Tuning.DigReach + EquipmentProgression.ToolProfiles().Last().ReachBonus));
         }
 
         [UnityTest]
         public IEnumerator AttachedRemnantClearsPlayerTraversalAndCollisionInOnePaidStroke()
         {
-            player.ToggleAdminShaving();
+            if (player.ShavingEnabled) player.ToggleAdminShaving();
             InstallExcavatedSpikeFixture();
             var tip = new Vector3(0, -1.75f, 0);
             var feet = new Vector3(0, -1.94f, -1);

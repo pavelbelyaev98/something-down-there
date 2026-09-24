@@ -49,10 +49,10 @@ namespace SomethingDownThere
                 Kind = kind;
                 OwnedLevel = owner.Level(kind);
                 EquipmentRevision = owner.EquipmentRevision(kind);
-                LevelCount = kind == EquipmentKind.Shovel ? owner.shovel.LevelCount : EquipmentProgression.LevelCount;
+                LevelCount = EquipmentProgression.LevelCount;
                 Complete = OwnedLevel == LevelCount || (kind == EquipmentKind.Inventory
                     && owner.inventory.Capacity + EquipmentProgression.InventoryIncrease(OwnedLevel) > 256);
-                Cost = Complete ? 0 : kind == EquipmentKind.Shovel ? owner.prices[OwnedLevel - 1] : EquipmentProgression.Price(OwnedLevel);
+                Cost = Complete ? 0 : EquipmentProgression.Price(OwnedLevel);
             }
         }
 
@@ -91,20 +91,12 @@ namespace SomethingDownThere
         private readonly SessionWallet wallet;
         private readonly ShovelState shovel;
         private readonly Battery battery;
-        private readonly int[] prices;
-        public static int[] DefaultPrices() => (int[])EquipmentProgression.TierPrices.Clone();
-
-        public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, int[] prices, Battery battery = null)
+        public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, Battery battery = null)
         {
             this.inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
             this.wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             this.shovel = shovel ?? throw new ArgumentNullException(nameof(shovel));
             this.battery = battery;
-            if (prices == null || prices.Length != shovel.LevelCount - 1)
-                throw new ArgumentException("Provide one price for each shovel upgrade.", nameof(prices));
-            this.prices = (int[])prices.Clone();
-            foreach (int price in this.prices)
-                if (price <= 0) throw new ArgumentException("Upgrade prices must be positive.", nameof(prices));
         }
 
         public SaleOffer OfferSale(string instanceId = null) => new SaleOffer(this, instanceId);

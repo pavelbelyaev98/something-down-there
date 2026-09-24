@@ -28,7 +28,7 @@ grow stronger both need to pull the player into the next outing.
  Sideways digging earns its keep through physical buried connections ("Follow the thing"), coherent scenes, and oversized cable-winch salvage. Navigation is naturally intuitive and vertical (near the surface, looking up reveals the open sky and daylight shaft; deeper down, lamps mark the way); no map, ever.
 2. **The signal and the reveal.** A silent detector builds a hunch; the reward is recognizing an
  object from its half-buried shape. Every find requires deliberate excavation exposure before collection—no vacuum auto-collect. No value radar. No treasure GPS.
-3. **One ridiculous machine.** A single tool that visibly escalates from an improvised motorized shovel into a garage-built absurdity.
+3. **One ridiculous machine.** A single tool that visibly escalates from an ordinary shovel through a drill attachment into a garage-built absurdity.
  Automatic adaptation through the final tier; power outpaces tougher ground. No mode chores, no
  replacement tool that invalidates your investment.
 4. **Always a reason to dig, never a reason to fear losing it.** Money is banked only on the surface,

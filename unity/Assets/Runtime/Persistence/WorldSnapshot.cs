@@ -45,7 +45,7 @@ namespace SomethingDownThere
             Require(Finite(Pitch) && Math.Abs(Pitch) < 90 && Finite(VerticalSpeed), "Invalid player movement.");
             Require(Finite(CrouchAmount) && CrouchAmount >= 0f && CrouchAmount <= 1f, "Invalid saved crouch stance.");
             Require(InventoryCapacity > 0 && InventoryCapacity <= 256 && Credits >= 0 && ShovelLevel >= 1
-                && ShovelLevel <= 6 && SuccessfulStrokes >= 0, "Invalid progression.");
+                && ShovelLevel <= EquipmentProgression.LevelCount && SuccessfulStrokes >= 0, "Invalid progression.");
             Require(InventoryLevel >= 1 && InventoryLevel <= EquipmentProgression.LevelCount
                 && FuelLevel >= 1 && FuelLevel <= EquipmentProgression.LevelCount, "Invalid capacity upgrades.");
             Require(Finite(BatteryCapacity) && BatteryCapacity > 0 && Finite(BatteryCharge)

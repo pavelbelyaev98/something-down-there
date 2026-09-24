@@ -38,9 +38,9 @@ namespace SomethingDownThere
         [SerializeField] private Camera viewCamera;
         [Tooltip("Include all world blockers, not just interactive objects. Player colliders must be excluded.")]
         [SerializeField] private LayerMask worldMask = Physics.DefaultRaycastLayers;
-        // Authored once in ShovelProfile.Defaults(). Never serialize the ladder onto this
+        // Authored once in EquipmentProgression.ToolProfiles(). Never serialize the ladder onto this
         // component: the scene copy silently won every code edit until 048's follow-up.
-        private readonly ShovelProfile[] shovelLevels = ShovelProfile.Defaults();
+        private readonly ShovelProfile[] shovelLevels = EquipmentProgression.ToolProfiles();
         [UnityEngine.Serialization.FormerlySerializedAs("practiceTerrain")]
         [SerializeField] private TerrainVolume excavationTerrain;
         [SerializeField] private Transform surfaceReturn;
@@ -48,9 +48,6 @@ namespace SomethingDownThere
         [SerializeField] private SurfaceRecharge surfaceRecharge;
         [SerializeField] private ReturnWarning returnWarning = new ReturnWarning();
         [SerializeField, Min(0)] private int maximumRescueFee = 10;
-        // Owned by EquipmentProgression.TierPrices, never serialized into the scene: a
-        // baked copy silently outranked the source the same way the tool ladder did.
-        private readonly int[] shovelUpgradeCosts = StationTrade.DefaultPrices();
 
         private CharacterController motor;
         private FpsInput input;
@@ -86,7 +83,7 @@ namespace SomethingDownThere
         private ShovelProfile[] adminTuning;
         private bool unlimitedBattery;
         private bool adminXray;
-        private bool adminScoopComparison;
+        private bool? adminShavingOverride;
         private bool jetpackReadyInAir;
 
         public FpsTuning Tuning => tuning;
@@ -129,14 +126,17 @@ namespace SomethingDownThere
         public static bool AdminBuild => Debug.isDebugBuild;
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
-        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminScoopComparison);
-        public bool ShavingEnabled => ExcavationAvailable && (!AdminAvailable || !adminScoopComparison);
+        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminShavingOverride.HasValue);
+        public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
+            ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
+        public string AdminMotionLabel => (adminShavingOverride.HasValue ? "Override: " : "Automatic: ")
+            + (ShavingEnabled ? "drill" : "shovel");
         public DiscoveryField Discoveries => discoveries;
         public bool AdminXray => AdminAvailable && adminXray && discoveries != null && discoveries.isActiveAndEnabled;
         public bool UnlimitedBattery => AdminAvailable && unlimitedBattery;
         public int EffectiveShovelLevel => AdminAvailable && adminLevel > 0 ? adminLevel : Shovel.Level;
         // Developer calibration: a session-only ladder copy the dev menu edits live.
-        // Null means the authored ladder in ShovelProfile.Defaults() is in charge.
+        // Null means the authored ladder in EquipmentProgression.ToolProfiles() is in charge.
         public bool HasAdminTuning => AdminAvailable && adminTuning != null;
         public ShovelProfile ProfileAt(int level) => HasAdminTuning
             ? adminTuning[Mathf.Clamp(level, 1, Shovel.LevelCount) - 1] : Shovel.GetProfile(level);
@@ -148,8 +148,9 @@ namespace SomethingDownThere
         public float PickupReach(BuriedFind find) => find != null && find.IsReleased ? MaximumPickupReach : tuning.InteractReach;
         public float ScoopDigInterval => Mathf.Max(0.01f, tuning.DigInterval * EffectiveShovel.CadenceMultiplier);
         public float DigIntervalAtLevel(int level) => Mathf.Max(0.01f, tuning.DigInterval * ProfileAt(level).CadenceMultiplier
+            * (EquipmentProgression.UsesDrill(level) ? EquipmentProgression.ShavingIntervalScale : 1f));
+        public float EffectiveDigInterval => Mathf.Max(.01f, ScoopDigInterval
             * (ShavingEnabled ? EquipmentProgression.ShavingIntervalScale : 1f));
-        public float EffectiveDigInterval => DigIntervalAtLevel(EffectiveShovelLevel);
         public float EffectiveDigEnergy => Mathf.Max(0f, tuning.DigEnergy) * EffectiveDigInterval / ScoopDigInterval;
         public TerrainMaterialId LastDigMaterial { get; private set; }
         public float LastDigInterval { get; private set; }
@@ -175,7 +176,7 @@ namespace SomethingDownThere
             Wallet = new SessionWallet();
             Rescue = new RescueController(Inventory, Wallet, Mathf.Max(0, maximumRescueFee));
             Shovel = new ShovelState(shovelLevels);
-            Trade = new StationTrade(Inventory, Wallet, Shovel, shovelUpgradeCosts, Battery);
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery);
             pitch = Mathf.DeltaAngle(0f, viewCamera.transform.localEulerAngles.x);
             if (InputSettings == null)
                 ConfigureInputPreferences(new DevicePreferencesFile(System.IO.Path.Combine(Application.persistentDataPath,
@@ -268,10 +269,11 @@ namespace SomethingDownThere
             Wallet = new SessionWallet(snapshot.Credits);
             Shovel = shovel;
             Battery = battery;
-            Trade = new StationTrade(Inventory, Wallet, Shovel, shovelUpgradeCosts, Battery);
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = adminScoopComparison = jetpackReadyInAir = false;
+            unlimitedBattery = adminXray = jetpackReadyInAir = false;
+            adminShavingOverride = null;
             discoveries?.SetXray(false, null);
             motor.enabled = false;
             transform.SetPositionAndRotation(snapshot.PlayerPosition, snapshot.PlayerRotation);
@@ -692,7 +694,7 @@ namespace SomethingDownThere
             unlimitedBattery = false;
             adminXray = false;
             discoveries?.SetXray(false, null);
-            adminScoopComparison = false;
+            adminShavingOverride = null;
             ResetDigComparisonInput();
             ShowFeedback("Normal rules restored");
             MenuChanged?.Invoke();
@@ -709,9 +711,10 @@ namespace SomethingDownThere
         public void ToggleAdminShaving()
         {
             if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminScoopComparison = !adminScoopComparison;
+            bool shaving = !ShavingEnabled;
+            adminShavingOverride = shaving == EquipmentProgression.UsesDrill(EffectiveShovelLevel) ? (bool?)null : shaving;
             ResetDigComparisonInput();
-            ShowFeedback(ShavingEnabled ? "Shaving motion ON" : "Shaving motion OFF - scoop digging");
+            ShowFeedback(AdminMotionLabel);
             MenuChanged?.Invoke();
         }
 
@@ -719,7 +722,7 @@ namespace SomethingDownThere
         {
             digCooldown = DigPulse = 0;
             blockedPickup = null;
-            input?.SuppressHeldActions();
+            input?.SuppressDig();
             extractionInteraction?.Reset();
         }
 
@@ -746,7 +749,8 @@ namespace SomethingDownThere
         {
             if (!focused || !AdminAvailable || level < 1 || level > Shovel.LevelCount) return false;
             adminLevel = level;
-            ShowFeedback($"Shovel {level}  |  Reach {EffectiveDigReach:F1} m  |  Scoop width {EffectiveShovel.Radius * 2:F2} m");
+            ResetDigComparisonInput();
+            ShowFeedback($"{EquipmentProgression.ToolName(level)} {level}  |  Reach {EffectiveDigReach:F1} m  |  Cut width {EffectiveShovel.Radius * 2:F2} m");
             MenuChanged?.Invoke();
             return true;
         }
@@ -800,7 +804,7 @@ namespace SomethingDownThere
         }
 
         // One row per level, in the source's own fields and precision, so a screenshot
-        // of this table is enough to bake the numbers back into ShovelProfile.Defaults().
+        // of this table is enough to bake the numbers back into EquipmentProgression.ToolProfiles().
         public string AdminTuningSummary()
         {
             var text = new System.Text.StringBuilder();

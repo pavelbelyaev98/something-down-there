@@ -98,10 +98,10 @@ namespace SomethingDownThere.Tests
         {
             Press(keyboard.leftCtrlKey);
             Press(keyboard.leftShiftKey);
-            foreach (var key in new[] { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6 })
+            foreach (var key in new[] { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9, Key.Digit0 })
             {
                 Press(keyboard[key]);
-                Assert.That(input.Read().AdminLevel, Is.EqualTo((int)key - (int)Key.Digit1 + 1));
+                Assert.That(input.Read().AdminLevel, Is.EqualTo(key == Key.Digit0 ? 10 : (int)key - (int)Key.Digit1 + 1));
                 InputSystem.Update();
                 Assert.That(input.Read().AdminLevel, Is.Zero);
                 Release(keyboard[key]);
@@ -121,10 +121,10 @@ namespace SomethingDownThere.Tests
         {
             Press(keyboard.rightCtrlKey);
             Press(keyboard.rightShiftKey);
-            foreach (var key in new[] { Key.Numpad1, Key.Numpad2, Key.Numpad3, Key.Numpad4, Key.Numpad5, Key.Numpad6 })
+            foreach (var key in new[] { Key.Numpad1, Key.Numpad2, Key.Numpad3, Key.Numpad4, Key.Numpad5, Key.Numpad6, Key.Numpad7, Key.Numpad8, Key.Numpad9, Key.Numpad0 })
             {
                 Press(keyboard[key]);
-                Assert.That(input.Read().AdminLevel, Is.EqualTo((int)key - (int)Key.Numpad1 + 1));
+                Assert.That(input.Read().AdminLevel, Is.EqualTo(key == Key.Numpad0 ? 10 : (int)key - (int)Key.Numpad1 + 1));
                 Release(keyboard[key]);
             }
         }

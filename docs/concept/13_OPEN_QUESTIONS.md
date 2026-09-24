@@ -38,6 +38,16 @@ Tune recognition, discovery spacing, net income, upgrades, charge and return bur
 Numerical targets in [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) and the
 [Prototype Plan](14_PROTOTYPE_PLAN.md) are starting points to validate.
 
+## Later exploration: ground and tool upgrades
+
+Deferred idea for material/progression playtests; not an accepted mechanics change.
+
+- Explore upgrades that improve performance against tougher ground more strongly: the starter shovel is comfortable in soil, a reinforced shovel becomes effective in clay, and the drill brings the largest improvement against rock.
+- Keep every diggable material workable from the start with visible progress. A hard pocket offers a choice: dig through now, follow softer deposits around it, or return after upgrading.
+- Combine this with the planned [seam cleaving](03_WORLD_AND_SITE.md#4-materials): cutting along a clay–rock boundary can release a larger local rock section with less work.
+- Preserve the shared tool level and automatic material response. Power growth must outpace deeper resistance, making previously difficult ground noticeably easier while materials retain their character.
+- Compare against the current fixed material modifiers during playtests; adopt only if the differences create useful route and purchase decisions without turning early digging into a grind.
+
 ## Later work
 
 - Localization languages.

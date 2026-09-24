@@ -124,7 +124,7 @@ namespace SomethingDownThere.Tests
         public void AllTiersCutEveryMaterialAndUpgradesImproveFamiliarGround(bool scoop)
         {
             float[] previous = new float[3];
-            foreach (var profile in ShovelProfile.Defaults())
+            foreach (var profile in EquipmentProgression.ToolProfiles())
             {
                 float softerRate = float.MaxValue;
                 foreach (TerrainMaterialId material in Enum.GetValues(typeof(TerrainMaterialId)))
@@ -140,6 +140,45 @@ namespace SomethingDownThere.Tests
                     Assert.That(rate, Is.LessThan(softerRate), $"{material} must retain its resistance.");
                     previous[(int)material] = rate; softerRate = rate;
                 }
+            }
+        }
+
+        [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Clay)] [TestCase(TerrainMaterialId.Rock)]
+        public void AutomaticMotionImprovesFreshAndSustainedOutputAcrossTheDrillMilestone(TerrainMaterialId material)
+        {
+            float previousFresh = 0, previousSustained = 0;
+            var profiles = EquipmentProgression.ToolProfiles();
+            Assert.That(profiles.Length, Is.EqualTo(10));
+            for (int level = 1; level <= profiles.Length; level++)
+            {
+                var profile = profiles[level - 1];
+                var grid = new ExcavationGrid(new Vector3Int(48, 192, 48), .0625f);
+                var saved = grid.Capture();
+                saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, material);
+                grid.Restore(saved);
+                bool drill = EquipmentProgression.UsesDrill(level);
+                float interval = .35f * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval
+                    * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
+                float first = 0;
+                for (int cut = 0; cut < 12; cut++)
+                {
+                    float low = 0, high = grid.Extent.y;
+                    for (int step = 0; step < 18; step++)
+                    {
+                        float middle = (low + high) * .5f;
+                        if (grid.Sample(new Vector3(1.5f, middle, 1.5f)) > 0) low = middle; else high = middle;
+                    }
+                    var surface = new Vector3(1.5f, (low + high) * .5f, 1.5f);
+                    Assert.That(drill
+                        ? grid.RemoveShave(surface, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut)
+                        : grid.RemoveScoop(surface - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62 + cut, .1f, out _, true), Is.True);
+                    if (cut == 0) first = grid.LastRemovedVolume / interval;
+                }
+                float sustained = grid.RemovedVolume / (12 * interval);
+                TestContext.WriteLine($"{material} level {level}: fresh {first:F3}, sustained {sustained:F3} m3/s");
+                Assert.That(first, Is.GreaterThan(previousFresh), $"{material} level {level} fresh-ground output");
+                Assert.That(sustained, Is.GreaterThan(previousSustained), $"{material} level {level} sustained output");
+                previousFresh = first; previousSustained = sustained;
             }
         }
 

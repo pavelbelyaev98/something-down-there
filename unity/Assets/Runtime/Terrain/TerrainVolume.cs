@@ -13,7 +13,7 @@ namespace SomethingDownThere
         [SerializeField, Range(2, 24)] private int chunkSize = 16;
         // The starter bite is owned by the tool ladder, never by this scene: a stale
         // serialized copy here used to survive shovel retuning.
-        private float digRadius = ShovelProfile.Defaults()[0].Radius;
+        private float digRadius = EquipmentProgression.ToolProfiles()[0].Radius;
         [SerializeField, Range(0f, 0.15f)] private float scoopVariation = 0.12f;
         [SerializeField, Range(0f, 0.08f)] private float scoopDepthVariation = 0.05f;
         [SerializeField] private int excavationSeed = 2718;

@@ -2,10 +2,10 @@
 
 ## 1. One machine
 
-There is exactly one excavation tool. It starts as a visibly improvised, motor-assisted shovel and ends as a garage-built
+There is exactly one excavation tool. It starts as an ordinary shovel and ends as a garage-built
 absurdity. The player never switches tools; upgrades bolt onto the same object.
 
-- **Improvised baseline:** The starting tool is visibly motorized (small lawnmower engine/battery bolted to a spade handle). This immediately establishes the machine fantasy and logically explains why digging consumes battery from the very first stroke.
+- **Ordinary baseline:** Begin with recognizable shovel scoops. Improvements strengthen the same shovel through level six; level seven adds continuous drill-like cutting, retained through level ten. This is automatic progression, not a tool swap or a mode selection. Digging retains the shared battery budget throughout the progression.
 - **Visible body:** The tool only — no hands visible. The player watches the machine evolve for the whole game.
 - **Visual escalation:** Motors, battery packs, wider heads, pipes, reinforcement, a late nozzle,
  welded plates and cables. The silhouette grows ridiculous while staying recognizably the same
@@ -24,10 +24,10 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
  sensitivity options; optional gyro.
 - No mashing, no QTEs, no rhythm inputs, anywhere in the game.
 
-The current playtest uses a drill-like shaving cut: holding steadily removes shallow layers as
-the aim moves across the ground. There is no visible tool rig yet. Developer admin provides a
-session-only shaving ON/OFF comparison with scoop digging while this feel is evaluated; ordinary
-play never requires switching cutting modes.
+Holding repeats ordinary shovel scoops at the early levels. From tool level seven onward it
+steadily shaves shallow layers as the aim moves across the ground. There is no visible tool rig
+yet; the rig task must communicate this shovel-to-drill transition. Developer admin retains a
+session-only motion comparison; normal play follows the owned level automatically.
 
 ## 3. Automatic material adaptation (the mode model)
 
@@ -51,7 +51,7 @@ behavior automatically:
 ## 4. Upgrade tracks and the tool
 
 The tool's own track (Tool) controls power, bite size and adaptation quality; see
-[Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) for all six tracks. Fewer, stronger steps replace tiny increments;
+[Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) for all tracks. Each track has ten levels;
 each purchase noticeably improves the next outing and applies without a blocking animation.
 
 ## 5. Jetpack

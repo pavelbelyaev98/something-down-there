@@ -373,9 +373,9 @@ namespace SomethingDownThere.Tests
         [Test]
         public void EveryShovelLevelRemovesMoreFreshSoilAndUpgradesMustBeSequential()
         {
-            var shovel = new ShovelState(ShovelProfile.Defaults());
+            var shovel = new ShovelState(EquipmentProgression.ToolProfiles());
             float previous = 0;
-            for (int level = 1; level <= 6; level++)
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
             {
                 float radius = shovel.Current.Radius;
                 var grid = new ExcavationGrid(new Vector3Int(64, 64, 64), 0.125f);
@@ -384,18 +384,18 @@ namespace SomethingDownThere.Tests
                     "An upgrade should feel stronger without an explosive increase in volume.");
                 // The starter is deliberately weak (048 follow-up): a level-1 stroke
                 // still has to move soil, but far less than the old 0.06 m3 floor.
-                Assert.That(grid.RemovedVolume, Is.InRange(0.02f, 2f), "Fresh strokes remain controlled at every level.");
+                Assert.That(grid.RemovedVolume, Is.InRange(0.02f, 8f), "Fresh strokes remain controlled at every level.");
                 TestContext.WriteLine($"Level {level}: radius {radius:F2} m; scoop {grid.RemovedVolume:F3} m3");
                 previous = grid.RemovedVolume;
                 Assert.That(shovel.TryUpgradeTo(level), Is.False);
                 Assert.That(shovel.TryUpgradeTo(level + 2), Is.False);
-                Assert.That(shovel.TryUpgradeTo(level + 1), Is.EqualTo(level < 6));
+                Assert.That(shovel.TryUpgradeTo(level + 1), Is.EqualTo(level < EquipmentProgression.LevelCount));
             }
             Assert.Throws<ArgumentOutOfRangeException>(() => shovel.GetProfile(0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => shovel.GetProfile(7));
-            var invalid = ShovelProfile.Defaults(); invalid[3].Radius = invalid[2].Radius;
+            Assert.Throws<ArgumentOutOfRangeException>(() => shovel.GetProfile(EquipmentProgression.LevelCount + 1));
+            var invalid = EquipmentProgression.ToolProfiles(); invalid[3].Radius = invalid[2].Radius;
             Assert.Throws<ArgumentException>(() => new ShovelState(invalid));
-            invalid = ShovelProfile.Defaults(); invalid[3].ReachBonus = invalid[2].ReachBonus;
+            invalid = EquipmentProgression.ToolProfiles(); invalid[3].ReachBonus = invalid[2].ReachBonus;
             Assert.Throws<ArgumentException>(() => new ShovelState(invalid));
         }
 

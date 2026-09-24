@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Linq;
 
 namespace SomethingDownThere.Tests
 {
@@ -14,8 +15,8 @@ namespace SomethingDownThere.Tests
         {
             bag = new SessionInventory();
             wallet = new SessionWallet();
-            shovel = new ShovelState(ShovelProfile.Defaults());
-            trade = new StationTrade(bag, wallet, shovel, StationTrade.DefaultPrices());
+            shovel = new ShovelState(EquipmentProgression.ToolProfiles());
+            trade = new StationTrade(bag, wallet, shovel);
             bag.TryAdd(new InventoryItem("first", "Coin", 5));
             bag.TryAdd(new InventoryItem("second", "Coin", 17));
         }
@@ -69,7 +70,7 @@ namespace SomethingDownThere.Tests
             Assert.That(bag.Count, Is.EqualTo(2));
             Assert.That(wallet.Balance, Is.EqualTo(int.MaxValue - 10));
             Assert.That(trade.TrySell(trade.OfferSale("missing")), Is.False);
-            var other = new StationTrade(bag, wallet, shovel, StationTrade.DefaultPrices());
+            var other = new StationTrade(bag, wallet, shovel);
             Assert.That(other.TrySell(trade.OfferSale("first")), Is.False);
             Assert.That(other.TryUpgrade(trade.OfferUpgrade()), Is.False);
         }
@@ -83,9 +84,9 @@ namespace SomethingDownThere.Tests
             Assert.That(trade.Check(first), Is.EqualTo(TradeResult.Unaffordable));
             Assert.That(trade.TryUpgrade(first), Is.False);
             Assert.That(shovel.Level, Is.EqualTo(1));
-            wallet.TryCredit(370);
+            wallet.TryCredit(Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Sum(EquipmentProgression.Price));
             Assert.That(trade.TryUpgrade(first), Is.False, "A changed balance needs a fresh displayed offer.");
-            int[] prices = StationTrade.DefaultPrices();
+            int[] prices = Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Select(EquipmentProgression.Price).ToArray();
             for (int i = 0; i < prices.Length; i++)
             {
                 decimal before = wallet.Balance;
@@ -102,13 +103,11 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void ExternalProgressionAndPriceArrayChangesCannotRewriteAnOffer()
+        public void ExternalProgressionCannotRewriteAnOffer()
         {
-            var prices = StationTrade.DefaultPrices();
-            var shop = new StationTrade(bag, wallet, shovel, prices);
+            var shop = new StationTrade(bag, wallet, shovel);
             wallet.TryCredit(50);
             var quote = shop.OfferUpgrade();
-            prices[0] = 1;
             Assert.That(quote.Cost, Is.EqualTo(10));
             shovel.TryUpgradeTo(2);
             Assert.That(shop.TryUpgrade(quote), Is.False);
@@ -122,14 +121,11 @@ namespace SomethingDownThere.Tests
         {
             var fuel = new Battery(100);
             fuel.TrySpend(73.5f);
-            trade = new StationTrade(bag, wallet, shovel, StationTrade.DefaultPrices(), fuel);
-            // Every track shares one tier ladder, so the budget is the sum of its four
-            // capacity tiers rather than a literal from the old bag-only ladder.
-            wallet.TryCredit(EquipmentProgression.Price(1) + EquipmentProgression.Price(2)
-                + EquipmentProgression.Price(3) + EquipmentProgression.Price(4));
+            trade = new StationTrade(bag, wallet, shovel, fuel);
+            wallet.TryCredit(Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Sum(EquipmentProgression.Price));
             var item = bag.Items[0];
-            int[] capacities = kind == EquipmentKind.Inventory ? new[] { 15, 20, 30, 40 } : new[] { 150, 200, 300, 400 };
-            for (int i = 0; i < 4; i++)
+            int[] capacities = kind == EquipmentKind.Inventory ? new[] { 15, 20, 30, 40, 55, 75, 100, 130, 170 } : new[] { 150, 200, 300, 400, 550, 750, 1000, 1300, 1700 };
+            for (int i = 0; i < EquipmentProgression.LevelCount - 1; i++)
             {
                 var offer = trade.OfferUpgrade(kind);
                 Assert.That(trade.TryUpgrade(offer), Is.True);
@@ -162,7 +158,7 @@ namespace SomethingDownThere.Tests
             var fuel = new Battery(400);
             fuel.TrySpend(missing);
             wallet.TryCredit(credits);
-            trade = new StationTrade(bag, wallet, shovel, StationTrade.DefaultPrices(), fuel);
+            trade = new StationTrade(bag, wallet, shovel, fuel);
             var offer = trade.OfferRefill();
             Assert.That(offer.Amount, Is.EqualTo(added));
             Assert.That(offer.Cost, Is.EqualTo(cost));
@@ -180,7 +176,7 @@ namespace SomethingDownThere.Tests
             var fuel = new Battery(100);
             fuel.TrySpend(60);
             wallet.TryCredit(20);
-            trade = new StationTrade(bag, wallet, shovel, StationTrade.DefaultPrices(), fuel);
+            trade = new StationTrade(bag, wallet, shovel, fuel);
             var chargeOffer = trade.OfferRefill();
             fuel.TrySpend(1); fuel.TryAdd(1);
             Assert.That(trade.TryRefill(chargeOffer), Is.False);
@@ -190,7 +186,7 @@ namespace SomethingDownThere.Tests
             var walletOffer = trade.OfferRefill();
             wallet.TryCredit(1); wallet.TrySpend(1);
             Assert.That(trade.TryRefill(walletOffer), Is.False);
-            var foreign = new StationTrade(bag, wallet, shovel, StationTrade.DefaultPrices(), fuel);
+            var foreign = new StationTrade(bag, wallet, shovel, fuel);
             Assert.That(foreign.TryRefill(trade.OfferRefill()), Is.False);
             var fresh = trade.OfferRefill();
             Assert.That(fresh.Amount, Is.EqualTo(110));
@@ -209,7 +205,7 @@ namespace SomethingDownThere.Tests
                     float charge = (float)random.NextDouble() * capacity * .15f;
                     var fuel = new Battery(capacity); fuel.RestoreCharge(charge);
                     var credits = new SessionWallet(10);
-                    var service = new StationTrade(bag, credits, shovel, StationTrade.DefaultPrices(), fuel);
+                    var service = new StationTrade(bag, credits, shovel, fuel);
                     var offer = service.OfferRefill();
                     Assert.That(offer.ChargeAfter, Is.EqualTo(capacity));
                     Assert.That(service.TryRefill(offer), Is.True);
@@ -228,7 +224,7 @@ namespace SomethingDownThere.Tests
         {
             var fuel = new Battery(150); fuel.RestoreCharge(13.00586f);
             var credits = new SessionWallet(1);
-            var service = new StationTrade(bag, credits, shovel, StationTrade.DefaultPrices(), fuel);
+            var service = new StationTrade(bag, credits, shovel, fuel);
             var offer = service.OfferRefill();
             Assert.That(offer.Partial, Is.True);
             Assert.That(offer.Cost, Is.EqualTo(1));

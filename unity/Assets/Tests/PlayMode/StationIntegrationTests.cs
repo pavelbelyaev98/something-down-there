@@ -87,14 +87,14 @@ namespace SomethingDownThere.Tests
             StringAssert.Contains("$22", Text("Trade balance"));
             Assert.That(computer.Selling, Is.False);
             Assert.That(MenuTestUI.View(player).Root.Q<Button>("Sell all"), Is.Null);
-            Assert.That(Button("Upgrade Shovel").enabledSelf, Is.True);
+            Assert.That(Button("Upgrade Tool").enabledSelf, Is.True);
             Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Station));
             Assert.That(Time.timeScale, Is.Zero);
             Assert.That(player.ExecuteStationCommand(ComputerStation.SellAllCommand), Is.False);
             MenuTestUI.Click(oldClick);
             Assert.That(player.Wallet.Balance, Is.EqualTo(22));
             Assert.That(player.Shovel.Level, Is.EqualTo(1));
-            MenuTestUI.Click(Button("Upgrade Shovel"));
+            MenuTestUI.Click(Button("Upgrade Tool"));
             yield return null;
             Assert.That(player.Shovel.Level, Is.EqualTo(2));
             Assert.That(player.Wallet.Balance, Is.EqualTo(12));
@@ -114,21 +114,21 @@ namespace SomethingDownThere.Tests
             yield return null;
             yield return null;
             // The row advertises its own numbers, so nothing has to be selected first.
-            StringAssert.Contains($"{player.Shovel.Current.Radius * 2:F2} m", Text("Shovel effect"));
-            StringAssert.Contains($"{player.Shovel.GetProfile(2).Radius * 2:F2} m", Text("Shovel effect"));
-            StringAssert.Contains("Reach", Button("Upgrade Shovel").tooltip, "Secondary stats stay one hover away.");
-            Assert.That(Button("Upgrade Shovel").text, Is.EqualTo("$10"));
+            StringAssert.Contains($"{player.Shovel.Current.Radius * 2:F2} m", Text("Tool effect"));
+            StringAssert.Contains($"{player.Shovel.GetProfile(2).Radius * 2:F2} m", Text("Tool effect"));
+            StringAssert.Contains("Reach", Button("Upgrade Tool").tooltip, "Secondary stats stay one hover away.");
+            Assert.That(Button("Upgrade Tool").text, Is.EqualTo("$10"));
             Assert.That(player.Shovel.Level, Is.EqualTo(1));
-            MenuTestUI.Click(Button("Upgrade Shovel"));
+            MenuTestUI.Click(Button("Upgrade Tool"));
             yield return null;
             yield return null;
             Assert.That(player.Shovel.Level, Is.EqualTo(2), "A single activation buys exactly one level.");
             Assert.That(player.Wallet.Balance, Is.Zero);
             Assert.That(Text("Trade balance"), Is.EqualTo("$0"));
-            Assert.That(Button("Upgrade Shovel").enabledSelf, Is.False, "An unaffordable button reads as disabled.");
-            Assert.That(Button("Upgrade Shovel").text, Is.EqualTo("$25"));
-            Assert.That(Button("Upgrade Shovel").ClassListContains("short"), Is.True, "Out of reach is shown on the chip.");
-            MenuTestUI.Click(Button("Upgrade Shovel"));
+            Assert.That(Button("Upgrade Tool").enabledSelf, Is.False, "An unaffordable button reads as disabled.");
+            Assert.That(Button("Upgrade Tool").text, Is.EqualTo("$25"));
+            Assert.That(Button("Upgrade Tool").ClassListContains("short"), Is.True, "Out of reach is shown on the chip.");
+            MenuTestUI.Click(Button("Upgrade Tool"));
             Assert.That(player.Wallet.Balance, Is.Zero);
             Assert.That(player.Shovel.Level, Is.EqualTo(2));
             player.CloseMenu();
@@ -157,7 +157,7 @@ namespace SomethingDownThere.Tests
             Face(computer);
             Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
-            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Upgrade Shovel"), "The rows are the focus route.");
+            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Upgrade Tool"), "The rows are the focus route.");
             StringAssert.Contains("10 \u2192 15", Text("Backpack effect"));
             Assert.That(player.Wallet.Balance, Is.EqualTo(2 * EquipmentProgression.Price(1) + 1));
             // Pointing at another card must never re-target the purchase: the card
@@ -307,7 +307,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
             Assert.That(computer.Selling, Is.False);
-            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Upgrade Shovel"), Is.Not.Null);
+            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Upgrade Tool"), Is.Not.Null);
             Assert.That(MenuTestUI.View(player).Root.Q<Button>("Sell all"), Is.Null);
             player.CloseMenu();
             yield return null;
@@ -315,7 +315,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
             Assert.That(computer.Selling, Is.True);
-            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Upgrade Shovel"), Is.Null);
+            Assert.That(MenuTestUI.View(player).Root.Q<Button>("Upgrade Tool"), Is.Null);
             player.CloseMenu();
             yield return null;
             Assert.That(player.Inventory.Count, Is.EqualTo(1), "Closing the computer never sells.");
@@ -329,8 +329,39 @@ namespace SomethingDownThere.Tests
             Assert.That(computer.Selling, Is.False);
             Assert.That(player.Inventory.Count, Is.Zero);
             Assert.That(player.Wallet.Balance, Is.EqualTo(13));
-            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Upgrade Shovel"));
+            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Upgrade Tool"));
             Assert.That(player.Shovel.Level, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator EveryTrackBuysThroughTenAndTheDrillMilestoneIsVisible()
+        {
+            player.Wallet.TryCredit(3 * Enumerable.Range(1, 9).Sum(EquipmentProgression.Price));
+            Face(computer); Assert.That(player.TryInteract(), Is.True);
+            yield return null; yield return null;
+            foreach (string track in new[] { "Tool", "Backpack", "Fuel tank" })
+            {
+                for (int level = 1; level < 10; level++)
+                {
+                    StringAssert.Contains($"{level}/10", Text(track + " name"));
+                    if (track == "Tool" && level == 6)
+                    {
+                        StringAssert.Contains("Shovel → Drill", Text("Tool effect"));
+                        Assert.That(player.ShavingEnabled, Is.False);
+                    }
+                    float charge = player.Battery.Charge;
+                    MenuTestUI.Click(Button("Upgrade " + track));
+                    yield return null; yield return null;
+                    Assert.That(player.Battery.Charge, Is.EqualTo(charge));
+                    if (track == "Tool" && level >= 6) Assert.That(player.ShavingEnabled, Is.True);
+                }
+                var max = Button("Upgrade " + track);
+                Assert.That(max.text, Is.EqualTo("MAX")); Assert.That(max.enabledSelf, Is.False);
+                StringAssert.Contains("10/10", Text(track + " name"));
+                decimal balance = player.Wallet.Balance; MenuTestUI.Click(max);
+                Assert.That(player.Wallet.Balance, Is.EqualTo(balance));
+            }
+            Assert.That(player.Wallet.Balance, Is.Zero);
         }
 
         private void Face(StationTarget station)

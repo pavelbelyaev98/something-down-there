@@ -69,7 +69,7 @@ namespace SomethingDownThere.Editor
             var preview = Block("Untouched preview (edit mode only)", terrainRoot.transform,
                 new Vector3(0, -SiteLayout.Extent.y * 0.5f, 0), SiteLayout.Extent, soil);
             terrainRoot.AddComponent<TerrainVolume>().Configure(SiteLayout.Size, SiteLayout.CellSize,
-                SiteLayout.ChunkSize, ShovelProfile.Defaults()[0].Radius, soil, preview);
+                SiteLayout.ChunkSize, EquipmentProgression.ToolProfiles()[0].Radius, soil, preview);
             terrainRoot.SetActive(true);
 
             Anchor("RechargeZone", surface, new Vector3(0, 0, -14.5f));

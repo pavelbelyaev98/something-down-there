@@ -61,26 +61,27 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator HeldShavingCutsContinuouslyWithSynchronizedCollisionAndRestoresExactly()
         {
+            player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             Assert.That(player.ShavingEnabled, Is.True);
             float charge = player.Battery.Charge;
             var timings = new List<double>();
             float previousY = 0;
             int notifications = 0;
             terrain.Changed += _ => notifications++;
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 12; i++)
             {
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var before), Is.True);
                 Assert.That(player.TryDig(), Is.True, "Shave " + i);
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var after), Is.True);
                 Assert.That(after.point.y, Is.LessThan(before.point.y - .001f));
-                Assert.That(before.point.y - after.point.y, Is.LessThan(.04f), "The slower shave must stay shallow.");
+                Assert.That(before.point.y - after.point.y, Is.LessThan(player.EffectiveShovel.Radius * .2f), "Drilling removes shallow layers, not whole scoops.");
                 timings.Add(terrain.LastDigMilliseconds);
                 Assert.That(terrain.TryShave(before, player.EffectiveShovel.Radius, .03f), Is.False, "Reject stale contact.");
                 previousY = after.point.y;
             }
-            Assert.That(previousY, Is.InRange(-.5f, -.15f), "Steady held contact advances without the former rapid plunge.");
-            Assert.That(notifications, Is.EqualTo(32));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - 32 * player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(previousY, Is.LessThan(-.2f), "Steady held contact must keep advancing.");
+            Assert.That(notifications, Is.EqualTo(12));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - 12 * player.EffectiveDigEnergy).Within(.001f));
             foreach (var collider in terrain.GetComponentsInChildren<MeshCollider>().Where(c => c.enabled))
                 Assert.That(collider.sharedMesh, Is.SameAs(collider.GetComponent<MeshFilter>().sharedMesh));
             var saved = terrain.Capture();
@@ -94,6 +95,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void ComparisonSwitchPreservesWorldAndMatchesEnergyRate()
         {
+            player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             float shavingInterval = player.EffectiveDigInterval;
             float shavingRate = player.EffectiveDigEnergy / shavingInterval;
             Assert.That(player.TryDig(), Is.True);
@@ -112,23 +114,42 @@ namespace SomethingDownThere.Tests
             Assert.That(player.ShavingEnabled, Is.True);
             Assert.That(player.TryDig(), Is.True);
             player.ToggleAdminShaving(); player.RestoreAdminOverrides();
-            Assert.That(player.ShavingEnabled, Is.True);
+            Assert.That(player.ShavingEnabled, Is.False);
             Assert.That(player.Shovel.Level, Is.EqualTo(1));
         }
 
-        [Test]
-        public void HeldCadenceIsStableAcrossFrameRatesAndDoesNotBankIdleTime()
+        [TestCase(6, false)] [TestCase(7, true)] [TestCase(10, true)]
+        public void OwnedMotionAndSaveRestoreIgnoreDeveloperOverrides(int level, bool drill)
+        {
+            Assert.That(player.ShavingEnabled, Is.False, "A new player starts with a shovel.");
+            for (int next = 2; next <= level; next++) Assert.That(player.Shovel.TryUpgradeTo(next), Is.True);
+            Assert.That(player.ShavingEnabled, Is.EqualTo(drill));
+            float charge = player.Battery.Charge;
+            Assert.That(player.TryDig(), Is.True);
+            Assert.That(player.Battery.Charge, Is.LessThan(charge));
+            var saved = new WorldSnapshot(); player.Capture(saved);
+            player.SelectAdminLevel(drill ? 1 : 10); player.ToggleAdminShaving();
+            player.Restore(saved);
+            Assert.That(player.Shovel.Level, Is.EqualTo(level));
+            Assert.That(player.ShavingEnabled, Is.EqualTo(drill));
+            Assert.That(player.HasAdminOverrides, Is.False);
+            Assert.That(player.DigIntervalAtLevel(7), Is.LessThan(player.DigIntervalAtLevel(6)));
+        }
+
+        [TestCase(1)] [TestCase(7)]
+        public void HeldCadenceIsStableAcrossFrameRatesAndDoesNotBankIdleTime(int level)
         {
             int previousCount = -1;
             foreach (int fps in new[] { 30, 60, 144 })
             {
                 terrain.ResetExcavation(); player.RestoreAdminOverrides(); player.RefillAdminBattery();
+                player.SelectAdminLevel(level);
                 player.Tick(default, 20f);
                 int start = player.SuccessfulStrokes;
                 for (int frame = 0; frame < fps; frame++)
                     player.Tick(new FpsInputFrame { DigHeld = true, DigPressed = frame == 0 }, 1f / fps);
                 int count = player.SuccessfulStrokes - start;
-                Assert.That(count, Is.InRange(17, 19));
+                Assert.That(count, Is.EqualTo(Mathf.CeilToInt(1f / player.EffectiveDigInterval)).Within(1));
                 if (previousCount >= 0) Assert.That(count, Is.EqualTo(previousCount).Within(1));
                 previousCount = count;
                 player.Tick(default, 30);

@@ -59,12 +59,13 @@ Absurdity is controlled and deadpan:
 
 ## 4. Dig feel
 
-Continuous and controlled; rapid contact should not excavate the ground too quickly:
+Responsive shovel strokes develop into controlled continuous drilling:
 
-- Hold to rapidly shave shallow layers from the contacted surface, with an immediate response and
-  measured progress as the aim moves. Keep each layer thin enough to control the excavation and
-  notice emerging objects. Avoid a stop-start sequence of large scoops. Dust and crumbs
-  follow the cut when the feedback pass is implemented.
+- Hold to repeat recognizable scoops with the early shovel; each upgrade strengthens the stroke.
+  The drill milestone replaces that rhythm with frequent shallow layers and steady progress as
+  the aim moves. Keep individual drill layers controlled while improving overall output over the
+  preceding shovel. Emerging objects remain readable. Dust and crumbs follow the cut when the
+  feedback pass is implemented.
 - Collecting objects never pauses shaving or scoop digging, resets the cutting cadence, or waits
   for the pickup animation. Held digging continues through collection.
 - The camera never shakes or jerks from digging. No motion effects are added just to have toggles

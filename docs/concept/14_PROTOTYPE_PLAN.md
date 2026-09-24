@@ -47,7 +47,7 @@ and long-session validation before release.
 - Voxel size vs. dig satisfaction and recognition readability.
 - Seam cleaving: verify that broad cuts along visible seams trigger the crack → shift → break feedback
   cleanly without disrupting neighboring geometry, creating duplicate loot, or auto-collecting finds unseen.
-- Starting shovel speed vs. frustration; fewer stronger upgrade steps and output on familiar ground.
+- Starting shovel speed vs. frustration; ten meaningful upgrade levels, the shovel-to-drill milestone and output on familiar ground.
 - Battery drain per powered action vs. outing length; recovery frequency and empty-wallet restart.
 - Bag capacity vs. trip length; where the hard stop actually lands.
 - Detector range, aim bands and reveal cutoff; how often players follow cues.

@@ -36,7 +36,7 @@ namespace SomethingDownThere
         private readonly InputAction refill, returnToSurface, adminMenu, adminCtrl, adminShift, xray;
         private readonly InputAction lamp, mark, rotatePlacement;
         private bool lampArmed, markArmed, rotateArmed;
-        private readonly InputAction[] adminLevels = new InputAction[6];
+        private readonly InputAction[] adminLevels = new InputAction[EquipmentProgression.LevelCount];
         private bool digArmed, grabArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
         private InputPreferences preferences;
         private int preferenceRevision = -1;
@@ -71,8 +71,9 @@ namespace SomethingDownThere
             adminShift = actions.AddAction("AdminShift", InputActionType.Button, "<Keyboard>/shift");
             for (int i = 0; i < adminLevels.Length; i++)
             {
-                adminLevels[i] = actions.AddAction("AdminLevel" + (i + 1), InputActionType.Button, "<Keyboard>/" + (i + 1));
-                adminLevels[i].AddBinding("<Keyboard>/numpad" + (i + 1));
+                int key = (i + 1) % 10;
+                adminLevels[i] = actions.AddAction("AdminLevel" + (i + 1), InputActionType.Button, "<Keyboard>/" + key);
+                adminLevels[i].AddBinding("<Keyboard>/numpad" + key);
             }
             if (preferences != null) ConfigurePreferences(preferences);
         }
@@ -118,12 +119,17 @@ namespace SomethingDownThere
 
         public void SuppressHeldActions()
         {
-            digArmed = grabArmed = jetpackArmed = interactArmed = false;
+            SuppressDig();
+            grabArmed = jetpackArmed = interactArmed = false;
             lampArmed = markArmed = rotateArmed = false;
             inventoryArmed = !inventory.IsPressed();
             backArmed = !back.IsPressed();
             escapeArmed = !escape.IsPressed();
-            toggleIntent = false;
+        }
+
+        public void SuppressDig()
+        {
+            digArmed = toggleIntent = false;
             lastToggleUpdate = InputState.updateCount;
         }
 

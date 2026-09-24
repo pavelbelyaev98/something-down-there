@@ -39,6 +39,29 @@ namespace SomethingDownThere.Tests
             Assert.That(loadedGrid.RemovedVolume, Is.EqualTo(grid.RemovedVolume));
         }
 
+        [TestCase(6)] [TestCase(7)] [TestCase(10)]
+        public void HighEquipmentLevelsRoundTripWithoutClamping(int level)
+        {
+            var saved = Snapshot(1);
+            saved.ShovelLevel = saved.InventoryLevel = saved.FuelLevel = level;
+            saved.InventoryCapacity = 10 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.InventoryIncrease);
+            saved.BatteryCapacity = 100 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.FuelIncrease);
+            using var memory = new MemoryStream();
+            WorldSaveCodec.Write(memory, saved); memory.Position = 0;
+            AssertSame(saved, WorldSaveCodec.Read(memory));
+        }
+
+        [TestCase(0)] [TestCase(11)]
+        public void InvalidEquipmentLevelsCannotBeSaved(int level)
+        {
+            var saved = Snapshot(1); saved.ShovelLevel = level;
+            Assert.Throws<InvalidDataException>(saved.Validate);
+            saved.ShovelLevel = 1; saved.InventoryLevel = level;
+            Assert.Throws<InvalidDataException>(saved.Validate);
+            saved.InventoryLevel = 1; saved.FuelLevel = level;
+            Assert.Throws<InvalidDataException>(saved.Validate);
+        }
+
         [TestCase(SaveWriteStage.BeforeWrite, 1)]
         [TestCase(SaveWriteStage.TemporaryFlushed, 1)]
         [TestCase(SaveWriteStage.BeforeReplace, 1)]

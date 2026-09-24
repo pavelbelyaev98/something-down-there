@@ -409,14 +409,18 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void ShallowRockAndCoalPopulationFundsTheExistingShovelTrackWithoutClearingTheWholeMap()
+        public void StarterAllocationFundsTheShovelPhaseAndSiteFundsAllCurrentTracks()
         {
             var catalog = Catalog;
             var rock = catalog.Entries.Single(e => e.ItemId == "common_rock");
-            int totalCost = StationTrade.DefaultPrices().Sum();
-            Assert.That(catalog.Entries.Sum(e => e.ShallowCount * e.Prefab.SaleValue), Is.GreaterThan(totalCost),
-                "Shallow play should fund every existing shovel upgrade without mandatory deep-map clearance.");
-            Assert.That(5 * rock.Prefab.SaleValue, Is.EqualTo(StationTrade.DefaultPrices()[0]));
+            int totalCost = Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Sum(EquipmentProgression.Price);
+            int starterValue = catalog.Entries.Sum(e => e.ShallowCount * e.Prefab.SaleValue);
+            int shovelPhaseCost = Enumerable.Range(1, EquipmentProgression.DrillLevel - 2).Sum(EquipmentProgression.Price);
+            Assert.That(starterValue, Is.GreaterThan(shovelPhaseCost));
+            Assert.That(starterValue, Is.LessThan(totalCost), "Finishing the tool track should require leaving the starter allocation.");
+            Assert.That(catalog.Entries.Sum(e => e.Count * e.Prefab.SaleValue), Is.GreaterThan(totalCost * 3),
+                "The finite site must fund all current tracks with money left for refills.");
+            Assert.That(5 * rock.Prefab.SaleValue, Is.EqualTo(EquipmentProgression.Price(1)));
         }
 
     }

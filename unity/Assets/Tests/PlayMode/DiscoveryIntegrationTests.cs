@@ -69,7 +69,7 @@ namespace SomethingDownThere.Tests
         [TestCase(11.45f, 2f)] [TestCase(3f, 10f)] [TestCase(18f, 17f)] [TestCase(11.45f, 16f)]
         public void DefaultShovelRevealsMultipleShallowFindsInAnUninformedSmallPatch(float x, float z)
         {
-            Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(ShovelProfile.Defaults()[0].Radius).Within(.00001f));
+            Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(EquipmentProgression.ToolProfiles()[0].Radius).Within(.00001f));
             int strokes = 0, firstEncounter = 0;
             // A fixed approximately 2 x 2 m excavation, independent of hidden find
             // positions. Shallow shaves get the same powered-time budget as scoops.
@@ -716,7 +716,7 @@ namespace SomethingDownThere.Tests
             devices.Press(mouse.rightButton, queueEventOnly: true); yield return null; yield return null;
             devices.Release(mouse.rightButton, queueEventOnly: true); yield return null;
             float charge = player.Battery.Charge; int revision = terrain.Revision, strokes = player.SuccessfulStrokes;
-            yield return new WaitForSecondsRealtime(0.5f);
+            yield return new WaitForSecondsRealtime(player.EffectiveDigInterval * 1.5f);
             Assert.That(find.Collected, Is.False);
             Assert.That(player.SuccessfulStrokes, Is.GreaterThan(strokes), "Toggled digging continues through a full-bag find.");
             Assert.That(player.Battery.Charge, Is.EqualTo(charge - (player.SuccessfulStrokes - strokes) * player.EffectiveDigEnergy).Within(.001f));

@@ -403,7 +403,8 @@ namespace SomethingDownThere
             // The row is decoration; only the price button is interactive.
             var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", refill ? "station-row service" : "station-row");
             var main = ToolkitStationRows.Block(row, track + " main", "station-row-main");
-            ToolkitStationRows.Text(main, track + " name", track, "station-cell-name");
+            string caption = refill ? track : $"{track}  {offer.OwnedLevel}/{offer.LevelCount}";
+            ToolkitStationRows.Text(main, track + " name", caption, "station-cell-name");
             bool shortfall = false;
             bool maxed = false;
             string price;
@@ -449,13 +450,15 @@ namespace SomethingDownThere
             {
                 var current = player.Shovel.Current;
                 var next = player.Shovel.GetProfile(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
-                return Compared($"{current.Radius * 2:F2} m", $"{next.Radius * 2:F2} m", offer.Complete);
+                string motion = Compared(EquipmentProgression.ToolName(offer.OwnedLevel),
+                    EquipmentProgression.ToolName(offer.Complete ? offer.OwnedLevel : offer.NextLevel), offer.Complete);
+                return motion + "  |  " + Compared($"{current.Radius * 2:F2} m", $"{next.Radius * 2:F2} m", offer.Complete);
             }
             if (offer.Kind == EquipmentKind.Inventory)
                 return Compared($"{player.Inventory.Capacity}",
-                    $"{player.Inventory.Capacity + EquipmentProgression.InventoryIncrease(offer.OwnedLevel)}", offer.Complete);
+                    $"{player.Inventory.Capacity + (offer.Complete ? 0 : EquipmentProgression.InventoryIncrease(offer.OwnedLevel))}", offer.Complete);
             return Compared($"{player.Battery.Capacity:0.#}",
-                $"{player.Battery.Capacity + EquipmentProgression.FuelIncrease(offer.OwnedLevel):0.#}", offer.Complete);
+                $"{player.Battery.Capacity + (offer.Complete ? 0 : EquipmentProgression.FuelIncrease(offer.OwnedLevel)):0.#}", offer.Complete);
         }
 
         private string UpgradeDetail(StationTrade.UpgradeOffer offer)
@@ -467,6 +470,8 @@ namespace SomethingDownThere
                     $"{player.DigReachAtLevel(level):F1}", offer.Complete) + " m  |  Stroke "
                     + Compared($"{player.DigIntervalAtLevel(offer.OwnedLevel):F2}",
                         $"{player.DigIntervalAtLevel(level):F2}", offer.Complete) + " s";
+                detail += offer.OwnedLevel < EquipmentProgression.DrillLevel
+                    ? $"  |  Drill motion at level {EquipmentProgression.DrillLevel}" : "  |  Continuous drill cutting";
                 return player.HasAdminOverrides ? detail + "  |  DEVELOPER OVERRIDES ACTIVE" : detail;
             }
             return offer.Kind == EquipmentKind.Fuel ? "Refill sold separately" : "";
@@ -525,15 +530,15 @@ namespace SomethingDownThere
         {
             title.text = "Developer admin";
             subtitle.text = "Session overrides";
-            Text(scroll, "Body", $"Shovel {player.EffectiveShovelLevel}  |  {player.EffectiveDigReach:F1} m reach  |  {player.EffectiveShovel.Radius * 2:F2} m cut width\n"
+            Text(scroll, "Body", $"Tool {player.EffectiveShovelLevel}/{player.Shovel.LevelCount}  |  {player.EffectiveDigReach:F1} m reach  |  {player.EffectiveShovel.Radius * 2:F2} m cut width\n"
                 + $"This site: {player.SuccessfulStrokes} strokes, {player.ExcavatedVolume:F1} m³ removed."
                 + DensityLine(), "body");
             var grid = Element(scroll, "admin-actions");
-            Button(grid, "Shaving motion: " + (player.ShavingEnabled ? "ON" : "OFF (scoops)"), player.ToggleAdminShaving);
+            Button(grid, "Motion: " + player.AdminMotionLabel, player.ToggleAdminShaving);
             for (int i = 1; i <= player.Shovel.LevelCount; i++)
             {
                 int level = i;
-                Button(grid, $"{(i == player.EffectiveShovelLevel ? "Selected: " : "")}Shovel {i} / {player.DigReachAtLevel(i):F1} m reach", () => player.SelectAdminLevel(level));
+                Button(grid, $"{(i == player.EffectiveShovelLevel ? "Selected: " : "")}{EquipmentProgression.ToolName(i)} {i} / {player.DigReachAtLevel(i):F1} m reach", () => player.SelectAdminLevel(level));
             }
             var tuningNote = Text(scroll, "Tool tuning", TuningNote(), "body");
             var tuningRows = new ToolkitSettingsRows(scroll, scroll);
@@ -579,7 +584,7 @@ namespace SomethingDownThere
         private string TuningNote() => (player.HasAdminTuning
             ? "Tool tuning - session override active. " : "Tool tuning - authored ladder. ")
             + "Drag for the selected level; each shovel keeps its own values. "
-            + "Print writes Logs/tuning.txt to paste into ShovelProfile.Defaults().";
+            + "Print writes tuning.txt beside your saves to paste into EquipmentProgression.ToolProfiles().";
 
         // Tuning instrument for buried-find density: reads the live population, saves nothing.
         private string DensityLine()

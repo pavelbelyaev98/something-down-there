@@ -14,7 +14,7 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0; player.SelectAdminLevel(4);
-            if (!shaving) player.ToggleAdminShaving();
+            if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
             PlacePickupCutFixture(find, false); AimPickupCutFixture(find, 0);
             while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count, "Carried", 1));
             int count = player.Inventory.Count, strokes = player.SuccessfulStrokes;
@@ -62,7 +62,7 @@ namespace SomethingDownThere.Tests
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0;
             player.SelectAdminLevel(4);
-            if (!shaving) player.ToggleAdminShaving();
+            if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
             PlacePickupCutFixture(find, nearby);
             AimPickupCutFixture(find, nearby ? .7f : 0);
             Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
@@ -85,7 +85,7 @@ namespace SomethingDownThere.Tests
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0;
             player.SelectAdminLevel(4);
-            if (!shaving) player.ToggleAdminShaving();
+            if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
             PlacePickupCutFixture(find, false);
             AimPickupCutFixture(find, 1.1f);
             Assert.That(player.TryPrimaryAction(), Is.True);
@@ -140,7 +140,7 @@ namespace SomethingDownThere.Tests
         public void ShavingUncoversAndCollectsOneAimedIdentityForItsActualFuelCost()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
-            player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             player.enabled = false;
             HalfCover(find); AimVisible(find);
             int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
@@ -158,7 +158,7 @@ namespace SomethingDownThere.Tests
         public void ShavingRevealsAnOffAimFindWithoutCollectingOrBypassingAFullBag()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
-            player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             HalfCover(find);
             AimCutFixture(find.transform.position + Vector3.up * 2f,
                 find.transform.position + Vector3.right * (player.EffectiveShovel.Radius * .7f));
@@ -186,7 +186,7 @@ namespace SomethingDownThere.Tests
         public void AimedHalfCoveredFindCollectsOnItsRevealingStroke(bool rock, bool automatic)
         {
             var find = field.Finds.First(f => (f.Size == FindSize.Large) == rock);
-            player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             HalfCover(find); AimVisible(find);
             int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
             var pose = find.Capture();
@@ -214,7 +214,7 @@ namespace SomethingDownThere.Tests
         [TestCase(false)] [TestCase(true)]
         public void RevealingStrokeLeavesAFullBagFindAndFailedDigDoesNotCollect(bool full)
         {
-            var find = field.Finds[0]; player.Tuning.Gravity = 0; player.SelectAdminLevel(6);
+            var find = field.Finds[0]; player.Tuning.Gravity = 0; player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             HalfCover(find); AimVisible(find);
             if (full) while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count,"Carried",1));
             else player.Battery.TrySpend(player.Battery.Charge);

@@ -49,7 +49,7 @@ Contextual action prompts and the optional controls reference are allowed:
 
 ## 4. Upgrades at the same computer
 
-- Shows all six tracks with the next level for each.
+- Shows each implemented track with its current level out of ten and the next level; the tool row identifies the drill milestone.
 - Every row: current stat/behavior → next, cost, and a one-line practical benefit.
 - Locked future levels are visible with their unlock requirement, so there is always a next goal
  (the anti-dead-end rule).
