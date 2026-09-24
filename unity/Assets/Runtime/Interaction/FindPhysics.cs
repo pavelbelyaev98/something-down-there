@@ -245,7 +245,7 @@ namespace SomethingDownThere
 
         private void ResetSettling() { quietSeconds = 0; supported = false; }
 
-        internal void UpdateCollisionMode()
+        internal void UpdateCollisionMode(CollisionDetectionMode continuous = CollisionDetectionMode.ContinuousSpeculative)
         {
             // Speculative CCD adds distant predicted contacts on the irregular hull.
             // Near rest those contacts can sustain rocking instead of letting it sleep.
@@ -259,8 +259,8 @@ namespace SomethingDownThere
             }
             else if (speedSquared > .5625f || spinSquared > 4f)
             {
-                if (body.collisionDetectionMode != CollisionDetectionMode.ContinuousSpeculative)
-                    body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                if (body.collisionDetectionMode != continuous)
+                    body.collisionDetectionMode = continuous;
             }
         }
 

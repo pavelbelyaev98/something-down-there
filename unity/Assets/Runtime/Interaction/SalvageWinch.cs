@@ -54,7 +54,18 @@ namespace SomethingDownThere
             if(player==null || !player.GameplayActive || terrain==null || terrain.IsRestoring) SuspendLoad();
             DrawAttachedRope();
         }
-        private void OnDisable() => SuspendLoad();
+        private void LateUpdate() => RefreshMark();
+        internal void RefreshMark()
+        {
+            if (ropeView==null) return;
+            if (terrain==null || terrain.IsRestoring) { ropeView.HideMark(); return; }
+            if (job!=null && payload!=null)
+                ropeView.ShowMark(payload, job.AttachLocal, Vector3.zero, 1, true);
+            else if (player!=null && player.TryGetRecoveryMark(out var find, out var hit))
+                ropeView.ShowMark(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.ExtractionMarkProgress, false);
+            else ropeView.HideMark();
+        }
+        private void OnDisable() { SuspendLoad(); ropeView?.HideMark(); }
         private void OnDestroy() { (search as IDisposable)?.Dispose(); ReleaseRig(); }
 
         public bool TryMark(BuriedFind find,Vector3 hit,Vector3 normal)
@@ -68,6 +79,7 @@ namespace SomethingDownThere
             payload.GetComponent<FindPhysics>().ClaimForRecovery();
             job=new ExtractionSnapshot { FindId=find.Item.InstanceId, Phase=ExtractionPhase.Planning,
                 AttachLocal=find.transform.InverseTransformPoint(hit), Outward=terrain.transform.InverseTransformDirection(normal).normalized };
+            ropeView.ShowMark(find, job.AttachLocal, normal, 1, true);
             BeginSearch(); Checkpoint(); return true;
         }
         private Vector3 AttachWorld => LoadBody.position + Offset;
@@ -144,7 +156,7 @@ namespace SomethingDownThere
                     HaulPhysics(dt, job.Phase==ExtractionPhase.Delivering?fullLength:haulLength);
                     break;
             }
-            if (job != null) ropeView.Simulate(dt, payload.HitCollider, tensionCharge);
+            if (job != null) ropeView.Simulate(dt, payload.HitCollider, CableTension);
         }
 
         private void PlanningFailed(string error)
@@ -152,6 +164,7 @@ namespace SomethingDownThere
             search=null; planner=null;
             payload.Transition(FindState.Extracting,FindState.World);
             payload.GetComponent<FindPhysics>().Restore(false); job=null; payload=null; Checkpoint();
+            ropeView.HideMark();
             player.ShowFeedback(error);
         }
         private void Complete()
@@ -160,7 +173,7 @@ namespace SomethingDownThere
             if(!payload.Transition(FindState.Extracting,FindState.Stored)) throw new InvalidOperationException("Recovery lost its owner.");
             payload.GetComponent<FindPhysics>().Restore(false);
             player.ShowFeedback($"Recovered {payload.DisplayName}  |  Ready at the exhibit stand");
-            ropeView.Hide(); job=null; payload=null; Checkpoint();
+            ropeView.Hide(); ropeView.HideMark(); job=null; payload=null; Checkpoint();
         }
         private void SetPhase(ExtractionPhase phase) { job.Phase=phase; job.PhaseSeconds=0; Checkpoint(); }
         private void Checkpoint() { Revision++; player.Persistence?.RequestCheckpoint(); }
@@ -226,10 +239,11 @@ namespace SomethingDownThere
             ClearBreakFeedback();
             (search as IDisposable)?.Dispose(); search=null; planner=null;
             job=snapshot?.Copy(); payload=job==null?null:discoveries.Find(job.FindId); Revision++;
-            ropeView.Hide();
+            ropeView.Hide(); ropeView.HideMark();
             if(job==null) return;
             if(payload==null || payload.State!=FindState.Extracting) throw new InvalidDataException("Recovery owner is missing.");
             payload.GetComponent<FindPhysics>().ClaimForRecovery();
+            ropeView.ShowMark(payload, job.AttachLocal, Vector3.zero, 1, true);
             if(job.Phase==ExtractionPhase.Planning) return;
             if(job.Route.Length>=4)
             {

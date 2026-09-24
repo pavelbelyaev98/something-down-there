@@ -53,7 +53,8 @@ Absurdity is controlled and deadpan:
 - The machine escalates into a welded, bolted, over-batteried monster.
 - Objects are placed straight-faced; the jokes are in what they are and what they are worth.
 - Physical comedy is allowed: pile wobble, a car yanked out of the ground, the salvage winch
- visibly struggling with a haul.
+ straining a taut cable before a dirt rupture sends the load swinging into the next obstruction.
+ Recovery has a brisk strain–release rhythm, with momentum-driven chains of breakage rather than constant-speed careful chipping.
 - No random wackiness, no jokes baked into every texture, no cartoon eyes on the drill.
 
 ## 4. Dig feel

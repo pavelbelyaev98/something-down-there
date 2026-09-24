@@ -180,7 +180,9 @@ namespace SomethingDownThere
         internal bool TryGetCoveringSoil(FpsPlayer player, int worldMask, out RaycastHit soil)
         {
             soil = default;
-            if (Collectible || State != FindState.World || IsHeld || terrain == null || !terrain.CanDig) return false;
+            // Uniques must be excavated by aiming at their surrounding dirt.
+            // A visible fragment must never redirect a stroke around the whole object.
+            if (kind == DiscoveryKind.Unique || Collectible || State != FindState.World || IsHeld || terrain == null || !terrain.CanDig) return false;
             Vector3 eye = player.ViewCamera.transform.position;
             if (terrain.IsSolid(eye)) return false;
             float nearest = float.PositiveInfinity;

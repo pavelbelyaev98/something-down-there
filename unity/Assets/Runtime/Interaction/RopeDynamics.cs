@@ -21,6 +21,15 @@ namespace SomethingDownThere
         private readonly float[] arc = new float[Capacity];
         private float previousStep;
         public int Count { get; private set; }
+        public float Length
+        {
+            get
+            {
+                float length = 0;
+                for (int i = 1; i < Count; i++) length += Vector3.Distance(positions[i-1], positions[i]);
+                return length;
+            }
+        }
         public Vector3 Position(int index) => positions[index];
         public Vector3 RenderPosition(int index, float alpha) => Vector3.Lerp(renderPrevious[index], positions[index], alpha);
         public void Clear() { Count = 0; previousStep = 0; }
@@ -45,7 +54,7 @@ namespace SomethingDownThere
         }
 
         public void Step(float dt, Vector3 start, Vector3 end, float length, float spacing,
-            float damping, int iterations, float radius, IRopeCollision collision)
+            float damping, int iterations, float radius, IRopeCollision collision, float tension = 0)
         {
             if (Count < 2 || dt <= 0 || !float.IsFinite(dt)) return;
             dt = Mathf.Min(dt, .05f);
@@ -56,6 +65,7 @@ namespace SomethingDownThere
             int steps = Mathf.Clamp(Mathf.CeilToInt(dt / .01f), 1, 5);
             float h = dt / steps, rest = Mathf.Max(.001f, length / (Count - 1));
             float drag = Mathf.Exp(-damping * h);
+            float straightening = Mathf.Clamp01(tension) * .8f;
             for (int step = 0; step < steps; step++)
             {
                 for (int i = 1; i < Count - 1; i++)
@@ -80,11 +90,24 @@ namespace SomethingDownThere
                     {
                         LimitReach(i, 0, rest * i);
                         LimitReach(i, Count - 1, rest * (Count - 1 - i));
+                        // Loaded spans seek the shortest supported curve. Length
+                        // constraints alone leave compression wrinkles near a lip;
+                        // contact projection below retains real tunnel bends.
+                        positions[i]=Vector3.Lerp(positions[i],(positions[i-1]+positions[i+1])*.5f,straightening);
                     }
                     if (collision != null && ((pass + 1) % 4 == 0 || pass == iterations - 1)) Collide(collision, radius);
                 }
                 previousStep = h;
             }
+            // Mid-segment lip corrections can displace their neighbours. Finish
+            // with a particle projection so the rendered end state is in air.
+            if (collision != null)
+                for (int i = 1; i < Count - 1; i++)
+                {
+                    Vector3 point = collision.Project(safe[i], positions[i], radius);
+                    previous[i] += point - positions[i];
+                    positions[i] = point;
+                }
         }
 
         private void SolveDistance(int a, float rest)

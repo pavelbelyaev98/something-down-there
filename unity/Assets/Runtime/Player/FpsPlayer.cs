@@ -63,6 +63,11 @@ namespace SomethingDownThere
         private FindExtractionInteraction extractionInteraction;
         public SalvageWinch Winch => winch;
         public float ExtractionMarkProgress => extractionInteraction?.Progress ?? 0;
+        internal bool TryGetRecoveryMark(out BuriedFind find, out RaycastHit hit)
+        {
+            find=null; hit=default;
+            return extractionInteraction!=null && extractionInteraction.TryGetTarget(out find, out hit);
+        }
         private FindProximityCollection proximityCollection;
         private FindPickupPresentation pickupPresentation;
         public BuriedFind HeldFind => findHandling?.HeldFind;

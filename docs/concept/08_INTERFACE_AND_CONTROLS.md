@@ -67,6 +67,7 @@ Rules:
  collected (the "apparently I collected it but didn't see it" failure is banned).
 - Detector feedback has a visual channel; the game is fully playable muted.
 - Readability is never color-only: shapes, icons and labels back up every color cue.
+- Recovery marking previews directly on the eligible aimed surface, shows hold progress, and becomes a fixed checked mark when confirmed. It follows the moving find and obeys world occlusion; menus and equipment placement suppress the hover preview.
 
 ## 6. Photo mode
 

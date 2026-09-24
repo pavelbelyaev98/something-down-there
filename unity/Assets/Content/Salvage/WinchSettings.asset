@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.SalvageWinchSettings
   MarkSeconds: 1.1
   RopeSpeed: 3
-  HaulSpeed: 1.5
+  HaulSpeed: 2.25
   AttachSeconds: 0.6
   Clearance: 0.055
   RopeRadius: 0.018
@@ -22,23 +22,25 @@ MonoBehaviour:
   RopeSlack: 0.045
   RopeDamping: 1.4
   RopeIterations: 12
-  MaximumMoveStep: 0.1
+  MaximumMoveStep: 0.16
   SpringAcceleration: 100
-  SpringDamping: 14
-  GuideLead: 0.55
-  MaximumLoadSpeed: 3.2
+  SpringDamping: 9
+  GuideLead: 0.7
+  MaximumLoadSpeed: 4
   LoadedHaulMultiplier: 3
-  LoadedGuideLead: 1.05
-  MaximumBurstSpeed: 5
-  MaximumSpin: 3
-  ContactStallSeconds: 0.28
+  LoadedGuideLead: 1.35
+  MaximumBurstSpeed: 8
+  MaximumSpin: 5
+  ContactStallSeconds: 0.32
   FollowupContactSeconds: 0.12
-  BlockedPullMultiplier: 2.4
+  BlockedPullMultiplier: 3.2
   RetensionSeconds: 0.8
-  RetensionPullMultiplier: 4
-  TensionReleaseSeconds: 0.7
-  ContactBreakRadius: 0.3
-  ContactBreakDepth: 0.15
+  RetensionPullMultiplier: 5
+  TensionReleaseSeconds: 1.1
+  ContactBreakRadius: 0.36
+  ContactBreakDepth: 0.22
+  ImpactBreakSpeed: 3.4
+  RuptureSizeMultiplier: 1.4
   BreakParticleIntensity: 1
   SearchNodesPerFrame: 256
   MaximumSearchNodes: 150000

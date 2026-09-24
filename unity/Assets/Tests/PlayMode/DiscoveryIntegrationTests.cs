@@ -183,7 +183,9 @@ namespace SomethingDownThere.Tests
             Aim(find.transform.position + Vector3.up * 1.5f, find.transform.position);
             for (int i = 0; i < player.Inventory.Capacity; i++)
                 player.Inventory.TryAdd(new InventoryItem("full-" + i, "Carried find", 1));
-            Assert.That(player.TryPrimaryAction(), Is.False);
+            int revision = terrain.Revision;
+            Assert.That(player.TryPrimaryAction(), Is.True, "A full bag still allows a cut through the common to reachable soil.");
+            Assert.That(terrain.Revision, Is.GreaterThan(revision));
             StringAssert.Contains("Inventory full", player.Feedback);
             player.ShowFeedback("Other feedback");
             Assert.That(player.TryPrimaryAction(), Is.False);
@@ -479,6 +481,51 @@ namespace SomethingDownThere.Tests
                 player.TryPrimaryAction();
                 Assert.That(terrain.Revision, Is.EqualTo(revision), "Held assistance respects the shovel cooldown.");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator UniqueUncoveringRequiresAimingAtSoilEvenWithAFullBag()
+        {
+            var find = field.Finds.First(f => f.Kind == DiscoveryKind.Unique);
+            foreach (var other in field.Finds.Where(f => f != find)) other.gameObject.SetActive(false);
+            var state = find.Capture(); state.Rotation = Quaternion.identity; find.Restore(state);
+            Physics.SyncTransforms();
+            var bounds = find.WorldBounds;
+            var local = terrain.transform.InverseTransformPoint(bounds.center);
+            var grid = new ExcavationGrid(terrain.Dimensions, terrain.CellSize);
+            grid.RemoveSphere(local + Vector3.up * (bounds.extents.y + .6f), .75f, out _);
+            yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
+            find.RefreshExposure();
+            Aim(bounds.center + Vector3.up * (bounds.extents.y + .55f), bounds.center);
+            Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
+            Assert.That(hit.collider.GetComponentInParent<BuriedFind>(), Is.SameAs(find));
+            Assert.That(find.Exposure, Is.GreaterThan(0).And.LessThan(find.RequiredExposure));
+            int revision = terrain.Revision;
+            float charge = player.Battery.Charge;
+            float exposure = find.Exposure;
+            for (int bag = 0; bag < 2; bag++)
+            {
+                Assert.That(player.TryDig(), Is.False, "The unique cannot redirect a stroke to surrounding soil.");
+                Assert.That(player.TryPrimaryAction(), Is.False);
+                Assert.That(terrain.Revision, Is.EqualTo(revision));
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge));
+                for (int i = 0; i < player.Inventory.Capacity; i++)
+                    player.Inventory.TryAdd(new InventoryItem("manual-unique-" + i, "Rock", 1));
+            }
+            Vector3 side = bounds.center + Vector3.right * (bounds.extents.x + .06f);
+            Aim(side + Vector3.up * (bounds.extents.y + .55f), side);
+            Assert.That(player.TryGetTarget(player.EffectiveDigReach, out hit), Is.True);
+            Assert.That(hit.collider.GetComponentInParent<TerrainVolume>(), Is.SameAs(terrain));
+            int manualStrokes = 0;
+            while (manualStrokes < 12 && find.Exposure <= exposure)
+            {
+                Assert.That(player.TryDig(), Is.True, "A direct stroke at the surrounding soil still works with a full bag.");
+                manualStrokes++;
+            }
+            Assert.That(terrain.Revision, Is.GreaterThan(revision));
+            Assert.That(find.Exposure, Is.GreaterThan(exposure));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - manualStrokes * player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(find.State, Is.EqualTo(FindState.World));
         }
 
         [Test]

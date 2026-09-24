@@ -77,7 +77,7 @@ namespace SomethingDownThere.Tests
             var state = Snapshot();
             state.Extraction.Phase = phase;
             state.Extraction.Attached = phase >= ExtractionPhase.Hauling;
-            if(state.Extraction.Attached) { state.Extraction.LinearVelocity=Vector3.up*.8f; state.Extraction.AngularVelocity=Vector3.right*.4f; }
+            if(state.Extraction.Attached) { state.Extraction.LinearVelocity=Vector3.up*7.5f; state.Extraction.AngularVelocity=Vector3.right*12f; }
             if (phase == ExtractionPhase.Planning) state.Extraction.Route = Array.Empty<Vector3>();
             if (phase == ExtractionPhase.Delivering)
             {
@@ -144,6 +144,9 @@ namespace SomethingDownThere.Tests
             state.Extraction.LinearVelocity=new Vector3(float.NaN,0,0);
             Assert.Throws<InvalidDataException>(() => state.Validate());
             state.Extraction.LinearVelocity=Vector3.zero;
+            state.Extraction.AngularVelocity=Vector3.up*30;
+            Assert.Throws<InvalidDataException>(() => state.Validate());
+            state.Extraction.AngularVelocity=Vector3.zero;
             state.Finds[0].Position+=Vector3.right*3;
             Assert.Throws<InvalidDataException>(() => state.Validate());
             state.Finds[0].Position = ExtractionSnapshot.Point(state.Extraction.Route, .5f, out _);

@@ -64,6 +64,7 @@ namespace SomethingDownThere.Editor
             line.generateLightingData=true; line.positionCount=0; line.enabled=false;
             var hook=Visual(viewRoot,"Hook",steel); hook.gameObject.SetActive(false);
             Set(view,"rope",line); Set(view,"hook",hook);
+            ConfigureRecoveryMark(view);
             Set(winch,"terrain",terrain); Set(winch,"discoveries",field); Set(winch,"player",player); Set(winch,"settings",settings);
             Set(winch,"liftAnchor",lift); Set(winch,"ropeView",view);
             SetArray(winch,"padAnchors",landings); SetArray(winch,"displayStands",displays);
@@ -84,6 +85,15 @@ namespace SomethingDownThere.Editor
                 material.SetFloat("_Dust",dust ? 1 : 0); EditorUtility.SetDirty(material);
                 Set(winch,dust ? "soilDustMaterial" : "soilChipsMaterial",material);
             }
+        }
+        public static void ConfigureRecoveryMark(WinchRopeView view)
+        {
+            var shader=Shader.Find("Something Down There/Recovery Mark");
+            if(shader==null) throw new InvalidOperationException("Missing recovery-mark shader.");
+            string path=Folder+"/RecoveryMark.mat";
+            var material=AssetDatabase.LoadAssetAtPath<Material>(path);
+            if(material==null) { material=new Material(shader); AssetDatabase.CreateAsset(material,path); }
+            Set(view,"markMaterial",material);
         }
         private static Transform Child(Transform parent,string name)
         {

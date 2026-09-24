@@ -30,8 +30,10 @@ namespace SomethingDownThere
                 && WorldSnapshot.Finite(Progress) && Progress>=0 && WorldSnapshot.Finite(PhaseSeconds) && PhaseSeconds>=0 && PhaseSeconds<=60,
                 "Invalid extraction progress.");
             WorldSnapshot.Require(Route!=null && Route.Length<=MaximumWaypoints,"Invalid extraction route size.");
+            // Off-centre rupture/contact impulses can briefly exceed the body's
+            // pre-solver spin cap. Preserve those real spins in the checkpoint.
             WorldSnapshot.Require(WorldSnapshot.Valid(LinearVelocity) && LinearVelocity.sqrMagnitude<=100
-                && WorldSnapshot.Valid(AngularVelocity) && AngularVelocity.sqrMagnitude<=100, "Invalid extraction motion.");
+                && WorldSnapshot.Valid(AngularVelocity) && AngularVelocity.sqrMagnitude<=400, "Invalid extraction motion.");
             WorldSnapshot.Require(Attached || LinearVelocity==Vector3.zero && AngularVelocity==Vector3.zero,
                 "Unattached extraction has rope motion.");
             bool hasRoute=Phase!=ExtractionPhase.Planning;

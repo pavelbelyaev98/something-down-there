@@ -6,6 +6,8 @@ namespace SomethingDownThere
     {
         [SerializeField] private LineRenderer rope;
         [SerializeField] private Transform hook;
+        [SerializeField] private Material markMaterial;
+        private RecoveryMarkView mark;
         private readonly RopeDynamics dynamics = new RopeDynamics();
         private readonly Vector3[] seed = new Vector3[ExtractionSnapshot.MaximumWaypoints + 2];
         private readonly RaycastHit[] hits = new RaycastHit[16];
@@ -16,13 +18,23 @@ namespace SomethingDownThere
         private float paidLength;
         private bool attached;
         private Collider loadCollider;
-        public bool Configured => rope != null && hook != null;
+        public bool Configured => rope != null && hook != null && markMaterial != null;
         public bool Initialized => terrain != null && settings != null;
         public int ParticleCount => dynamics.Count;
         public Vector3 ParticlePosition(int index) => dynamics.Position(index);
         public double LastSimulationMilliseconds { get; private set; }
 
         private void LateUpdate() { if (rope != null && rope.enabled) Render(); }
+        private void OnDestroy() => mark?.Dispose();
+
+        internal void ShowMark(BuriedFind find, Vector3 localPoint, Vector3 normal, float progress, bool placed)
+        {
+            if (markMaterial == null) return;
+            mark ??= new RecoveryMarkView(transform, markMaterial);
+            mark.Show(find, localPoint, normal, progress, placed);
+        }
+
+        internal void HideMark() => mark?.Hide();
 
         public void Initialize(TerrainVolume volume, SalvageWinchSettings tuning)
         {
@@ -51,7 +63,9 @@ namespace SomethingDownThere
             attachment = end ?? world.TransformPoint(point);
             attached = end.HasValue;
             float available = segment < anchorIndex ? ExtractionSnapshot.Length(path, anchorIndex) - distance : 0;
-            if (attached && segment < anchorIndex) available += Vector3.Distance(world.TransformPoint(point), attachment);
+            // The reel takes cable in even while the load is wedged. Adding the
+            // guide/load gap here paid the spring's extension straight back out,
+            // so the visible cable stayed slack while an invisible spring hauled.
             paidLength = Mathf.Max(Vector3.Distance(reel, attachment), available);
             if (route != path || dynamics.Count == 0)
             {
@@ -73,9 +87,13 @@ namespace SomethingDownThere
             using var profile = SimulationMarker.Auto();
             long start = System.Diagnostics.Stopwatch.GetTimestamp();
             loadCollider = payload;
-            float slack = attached ? Mathf.Lerp(settings.RopeSlack * .2f, 0, tension) : settings.RopeSlack;
-            dynamics.Step(dt, reel, attachment, paidLength * (1 + slack), settings.RopeSegmentLength,
-                settings.RopeDamping, settings.RopeIterations, settings.RopeRadius, this);
+            float slack = attached ? settings.RopeSlack * (1 - Mathf.Clamp01(tension)) : settings.RopeSlack;
+            float length = paidLength * (1 + slack);
+            // Cleared corners can shorten the supported cable path before the
+            // route guide passes them. Reel that spare live curve in as well.
+            if (attached) length = Mathf.Min(length, dynamics.Length - settings.RopeSpeed * dt * Mathf.Clamp01(tension));
+            dynamics.Step(dt, reel, attachment, length, settings.RopeSegmentLength,
+                settings.RopeDamping, settings.RopeIterations, settings.RopeRadius, this, attached ? tension : 0);
             LastSimulationMilliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
             Render();
         }

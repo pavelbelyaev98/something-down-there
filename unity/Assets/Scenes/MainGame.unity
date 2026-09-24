@@ -2165,6 +2165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.WinchRopeView
   rope: {fileID: 1330370708}
   hook: {fileID: 1014413276}
+  markMaterial: {fileID: 2100000, guid: 749343a980111154190043657ba8ad42, type: 2}
 --- !u!1 &1331360526
 GameObject:
   m_ObjectHideFlags: 0
