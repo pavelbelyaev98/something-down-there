@@ -48,6 +48,12 @@ namespace SomethingDownThere.Tests
                 Assert.That(root.GetComponentsInChildren<Camera>(true).Length, Is.EqualTo(1));
                 var camera = root.GetComponentInChildren<Camera>();
                 Assert.That(camera.GetUniversalAdditionalCameraData().cameraStack, Is.Empty);
+                var cameraData = camera.GetUniversalAdditionalCameraData();
+                Assert.That(cameraData.requiresDepthTexture && cameraData.requiresColorTexture, Is.True,
+                    "Lakebed water needs opaque colour and depth for shoreline refraction.");
+                var pipeline = (UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
+                Assert.That(pipeline.reflectionProbeBoxProjection && pipeline.reflectionProbeBlending, Is.True,
+                    "The canyon probe's projection must also be enabled by the rendering pipeline.");
                 Assert.That(root.GetComponentsInChildren<AudioSource>(true), Is.Empty);
                 Assert.That(camera.clearFlags, Is.EqualTo(CameraClearFlags.Skybox));
                 var sky = camera.GetComponent<Skybox>();
@@ -219,7 +225,10 @@ namespace SomethingDownThere.Tests
                     .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
                     "Runtime static batching of the vendor scenery exhausts memory on every scene load.");
                 var lake = environment.Find("Water/Lake surface");
-                Assert.That(lake.GetComponent<Renderer>().sharedMaterial.shader.name, Is.EqualTo("BK/Water"));
+                var waterMaterial = lake.GetComponent<Renderer>().sharedMaterial;
+                Assert.That(waterMaterial.shader.name, Is.EqualTo(LakebedSiteSetup.WaterShaderName));
+                Assert.That(ShaderUtil.ShaderHasError(waterMaterial.shader), Is.False);
+                Assert.That(AssetDatabase.GetAssetPath(waterMaterial), Is.EqualTo(LakebedSiteSetup.LakeMaterialPath));
                 Assert.That(lake.GetComponent<Collider>(), Is.Null, "The water surface is not walkable.");
                 Assert.That(lake.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => new Vector2(v.x, v.z).magnitude),
                     Is.GreaterThan(SiteLayout.RimRadius), "Water never reaches the dig column or rim.");

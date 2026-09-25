@@ -28,6 +28,9 @@ retain the custom soil art as an inactive option for later, without applying it 
 - Pure Nature 2: Mountains supplies the meadow plants and dig-ground textures; Pure Nature 2:
   Highlands supplies the canyon, lake and lakebed around the dig area, with its demo's sky, haze and
   baked water reflections.
+- Match the Highlands colour grade with restrained bloom. Water keeps coloured depth,
+  subtle shore foam and reflected scenery; shallow refraction preserves the underlying
+  ground's lighting instead of bleaching it. Tune project-owned shader/material copies.
 - Custom grass clump, cloud and sun art and the rejected first-person tool experiments are removed.
   Preserve the full licensed pack for future use; tune project-owned copies.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.

@@ -54,8 +54,10 @@
   roof above the grid corners, which stay reachable for lateral digging. One merged mesh of small
   pebbles borders the circle; a tinted copy of the Highlands grass layer and sparse terrain grass
   fade from the rim into the mud, with a few larger stones. One generated lake surface replaces the
-  demo's sea-level planes and never crosses the dig column; the demo's baked box-projected probe
-  lights the water. Walls and a 16 m flight ceiling on the Ignore Raycast layer keep the player on
+  demo's sea-level planes and never crosses the dig column; the demo's baked canyon probe uses
+  URP box projection and blending. Project-owned lake/river materials and the adapted BK water
+  shader retain ripples with bounded foam and refraction that does not relight the riverbed.
+  Walls and a 16 m flight ceiling on the Ignore Raycast layer keep the player on
   the drained section; scenery objects and terrain trees unseen from that volume are removed at
   setup (ID-colour renders plus terrain line-of-sight). Scenery reports the permanent-boundary
   prompt; terrain shadow casting is off because its casters ignore holes, and pixel error is 3.
@@ -71,7 +73,9 @@
   a 3 km camera range and almost overhead midday sunlight; custom grass, clouds,
   sun and trial-tool art/imports are deleted. No first-person rig is present; the shaving/scoop
   transition follows the tool level, with a comparison override in development admin. The full licensed vendor pack remains available.
-  The project color profile preserves the vivid ACES grade, warm soil and rich surface colors.
+  The project color profile uses the Highlands ACES grade with restrained bloom, warm soil and
+  rich surface colors. Lighting/water can be refreshed without regenerating scenery or terrain;
+  existing project water-material and color-profile tuning survives setup runs.
   WindowsBuild always targets MainGame.
 - **Underground lighting:** `ExcavationDaylight` derives daylight from connected excavated air, keeping shallow and middle-depth ground and short branches readable before gradually fading along deeper or longer routes. Soil and adapted URP Lit finds/boundaries attenuate sun, sky fill and reflections together; sealed rooms admit no daylight and there is no ambient brightness floor.
 - **Work lights:** compact neutral lanterns illuminate a broad area in every direction with local soft shadows, gradual distant falloff and bounded close-range brightness, preserving soil texture beside the light. The point-light shadow atlas fits the entire kit; distant route lamps stop submitting lights while retaining their visible diffuser. No personal light, fuel drain or expiry. Marks conform to collision surfaces and remain readable by their shape when lit.

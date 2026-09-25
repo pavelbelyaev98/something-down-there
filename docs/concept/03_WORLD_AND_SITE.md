@@ -23,6 +23,9 @@ The lakebed excavation is a single contained worksite.
 - **Lighting:** solar-noon presentation with the sun almost directly overhead and short shadows.
   Use the Highlands demo's sky, ambient colour, sun colour and baked canyon reflections; custom
   sun/cloud artwork is retired.
+- **Water presentation:** calm blue-green lake water with readable shallow ground, restrained
+  shore foam and rippled canyon reflections. Neither refraction nor reflected light may turn
+  the shore into a glowing white band; the lake remains scenery outside the play area.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
 - **No pre-existing caves or tunnels:** every opening in the ground is one the player made.
 

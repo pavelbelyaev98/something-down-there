@@ -13,7 +13,7 @@ namespace SomethingDownThere.Editor
     // Pure Nature 2: Highlands demo: the river widened into a former lake, one drained
     // section of its bed around the voxel dig site, and the camp beside the opening.
     // Reruns regenerate the same terrain, objects and water from the unmodified demo.
-    public static class LakebedSiteSetup
+    public static partial class LakebedSiteSetup
     {
         public const string Folder = "Assets/Content/Lakebed";
         public const string TerrainDataPath = Folder + "/LakebedTerrain.asset";
@@ -106,6 +106,7 @@ namespace SomethingDownThere.Editor
             root.GetComponentInChildren<Camera>().farClipPlane = 3000;
             GroundTextureSetup.ConfigureMeadowMaterials(root);
             SunPresentationSetup.Configure();
+            ConfigureWater(root);
             foreach (string retired in new[] { "Assets/Content/Site/WalkingApron.asset", "Assets/Content/Site/DryGravel.mat", Folder + "/LakebedRim.mat",
                 Folder + "/WadingFloor.asset", "Assets/Content/Environment/ReservoirSky.mat" })
                 AssetDatabase.DeleteAsset(retired);

@@ -252,7 +252,7 @@ Shader "Something Down There/Excavation Grass"
 			#if ( UNITY_VERSION >= 60010000 )
 			#pragma multi_compile _ _CLUSTER_LIGHT_LOOP
 			#else
-			#pragma multi_compile _ _FORWARD_PLUS
+			#pragma multi_compile _ _CLUSTER_LIGHT_LOOP
 			#endif
 
             #if defined(UNITY_PLATFORM_META_QUEST) && ( UNITY_VERSION >= 60050000 )
@@ -337,8 +337,8 @@ Shader "Something Down There/Excavation Grass"
 			#endif
 
 			#if ( UNITY_VERSION < 60010000 )
-				#define USE_CLUSTER_LIGHT_LOOP USE_FORWARD_PLUS
-				#define CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+				#define USE_CLUSTER_LIGHT_LOOP USE_CLUSTER_LIGHT_LOOP
+				#define CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK
 			#endif
 
 			struct Attributes
@@ -3160,7 +3160,7 @@ Shader "Something Down There/Excavation Grass"
 			#if ( UNITY_VERSION >= 60010000 )
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferOutput.hlsl"
 			#else
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferOutput.hlsl"
 			#endif
 
 			float3 mod2D289( float3 x ) { return x - floor( x * ( 1.0 / 289.0 ) ) * 289.0; }
@@ -3387,7 +3387,7 @@ Shader "Something Down There/Excavation Grass"
 		#if ( UNITY_VERSION >= 60010000 )
 			GBufferFragOutput frag ( PackedVaryings input
 		#else
-			FragmentOutput frag ( PackedVaryings input
+			GBufferFragOutput frag ( PackedVaryings input
 		#endif
 								#if defined( ASE_WRITE_DEPTH )
 								,out float outputDepth : ASE_SV_DEPTH
@@ -3609,7 +3609,7 @@ Shader "Something Down There/Excavation Grass"
 			#if ( UNITY_VERSION >= 60010000 )
 				return PackGBuffersBRDFData(brdfData, inputData, Smoothness, Emission + color.rgb, Occlusion);
 			#else
-				return BRDFDataToGbuffer(brdfData, inputData, Smoothness, Emission + color.rgb, Occlusion);
+				return PackGBuffersBRDFData(brdfData, inputData, Smoothness, Emission + color.rgb, Occlusion);
 			#endif
 			}
 

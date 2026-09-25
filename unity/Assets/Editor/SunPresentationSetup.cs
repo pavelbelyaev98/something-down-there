@@ -16,7 +16,7 @@ namespace SomethingDownThere.Editor
         public const string SkyPath = Folder + "LakebedSky.mat";
         public const string PostPath = Folder + "ReservoirPostProcess.asset";
         private const string VendorSky = "Assets/BK/PureNature_Highlands/Textures/Sky/Sky_Highlands.mat";
-        private const string VendorPost = "Assets/BK/PureNature_Mountains/Settings/Mountains_PostProcess.asset";
+        private const string VendorPost = "Assets/BK/PureNature_Highlands/Settings/Highlands_PostProcess.asset";
 
         [MenuItem("Tools/Something Down There/Configure Approved Sun")]
         public static void Configure()
@@ -61,6 +61,7 @@ namespace SomethingDownThere.Editor
             EditorUtility.SetDirty(camera);
             EditorUtility.SetDirty(skybox);
             ConfigurePost(root, camera);
+            ConfigureReflections();
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
         }
@@ -89,6 +90,12 @@ namespace SomethingDownThere.Editor
                 AssetDatabase.CopyAsset(VendorPost, PostPath);
                 profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(PostPath);
                 if (profile == null) throw new InvalidOperationException("The approved midday site post profile could not be copied.");
+                if (profile.TryGet<Bloom>(out var bloom))
+                {
+                    bloom.intensity.Override(.12f);
+                    bloom.threshold.Override(1.1f);
+                    EditorUtility.SetDirty(bloom);
+                }
             }
 
             var child = root.transform.Find("Daylight Colors");
@@ -111,8 +118,24 @@ namespace SomethingDownThere.Editor
             if (data == null) data = Undo.AddComponent<UniversalAdditionalCameraData>(camera.gameObject);
             Undo.RecordObject(data, "Enable world color grading");
             data.renderPostProcessing = true;
+            data.requiresDepthTexture = true;
+            data.requiresColorTexture = true;
             data.volumeLayerMask |= 1 << child.gameObject.layer;
             EditorUtility.SetDirty(data);
+        }
+
+        private static void ConfigureReflections()
+        {
+            var pipeline = UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline as UniversalRenderPipelineAsset;
+            if (pipeline == null) throw new InvalidOperationException("The lakebed requires URP.");
+            Undo.RecordObject(pipeline, "Enable Highlands water reflection projection");
+            pipeline.supportsCameraDepthTexture = true;
+            pipeline.supportsCameraOpaqueTexture = true;
+            var settings = new SerializedObject(pipeline);
+            settings.FindProperty("m_ReflectionProbeBoxProjection").boolValue = true;
+            settings.FindProperty("m_ReflectionProbeBlending").boolValue = true;
+            settings.ApplyModifiedProperties();
+            EditorUtility.SetDirty(pipeline);
         }
 
         private static void EnsureFolder()
