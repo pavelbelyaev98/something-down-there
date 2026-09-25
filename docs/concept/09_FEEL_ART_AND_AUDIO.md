@@ -7,6 +7,8 @@ cohesive art direction across custom and licensed assets. Bright and readable, n
 Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid grass,
 warm soil and a blue sky with soft clouds. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
+Prefer smooth, softer nearby shadows over sharp pixelated edges. Backdrop shadow and geometry
+detail may be reduced for frame rate; retain contact cues at the worksite and local lamp occlusion.
 Preserve the established vivid color grade across the game. Improve underground readability
 through the excavation daylight and ground response, without flattening surface colors.
 Lanterns light a broad work area with gradual falloff, without bleaching nearby textures or changing the surface grade.

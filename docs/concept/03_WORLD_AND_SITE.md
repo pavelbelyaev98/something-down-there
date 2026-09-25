@@ -22,7 +22,14 @@ The lakebed excavation is a single contained worksite.
   subsurface grid remains accessible beneath them for lateral digging.
 - **Lighting:** solar-noon presentation with the sun almost directly overhead and short shadows.
   Use the Highlands demo's sky, ambient colour, sun colour and baked canyon reflections; custom
-  sun/cloud artwork is retired.
+  sun/cloud artwork is retired. The sky's sun reads as a clear disc with a soft glow, not the
+  demo's pinpoint.
+  Concentrate soft real-time shadows around the playable ground; distant scenery may omit them.
+  Treat the surrounding canyon as a backdrop with earlier detail reduction and view-dependent
+  occlusion, preserving its silhouette from the ground and flight ceiling. Detail reduction is
+  for far scenery only: rocks, trees and bushes keep full detail near the player, the coarsest
+  meshes and flat tree impostors stay on the distant backdrop, and switches blend. Foliage reads
+  as solid canopies, without speckled dither patterns.
 - **Water presentation:** calm blue-green lake water with readable shallow ground, restrained
   shore foam and rippled canyon reflections. Neither refraction nor reflected light may turn
   the shore into a glowing white band; the lake remains scenery outside the play area.

@@ -232,19 +232,14 @@ namespace SomethingDownThere.Editor
             if (sunData == null) sunData = Undo.AddComponent<UniversalAdditionalLightData>(sun.gameObject);
             Undo.RecordObject(sunData, "Refine excavation sun shadows");
             sunData.usePipelineSettings = false;
-            sunData.softShadowQuality = SoftShadowQuality.High;
             EditorUtility.SetDirty(sunData);
             EditorUtility.SetDirty(sun);
+            SunPresentationSetup.ConfigureShadowBudget(sun);
 
             var pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>("Assets/Settings/SomethingDownThereURP.asset");
             var settings = new SerializedObject(pipeline);
             settings.FindProperty("m_MainLightShadowsSupported").boolValue = true;
             settings.FindProperty("m_SoftShadowsSupported").boolValue = true;
-            settings.FindProperty("m_MainLightShadowmapResolution").intValue = 4096;
-            settings.FindProperty("m_ShadowCascadeCount").intValue = 4;
-            settings.FindProperty("m_ShadowDistance").floatValue = 45;
-            settings.FindProperty("m_Cascade4Split").vector3Value = new Vector3(0.1f, 0.26f, 0.55f);
-            settings.FindProperty("m_CascadeBorder").floatValue = 0.12f;
             settings.FindProperty("m_SoftShadowQuality").intValue = (int)SoftShadowQuality.High;
             settings.ApplyModifiedProperties();
 

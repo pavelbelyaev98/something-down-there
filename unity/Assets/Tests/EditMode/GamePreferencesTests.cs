@@ -44,7 +44,7 @@ namespace SomethingDownThere.Tests
             using var preferences = new GamePreferences(store, platform);
             Assert.That(platform.CurrentDisplay.Same(platform.NativeDisplay), Is.True);
             Assert.That(preferences.Values.VSync, Is.False);
-            Assert.That(preferences.Values.Msaa, Is.EqualTo(4));
+            Assert.That(preferences.Values.Msaa, Is.EqualTo(2));
             Assert.That(preferences.Values.Shadows, Is.EqualTo(3));
             Assert.That(preferences.Values.Filtering, Is.EqualTo(2));
             Assert.That(preferences.Values.FrameLimit, Is.EqualTo(144));
@@ -86,7 +86,7 @@ namespace SomethingDownThere.Tests
             using var preferences = new GamePreferences(store, platform);
             Assert.That(preferences.Values.Sensitivity, Is.EqualTo(300));
             Assert.That(platform.Applied.MasterVolume, Is.EqualTo(100));
-            Assert.That(platform.Applied.Msaa, Is.EqualTo(4));
+            Assert.That(platform.Applied.Msaa, Is.EqualTo(2));
             Assert.That(platform.Applied.TextureLimit, Is.EqualTo(2));
             Assert.That(platform.Applied.Shadows, Is.EqualTo(3));
             Assert.That(platform.Applied.FrameLimit, Is.EqualTo(144));
@@ -129,7 +129,7 @@ namespace SomethingDownThere.Tests
             Assert.That(preferences.Values.Width, Is.EqualTo(1280)); Assert.That(preferences.Values.WindowMode, Is.EqualTo(2));
             Assert.That(preferences.Values.FrameLimit, Is.EqualTo(144));
             Assert.That(preferences.Values.Shadows, Is.EqualTo(category == SettingsCategory.Graphics ? 3 : 1));
-            Assert.That(preferences.Values.Msaa, Is.EqualTo(category == SettingsCategory.Graphics ? 4 : 8));
+            Assert.That(preferences.Values.Msaa, Is.EqualTo(category == SettingsCategory.Graphics ? 2 : 8));
             Assert.That(preferences.Values.TextureLimit, Is.EqualTo(category == SettingsCategory.Graphics ? 0 : 2));
             Assert.That(preferences.Values.Filtering, Is.EqualTo(category == SettingsCategory.Graphics ? 2 : 0));
             Assert.That(preferences.Values.MasterVolume, Is.EqualTo(category == SettingsCategory.Audio ? 100 : 20));

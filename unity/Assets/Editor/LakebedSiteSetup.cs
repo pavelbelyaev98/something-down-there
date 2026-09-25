@@ -107,6 +107,7 @@ namespace SomethingDownThere.Editor
             GroundTextureSetup.ConfigureMeadowMaterials(root);
             SunPresentationSetup.Configure();
             ConfigureWater(root);
+            ConfigurePerformance(root);
             foreach (string retired in new[] { "Assets/Content/Site/WalkingApron.asset", "Assets/Content/Site/DryGravel.mat", Folder + "/LakebedRim.mat",
                 Folder + "/WadingFloor.asset", "Assets/Content/Environment/ReservoirSky.mat" })
                 AssetDatabase.DeleteAsset(retired);

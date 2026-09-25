@@ -891,7 +891,7 @@ namespace SomethingDownThere.Tests
                     Assert.That(runtime.shadowDistance, Is.EqualTo(Mathf.Max(WorksiteTools.LightCullDistance + WorksiteTools.LightRange,
                         level == 0 ? 0 : level == 3 ? shadowDistance : Mathf.Min(shadowDistance, level == 1 ? 25f : 35f))));
                     if (RenderSettings.sun != null && level == 0) Assert.That(RenderSettings.sun.shadows, Is.EqualTo(LightShadows.None));
-                    Assert.That(runtime.mainLightShadowmapResolution, Is.EqualTo(level == 3 ? shadowResolution : Mathf.Min(shadowResolution, level <= 1 ? 1024 : 2048)));
+                    Assert.That(runtime.mainLightShadowmapResolution, Is.EqualTo(level == 3 ? shadowResolution : Mathf.Min(shadowResolution, level <= 1 ? 1024 : Mathf.Max(1024, shadowResolution / 2))));
                     Assert.That(runtime.shadowCascadeCount, Is.EqualTo(level == 3 ? shadowCascades : Mathf.Min(shadowCascades, level <= 1 ? 1 : 2)));
                     Assert.That(source.shadowDistance, Is.EqualTo(shadowDistance), "Runtime settings must not mutate the source asset.");
                     Assert.That(source.mainLightShadowmapResolution, Is.EqualTo(shadowResolution));

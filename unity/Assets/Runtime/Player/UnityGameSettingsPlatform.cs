@@ -83,7 +83,7 @@ namespace SomethingDownThere
                 pipeline.shadowDistance = Mathf.Max(WorksiteTools.LightCullDistance + WorksiteTools.LightRange,
                     shadows == 0 ? 0 : shadows == 3 ? authoredShadowDistance : Mathf.Min(authoredShadowDistance, shadows == 1 ? 25f : 35f));
                 pipeline.mainLightShadowmapResolution = shadows == 3 ? authoredShadowResolution
-                    : Mathf.Min(authoredShadowResolution, shadows <= 1 ? 1024 : 2048);
+                    : Mathf.Min(authoredShadowResolution, shadows <= 1 ? 1024 : Mathf.Max(1024, authoredShadowResolution / 2));
                 pipeline.shadowCascadeCount = shadows == 3 ? authoredShadowCascades
                     : Mathf.Min(authoredShadowCascades, shadows <= 1 ? 1 : 2);
             }

@@ -9,8 +9,9 @@ using UnityEngine.SceneManagement;
 
 namespace SomethingDownThere
 {
-    // Dedicated validation scene only. Loads MainGame additively with no game
-    // save session. Normal device preferences are read but never edited. No
+    // Dedicated validation scenes only: environment mode boots a MainGame copy
+    // without a save owner; other modes use the additive integration fixture.
+    // Normal device preferences are read but never edited. No
     // component is installed in MainGame.
     public sealed partial class SurfacePerformanceFixture : MonoBehaviour
     {
@@ -21,7 +22,8 @@ namespace SomethingDownThere
             Application.targetFrameRate = -1;
             QualitySettings.vSyncCount = 0;
             Time.timeScale = 1;
-            yield return SceneManager.LoadSceneAsync("MainGame", LoadSceneMode.Additive);
+            if (FindAnyObjectByType<FpsPlayer>() == null)
+                yield return SceneManager.LoadSceneAsync("MainGame", LoadSceneMode.Additive);
             var player = FindAnyObjectByType<FpsPlayer>();
             if (player == null || player.Persistence != null)
                 throw new InvalidOperationException("Surface validation must not own a save.");
@@ -35,6 +37,12 @@ namespace SomethingDownThere
             var grass = player.ExcavationTerrain.GetComponent<SurfaceGrassRenderer>();
             while (!player.ExcavationTerrain.CanDig || player.ExcavationTerrain.IsRestoring) yield return null;
             var args = Environment.GetCommandLineArgs();
+            int environmentReport = Array.IndexOf(args, "--environment-report");
+            if (environmentReport >= 0 && environmentReport + 1 < args.Length)
+            {
+                yield return MeasureEnvironment(player, args[environmentReport + 1]);
+                yield break;
+            }
             int recoveryReport = Array.IndexOf(args, "--recovery-report");
             if (recoveryReport >= 0 && recoveryReport + 1 < args.Length)
             {

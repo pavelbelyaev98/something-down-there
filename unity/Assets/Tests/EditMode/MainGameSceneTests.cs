@@ -192,6 +192,16 @@ namespace SomethingDownThere.Tests
                 Assert.That(AssetDatabase.GetAssetPath(terrain.terrainData), Is.EqualTo(LakebedSiteSetup.TerrainDataPath));
                 Assert.That(terrain.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off),
                     "Terrain shadow casters ignore holes and would shade the whole shaft.");
+                var occluder = StaticEditorFlags.OccluderStatic;
+                foreach (var item in root.Find("Excavation").GetComponentsInChildren<Transform>(true))
+                    Assert.That(GameObjectUtility.GetStaticEditorFlags(item.gameObject) & occluder, Is.EqualTo((StaticEditorFlags)0),
+                        "Mutable soil and the edit-mode preview must not hide future excavated views: " + item.name);
+                Assert.That(GameObjectUtility.GetStaticEditorFlags(terrain.gameObject) & occluder, Is.EqualTo((StaticEditorFlags)0),
+                    "The terrain hole must not be sealed by baked occlusion.");
+                var volumes = environment.GetComponentsInChildren<OcclusionArea>();
+                Assert.That(volumes.Any(v => new Bounds(v.transform.TransformPoint(v.center), v.size)
+                    .Contains(new Vector3(0, -SiteLayout.Extent.y + 1, 0))), Is.True,
+                    "Baked visibility must include cameras at the bottom of the excavation.");
                 var ground = terrain.GetComponent<TerrainCollider>();
                 Assert.That(ground.terrainData, Is.SameAs(terrain.terrainData));
                 var rim = root.Find("Surface/Excavation rim");
@@ -241,6 +251,24 @@ namespace SomethingDownThere.Tests
                 StringAssert.StartsWith("Assets/BK/PureNature_Highlands/", AssetDatabase.GetAssetPath(probe.customBakedTexture),
                     "Water reflects the demo's baked canyon cubemap.");
                 Assert.That(new Bounds(probe.transform.position + probe.center, probe.size).Contains(Vector3.up), Is.True);
+                foreach (var particles in environment.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                    Assert.That(particles.sharedMaterial.mainTexture, Is.Not.Null, "Untextured particles render as solid sheets: " + particles.name);
+                // Detail switches happen only far from the player, with a timed blend.
+                var detail = environment.GetComponentsInChildren<LODGroup>(true)
+                    .Select(l => (group: l, size: l.size * Mathf.Max(Mathf.Abs(l.transform.lossyScale.x),
+                        Mathf.Abs(l.transform.lossyScale.y), Mathf.Abs(l.transform.lossyScale.z))))
+                    .Concat(terrain.terrainData.treePrototypes.Select(p => p.prefab.GetComponent<LODGroup>())
+                        .Where(l => l != null).Select(l => (group: l, size: l.size)));
+                foreach (var (lod, size) in detail.Where(d => d.group.lodCount > 1 && d.size >= .5f))
+                {
+                    Assert.That(LakebedSiteSetup.SwitchDistance(size, lod.GetLODs()[0].screenRelativeTransitionHeight),
+                        Is.GreaterThanOrEqualTo(LakebedSiteSetup.DetailSwitchDistances[0] - .5f), "Nearby detail must not switch: " + lod.name);
+                    if (!lod.transform.IsChildOf(environment.Find("Water")))
+                        Assert.That(lod.fadeMode == LODFadeMode.CrossFade && lod.animateCrossFading, Is.True, "Foliage and rocks blend each switch: " + lod.name);
+                }
+                var rendererData = AssetDatabase.LoadAssetAtPath<UniversalRendererData>("Assets/Settings/SomethingDownThereUniversalRenderer.asset");
+                Assert.That(rendererData.depthPrimingMode, Is.EqualTo(DepthPrimingMode.Disabled),
+                    "Depth priming runs only without MSAA and drops the runtime excavation ground.");
                 // The play area keeps the player on the drained section, below a flight ceiling.
                 var area = LakebedSiteSetup.PlayArea();
                 var playBounds = environment.Find("Play area bounds");

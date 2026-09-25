@@ -34,12 +34,7 @@ namespace SomethingDownThere.Editor
             sun.intensity = 1;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .9f;
-            var sunData = sun.GetComponent<UniversalAdditionalLightData>();
-            if (sunData == null) sunData = Undo.AddComponent<UniversalAdditionalLightData>(sun.gameObject);
-            Undo.RecordObject(sunData, "Refine midday site sun shadows");
-            sunData.usePipelineSettings = false;
-            sunData.softShadowQuality = SoftShadowQuality.High;
-            EditorUtility.SetDirty(sunData);
+            ConfigureShadowBudget(sun);
             EditorUtility.SetDirty(sun);
             RenderSettings.sun = sun;
             RenderSettings.ambientMode = AmbientMode.Flat;
@@ -51,6 +46,11 @@ namespace SomethingDownThere.Editor
             RenderSettings.fogColor = new Color(.359f, .519f, .783f);
             RenderSettings.fogDensity = .001f;
             var sky = SkyMaterial();
+            // The demo's pinpoint sun reads as a star overhead; keep a clear disc with a soft glow.
+            Undo.RecordObject(sky, "Size the midday sun disc");
+            sky.SetFloat("_SunSize", .05f);
+            sky.SetFloat("_SunSizeConvergence", 4);
+            EditorUtility.SetDirty(sky);
             RenderSettings.skybox = sky;
             var skybox = camera.GetComponent<Skybox>();
             if (skybox == null) skybox = Undo.AddComponent<Skybox>(camera.gameObject);
@@ -64,6 +64,28 @@ namespace SomethingDownThere.Editor
             ConfigureReflections();
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
+        }
+
+        public static void ConfigureShadowBudget(Light sun)
+        {
+            var sunData = sun.GetComponent<UniversalAdditionalLightData>();
+            if (sunData == null) sunData = Undo.AddComponent<UniversalAdditionalLightData>(sun.gameObject);
+            Undo.RecordObjects(new UnityEngine.Object[] { sun, sunData }, "Budget soft worksite shadows");
+            sun.shadows = LightShadows.Soft;
+            sunData.usePipelineSettings = false;
+            sunData.softShadowQuality = SoftShadowQuality.Medium;
+            EditorUtility.SetDirty(sun);
+            EditorUtility.SetDirty(sunData);
+            var pipeline = GraphicsSettings.defaultRenderPipeline as UniversalRenderPipelineAsset;
+            if (pipeline == null) throw new InvalidOperationException("The lakebed requires URP.");
+            Undo.RecordObject(pipeline, "Budget worksite sun cascades");
+            pipeline.mainLightShadowmapResolution = 2048;
+            pipeline.shadowCascadeCount = 2;
+            // URP shares this range with point-light shadows. Never shorten the lamp range.
+            pipeline.shadowDistance = WorksiteTools.LightCullDistance + WorksiteTools.LightRange;
+            pipeline.cascade2Split = .3f;
+            pipeline.cascadeBorder = .2f;
+            EditorUtility.SetDirty(pipeline);
         }
 
         private static Material SkyMaterial()

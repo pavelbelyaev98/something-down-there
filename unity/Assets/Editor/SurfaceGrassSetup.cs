@@ -171,8 +171,10 @@ namespace SomethingDownThere.Editor
             var renderer = serialized.FindProperty("m_RendererDataList").GetArrayElementAtIndex(
                 serialized.FindProperty("m_DefaultRendererIndex").intValue).objectReferenceValue as UniversalRendererData;
             if (renderer == null) throw new InvalidOperationException("A Universal renderer is required.");
+            // URP primes depth only without MSAA; its equal-depth pass then drops the
+            // runtime excavation ground. Every anti-aliasing setting shares one path.
             Undo.RecordObject(renderer, "Configure Pure Nature depth priming");
-            renderer.depthPrimingMode = DepthPrimingMode.Forced;
+            renderer.depthPrimingMode = DepthPrimingMode.Disabled;
             EditorUtility.SetDirty(pipeline);
             EditorUtility.SetDirty(renderer);
         }

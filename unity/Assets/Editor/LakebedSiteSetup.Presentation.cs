@@ -15,6 +15,7 @@ namespace SomethingDownThere.Editor
         public const string LakeMaterialPath = Folder + "/LakeWater.mat";
         public const string RiverMaterialPath = Folder + "/RiverWater.mat";
         private const string VendorWaterFolder = "Assets/BK/PureNature_Highlands/Textures/Water/Materials/";
+        private const string VendorSplashMaterial = "Assets/BK/PureNature_Highlands/Textures/Fx/Materials/Watersplash.mat";
 
         // Rebind presentation without regenerating terrain, scenery or authored placement.
         [MenuItem("Tools/Something Down There/Refresh Lakebed Lighting and Water")]
@@ -37,7 +38,14 @@ namespace SomethingDownThere.Editor
             var shader = ConfigureWaterShader();
             var lake = WaterMaterial("Ocean.mat", LakeMaterialPath, shader, false);
             var river = WaterMaterial("River.mat", RiverMaterialPath, shader, true);
-            foreach (var renderer in root.Find("Environment/Water").GetComponentsInChildren<Renderer>(true))
+            var water = root.Find("Environment/Water");
+            // The publisher's splash material ships without its textures: its lake-sized
+            // horizontal billboards render as solid white sheets below the waterfalls.
+            foreach (var splash in water.GetComponentsInChildren<ParticleSystemRenderer>(true)
+                .Where(r => AssetDatabase.GetAssetPath(r.sharedMaterial) == VendorSplashMaterial)
+                .Select(r => PrefabUtility.GetOutermostPrefabInstanceRoot(r.gameObject) ?? r.gameObject).Distinct().ToArray())
+                Undo.DestroyObjectImmediate(splash);
+            foreach (var renderer in water.GetComponentsInChildren<Renderer>(true))
             {
                 var materials = renderer.sharedMaterials;
                 bool changed = false;
