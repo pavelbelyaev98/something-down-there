@@ -17,20 +17,19 @@ namespace SomethingDownThere.Editor
         public const string SedimentPath = "Assets/Content/Nature/ReservoirSediment.mat";
         public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
 
-        [MenuItem("Tools/Something Down There/Configure Pack Meadow Ground")]
-        public static void ConfigurePackMeadow()
+        [MenuItem("Tools/Something Down There/Configure Pack Lakebed Ground")]
+        public static void ConfigurePackGround()
         {
             var scene = SceneManager.GetActiveScene();
             if (EditorApplication.isPlaying || scene.path != MainGameSceneBuilder.ScenePath)
                 throw new InvalidOperationException("Open MainGame outside Play Mode.");
             var root = scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").transform;
-            ConfigureMeadowMaterials(root);
-            SurfaceGrassSetup.Configure();
+            ConfigureGroundMaterials(root);
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
         }
 
-        public static void ConfigureMeadowMaterials(Transform root)
+        public static void ConfigureGroundMaterials(Transform root)
         {
             var shader = Shader.Find(ShaderName);
             if (shader == null || ShaderUtil.ShaderHasError(shader))
@@ -42,7 +41,7 @@ namespace SomethingDownThere.Editor
                 sediment = new Material(shader) { name = "ReservoirSediment" };
                 AssetDatabase.CreateAsset(sediment, SedimentPath);
             }
-            Undo.RecordObject(sediment, "Use pack meadow ground");
+            Undo.RecordObject(sediment, "Use pack lakebed ground");
             sediment.shader = shader;
             foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
             {
@@ -51,7 +50,7 @@ namespace SomethingDownThere.Editor
                 // active terrain or player build through dormant comparison slots.
                 sediment.SetTexture("_Comparison" + channel, null);
             }
-            ConfigurePackTurf(sediment, terrain.SurfaceHeight);
+            ConfigureSurfaceCap(sediment, terrain.SurfaceHeight);
             sediment.SetFloat("_MaskLayout", 1);
             sediment.SetFloat("_SoilTileMetres", 4.2f);
             sediment.SetFloat("_NormalStrength", .45f);
@@ -68,8 +67,8 @@ namespace SomethingDownThere.Editor
 
             var camp = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
             if (camp == null) throw new InvalidOperationException("Keep the existing camp material.");
-            Undo.RecordObject(camp, "Replace custom turf with pack meadow");
-            ConfigurePackTurf(camp, terrain.SurfaceHeight);
+            Undo.RecordObject(camp, "Use the pack lakebed surface cap");
+            ConfigureSurfaceCap(camp, terrain.SurfaceHeight);
             camp.SetFloat("_SoilComparison", 0);
             EditorUtility.SetDirty(camp);
             var settings = new SerializedObject(terrain);
@@ -85,13 +84,21 @@ namespace SomethingDownThere.Editor
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
         }
 
-        private static void ConfigurePackTurf(Material material, float surfaceHeight)
+        // The dig surface wears the surrounding lakebed's packed sediment (same pack texture and
+        // tiling), a little paler and drier than the trampled mud outside its fence.
+        public static readonly Color PackedSedimentTint = new Color(1.12f, .9f, .68f, 1);
+        public static readonly Color DriedSedimentTint = new Color(1.22f, 1, .78f, 1);
+        public const float PackedSedimentTileMetres = 6;
+
+        private static void ConfigureSurfaceCap(Material material, float surfaceHeight)
         {
             foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-                material.SetTexture("_Turf" + channel, PackTexture("Grass01", channel));
+                material.SetTexture("_Turf" + channel, PackTexture("Gravel", channel));
+            // Colour properties are linearised for the shader; terrain layer remaps are not.
+            material.SetColor("_TurfTint", DriedSedimentTint.gamma);
             material.SetFloat("_TurfMaskLayout", 1);
-            material.SetFloat("_TileMetres", 10f);
-            material.SetFloat("_TurfNormalStrength", 1f);
+            material.SetFloat("_TileMetres", PackedSedimentTileMetres);
+            material.SetFloat("_TurfNormalStrength", .8f);
             material.SetFloat("_SurfaceHeight", surfaceHeight);
             material.SetFloat("_TurfDepth", .045f);
             material.SetFloat("_MaxSmoothness", .15f);
@@ -137,7 +144,7 @@ namespace SomethingDownThere.Editor
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        private static Texture2D PackTexture(string surface, string channel)
+        public static Texture2D PackTexture(string surface, string channel)
         {
             string folder = PackTextureFolder.TrimEnd('/');
             if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder("Assets/Content/Nature", "GroundTextures");
@@ -153,7 +160,7 @@ namespace SomethingDownThere.Editor
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        [MenuItem("Tools/Something Down There/Configure Original Soil With Meadow")]
+        [MenuItem("Tools/Something Down There/Configure Original Soil")]
         public static void Configure()
         {
             Scene scene = SceneManager.GetActiveScene();
@@ -186,7 +193,7 @@ namespace SomethingDownThere.Editor
                 ConfigureImport(path, channel);
                 material.SetTexture("_" + kind + channel, AssetDatabase.LoadAssetAtPath<Texture2D>(path));
             }
-            ConfigurePackTurf(material, terrain.SurfaceHeight);
+            ConfigureSurfaceCap(material, terrain.SurfaceHeight);
             material.SetFloat("_SoilComparison", 0);
             material.SetFloat("_MaskLayout", 0f); // Original: roughness R, contact G, stone coverage B.
             material.SetFloat("_MaxSmoothness", .15f);
@@ -274,7 +281,7 @@ namespace SomethingDownThere.Editor
         private static void ConfigureSunBias(Transform root)
         {
             var sun = root.Find("Sun").GetComponent<Light>();
-            Undo.RecordObject(sun, "Prevent turf self-shadow contours");
+            Undo.RecordObject(sun, "Prevent surface cap self-shadow contours");
             // Near-overhead light needs enough depth bias to keep the flat cap
             // from tracing its own tessellation around freshly excavated rims.
             sun.shadowBias = 0.5f;

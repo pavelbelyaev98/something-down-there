@@ -39,8 +39,8 @@ $Path = @($Path | ForEach-Object { $_ -replace '\\', '/' })
 $map = @(
     @{ Pattern = '^unity/Assets/Runtime/Interaction/(FindDetector|DetectorTargeting)\.cs$|^unity/Assets/Runtime/UI/Toolkit/(DetectorCue|GameHudView)\.cs$|^unity/Assets/Editor/RetroComputerSetup\.cs$'; Play = @('DetectorIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Interaction/SalvageWinch.*\.cs$|^unity/Assets/Editor/SalvageWinchSetup\.cs$'; Play = @('UniqueRecoveryIntegrationTests', 'DetectorIntegrationTests') },
-    @{ Pattern = '^art/.*catalog\.json$|^unity/Assets/Content/'; Play = @('DiscoveryIntegrationTests', 'FindCollectionFlowTests', 'StartupMenuTests', 'SaveIntegrationTests') },
-    @{ Pattern = '^unity/Assets/Runtime/Interaction/'; Play = @('DiscoveryIntegrationTests', 'FindCollectionFlowTests', 'FindPhysicsIntegrationTests', 'SaveIntegrationTests') },
+    @{ Pattern = '^art/.*catalog\.json$|^unity/Assets/Content/'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests', 'StartupMenuTests', 'SaveIntegrationTests') },
+    @{ Pattern = '^unity/Assets/Runtime/Interaction/'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests', 'SaveIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Terrain/'; Play = @('TerrainIntegrationTests', 'SaveIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Player/ShovelState\.cs$'; Play = @('TerrainIntegrationTests', 'DiscoveryIntegrationTests', 'FpsUiInputTests') },
     @{ Pattern = '^unity/Assets/Runtime/Player/'; Play = @('FpsPlayerTests', 'FpsUiInputTests', 'RescueIntegrationTests', 'SurfaceRechargeTests', 'SaveIntegrationTests') },

@@ -72,15 +72,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfAlbedo:
-        m_Texture: {fileID: 2800000, guid: b5cf7bb00a396294abfbe6d4fc8310aa, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7b417fe2262f8e441bf0c073c919b869, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfNormal:
-        m_Texture: {fileID: 2800000, guid: 4b5aadda936bd1440918750ef7e778af, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5c1b7a539904f734885a221d647f5da0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfRoughness:
-        m_Texture: {fileID: 2800000, guid: d63f60f4a40be5c47a8d50701156760b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4da000d92dea41e4095890d9f5394ce8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -105,13 +105,14 @@ Material:
     - _SrcBlend: 1
     - _StoneNormalStrength: 0.55
     - _SurfaceHeight: 0
-    - _TileMetres: 10
+    - _TileMetres: 6
     - _TurfDepth: 0.045
     - _TurfMaskLayout: 1
-    - _TurfNormalStrength: 1
+    - _TurfNormalStrength: 0.8
     - _ZWrite: 1
     m_Colors:
     - _ClayTint: {r: 0.92, g: 0.46, b: 0.27, a: 1}
     - _RockTint: {r: 0.4, g: 0.4, b: 0.4, a: 1}
+    - _TurfTint: {r: 1.0945976, g: 1, b: 0.8962438, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

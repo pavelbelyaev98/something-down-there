@@ -173,7 +173,8 @@ namespace SomethingDownThere
                 reserved.Add(new DiscoveryReservation(p,entryRadii[i]));
                 authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
             }
-            var layout = DiscoveryField.Generate(extent, shallow.Count, seed, ShallowCount, radii, bands, covers, reserved.ToArray());
+            var layout = DiscoveryField.Generate(extent, shallow.Count, seed, ShallowCount, radii, bands, covers, reserved.ToArray(),
+                SiteLayout.FindFootprint(extent));
             for (int i = 0; i < layout.Length; i++)
             {
                 int index = shallow[i];

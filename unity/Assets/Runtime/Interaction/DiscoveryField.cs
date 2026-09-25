@@ -215,7 +215,8 @@ namespace SomethingDownThere
         public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands)
             => Generate(extent, total, placementSeed, shallowCount, radii, depthBands, null);
 
-        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null)
+        // A footprint (grid-local XZ) limits candidates to where the player can dig; see SiteLayout.
+        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null)
         {
             if (!ExcavationGrid.Finite(extent.x) || !ExcavationGrid.Finite(extent.y) || !ExcavationGrid.Finite(extent.z)
                 || extent.x < 8 || extent.y < 4 || extent.z < 8 || total < 1 || total > MaximumPopulation
@@ -260,13 +261,22 @@ namespace SomethingDownThere
                 // A packed entry carpet accepts the best of a few clear candidates; wide
                 // banded types keep the 64-candidate spread so no band reads as a recipe.
                 int refinement = shallow ? 8 : 64;
+                int outside = 0;
                 for (int attempt = 0; attempt < maxAttempts && (!placed || ((shallow || banded) && attempt < refinement)); attempt++)
                 {
+                    // The first finds lie a few metres in from the camp side, measured from the site centre.
                     float x = i < 6 ? Range(extent.x * 0.5f - 2.5f, extent.x * 0.5f + 2.5f) : Range(0.8f, extent.x - 0.8f);
+                    float near = Mathf.Max(1, extent.z * .5f - 11);
                     // The catalog covers the whole layer; the legacy three-prefab
                     // validation field keeps its small entrance allocation.
-                    float z = i < 6 ? Range(1, 3.5f) : radii == null && i < Math.Min(shallowCount, 48)
+                    float z = i < 6 ? Range(near, near + 2.5f) : radii == null && i < Math.Min(shallowCount, 48)
                         ? Range(0.8f, 6) : Range(0.8f, extent.z - 0.8f);
+                    // Candidates outside the footprint are redrawn rather than spent as attempts.
+                    if (footprint != null && !footprint(new Vector2(x, z)))
+                    {
+                        if (++outside < maxAttempts * 8) attempt--;
+                        continue;
+                    }
                     // Authored cover puts the entry layer just under the turf, measured
                     // above the true mesh envelope. Legacy catalogs keep their two tiers.
                     float radius = radii == null ? MaximumFindRadius : radii[i];

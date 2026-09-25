@@ -27,7 +27,7 @@ belongs to the recent fill, the mid ladder to the sediment, and the deep ground 
 carrying home. Price stays fixed per type; the mix is what rewards descending.
 The accepted shallow rock layer stays intact. **The first few metres should feel almost as
 full of fresh finds as the first scrape**, with rocks continuing and coal entering as the
-player digs beneath the turf. Measure new objects emerging from intact soil at each dig face;
+player digs beneath the surface. Measure new objects emerging from intact soil at each dig face;
 loose rocks falling down from earlier layers do not count. Farther down, the mix shifts toward
 richer types while the encounter rate stays roughly constant.
 
@@ -41,7 +41,7 @@ or collection/extraction eligibility; turning it off restores normal concealment
 
 The **top metre belongs to plain rocks** — the junk you meet while the starter machine is still weak —
 and the ore ladder starts just beneath it: coal first, then the rest in order. Rocks stay full size
-and form a dense layer just beneath the turf, so the first shallow scrapes reveal several nearby
+and form a dense layer just beneath the surface, so the first shallow scrapes reveal several nearby
 pieces. Placement clearance follows the actual rock geometry; empty bounding-box corners must not
 force finds deeper or farther apart than necessary.
 

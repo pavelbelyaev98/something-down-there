@@ -52,14 +52,9 @@ namespace SomethingDownThere.Editor
             Block("East rim", surface, new Vector3(14, -0.5f, 0), new Vector3(4, 1, 24), grass);
 
             Transform bedrock = Group("Bedrock", root);
-            float depth = SiteLayout.Extent.y;
-            Boundary("Floor", bedrock, new Vector3(0, -depth - 0.5f, 0), new Vector3(26, 1, 26), rock);
-            // Meet the permanent rim underside without overlapping visible faces.
-            float wallCentre = (-depth + SiteLayout.RimBottom) * 0.5f, wallHeight = depth + SiteLayout.RimBottom;
-            Boundary("West", bedrock, new Vector3(-12.5f, wallCentre, 0), new Vector3(1, wallHeight, 24), rock);
-            Boundary("East", bedrock, new Vector3(12.5f, wallCentre, 0), new Vector3(1, wallHeight, 24), rock);
-            Boundary("North", bedrock, new Vector3(0, wallCentre, 12.5f), new Vector3(26, wallHeight, 1), rock);
-            Boundary("South", bedrock, new Vector3(0, wallCentre, -12.5f), new Vector3(26, wallHeight, 1), rock);
+            foreach (string side in new[] { "Floor", "West", "East", "North", "South" })
+                Boundary(side, bedrock, Vector3.zero, Vector3.one, rock);
+            PlaceBedrock(bedrock);
             // LakebedSiteSetup replaces the temporary rectangular construction rims.
 
             var terrainRoot = new GameObject("Excavation");
@@ -84,17 +79,37 @@ namespace SomethingDownThere.Editor
             ConfigureSurfaceRecharge();
             ConfigureDiscoveryContent();
             GroundTextureSetup.Configure();
-            SurfaceGrassSetup.Configure();
+            NatureEnvironmentSetup.Configure();
             LakebedSiteSetup.Configure();
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
             Debug.Log("Main game scene created with untouched terrain and permanent boundaries.");
         }
 
+        // One metre of bedrock just outside every side of the grid. The walls meet the
+        // permanent rim underside without overlapping visible faces.
+        public static void PlaceBedrock(Transform bedrock)
+        {
+            var extent = SiteLayout.Extent;
+            float centre = (-extent.y + SiteLayout.RimBottom) * .5f, height = extent.y + SiteLayout.RimBottom;
+            void Put(string side, Vector3 position, Vector3 size)
+            {
+                var wall = bedrock.Find(side);
+                wall.position = position;
+                wall.localScale = size;
+                EditorUtility.SetDirty(wall);
+            }
+            Put("Floor", new Vector3(0, -extent.y - .5f, 0), new Vector3(extent.x + 2, 1, extent.z + 2));
+            Put("West", new Vector3(-extent.x * .5f - .5f, centre, 0), new Vector3(1, height, extent.z));
+            Put("East", new Vector3(extent.x * .5f + .5f, centre, 0), new Vector3(1, height, extent.z));
+            Put("North", new Vector3(0, centre, extent.z * .5f + .5f), new Vector3(extent.x + 2, height, 1));
+            Put("South", new Vector3(0, centre, -extent.z * .5f - .5f), new Vector3(extent.x + 2, height, 1));
+        }
+
         // Applies the authored site layout to the existing scene, in place, so the reservoir
-        // depth is one edit. Safe to re-run: every value is derived from SiteLayout.
-        [MenuItem("Tools/Something Down There/Configure Excavation Depth")]
-        public static void ConfigureExcavationDepth()
+        // size is one edit. Safe to re-run: every value is derived from SiteLayout.
+        [MenuItem("Tools/Something Down There/Configure Excavation Size")]
+        public static void ConfigureExcavationSize()
         {
             if (EditorApplication.isPlaying)
                 throw new InvalidOperationException("Configure the MainGame depth outside Play Mode.");
@@ -115,13 +130,7 @@ namespace SomethingDownThere.Editor
                 preview.transform.position = new Vector3(0, -SiteLayout.Extent.y * 0.5f, 0);
                 preview.transform.localScale = SiteLayout.Extent;
             }
-            root.Find("Bedrock/Floor").position = new Vector3(0, -SiteLayout.Extent.y - 0.5f, 0);
-            foreach (string side in new[] { "West", "East", "North", "South" })
-            {
-                var wall = root.Find("Bedrock/" + side);
-                var position = wall.position; position.y = (-SiteLayout.Extent.y + SiteLayout.RimBottom) * 0.5f; wall.position = position;
-                var scale = wall.localScale; scale.y = SiteLayout.Extent.y + SiteLayout.RimBottom; wall.localScale = scale;
-            }
+            PlaceBedrock(root.Find("Bedrock"));
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log($"MainGame site configured: {SiteLayout.Extent.x} x {SiteLayout.Extent.y} x {SiteLayout.Extent.z} m.");

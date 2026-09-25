@@ -34,7 +34,6 @@ namespace SomethingDownThere
             player.ViewCamera.transform.localPosition = new Vector3(0, 1.65f, 0);
             player.ViewCamera.transform.rotation = Quaternion.Euler(10, 0, 0);
             Screen.SetResolution(2560, 1440, FullScreenMode.Windowed);
-            var grass = player.ExcavationTerrain.GetComponent<SurfaceGrassRenderer>();
             while (!player.ExcavationTerrain.CanDig || player.ExcavationTerrain.IsRestoring) yield return null;
             var args = Environment.GetCommandLineArgs();
             int environmentReport = Array.IndexOf(args, "--environment-report");
@@ -64,17 +63,14 @@ namespace SomethingDownThere
             using (var main = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Main Thread", 1))
             using (var render = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Render Thread", 1))
             {
-                // Alternate states to expose warm-up/order effects. Measure the
+                // Repeat the sample to expose warm-up/order effects. Measure the
                 // actual player render loop with a fixed camera and resolution.
-                foreach (bool enabledGrass in new[] { true, false, true, false })
+                for (int repeat = 0; repeat < 2; repeat++)
                 {
-                    grass.enabled = enabledGrass;
                     for (int i = 0; i < 120; i++) { FrameTimingManager.CaptureFrameTimings(); yield return null; }
-                    if (enabledGrass && grass.LastDrawCalls == 0)
-                        throw new InvalidOperationException("No grass was rendered; discard this surface performance run.");
                     var frames = new List<double>(); var gpu = new List<double>();
                     var cpu = new List<double>(); var mainMs = new List<double>();
-                    var renderMs = new List<double>(); var submission = new List<double>();
+                    var renderMs = new List<double>();
                     for (int i = 0; i < 300; i++)
                     {
                         FrameTimingManager.CaptureFrameTimings();
@@ -87,23 +83,13 @@ namespace SomethingDownThere
                         }
                         if (main.Valid) mainMs.Add(main.LastValue / 1000000.0);
                         if (render.Valid) renderMs.Add(render.LastValue / 1000000.0);
-                        if (enabledGrass) submission.Add(grass.LastSubmissionMilliseconds);
                     }
-                    results.Add(new { scenario = "fixedSurface", grassEnabled = enabledGrass, frame = Summary(frames), gpu = Summary(gpu),
-                        cpu = Summary(cpu), mainThread = Summary(mainMs), renderThread = Summary(renderMs),
-                        grassSubmission = Summary(submission), grass.LastTriangles, grass.LastDrawCalls, grass.SupportedClumps });
+                    results.Add(new { scenario = "fixedSurface", repeat, frame = Summary(frames), gpu = Summary(gpu),
+                        cpu = Summary(cpu), mainThread = Summary(mainMs), renderThread = Summary(renderMs) });
                 }
             }
-            foreach (bool enabledGrass in new[] { true, true, false })
-            {
-                grass.enabled=enabledGrass;
-                yield return MeasureTravel(player,grass,results);
-            }
-            foreach (bool enabledGrass in new[] { true, false })
-            {
-                grass.enabled=enabledGrass;
-                yield return MeasureDigging(player,grass,results);
-            }
+            for (int repeat = 0; repeat < 2; repeat++) yield return MeasureTravel(player, results);
+            yield return MeasureDigging(player, results);
             var arguments = Environment.GetCommandLineArgs();
             int outputIndex = Array.IndexOf(arguments, "--surface-report");
             if (outputIndex < 0 || outputIndex + 1 >= arguments.Length)
@@ -111,7 +97,7 @@ namespace SomethingDownThere
             var output = Path.GetFullPath(arguments[outputIndex + 1]);
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             File.WriteAllText(output, Newtonsoft.Json.JsonConvert.SerializeObject(new {
-                scope = "Native fixed surface, camera travel and 16 real terrain cuts per grass state; additive MainGame without world saves; not minimum-hardware or save-IO qualification",
+                scope = "Native fixed surface, camera travel and 16 real terrain cuts; additive MainGame without world saves; not minimum-hardware or save-IO qualification",
                 width = Screen.width, height = Screen.height, gpu = SystemInfo.graphicsDeviceName,
                 cpu = SystemInfo.processorType, graphicsApi = SystemInfo.graphicsDeviceType.ToString(),
                 developmentBuild = Debug.isDebugBuild, timingEnabled = FrameTimingManager.IsFeatureEnabled(),
@@ -121,11 +107,11 @@ namespace SomethingDownThere
             Application.Quit();
         }
 
-        private static IEnumerator MeasureTravel(FpsPlayer player,SurfaceGrassRenderer grass,List<object> results)
+        private static IEnumerator MeasureTravel(FpsPlayer player,List<object> results)
         {
             player.ExcavationTerrain.ResetExcavation();
             for(int i=0;i<120;i++)yield return null;
-            var frames=new List<double>(8192);var gpu=new List<double>(8192);var submission=new List<double>(8192);
+            var frames=new List<double>(8192);var gpu=new List<double>(8192);
             var slowFrames=new List<object>(16);
             int collectionCount=GC.CollectionCount(0);
             using var gc=ProfilerRecorder.StartNew(new ProfilerCategory("GC"),"GC.Collect",1);
@@ -133,7 +119,6 @@ namespace SomethingDownThere
             var timings=new FrameTiming[1];
             double started=Time.realtimeSinceStartupAsDouble;
             long previous=System.Diagnostics.Stopwatch.GetTimestamp();
-            int peakTriangles=0,peakDraws=0;
             while(Time.realtimeSinceStartupAsDouble-started<8)
             {
                 float t=(float)((Time.realtimeSinceStartupAsDouble-started)/8);
@@ -146,16 +131,14 @@ namespace SomethingDownThere
                 frames.Add(frameMs);previous=now;
                 if(frameMs>12)slowFrames.Add(new {atSeconds=Time.realtimeSinceStartupAsDouble-started,frameMs,
                     gcCollections=GC.CollectionCount(0)-collectionCount,gcMilliseconds=gc.Valid?gc.LastValue/1000000.0:(double?)null,
-                    allocatedBytes=allocation.Valid?(long?)allocation.LastValue:null,grass.LastSubmissionMilliseconds,grass.LastRebuildMilliseconds});
+                    allocatedBytes=allocation.Valid?(long?)allocation.LastValue:null});
                 collectionCount=GC.CollectionCount(0);
                 if(FrameTimingManager.GetLatestTimings(1,timings)>0 && timings[0].gpuFrameTime>0)gpu.Add(timings[0].gpuFrameTime);
-                if(grass.enabled)submission.Add(grass.LastSubmissionMilliseconds);
-                peakTriangles=Mathf.Max(peakTriangles,grass.LastTriangles);peakDraws=Mathf.Max(peakDraws,grass.LastDrawCalls);
             }
-            results.Add(new {scenario="cameraTravelAndTurn",grassEnabled=grass.enabled,frame=Summary(frames),gpu=Summary(gpu),grassSubmission=Summary(submission),peakTriangles,peakDraws,slowFrames});
+            results.Add(new {scenario="cameraTravelAndTurn",frame=Summary(frames),gpu=Summary(gpu),slowFrames});
         }
 
-        private static IEnumerator MeasureDigging(FpsPlayer player,SurfaceGrassRenderer grass,List<object> results)
+        private static IEnumerator MeasureDigging(FpsPlayer player,List<object> results)
         {
             var terrain=player.ExcavationTerrain;terrain.ResetExcavation();
             player.transform.position=new Vector3(-4,.05f,-8);
@@ -184,7 +167,7 @@ namespace SomethingDownThere
                     frames.Add((now-previous)*1000.0/System.Diagnostics.Stopwatch.Frequency);previous=now;
                 }while(Time.realtimeSinceStartupAsDouble<until);
             }
-            results.Add(new {scenario="terrainDigging",grassEnabled=grass.enabled,frame=Summary(frames),strokes});
+            results.Add(new {scenario="terrainDigging",frame=Summary(frames),strokes});
         }
 
         private static object Summary(List<double> values)

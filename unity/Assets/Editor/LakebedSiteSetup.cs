@@ -19,10 +19,8 @@ namespace SomethingDownThere.Editor
         public const string TerrainDataPath = Folder + "/LakebedTerrain.asset";
         public const string RimMeshPath = Folder + "/ExcavationRim.asset";
         public const string LakeMeshPath = Folder + "/LakeSurface.asset";
-        public const string BorderMeshPath = Folder + "/BorderStones.asset";
-        public const string MeadowLayerPath = Folder + "/RimMeadow.terrainlayer";
-        // Darkens the Highlands grass layer toward the dig meadow's turf.
-        private static readonly Color MeadowTint = new Color(.6f, .72f, .5f, 1);
+        public const string SedimentLayerPath = Folder + "/PackedSediment.terrainlayer";
+        public const string DryTurfLayerPath = Folder + "/DryTurf.terrainlayer";
         public const string DemoScenePath = "Assets/BK/PureNature_Highlands/Scenes/Highlands_Demo.unity";
         private const string VendorPrefabs = "Assets/BK/PureNature_Highlands/Prefabs/";
 
@@ -37,15 +35,19 @@ namespace SomethingDownThere.Editor
         private static readonly Vector2 LakeSeed = new Vector2(355, -300);
         // Site-local drained section against the east cliff.
         private static readonly Vector2 DrainedCentre = new Vector2(-3, -2), DrainedRadii = new Vector2(48, 76);
-        private const float CampFlat = 20f, CampBlend = 30f, CampClearance = 21f, PeakRange = 1600f;
+        // Metres beyond the dig plot outline: level ground (it holds the camp and pads to the
+        // south), then a blend back into the demo terrain.
+        private const float CampFlat = 10f, CampBlend = 19f, CampClearance = 26f, PeakRange = 1600f;
         private const float TileSize = 10f, GrassTile = 20f;
         // The walkable drained section stops this far inside its mapped edge, at the water line.
         private const float PlayAreaInset = 9f;
         // Highest point the player's feet can reach above the lakebed ground.
         public const float FlightCeiling = 16f;
-        // Compass arc (clockwise from north) kept free of boundary rocks for the south-rim
-        // stations and the winch rope; the camp looks north up the canyon over the opening.
-        private const float CampArcStart = 128f, CampArcEnd = 212f;
+        // Metres beyond the plot outline: plants and debris stay this far out, and a band of
+        // trampled mud surrounds the plot out to about twice that.
+        public const float DressingClearance = 3f;
+        // The rim collar's roof reaches this far past the grid rectangle, under the terrain.
+        private const float CollarOverlap = .5f;
         private static readonly string[] Groups = { "Cliffs", "Peaks", "BigBoulders", "Boulders", "Rubble_dense", "Rubble_sparse", "Ruins", "Trees", "Water" };
 
         public static Vector3 Camp(Vector3 rimLayout) => rimLayout + Vector3.up * SiteLayout.GroundTop;
@@ -80,8 +82,9 @@ namespace SomethingDownThere.Editor
                 BuildTerrain(source, section, environment, stations);
                 CopyObjects(demo, section, environment);
                 BuildWater(demo, section, environment.Find("Water"));
+                BuildTrickles(section, environment.Find("Water"));
                 CopyReflections(demo, environment);
-                BuildBoundary(environment);
+                ScatterDebris(section, environment, stations);
             }
             finally
             {
@@ -91,28 +94,13 @@ namespace SomethingDownThere.Editor
             BuildPlayArea(environment, area);
             CullHidden(environment, area);
             var soil = new SerializedObject(root.GetComponentInChildren<TerrainVolume>()).FindProperty("soilMaterial").objectReferenceValue as Material;
-            BuildRim(surface, section.TerrainPosition, soil);
-            float depth = SiteLayout.Extent.y;
-            foreach (string side in new[] { "West", "East", "North", "South" })
-            {
-                var wall = root.Find("Bedrock/" + side);
-                var position = wall.position; position.y = (-depth + SiteLayout.RimBottom) * .5f; wall.position = position;
-                var scale = wall.localScale; scale.y = depth + SiteLayout.RimBottom; wall.localScale = scale;
-            }
-            var terrain = root.GetComponentInChildren<TerrainVolume>();
-            var grass = new SerializedObject(terrain.GetComponent<SurfaceGrassRenderer>());
-            grass.FindProperty("surfaceRadius").floatValue = SiteLayout.OpeningRadius;
-            grass.ApplyModifiedPropertiesWithoutUndo();
+            BuildRim(surface, soil);
+            MainGameSceneBuilder.PlaceBedrock(root.Find("Bedrock"));
             root.GetComponentInChildren<Camera>().farClipPlane = 3000;
-            GroundTextureSetup.ConfigureMeadowMaterials(root);
+            GroundTextureSetup.ConfigureGroundMaterials(root);
             SunPresentationSetup.Configure();
             ConfigureWater(root);
             ConfigurePerformance(root);
-            foreach (string retired in new[] { "Assets/Content/Site/WalkingApron.asset", "Assets/Content/Site/DryGravel.mat", Folder + "/LakebedRim.mat",
-                Folder + "/WadingFloor.asset", "Assets/Content/Environment/ReservoirSky.mat" })
-                AssetDatabase.DeleteAsset(retired);
-            if (AssetDatabase.IsValidFolder("Assets/Content/Site") && AssetDatabase.FindAssets("", new[] { "Assets/Content/Site" }).Length == 0)
-                AssetDatabase.DeleteAsset("Assets/Content/Site");
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.SaveScene(scene);
@@ -127,6 +115,11 @@ namespace SomethingDownThere.Editor
             public int I0, J0;
             public Vector2 Origin;
             public float[,] Before, After, Shore, Drained;
+            // Heights before channel carving: the lake follows these, the trickles own the channels.
+            public float[,] Uncarved;
+            // Metres from the nearest channel bed edge, negative inside a bed.
+            public float[,] Channel;
+            public readonly List<Stream> Streams = new List<Stream>();
             public bool[,] Lake;
             public float Extent => WindowCells * Cell;
             public Vector3 TerrainPosition => new Vector3(Origin.x - SiteInDemo.x, -SiteInDemo.y, Origin.y - SiteInDemo.z);
@@ -185,11 +178,13 @@ namespace SomethingDownThere.Editor
                     float drained = DrainedWeight(local);
                     s.Drained[z, x] = drained;
                     if (drained > 0) h = Mathf.Max(h, Mathf.Lerp(h, DrainedFloor(local), drained));
+                    else h = Mathf.Max(h, IslandHeight(local));
                 }
-                float r = local.magnitude;
-                if (r < CampBlend) h = Mathf.Lerp(SiteInDemo.y + SiteLayout.GroundTop, h, Smooth((r - CampFlat) / (CampBlend - CampFlat)));
+                float beyond = SiteLayout.BeyondOpening(local);
+                if (beyond < CampBlend) h = Mathf.Lerp(SiteInDemo.y + SiteLayout.GroundTop, h, Smooth((beyond - CampFlat) / (CampBlend - CampFlat)));
                 s.After[z, x] = h;
             }
+            CarveChannels(s);
             return s;
         }
 
@@ -260,15 +255,33 @@ namespace SomethingDownThere.Editor
             return 1 - Smooth((signedMetres + 10) / 10);
         }
 
-        // Nearly level mud, tilting gently toward the remaining lake in the west.
+        // Nearly level mud, tilting gently toward the remaining lake in the west, with low
+        // hummocks and hollows left by the retreating water.
         private static float DrainedFloor(Vector2 local) =>
             SiteInDemo.y - .05f + .012f * local.x
             + .3f * (Mathf.PerlinNoise(local.x / 28 + 40, local.y / 28 + 12) - .5f)
+            + .18f * (Mathf.PerlinNoise(local.x / 9 + 3, local.y / 9 + 17) - .5f)
             + .06f * (Mathf.PerlinNoise(local.x / 5 + 7, local.y / 5 + 91) - .5f);
 
-        // Grass around the stone border: full at the rim, a ragged fade into the drained mud.
-        private static float Meadow(Vector2 local) =>
-            1 - Smooth((local.magnitude - 15f - 9f * (Noise(local, 7, 2.4f) - .5f)) / 8f);
+        // Low sand islands stranded in the remaining lake off the drained shore: broad grassy
+        // tops over a narrow sandy rim that shelves into the water.
+        private static readonly (Vector2 centre, float radius)[] Islands =
+        {
+            (new Vector2(-57, 20), 7.5f), (new Vector2(-62, -26), 6), (new Vector2(-54, 46), 5), (new Vector2(-72, 2), 5.5f)
+        };
+
+        private static float IslandHeight(Vector2 local)
+        {
+            float best = float.MinValue;
+            foreach (var (centre, radius) in Islands)
+            {
+                var offset = local - centre;
+                float edge = radius * (1 + .25f * (Noise(offset, 4, centre.x * .1f) - .5f) + .15f * Mathf.Sin(3 * Mathf.Atan2(offset.y, offset.x) + centre.y));
+                float t = offset.magnitude / edge;
+                best = Mathf.Max(best, WaterLevel + .5f - 1.3f * t * t * t - .12f * Noise(offset, 1.8f, 3.3f));
+            }
+            return best;
+        }
 
         private static float Noise(Vector2 local, float scale, float seed) => Mathf.PerlinNoise(local.x / scale + seed, local.y / scale + seed * 1.7f);
 
@@ -276,7 +289,9 @@ namespace SomethingDownThere.Editor
         {
             var from = source.terrainData;
             // Create other assets first: an asset import after CreateAsset reloads the unsaved terrain data.
-            var meadow = MeadowLayer(from);
+            var sediment = SedimentLayer(s.TerrainPosition);
+            var dryTurf = DryTurfLayer(from);
+            var lakebedDetails = LakebedDetails(from);
             AssetDatabase.DeleteAsset(TerrainDataPath);
             var data = new TerrainData { name = "LakebedTerrain" };
             data.heightmapResolution = s.Samples;
@@ -291,13 +306,15 @@ namespace SomethingDownThere.Editor
             data.wavingGrassStrength = from.wavingGrassStrength;
             data.wavingGrassTint = from.wavingGrassTint;
             data.alphamapResolution = WindowCells;
-            data.terrainLayers = from.terrainLayers.Append(meadow).ToArray();
+            // Up to eight layers keep the terrain to two splat passes.
+            data.terrainLayers = from.terrainLayers.Append(sediment).Append(dryTurf).ToArray();
             data.SetAlphamaps(0, 0, Paint(from, s));
             data.SetDetailScatterMode(from.detailScatterMode);
             int detailScale = (from.heightmapResolution - 1) / from.detailResolution;
             data.SetDetailResolution(WindowCells / detailScale, from.detailResolutionPerPatch);
-            data.detailPrototypes = from.detailPrototypes;
+            data.detailPrototypes = from.detailPrototypes.Concat(lakebedDetails).ToArray();
             CopyDetails(from, s, data, detailScale, stations);
+            DressDetails(s, data, detailScale, from.detailPrototypes.Length, stations);
             data.treePrototypes = from.treePrototypes;
             data.SetTreeInstances(Trees(from, source.transform.position, s), false);
             data.SetHoles(0, 0, Holes(s));
@@ -319,15 +336,48 @@ namespace SomethingDownThere.Editor
             terrainObject.AddComponent<TerrainCollider>().terrainData = data;
         }
 
-        // Project copy of the Highlands grass layer, tinted to meet the dig meadow at the rim.
-        private static TerrainLayer MeadowLayer(TerrainData from)
+        // The pack's Mountains gravel, tinted as warm packed lakebed sediment. The dig surface
+        // cap uses the same texture, tint and world-aligned tiling, so the plot has no seam.
+        private static TerrainLayer SedimentLayer(Vector3 terrainPosition)
         {
-            var vendor = from.terrainLayers.Single(l => l.name == "Grass");
-            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(MeadowLayerPath);
-            if (layer == null) { layer = new TerrainLayer(); AssetDatabase.CreateAsset(layer, MeadowLayerPath); }
-            EditorUtility.CopySerialized(vendor, layer);
-            layer.name = "RimMeadow";
-            layer.diffuseRemapMax = MeadowTint;
+            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(SedimentLayerPath);
+            if (layer == null) { layer = new TerrainLayer(); AssetDatabase.CreateAsset(layer, SedimentLayerPath); }
+            float tile = GroundTextureSetup.PackedSedimentTileMetres;
+            layer.diffuseTexture = GroundTextureSetup.PackTexture("Gravel", "Albedo");
+            layer.normalMapTexture = GroundTextureSetup.PackTexture("Gravel", "Normal");
+            layer.maskMapTexture = GroundTextureSetup.PackTexture("Gravel", "Roughness");
+            layer.tileSize = Vector2.one * tile;
+            // Terrain UVs start at its corner; this offset lines them up with world-space tiling.
+            layer.tileOffset = new Vector2(Mathf.Repeat(terrainPosition.x, tile), Mathf.Repeat(terrainPosition.z, tile));
+            layer.normalScale = .8f;
+            layer.diffuseRemapMax = GroundTextureSetup.PackedSedimentTint;
+            layer.maskMapRemapMin = new Vector4(0, .65f, 0, 0);
+            layer.maskMapRemapMax = new Vector4(1, 1, 1, .15f);
+            EditorUtility.SetDirty(layer);
+            AssetDatabase.SaveAssetIfDirty(layer);
+            return layer;
+        }
+
+        // The canyon's grassy mud, muted to sun-dried olive for the exposed bed and its islands;
+        // the canyon beyond keeps the pack's vivid grass.
+        private static TerrainLayer DryTurfLayer(TerrainData from)
+        {
+            var source = from.terrainLayers.Single(l => l != null && l.name == "Mud_grass");
+            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(DryTurfLayerPath);
+            if (layer == null) { layer = new TerrainLayer(); AssetDatabase.CreateAsset(layer, DryTurfLayerPath); }
+            layer.diffuseTexture = source.diffuseTexture;
+            layer.normalMapTexture = source.normalMapTexture;
+            layer.maskMapTexture = source.maskMapTexture;
+            layer.tileSize = source.tileSize;
+            layer.tileOffset = source.tileOffset;
+            layer.normalScale = source.normalScale;
+            layer.metallic = source.metallic;
+            layer.smoothness = source.smoothness;
+            layer.specular = source.specular;
+            layer.maskMapRemapMin = source.maskMapRemapMin;
+            layer.maskMapRemapMax = source.maskMapRemapMax;
+            layer.diffuseRemapMin = source.diffuseRemapMin;
+            layer.diffuseRemapMax = Vector4.Scale(source.diffuseRemapMax, new Vector4(.6f, .5f, .4f, 1));
             EditorUtility.SetDirty(layer);
             AssetDatabase.SaveAssetIfDirty(layer);
             return layer;
@@ -336,10 +386,11 @@ namespace SomethingDownThere.Editor
         private static float[,,] Paint(TerrainData from, Section s)
         {
             int Layer(string name) => Array.FindIndex(from.terrainLayers, l => l != null && l.name == name);
-            int grassy = Layer("Mud_grass"), rubble = Layer("Mud_rubble"), mud = Layer("Mud"), sand = Layer("Sand"), gravel = Layer("Sand_rubble");
-            if (new[] { grassy, rubble, mud, sand, gravel }.Any(i => i < 0)) throw new InvalidOperationException("Demo terrain layers changed.");
+            int rubble = Layer("Mud_rubble"), mud = Layer("Mud"), sand = Layer("Sand"), gravel = Layer("Sand_rubble");
+            if (new[] { rubble, mud, sand, gravel }.Any(i => i < 0)) throw new InvalidOperationException("Demo terrain layers changed.");
             var source = from.GetAlphamaps(s.I0, s.J0, WindowCells, WindowCells);
-            int halo = source.GetLength(2), layers = halo + 1;
+            // The project sediment and muted turf layers follow the demo's layers.
+            int halo = source.GetLength(2), sediment = halo, grassy = halo + 1, layers = halo + 2;
             var alpha = new float[WindowCells, WindowCells, layers];
             for (int z = 0; z < WindowCells; z++)
             for (int x = 0; x < WindowCells; x++)
@@ -349,19 +400,39 @@ namespace SomethingDownThere.Editor
             for (int x = 0; x < WindowCells; x++)
             {
                 var local = s.Local(x + .5f, z + .5f);
-                float camp = 1 - Smooth((local.magnitude - 16) / 8), meadow = Meadow(local);
+                float camp = 1 - Smooth((SiteLayout.BeyondOpening(local) - CampFlat) / (CampBlend - CampFlat));
                 float weight = Mathf.Max(s.Lake[z, x] ? Smooth(s.Shore[z, x] / 3) : 0, camp);
                 if (weight <= 0) continue;
-                float h = s.After[z, x];
+                float h = s.After[z, x], a = h - WaterLevel;
                 float patches = Noise(local, 9, 3.1f), growth = Noise(local, 14, 5.3f), grain = Noise(local, 4, 1.7f);
                 Array.Clear(target, 0, layers);
-                if (h < WaterLevel - .15f) { target[sand] = .75f; target[mud] = .25f; }
+                if (a < -.15f) { target[sand] = .75f; target[mud] = .25f; }
                 else if (s.Drained[z, x] > .35f)
                 {
-                    target[mud] = 1;
-                    target[rubble] = 1.2f * Smooth((patches - .5f) / .15f);
-                    target[grassy] = 1.5f * Smooth((growth - .6f) / .12f) * Smooth((h - WaterLevel - .8f) / .6f);
-                    target[sand] = 1.5f * Smooth((WaterLevel + .7f - h) / .5f);
+                    // Packed sediment on the flats; damp dark silt toward the water and channels;
+                    // stony beds, pebble strand lines and sandy banks at the waterline.
+                    float c = s.Channel[z, x];
+                    float damp = Mathf.Max(Smooth((.95f - a) / .6f), Smooth((2.4f - c) / 2.2f));
+                    // Broad darker mud patches break up the pale sediment, as on a real drying bed.
+                    float mudPatch = Smooth((Noise(local, 16, 2.6f) - .45f) / .2f);
+                    target[sediment] = (1 - damp) * (1.1f + .3f * grain) * (1 - .65f * mudPatch);
+                    target[mud] = damp + (1 - damp) * (.25f * (1 - grain) + .9f * mudPatch);
+                    // Channel beds are dark stony mud under the water, never pale beach sand.
+                    float beach = Smooth((c - .3f) / .8f);
+                    target[rubble] = Smooth((patches - .58f) / .1f) * (1 - damp) + 2.2f * Smooth((.3f - c) / .6f);
+                    target[gravel] = 1.3f * Band(a, .1f, .6f) * (.5f + grain) * beach + .6f * Band(c, .3f, 1.6f, .3f);
+                    // Green only returns on the higher ground toward the cliffs.
+                    target[grassy] = .9f * Smooth((growth - .72f) / .08f) * Smooth((a - 1.3f) / .5f) * (1 - damp);
+                    target[sand] = 1.6f * Smooth((.4f - a) / .3f) * beach + .7f * Band(c, .2f, 1.2f, .3f) * Smooth((patches - .45f) / .2f);
+                }
+                else if (IslandHeight(local) > WaterLevel - .3f)
+                {
+                    // Grassy island tops over sandy, gravelly rims sorted by the water.
+                    float top = Smooth((IslandHeight(local) - WaterLevel - .12f) / .15f);
+                    target[sand] = (1 - top) * (.8f + .4f * grain);
+                    target[mud] = .45f * (1 - top) * (1 - grain);
+                    target[gravel] = .5f * (1 - top) * Smooth((patches - .5f) / .2f);
+                    target[grassy] = 1.5f * top;
                 }
                 else
                 {
@@ -371,15 +442,13 @@ namespace SomethingDownThere.Editor
                 }
                 if (camp > 0)
                 {
+                    // Around the plot and camp: dark trampled mud along its edge, then packed sediment
+                    // with worked patches and gravel. The paler plot stands out inside it.
+                    float trampled = 1 - Smooth((SiteLayout.BeyondOpening(local) - DressingClearance) / 3.5f);
                     for (int l = 0; l < layers; l++) target[l] *= 1 - camp;
-                    target[rubble] += camp * (1 - meadow);
-                    target[mud] += camp * .15f * grain;
-                }
-                if (meadow > 0)
-                {
-                    for (int l = 0; l < layers; l++) target[l] *= 1 - meadow;
-                    target[halo] += meadow * (.55f + .3f * grain);
-                    target[grassy] += meadow * .45f * (1 - grain);
+                    target[sediment] += camp * (1 + .25f * grain) * (1 - .7f * trampled);
+                    target[mud] += camp * (.35f * Smooth((patches - .45f) / .2f) + 1.2f * trampled * (.6f + .4f * grain));
+                    target[rubble] += camp * .45f * Smooth((growth - .55f) / .15f);
                 }
                 float total = target.Sum(), mixed = 0;
                 for (int l = 0; l < layers; l++) { alpha[z, x, l] = Mathf.Lerp(alpha[z, x, l], target[l] / total, weight); mixed += alpha[z, x, l]; }
@@ -399,20 +468,11 @@ namespace SomethingDownThere.Editor
                 {
                     int x = u * scale, z = v * scale;
                     var local = s.Local(x, z);
+                    float beyond = SiteLayout.BeyondOpening(local);
                     bool changed = s.After[z, x] < s.Before[z, x] - .3f || s.After[z, x] > s.Before[z, x] + .3f;
                     bool bed = s.Lake[z, x] && s.After[z, x] < OldShore - .2f;
-                    if (!changed && !bed && local.magnitude >= CampBlend - 6) continue;
+                    if (!changed && !bed && beyond >= CampBlend - 6) continue;
                     map[v, u] = 0;
-                    // Sparse grass re-colonises the high drained mud, away from the camp.
-                    if (layer == 0 && s.Drained[z, x] > .35f && local.magnitude > CampBlend - 4
-                        && Noise(local, 14, 5.3f) > .66f && s.After[z, x] > WaterLevel + 1) map[v, u] = 110;
-                    // The meadow continues past the stone border and thins out into the mud.
-                    float meadow = Meadow(local);
-                    if (meadow <= 0 || local.magnitude < SiteLayout.RimOuterRadius - .2f || stations.Any(r => r.Contains(local))) continue;
-                    float tufts = Noise(local, 3, 8.1f);
-                    if (layer == 0) map[v, u] = Mathf.RoundToInt(150 * meadow);
-                    else if (layer == 1) map[v, u] = Mathf.RoundToInt(70 * meadow * tufts);
-                    else if (layer == 3 && tufts > .72f) map[v, u] = Mathf.RoundToInt(90 * meadow);
                 }
                 data.SetDetailLayer(0, 0, layer, map);
             }
@@ -426,7 +486,7 @@ namespace SomethingDownThere.Editor
                 var demo = sourcePosition + Vector3.Scale(tree.position, from.size);
                 if (!s.Contains(demo) || s.InLake(demo)) continue;
                 var local = new Vector2(demo.x - SiteInDemo.x, demo.z - SiteInDemo.z);
-                if (local.magnitude < CampBlend || Mathf.Abs(s.Sample(s.After, demo) - s.Sample(s.Before, demo)) > .2f) continue;
+                if (SiteLayout.BeyondOpening(local) < CampBlend || Mathf.Abs(s.Sample(s.After, demo) - s.Sample(s.Before, demo)) > .2f) continue;
                 var copy = tree;
                 copy.position = new Vector3((demo.x - s.Origin.x) / s.Extent, tree.position.y, (demo.z - s.Origin.y) / s.Extent);
                 kept.Add(copy);
@@ -438,10 +498,9 @@ namespace SomethingDownThere.Editor
         private static bool[,] Holes(Section s)
         {
             var solid = new bool[WindowCells, WindowCells];
-            float radius = SiteLayout.RimOuterRadius - .5f;
             for (int z = 0; z < WindowCells; z++)
             for (int x = 0; x < WindowCells; x++)
-                solid[z, x] = s.Local(x + .5f, z + .5f).magnitude >= radius;
+                solid[z, x] = SiteLayout.BeyondOpening(s.Local(x + .5f, z + .5f)) >= SiteLayout.RimBand - .5f;
             return solid;
         }
 
@@ -564,9 +623,14 @@ namespace SomethingDownThere.Editor
             for (int gz = 0; gz < cells; gz++)
             for (int gx = 0; gx < cells; gx++)
             {
-                if (s.Local((gx + .5f) * step, (gz + .5f) * step).magnitude < CampClearance) continue;
+                if (SiteLayout.BeyondOpening(s.Local((gx + .5f) * step, (gz + .5f) * step)) < CampFlat) continue;
+                // Carved ground counts: the lake floods each channel mouth up to the contour where its bed
+                // rises above the water, so no square cell edge crosses a channel. Inland beds stay above
+                // the lake plane. Every sample counts: shore dips between cell corners otherwise leave
+                // straight gaps.
                 bool wet = false;
-                for (int c = 0; c < 4 && !wet; c++) wet = s.After[(gz + (c >> 1)) * step, (gx + (c & 1)) * step] < below;
+                for (int z = gz * step; z <= (gz + 1) * step && !wet; z++)
+                for (int x = gx * step; x <= (gx + 1) * step && !wet; x++) wet = s.After[z, x] < below;
                 if (!wet) continue;
                 int a = Vertex(gx, gz), b = Vertex(gx + 1, gz), c0 = Vertex(gx, gz + 1), d = Vertex(gx + 1, gz + 1);
                 triangles.AddRange(new[] { a, c0, d, a, d, b });
@@ -582,107 +646,70 @@ namespace SomethingDownThere.Editor
             var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (saved == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
             EditorUtility.CopySerialized(mesh, saved);
+            // CopySerialized updates the stored arrays but can leave the Editor's GPU buffers with
+            // the previous shape until restart; rewrite the geometry through the Mesh API as well.
+            using (var source = Mesh.AcquireReadOnlyMeshData(mesh))
+            {
+                var data = source[0];
+                const MeshUpdateFlags keep = MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices;
+                saved.SetVertexBufferParams(mesh.vertexCount, mesh.GetVertexAttributes());
+                for (int stream = 0; stream < data.vertexBufferCount; stream++)
+                {
+                    var bytes = data.GetVertexData<byte>(stream);
+                    saved.SetVertexBufferData(bytes, 0, 0, bytes.Length, stream, keep);
+                }
+                if (data.indexFormat == IndexFormat.UInt16)
+                {
+                    var indices = data.GetIndexData<ushort>();
+                    saved.SetIndexBufferParams(indices.Length, IndexFormat.UInt16);
+                    saved.SetIndexBufferData(indices, 0, 0, indices.Length, keep);
+                }
+                else
+                {
+                    var indices = data.GetIndexData<uint>();
+                    saved.SetIndexBufferParams(indices.Length, IndexFormat.UInt32);
+                    saved.SetIndexBufferData(indices, 0, 0, indices.Length, keep);
+                }
+                saved.subMeshCount = mesh.subMeshCount;
+                for (int i = 0; i < mesh.subMeshCount; i++) saved.SetSubMesh(i, mesh.GetSubMesh(i), keep);
+                saved.bounds = mesh.bounds;
+            }
             UnityEngine.Object.DestroyImmediate(mesh);
             EditorUtility.SetDirty(saved);
             return saved;
         }
 
-        // A continuous border of small half-buried stones marks the diggable circle; a few
-        // larger stones lie out in the grass, clear of the camp.
-        private static void BuildBoundary(Transform environment)
+        // Closed collar: a lip following the plot outline over the terrain-hole edge and a roof
+        // over the rest of the rectangular grid, in the dig surface's own ground material.
+        private static void BuildRim(Transform surface, Material ground)
         {
-            var parent = new GameObject("Dig boundary").transform;
-            parent.SetParent(environment, false);
-            var random = new System.Random(89);
-            float Range(float min, float max) => min + (float)random.NextDouble() * (max - min);
-            bool InCamp(float compass) { compass = Mathf.Repeat(compass, 360); return compass > CampArcStart && compass < CampArcEnd; }
-            // The border merges into one mesh per material: ~150 pebbles cost a single draw.
-            var pieces = new Dictionary<Material, List<CombineInstance>>();
-            float circumference = 2 * Mathf.PI * SiteLayout.OpeningRadius;
-            for (float arc = 0; arc < circumference; arc += Range(.42f, .8f))
-            {
-                var tumble = Quaternion.Euler(Range(0, 360), Range(0, 360), Range(0, 360));
-                var stone = Place(parent, "Rocks/Rock_" + random.Next(4), arc / circumference * 360, Range(12.35f, 12.75f), tumble, Range(.15f, .3f), .35f, false);
-                foreach (var renderer in stone.GetComponent<LODGroup>().GetLODs()[0].renderers)
-                {
-                    var mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
-                    for (int part = 0; part < mesh.subMeshCount; part++)
-                    {
-                        var material = renderer.sharedMaterials[part];
-                        if (!pieces.TryGetValue(material, out var list)) pieces[material] = list = new List<CombineInstance>();
-                        list.Add(new CombineInstance { mesh = mesh, subMeshIndex = part, transform = renderer.localToWorldMatrix });
-                    }
-                }
-                UnityEngine.Object.DestroyImmediate(stone);
-            }
-            var border = new Mesh { name = "BorderStones", indexFormat = IndexFormat.UInt32 };
-            var parts = pieces.Select(entry =>
-            {
-                var merged = new Mesh { indexFormat = IndexFormat.UInt32 };
-                merged.CombineMeshes(entry.Value.ToArray(), true, true);
-                return new CombineInstance { mesh = merged, transform = Matrix4x4.identity };
-            }).ToArray();
-            border.CombineMeshes(parts, false, true);
-            foreach (var part in parts) UnityEngine.Object.DestroyImmediate(part.mesh);
-            border.RecalculateBounds();
-            var stones = new GameObject("Border stones");
-            stones.transform.SetParent(parent, false);
-            stones.AddComponent<MeshFilter>().sharedMesh = SaveMesh(border, BorderMeshPath);
-            stones.AddComponent<MeshRenderer>().sharedMaterials = pieces.Keys.ToArray();
-            foreach (float cluster in new[] { 11f, 49f, 86f, 118f, 231f, 268f, 305f, 340f })
-            {
-                int count = 1 + random.Next(2);
-                for (int i = 0; i < count; i++)
-                {
-                    float compass = cluster + Range(-7, 7);
-                    if (InCamp(compass)) continue;
-                    var tilt = Quaternion.Euler(Range(72, 98), Range(0, 360), Range(-12, 12));
-                    Place(parent, "Rocks/Rock_" + random.Next(4), compass, Range(15f, 19f), tilt, Range(.5f, .9f), .35f, true);
-                }
-            }
-        }
-
-        private static GameObject Place(Transform parent, string prefabName, float compass, float radius, Quaternion rotation, float scale, float embed, bool solid)
-        {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VendorPrefabs + prefabName + ".prefab");
-            if (prefab == null) throw new InvalidOperationException("Missing Highlands prefab " + prefabName + ".");
-            var item = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
-            WithoutStaticBatching(item);
-            // Border pebbles are visual: the player walks over them without snagging.
-            if (!solid) foreach (var collider in item.GetComponentsInChildren<Collider>()) UnityEngine.Object.DestroyImmediate(collider);
-            float angle = compass * Mathf.Deg2Rad;
-            item.transform.SetPositionAndRotation(new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle)) * radius, rotation);
-            item.transform.localScale = Vector3.one * scale;
-            var bounds = WorldBounds(item.transform);
-            item.transform.position += Vector3.up * (SiteLayout.GroundTop - bounds.min.y - embed * bounds.size.y);
-            // Nothing loose may hang over the opening, where digging would leave it floating.
-            var outward = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle)) * .1f;
-            while (DistanceXZ(WorldBounds(item.transform), Vector3.zero) < SiteLayout.OpeningRadius + .2f) item.transform.position += outward;
-            return item;
-        }
-
-        // Closed collar: an exact circular lip over the terrain-hole edge and a roof over
-        // the grid corners, textured to continue the surrounding lakebed ground.
-        private static void BuildRim(Transform surface, Vector3 terrainPosition, Material meadow)
-        {
-            const int segments = 256;
+            const int segments = 360;
             var vertices = new List<Vector3>(); var uv = new List<Vector2>(); var triangles = new List<int>();
             void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
             {
                 int i = vertices.Count; vertices.AddRange(new[] { a, b, c, d });
-                foreach (var v in new[] { a, b, c, d }) uv.Add(new Vector2(v.x - terrainPosition.x, v.z - terrainPosition.z) / GrassTile);
+                foreach (var v in new[] { a, b, c, d }) uv.Add(new Vector2(v.x, v.z) / TileSize);
                 triangles.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
             }
-            float lip = SiteLayout.RimOuterRadius + .35f;
+            float halfX = SiteLayout.Extent.x * .5f + CollarOverlap, halfZ = SiteLayout.Extent.z * .5f + CollarOverlap;
+            Vector3 Point(float compass, float offset)
+            {
+                var p = SiteLayout.OpeningPoint(compass, offset);
+                return new Vector3(p.x, 0, p.y);
+            }
+            Vector3 Outer(float compass)
+            {
+                float c = compass * Mathf.Deg2Rad, dx = Mathf.Abs(Mathf.Sin(c)), dz = Mathf.Abs(Mathf.Cos(c));
+                float reach = Mathf.Min(dx > 1e-4f ? halfX / dx : float.MaxValue, dz > 1e-4f ? halfZ / dz : float.MaxValue);
+                return new Vector3(Mathf.Sin(c), 0, Mathf.Cos(c)) * reach;
+            }
             Vector3 top = Vector3.up * SiteLayout.RimTop, skirt = Vector3.up * (SiteLayout.GroundTop - .015f), bottom = Vector3.up * SiteLayout.RimBottom;
             for (int i = 0; i < segments; i++)
             {
-                float a = i * Mathf.PI * 2 / segments, b = (i + 1) * Mathf.PI * 2 / segments;
-                Vector3 Direction(float angle) => new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
-                Vector3 da = Direction(a), db = Direction(b);
-                Vector3 ia = da * SiteLayout.OpeningRadius, ib = db * SiteLayout.OpeningRadius;
-                Vector3 ca = da * SiteLayout.RimOuterRadius, cb = db * SiteLayout.RimOuterRadius;
-                Vector3 la = da * lip, lb = db * lip, oa = da * SiteLayout.RimRadius, ob = db * SiteLayout.RimRadius;
+                // Descending compass keeps the collar's faces pointing up.
+                float a = 90 - i * 360f / segments, b = 90 - (i + 1) * 360f / segments;
+                Vector3 ia = Point(a, 0), ib = Point(b, 0), ca = Point(a, SiteLayout.RimBand), cb = Point(b, SiteLayout.RimBand);
+                Vector3 la = Point(a, SiteLayout.RimBand + .35f), lb = Point(b, SiteLayout.RimBand + .35f), oa = Outer(a), ob = Outer(b);
                 Quad(ia + top, ib + top, cb + top, ca + top);
                 Quad(ca + top, cb + top, lb + skirt, la + skirt);
                 Quad(la + skirt, lb + skirt, ob, oa);
@@ -692,14 +719,15 @@ namespace SomethingDownThere.Editor
             }
             var mesh = new Mesh { name = "ExcavationRim" };
             mesh.SetVertices(vertices); mesh.SetUVs(0, uv); mesh.SetTriangles(triangles, 0);
+            // Zero deposit weights: the ground shader draws plain soil under the sediment cap.
+            mesh.SetUVs(2, new Vector2[vertices.Count]);
             mesh.RecalculateNormals(); mesh.RecalculateTangents(); mesh.RecalculateBounds();
             mesh.SetPreBakeCollisionMesh(false, true);
             var saved = SaveMesh(mesh, RimMeshPath);
             var rim = new GameObject("Excavation rim");
             rim.transform.SetParent(surface, false);
             rim.AddComponent<MeshFilter>().sharedMesh = saved;
-            // The collar continues the dig meadow itself; the pebble border marks where digging ends.
-            rim.AddComponent<MeshRenderer>().sharedMaterial = meadow;
+            rim.AddComponent<MeshRenderer>().sharedMaterial = ground;
             rim.AddComponent<MeshCollider>().sharedMesh = saved;
             rim.AddComponent<PermanentTerrainBoundary>();
         }

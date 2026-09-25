@@ -57,7 +57,6 @@ namespace SomethingDownThere
             if (RenderSettings.sun != sun) throw new InvalidOperationException("Environment review must use MainGame's scene lighting.");
             var sunData = sun.GetUniversalAdditionalLightData();
             var softQuality = sunData.softShadowQuality;
-            var grass = player.ExcavationTerrain.GetComponent<SurfaceGrassRenderer>();
             var scenery = EnvironmentScenery.Select(n => environment.Find(n).gameObject).ToArray();
             var rockRenderers = scenery.SelectMany(o => o.GetComponentsInChildren<Renderer>(true)).ToArray();
             var lods = scenery.SelectMany(o => o.GetComponentsInChildren<LODGroup>(true)).ToArray();
@@ -65,7 +64,7 @@ namespace SomethingDownThere
             if (EnvironmentReferenceLodHeights == null || EnvironmentReferenceLodHeights.Length != lodLevels.Sum(l => l.Length))
                 throw new InvalidOperationException("Rebuild the validation player with the environment reference LOD thresholds.");
             var water = environment.Find("Water").gameObject;
-            bool environmentActive = environment.gameObject.activeSelf, waterActive = water.activeSelf, grassEnabled = grass.enabled;
+            bool environmentActive = environment.gameObject.activeSelf, waterActive = water.activeSelf;
             var sceneryActive = scenery.Select(o => o.activeSelf).ToArray();
             var shadows = rockRenderers.Select(r => r.shadowCastingMode).ToArray();
             var colliders = environment.GetComponentsInChildren<Collider>(true);
@@ -108,7 +107,6 @@ namespace SomethingDownThere
                 for (int i = 0; i < colliders.Length; i++) colliders[i].enabled = colliderEnabled[i];
                 sun.shadows = sunShadows;
                 sunData.softShadowQuality = softQuality;
-                grass.enabled = grassEnabled;
                 cameraData.renderPostProcessing = post;
                 camera.useOcclusionCulling = occlusion;
                 pipeline.msaaSampleCount = msaa;
@@ -159,7 +157,6 @@ namespace SomethingDownThere
                     case "sun_shadows_off": sun.shadows = LightShadows.None; break;
                     case "scenery_shadows_off": foreach (var renderer in rockRenderers) renderer.shadowCastingMode = ShadowCastingMode.Off; break;
                     case "post_off": cameraData.renderPostProcessing = false; break;
-                    case "dig_meadow_off": grass.enabled = false; break;
                     case "terrain_surface_off": terrain.drawHeightmap = false; break;
                     case "lod_bias_1": QualitySettings.lodBias = 1; break;
                     case "lod_bias_half": QualitySettings.lodBias = .5f; break;
@@ -187,7 +184,7 @@ namespace SomethingDownThere
             }
             bool candidates = Environment.GetCommandLineArgs().Contains("--environment-candidates");
             var variants = new[] { "baseline_start", "environment_off", "scenery_off", "terrain_details_off", "terrain_trees_off",
-                "water_off", "sun_shadows_off", "scenery_shadows_off", "post_off", "dig_meadow_off", "terrain_surface_off",
+                "water_off", "sun_shadows_off", "scenery_shadows_off", "post_off", "terrain_surface_off",
                 "lod_bias_1", "lod_bias_half", "scenery_lowest_lod", "terrain_pixel_error_10", "terrain_basemap_150",
                 "terrain_details_30", "msaa_2", "scale_75_diagnostic", "environment_colliders_off", "baseline_end" };
             if (candidates) variants = new[] { "baseline_start", "sun_shadows_medium", "sun_shadows_low", "geometry_candidate",
@@ -260,7 +257,7 @@ namespace SomethingDownThere
                             mainThread = Summary(main), renderThread = Summary(render), presentWait = Summary(wait),
                             frameLimit = Application.targetFrameRate, vsync = QualitySettings.vSyncCount,
                             terrainTrees = terrain.terrainData.treeInstanceCount,
-                            renderedFinds = player.Discoveries.Finds.Count(f => f.GetComponent<MeshRenderer>().enabled), grass.LastTriangles,
+                            renderedFinds = player.Discoveries.Finds.Count(f => f.GetComponent<MeshRenderer>().enabled),
                             draws = Counts(drawCounts), batches = Counts(batchCounts), triangles = Counts(triangleCounts), setPass = Counts(passCounts) });
                         File.WriteAllText(output, Newtonsoft.Json.JsonConvert.SerializeObject(new {
                             scope = "Native uncapped environment attribution; disposable single-scene MainGame copy, no game saves or persisted settings",

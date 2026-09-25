@@ -7,17 +7,23 @@ The lakebed excavation is a single contained worksite.
 - **Setting:** the river canyon of the approved Pure Nature 2: Highlands demo, kept close to the
   demo's terrain and asset placement. The river is widened into a former lake that still holds
   water along the canyon, with a waterfall at its southern end; a bathtub band marks the old shoreline.
-- **Drained section:** one large exposed section of the lakebed against the east cliff: mud,
-  rubble, stranded boulders and sparse re-growing grass, sloping gently into the remaining water.
-- **Dig area:** one round meadow opening with grass and flowers inside the drained section. A narrow
-  soil rim carrying a continuous border of small stones marks exactly where digging stops; outside
-  it the meadow continues as grass that thins raggedly into the drained mud, with a few larger
-  stones. The stations stand on its south rim, looking north up the canyon.
+- **Drained section:** one large exposed section of the lakebed against the east cliff, sloping
+  gently into the remaining water. It reads as a recently drained bed, not a flat yard: packed
+  sediment on the flats broken by darker mud patches, damp silt toward the water, pebble strands
+  along old waterlines and sandy banks. Shallow, walkable channels still trickle from seeps at the
+  cliff foot, wind around the dig plot and run into the lake, with stony beds, damp banks, reeds,
+  rushes and tufts of muted, sun-dried grass (never bright lime); one dry gully joins them. Stranded stones, rubble and twigs lie
+  along channels and waterlines. Low sand islands with grassy tops and the odd boulder stand in
+  the remaining lake. All lakebed dressing stays clear of the camp and the dig plot.
+- **Dig area:** one wide, irregular plot of bare packed sediment inside the drained section, wider
+  east-west than north-south and never a circle, with no fence. Its paler ground stands out
+  within a band of darker trampled mud. No grass grows on the plot. The stations stand on its south side, looking north up the canyon.
 - **Play area:** the player stays on the drained section: invisible walls follow its edge at the
   water line and a flight ceiling stops the jetpack about 16 m above the ground. Scenery that can
   never be seen from inside this volume is left out.
 - **Dimensions:** `SiteLayout` owns the opening, rim and subsurface allocation. Depth remains
-  at least 100 m; the footprint leaves useful lateral room for branches.
+  at least 100 m; the footprint leaves useful lateral room for branches. Finds keep their
+  accepted density beneath the plot and just under its edge; ground further out is plain soil.
 - **Boundary:** the rim and lakebed ground cannot be dug from above. The saved rectangular
   subsurface grid remains accessible beneath them for lateral digging.
 - **Lighting:** solar-noon presentation with the sun almost directly overhead and short shadows.
@@ -30,7 +36,8 @@ The lakebed excavation is a single contained worksite.
   for far scenery only: rocks, trees and bushes keep full detail near the player, the coarsest
   meshes and flat tree impostors stay on the distant backdrop, and switches blend. Foliage reads
   as solid canopies, without speckled dither patterns.
-- **Water presentation:** calm blue-green lake water with readable shallow ground, restrained
+- **Water presentation:** calm, silty slate grey-green lake water, murky rather than blue: the
+  bottom shows only in the shallows, trickles run into the lake without a seam, with restrained
   shore foam and rippled canyon reflections. Neither refraction nor reflected light may turn
   the shore into a glowing white band; the lake remains scenery outside the play area.
 - **Underground:** fully diggable voxel ground except permanent boundaries.

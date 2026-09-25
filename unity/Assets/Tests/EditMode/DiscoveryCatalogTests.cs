@@ -72,8 +72,8 @@ namespace SomethingDownThere.Tests
                 Assert.That(top.Count(p => p.Position.z <= 6), Is.GreaterThanOrEqualTo(50));
                 Assert.That(layout.Skip(catalog.ShallowCount).Count(), Is.EqualTo(catalog.TotalCount - catalog.ShallowCount));
                 Assert.That(layout.Count(p => p.Position.y < 8.5f), Is.GreaterThanOrEqualTo(100));
-                // Sample walkable excavation locations, including lateral/back areas. This is a
-                // spatial bound on empty topsoil, not a claim about every player's encounter time.
+                // Sample the whole dig plot, including its lateral/back areas. This is a spatial
+                // bound on empty topsoil, not a claim about every player's encounter time.
                 // The rug is bucketed so the sweep stays linear as the entry layer grows.
                 var rug = new System.Collections.Generic.Dictionary<(int, int), System.Collections.Generic.List<Vector2>>();
                 foreach (var p in top)
@@ -82,9 +82,11 @@ namespace SomethingDownThere.Tests
                     if (!rug.TryGetValue(cell, out var list)) rug[cell] = list = new System.Collections.Generic.List<Vector2>();
                     list.Add(new Vector2(p.Position.x, p.Position.z));
                 }
-                for (float x = .8f; x <= 23.2f; x += .5f)
-                    for (float z = .8f; z <= 23.2f; z += .5f)
+                var corner = new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
+                for (float x = .8f; x <= SiteLayout.Extent.x - .8f; x += .5f)
+                    for (float z = .8f; z <= SiteLayout.Extent.z - .8f; z += .5f)
                     {
+                        if (SiteLayout.BeyondOpening(new Vector2(x, z) + corner) > 0) continue;
                         int cx = Mathf.FloorToInt(x / 2f), cz = Mathf.FloorToInt(z / 2f);
                         float distance = float.MaxValue;
                         for (int ox = -1; ox <= 1; ox++)
@@ -186,17 +188,23 @@ namespace SomethingDownThere.Tests
                         $"Seed {seed}, floor {floor}: original buried shapes, excluding every turf find.");
                     Assert.That(fresh.Count(i => catalog.Entries[layout[i].PrefabIndex].ItemId == "mineral_coal"),
                         Is.GreaterThanOrEqualTo(15), $"Seed {seed}: coal should enter around the first metre.");
-                    // Blind, fixed-area patches measure player-scale encounters. Fallen
-                    // objects cannot enter this count: positions are the original generation.
+                    // Blind, fixed-area patches inside the plot measure player-scale encounters.
+                    // Fallen objects cannot enter this count: positions are the original generation.
                     var patches = new System.Collections.Generic.List<int>();
-                    for (float x = 1; x <= 19; x += 3) for (float z = 1; z <= 19; z += 3)
-                        patches.Add(fresh.Count(i => layout[i].Position.x >= x && layout[i].Position.x < x + 3
-                            && layout[i].Position.z >= z && layout[i].Position.z < z + 3));
+                    var corner = new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
+                    bool InPlot(float x, float z) => SiteLayout.BeyondOpening(new Vector2(x, z) + corner) <= 0;
+                    for (float x = 0; x + 3 <= SiteLayout.Extent.x; x += 3) for (float z = 0; z + 3 <= SiteLayout.Extent.z; z += 3)
+                        if (InPlot(x, z) && InPlot(x + 3, z) && InPlot(x, z + 3) && InPlot(x + 3, z + 3))
+                            patches.Add(fresh.Count(i => layout[i].Position.x >= x && layout[i].Position.x < x + 3
+                                && layout[i].Position.z >= z && layout[i].Position.z < z + 3));
+                    Assert.That(patches.Count, Is.GreaterThanOrEqualTo(40), "The plot holds enough whole patches to judge.");
                     // Random patches may vary; require no empty patch and keep even the
                     // sparse decile useful, rather than treating one low sample as the mean.
+                    // The lobed plot packs its finds a little tighter than the old square grid,
+                    // so a few seeds' sparse decile holds five rather than six.
                     patches.Sort();
                     Assert.That(patches[0], Is.GreaterThanOrEqualTo(1), $"Seed {seed}, floor {floor}: empty local dig patch.");
-                    Assert.That(patches[patches.Count / 10], Is.GreaterThanOrEqualTo(6),
+                    Assert.That(patches[patches.Count / 10], Is.GreaterThanOrEqualTo(5),
                         $"Seed {seed}, floor {floor}: too many sparse local patches.");
                     Assert.That(patches.Average(), Is.GreaterThanOrEqualTo(8), $"Seed {seed}, floor {floor}: encounters are too sparse.");
                 }
@@ -273,7 +281,8 @@ namespace SomethingDownThere.Tests
                     int core = banded.Count(p => SiteLayout.Extent.y - p.Position.y >= entry.CoreMinDepth - .0001f && SiteLayout.Extent.y - p.Position.y <= entry.CoreMaxDepth + .0001f);
                     Assert.That(core, Is.GreaterThanOrEqualTo(Mathf.FloorToInt(banded.Length * entry.CoreShare * .9f)), $"{seed}: {entry.ItemId} core share");
                     for (int quadrant = 0; quadrant < 4; quadrant++)
-                        Assert.That(placements.Count(p => (p.Position.x < 12 ? 0 : 1) + (p.Position.z < 12 ? 0 : 2) == quadrant),
+                        Assert.That(placements.Count(p => (p.Position.x < SiteLayout.Extent.x * .5f ? 0 : 1)
+                            + (p.Position.z < SiteLayout.Extent.z * .5f ? 0 : 2) == quadrant),
                             Is.GreaterThanOrEqualTo(entry.Count / 10), $"Seed {seed}, {entry.ItemId}, quadrant {quadrant}");
                 }
             }

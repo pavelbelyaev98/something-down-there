@@ -20,6 +20,7 @@ Shader "Something Down There/Ground Triplanar"
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
+        _TurfTint("Surface cap tint", Color) = (1,1,1,1)
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _MaskLayout("Mask layout", Float) = 0
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _TurfMaskLayout("Turf mask layout", Float) = 0
         [Toggle] _SoilComparison("Compare soil on the west half", Float) = 0
@@ -70,7 +71,7 @@ Shader "Something Down There/Ground Triplanar"
             float _ComparisonStoneNormalStrength;
             float _MaxSmoothness;
             float _GroundOpacity;
-            float4 _ClayTint, _RockTint;
+            float4 _ClayTint, _RockTint, _TurfTint;
             float _ClayTileMetres, _RockTileMetres;
             float _ClayNormalStrength, _RockNormalStrength;
         CBUFFER_END
@@ -216,35 +217,36 @@ Shader "Something Down There/Ground Triplanar"
             half2 soilMask = maskX.rg * weights.x + maskY.rg * weights.y + maskZ.rg * weights.z;
             roughness = soilMask.r;
             occlusion = soilMask.g;
-            // Soil variation stays below the continuous meadow cap.
+            // Soil variation stays below the continuous surface cap.
             float2 macroUV = (position.xz + position.y * float2(0.37, 0.23)) * 0.073;
             float2 macroDx = (positionDx.xz + positionDx.y * float2(0.37, 0.23)) * 0.073;
             float2 macroDy = (positionDy.xz + positionDy.y * float2(0.37, 0.23)) * 0.073;
             half macro = SOIL_SAMPLE(Albedo, macroUV, macroDx, macroDy).r;
             colour *= 1 + (macro - 0.47) * _MacroVariation * 3;
 
-            // Feather turf into the exposed soil over a shallow collar. A nearly
+            // Feather the surface cap (the lakebed sediment, "turf" below) into the
+            // exposed soil over a shallow collar. A nearly
             // binary cutoff at the flat surface traced individual mesh triangles.
             float depth = max(0, _SurfaceHeight - position.y);
-            // The meadow stays on one continuous top projection across the rim.
+            // The cap stays on one continuous top projection across the rim.
             // Switching to a wall projection near tilted mesh normals produced
-            // unrelated dark polygonal patches on the otherwise intact lawn.
+            // unrelated dark polygonal patches on the otherwise intact surface.
             float edgeWidth = max(_TurfDepth * 0.45, (abs(positionDx.y) + abs(positionDy.y)) * 0.65);
             if (depth < _TurfDepth * 1.5 + 0.02)
             {
                 float turfScale = soilTileMetres / max(_TileMetres, 0.05);
-                half3 grassY = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb;
+                half3 grassY = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb * _TurfTint.rgb;
                 half3 grass = grassY;
                 half leaf = saturate((grass.g - grass.r * 0.7) * 3.5);
                 half drift = GROUND_SAMPLE(_TurfAlbedo, position.xz * 0.61, positionDx.xz * 0.61, positionDy.xz * 0.61).r;
                 float fringeDepth = _TurfDepth * (0.75 + leaf * 0.15 + drift * 0.1);
                 // Texture variation stays within the blend so it breaks up the
-                // contour without punching holes in untouched flat grass.
+                // contour without punching holes in the untouched flat surface.
                 float edge = depth - fringeDepth;
                 half turf = (1 - smoothstep(-edgeWidth, edgeWidth, edge))
                     * smoothstep(-0.2, -0.05, n.y);
                 half3 gy = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfNormalStrength);
-                // The thin turf fringe shares the lawn's lighting. Following the
+                // The thin cap fringe shares the surface lighting. Following the
                 // steep soil normal here draws a dark polygonal outline on each cut.
                 half3 turfNormal = half3(0, 1, 0);
                 normal = normalize(lerp(normal, ProjectGroundNormal(turfNormal, half3(0, 1, 0), axisSign, gy, gy, gy), turf));

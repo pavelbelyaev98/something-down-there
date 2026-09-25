@@ -67,7 +67,7 @@ namespace SomethingDownThere
                 ScreenCapture.CaptureScreenshot(Path.Combine(directory, excavated ? "pit.png" : "surface.png"));
                 yield return null; yield return null;
             }
-            yield return MeasureDigging(player, terrain.GetComponent<SurfaceGrassRenderer>(), results);
+            yield return MeasureDigging(player, results);
             // Check the normal runtime limiter too; the A/B samples above deliberately disable it.
             Application.targetFrameRate = GamePreferences.DefaultFrameLimit;
             for (int i = 0; i < 80; i++) yield return null;

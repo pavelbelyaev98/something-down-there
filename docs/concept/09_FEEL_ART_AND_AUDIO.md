@@ -4,7 +4,8 @@
 
 Stylized painted low-poly: strong silhouettes, restrained texture detail, painted gradients,
 cohesive art direction across custom and licensed assets. Bright and readable, never realistic mud, never asset-store clutter.
-Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid grass,
+Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid canyon grass
+(the exposed lakebed's plants stay muted and sun-dried),
 warm soil and a blue sky with soft clouds. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
 Prefer smooth, softer nearby shadows over sharp pixelated edges. Backdrop shadow and geometry
@@ -12,26 +13,23 @@ detail may be reduced for frame rate; retain contact cues at the worksite and lo
 Preserve the established vivid color grade across the game. Improve underground readability
 through the excavation daylight and ground response, without flattening surface colors.
 Lanterns light a broad work area with gradual falloff, without bleaching nearby textures or changing the surface grade.
-The lakebed crust and freshly dug soil read as dry, rough ground: no mirror-like white
+The lakebed sediment and freshly dug soil read as dry, rough ground: no mirror-like white
 glare or crystal sparkles. Preserve texture relief and contact shadows without a wet sheen.
-The whole round diggable surface is a meadow using approved pack plants: low grass,
-white/blue daisies, taller white/yellow/pink flowers and occasional ferns, with small clearings.
-Use pack turf instead of custom turf, continuous to cut edges with a soft, natural transition
-into soil. Avoid sharp sawtooth colouring and dark polygonal outlines around holes.
-Keep plants rooted beside holes; clip only foliage actually above the opening, including wind
-movement. Remove whole plants when their roots lose support, without a padded clearing margin.
-Use approved pack ground throughout the top layer beneath the meadow. The comparison is over;
-retain the custom soil art as an inactive option for later, without applying it to the site.
+The diggable surface is bare packed sediment from the approved pack, the same ground as the
+surrounding lakebed, continuous to cut edges with a soft, natural transition into soil. No
+plants grow on it. Avoid sharp sawtooth colouring and dark polygonal outlines around holes.
+Use approved pack textures only; no generated ground patterns. Custom soil art stays an
+inactive option for later, without applying it to the site.
 
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
 - Soil, clay and rock use distinct grain and relief patterns matching their saved deposits; texture scale stays consistent on floors, walls and ceilings.
 - **Objects read by silhouette**, because recognition is the core reward.
-- Pure Nature 2: Mountains supplies the meadow plants and dig-ground textures; Pure Nature 2:
+- Pure Nature 2: Mountains supplies the dig-ground textures and lakebed plants; Pure Nature 2:
   Highlands supplies the canyon, lake and lakebed around the dig area, with its demo's sky, haze and
   baked water reflections.
-- Match the Highlands colour grade with restrained bloom. Water keeps coloured depth,
-  subtle shore foam and reflected scenery; shallow refraction preserves the underlying
+- Match the Highlands colour grade with restrained bloom. Water is silty and murky rather than
+  blue, with subtle shore foam and reflected scenery; shallow refraction preserves the underlying
   ground's lighting instead of bleaching it. Tune project-owned shader/material copies.
 - Custom grass clump, cloud and sun art and the rejected first-person tool experiments are removed.
   Preserve the full licensed pack for future use; tune project-owned copies.

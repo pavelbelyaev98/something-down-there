@@ -176,10 +176,10 @@ namespace SomethingDownThere.Tests
         {
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
-            // A 100 m volume only materializes the top layer that owns the ground plane:
-            // 12 x 12 chunks out of 12 x 50 x 12 possible keys.
-            Assert.That(terrain.ChunkKeyCount, Is.EqualTo(7200));
-            Assert.That(terrain.ChunkCount, Is.EqualTo(144));
+            // A 100 m volume only materializes the top layer that owns the ground plane.
+            var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
+            Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
+            Assert.That(terrain.ChunkCount, Is.EqualTo(chunks.x * chunks.z));
             string surfaceLayer = ((terrain.Dimensions.y - 1) / 16).ToString();
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
                 Assert.That(chunk.name.Split(',')[1], Is.EqualTo(surfaceLayer), "Only the surface layer is materialized.");
@@ -226,18 +226,19 @@ namespace SomethingDownThere.Tests
             // A materialized chunk on the far side of the ground plane: untouched, still meshed.
             MeshFilter distant = filters.First(f => f.name == $"Chunk 0,{(terrain.Dimensions.y - 1) / 16},11");
             Vector3[] previousVertices = distant.sharedMesh.vertices;
-            RaycastHit top = Hit(new Vector3(0, 2, 0), Vector3.down); // Four chunks meet here.
+            var above = Seam + Vector3.up * 2;
+            RaycastHit top = Hit(above, Vector3.down);
             Assert.That(terrain.TryDig(top), Is.True);
             Assert.That(terrain.LastRebuiltChunkCount, Is.InRange(4, 8));
             Assert.That(terrain.LastRebuiltChunkCount, Is.LessThan(terrain.ChunkCount));
             CollectionAssert.AreEqual(previousVertices, distant.sharedMesh.vertices);
             foreach (var collider in terrain.GetComponentsInChildren<MeshCollider>().Where(c => c.enabled))
                 Assert.That(collider.sharedMesh, Is.SameAs(collider.GetComponent<MeshFilter>().sharedMesh));
-            RaycastHit floor = Hit(new Vector3(0, 2, 0), Vector3.down);
+            RaycastHit floor = Hit(above, Vector3.down);
             // One bite opens usable space: the depth scales with the tool's own radius.
             Assert.That(floor.point.y, Is.InRange(-terrain.DigRadius * 1.2f, -terrain.DigRadius * .4f),
                 "A shallow shovel bite still opens usable space.");
-            Assert.That(terrain.IsSolid(new Vector3(0.1f, -0.15f, 0.1f)), Is.False);
+            Assert.That(terrain.IsSolid(Seam + new Vector3(0.1f, -0.15f, 0.1f)), Is.False);
             int count = terrain.RemainingCells;
             // A physical walk along the surface must not initialize a new excavation.
             // Keep this terrain fixture's walk clear of the permanent yard winch.
@@ -249,7 +250,19 @@ namespace SomethingDownThere.Tests
             terrain.InitializeSession();
             Physics.SyncTransforms();
             Assert.That(terrain.RemainingCells, Is.EqualTo(count));
-            Assert.That(Hit(new Vector3(0, 2, 0), Vector3.down).point.y, Is.EqualTo(floor.point.y).Within(0.001f));
+            Assert.That(Hit(above, Vector3.down).point.y, Is.EqualTo(floor.point.y).Within(0.001f));
+        }
+
+        // A chunk corner beside the site centre, where four chunks meet. The odd chunk count
+        // north-south leaves the centre itself mid-chunk.
+        private static Vector3 Seam
+        {
+            get
+            {
+                float chunk = SiteLayout.ChunkSize * SiteLayout.CellSize;
+                return new Vector3(SiteLayout.Origin.x + Mathf.Floor(-SiteLayout.Origin.x / chunk) * chunk, 0,
+                    SiteLayout.Origin.z + Mathf.Floor(-SiteLayout.Origin.z / chunk) * chunk);
+            }
         }
 
         [Test]
@@ -305,7 +318,7 @@ namespace SomethingDownThere.Tests
             // above the bedrock shelf.
             foreach (float depth in new[] { 30f, 60f, 90f })
             foreach (Vector3 direction in new[] { Vector3.left, Vector3.right, Vector3.forward, Vector3.back })
-                DigUntilBoundary(new Vector3(0, -depth, 0), direction, 12);
+                DigUntilBoundary(new Vector3(0, -depth, 0), direction, Mathf.Abs(Vector3.Dot(direction, SiteLayout.Extent)) * .5f);
         }
 
         [Test]
@@ -510,23 +523,23 @@ namespace SomethingDownThere.Tests
         {
             if (player.ShavingEnabled) player.ToggleAdminShaving();
             InstallExcavatedSpikeFixture();
-            var tip = new Vector3(0, -1.75f, 0);
-            var feet = new Vector3(0, -1.94f, -1);
+            var tip = Seam + new Vector3(0, -1.75f, 0);
+            var feet = Seam + new Vector3(0, -1.94f, -1);
             var motor = player.GetComponent<CharacterController>();
             bool Sweep() => Physics.CapsuleCast(feet + Vector3.up * motor.radius,
                 feet + Vector3.up * (motor.height - motor.radius), motor.radius, Vector3.forward,
                 out _, 2, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
             Assert.That(terrain.IsSolid(tip), Is.True);
             Assert.That(Sweep(), Is.True, "The actual player-sized sweep initially snags the attached spike.");
-            var oldTipHit = Hit(new Vector3(0, -0.5f, 0), Vector3.down);
+            var oldTipHit = Hit(Seam + new Vector3(0, -0.5f, 0), Vector3.down);
             Bounds notification = default;
             int notifications = 0;
             terrain.Changed += bounds => { notification = bounds; notifications++; };
             // Stay just outside the spike and cut its attachment with the tuned
             // smaller shovel; the old 0.5 m offset no longer reaches the neck.
             float cutOffset = player.EffectiveShovel.Radius + .09f;
-            player.ViewCamera.transform.position = new Vector3(cutOffset, -0.5f, 0);
-            player.ViewCamera.transform.LookAt(new Vector3(cutOffset, -2, 0));
+            player.ViewCamera.transform.position = Seam + new Vector3(cutOffset, -0.5f, 0);
+            player.ViewCamera.transform.LookAt(Seam + new Vector3(cutOffset, -2, 0));
             float charge = player.Battery.Charge;
             Assert.That(player.TryDig(), Is.True);
             Assert.That(terrain.LastRemnantSamples, Is.GreaterThan(0));
@@ -552,7 +565,7 @@ namespace SomethingDownThere.Tests
             PlacePlayer(feet);
             yield return null;
             for (int i = 0; i < 60; i++) player.Tick(new FpsInputFrame { Move = Vector2.up }, 1f / 60);
-            Assert.That(player.transform.position.z, Is.GreaterThan(0.8f), "Walk across the former spike without a jump or jetpack.");
+            Assert.That(player.transform.position.z, Is.GreaterThan(Seam.z + 0.8f), "Walk across the former spike without a jump or jetpack.");
             Assert.That(player.FeetPosition.y, Is.InRange(-2.3f, -1.8f));
             Assert.That(player.Battery.Charge, Is.EqualTo(chargeAfterCut).Within(.001f));
         }
@@ -567,13 +580,16 @@ namespace SomethingDownThere.Tests
             var snapshot = grid.Capture();
             var samples = snapshot.Density.ToArray();
             snapshot.LowestCarvedY = terrain.Dimensions.y - 16;
-            for (int z = 78; z <= 114; z++) for (int y = terrain.Dimensions.y - 20; y <= terrain.Dimensions.y; y++) for (int x = 78; x <= 114; x++)
+            // Centred on a chunk corner, so the cut crosses the four horizontal chunk seams.
+            var centre = Vector3Int.RoundToInt((Seam - terrain.transform.position) / terrain.CellSize);
+            int stride = terrain.Dimensions.x + 1, plane = stride * (terrain.Dimensions.y + 1);
+            for (int z = centre.z - 18; z <= centre.z + 18; z++) for (int y = terrain.Dimensions.y - 20; y <= terrain.Dimensions.y; y++) for (int x = centre.x - 18; x <= centre.x + 18; x++)
             {
-                Vector3 p = terrain.transform.TransformPoint(new Vector3(x, y, z) * terrain.CellSize);
+                Vector3 p = terrain.transform.TransformPoint(new Vector3(x, y, z) * terrain.CellSize) - Seam;
                 float cavity = Mathf.Max(Mathf.Abs(p.x) - 1.8f, Mathf.Abs(p.z) - 1.8f, -2 - p.y);
                 float h = p.y + 2;
                 float spike = Mathf.Min(0.16f - Mathf.Abs(p.x), 0.16f - Mathf.Abs(p.z), 0.375f - h, h + 0.05f);
-                int index = x + y * 193 + z * 193 * (terrain.Dimensions.y + 1);
+                int index = x + y * stride + z * plane;
                 samples[index] = Mathf.Clamp(Mathf.Min(samples[index], Mathf.Max(cavity, spike)), -0.25f, 0.25f);
             }
             snapshot.Density = DensitySnapshot.CopyFrom(samples);
@@ -582,8 +598,8 @@ namespace SomethingDownThere.Tests
             // cavity can reach instead of trusting what happened to exist already.
             var refresh = typeof(TerrainVolume).GetMethod("Refresh", flags);
             for (int keyY = (terrain.Dimensions.y - 32) / 16; keyY <= (terrain.Dimensions.y - 1) / 16; keyY++)
-            for (int keyZ = 4; keyZ <= 7; keyZ++)
-            for (int keyX = 4; keyX <= 7; keyX++)
+            for (int keyZ = (centre.z - 18) / 16; keyZ <= (centre.z + 18) / 16; keyZ++)
+            for (int keyX = (centre.x - 18) / 16; keyX <= (centre.x + 18) / 16; keyX++)
                 refresh.Invoke(terrain, new object[] { new Vector3Int(keyX, keyY, keyZ) });
             Physics.SyncTransforms();
         }
@@ -732,11 +748,21 @@ namespace SomethingDownThere.Tests
         private void DigUntilBoundary(Vector3 origin, Vector3 direction, float expectedCoordinate)
         {
             RaycastHit hit = default;
+            // A 4 m cut can leave a sliver whose surface-net face lies about a cell outside the
+            // density surface, where TryDig rejects the hit as stale air. Like a player, the bore
+            // re-aims a few centimetres aside instead of treating that as a failed boundary.
+            var side = Vector3.Cross(direction, Mathf.Abs(direction.y) > .5f ? Vector3.right : Vector3.up).normalized;
+            var aims = new[] { Vector3.zero, side * .3f, -side * .3f, Vector3.Cross(direction, side) * .3f };
             for (int i = 0; i < 64; i++)
             {
-                hit = Hit(origin, direction);
+                bool cut = false;
+                foreach (var aim in aims)
+                {
+                    hit = Hit(origin + aim, direction);
+                    if (hit.collider.GetComponent<PermanentTerrainBoundary>() != null || (cut = terrain.TryDig(hit))) break;
+                }
                 if (hit.collider.GetComponent<PermanentTerrainBoundary>() != null) break;
-                Assert.That(terrain.TryDig(hit), Is.True);
+                Assert.That(cut, Is.True, $"Cut {i} toward {direction} at {hit.point} on {hit.collider.name}");
                 // Follow the bore so a 100 m descent stays inside the 40 m probe range.
                 origin = hit.point - direction * 1.5f;
             }
@@ -820,7 +846,8 @@ namespace SomethingDownThere.Tests
             terrain.ToolCut += value => { notifications++; feedback = value; };
             for (int i = 0; i < 3; i++)
             {
-                player.ViewCamera.transform.position = new Vector3(-6 + i * 6, 1.5f, -4);
+                // Well inside each third of the grid and inside the plot.
+                player.ViewCamera.transform.position = new Vector3(-10 + i * 10, 1.5f, -4);
                 player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
                 Physics.SyncTransforms();
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);

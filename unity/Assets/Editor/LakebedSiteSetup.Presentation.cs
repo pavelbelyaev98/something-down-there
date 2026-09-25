@@ -14,6 +14,7 @@ namespace SomethingDownThere.Editor
         public const string WaterShaderName = "Something Down There/Lakebed Water";
         public const string LakeMaterialPath = Folder + "/LakeWater.mat";
         public const string RiverMaterialPath = Folder + "/RiverWater.mat";
+        public const string TrickleMaterialPath = Folder + "/TrickleWater.mat";
         private const string VendorWaterFolder = "Assets/BK/PureNature_Highlands/Textures/Water/Materials/";
         private const string VendorSplashMaterial = "Assets/BK/PureNature_Highlands/Textures/Fx/Materials/Watersplash.mat";
 
@@ -45,8 +46,15 @@ namespace SomethingDownThere.Editor
                 .Where(r => AssetDatabase.GetAssetPath(r.sharedMaterial) == VendorSplashMaterial)
                 .Select(r => PrefabUtility.GetOutermostPrefabInstanceRoot(r.gameObject) ?? r.gameObject).Distinct().ToArray())
                 Undo.DestroyObjectImmediate(splash);
+            var trickle = TrickleMaterial(river);
             foreach (var renderer in water.GetComponentsInChildren<Renderer>(true))
             {
+                if (renderer.name.StartsWith("Trickle", StringComparison.Ordinal))
+                {
+                    renderer.sharedMaterial = trickle;
+                    EditorUtility.SetDirty(renderer);
+                    continue;
+                }
                 var materials = renderer.sharedMaterials;
                 bool changed = false;
                 for (int i = 0; i < materials.Length; i++)
@@ -102,6 +110,30 @@ namespace SomethingDownThere.Editor
             return shader;
         }
 
+        // A shallow run of the same silty water, with finer ripples and a thinner foam line.
+        private static Material TrickleMaterial(Material river)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(TrickleMaterialPath);
+            if (material == null)
+            {
+                material = new Material(river) { name = "TrickleWater" };
+                material.SetFloat("_FoamDistance", .2f);
+                material.SetFloat("_FoamPower", .25f);
+                material.SetFloat("_EdgesFade", .15f);
+                material.SetFloat("_RefractionPower", .15f);
+                material.SetFloat("_NormalScale", 4);
+                AssetDatabase.CreateAsset(material, TrickleMaterialPath);
+            }
+            // Subsequent setup runs preserve the user's Inspector tuning.
+            material.shader = river.shader;
+            // Drawn before the lake: its depth write hides the lake plane under the flooded mouth.
+            // URP's material validation derives the queue from _QueueOffset, so set both.
+            material.SetFloat("_QueueOffset", -1);
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 1;
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
         private static Material WaterMaterial(string vendorName, string path, Shader shader, bool flowing)
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -114,16 +146,25 @@ namespace SomethingDownThere.Editor
                 material.SetFloat("_FoamPower", flowing ? .35f : .18f);
                 material.SetFloat("_SmoothnessPower", .94f);
                 material.SetFloat("_RefractionPower", .3f);
-                material.SetFloat("_Depth", 1.5f);
                 material.SetFloat("_EdgesFade", .25f);
-                material.SetColor("_ShallowColor", new Color(.19f, .52f, .54f, 1));
-                material.SetColor("_CausticsColor", new Color(.32f, .6f, .62f, 1));
+                Silt(material);
                 AssetDatabase.CreateAsset(material, path);
             }
             // Subsequent setup runs preserve the user's Inspector tuning.
             material.shader = shader;
             EditorUtility.SetDirty(material);
             return material;
+        }
+
+        // Silty water off the drained bed: slate grey-green that hides the bottom within a few
+        // decimetres. _Depth is the depth-fade length, so shorter reads as murkier. Lake, river
+        // and trickles share it so a trickle runs into the lake without a seam.
+        private static void Silt(Material material)
+        {
+            material.SetFloat("_Depth", .3f);
+            material.SetColor("_ShallowColor", new Color(.47f, .5f, .45f, 1));
+            material.SetColor("_CausticsColor", new Color(.5f, .52f, .47f, 1));
+            material.SetColor("_DepthColor", new Color(.37f, .42f, .42f, .8f));
         }
     }
 }

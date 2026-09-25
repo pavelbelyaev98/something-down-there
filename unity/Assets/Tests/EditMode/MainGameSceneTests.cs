@@ -42,7 +42,7 @@ namespace SomethingDownThere.Tests
                 {
                     var local = new Vector3((corner & 1) == 0 ? -.5f : .5f, 0, (corner & 2) == 0 ? -.5f : .5f);
                     var point = recharge.transform.TransformPoint(Vector3.Scale(local, new Vector3(recharge.Footprint.x, 0, recharge.Footprint.y)));
-                    Assert.That(new Vector2(point.x, point.z).magnitude, Is.GreaterThan(SiteLayout.OpeningRadius),
+                    Assert.That(SiteLayout.BeyondOpening(new Vector2(point.x, point.z)), Is.GreaterThan(0),
                         "Recharge must stay on the permanent rim, outside excavatable soil.");
                 }
                 Assert.That(root.GetComponentsInChildren<Camera>(true).Length, Is.EqualTo(1));
@@ -88,7 +88,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(excavation.CellSize, Is.EqualTo(SiteLayout.CellSize));
                 Assert.That(excavation.SurfaceHeight, Is.Zero.Within(.0001f));
                 Assert.That(excavation.transform.position, Is.EqualTo(SiteLayout.Origin));
-                // The reservoir is 24 x 100 x 24 m: the floor is bedrock at -100 and the
+                // The reservoir is SiteLayout.Extent deep: the floor is bedrock at its base and the
                 // preview block spans exactly the diggable volume.
                 Assert.That(root.Find("Bedrock/Floor").GetComponent<Collider>().bounds.max.y,
                     Is.EqualTo(-SiteLayout.Extent.y).Within(.0001f));
@@ -99,36 +99,8 @@ namespace SomethingDownThere.Tests
                 Assert.That(previewBounds.max.y, Is.EqualTo(0).Within(.0001f));
                 Assert.That(previewBounds.size.x, Is.EqualTo(SiteLayout.Extent.x).Within(.0001f));
                 Assert.That(previewBounds.size.z, Is.EqualTo(SiteLayout.Extent.z).Within(.0001f));
-                var grass = root.GetComponentInChildren<SurfaceGrassRenderer>();
-                Assert.That(grass, Is.Not.Null, "The main game must retain the approved moving grass.");
-                var grassSettings = new SerializedObject(grass);
-                StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(
-                    grassSettings.FindProperty("nearMesh").objectReferenceValue));
-                Assert.That(grassSettings.FindProperty("farMesh").objectReferenceValue, Is.Null);
-                StringAssert.StartsWith("Assets/Content/Nature/", AssetDatabase.GetAssetPath(
-                    grassSettings.FindProperty("material").objectReferenceValue));
-                var grassMesh = (Mesh)grassSettings.FindProperty("nearMesh").objectReferenceValue;
-                Assert.That(grassMesh.GetIndexCount(0) / 3, Is.LessThanOrEqualTo(64), "Vendor grass must keep inexpensive instanced geometry.");
-                Assert.That(grassMesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Color), Is.True,
-                    "The vendor shader uses vertex color to weight wind.");
-                var grassMaterial = (Material)grassSettings.FindProperty("material").objectReferenceValue;
-                Assert.That(grassMaterial.enableInstancing, Is.True);
-                Assert.That(ShaderUtil.ShaderHasError(grassMaterial.shader), Is.False);
-                Assert.That(grassMaterial.shader.name, Is.EqualTo("Something Down There/Excavation Grass"));
-                Assert.That(grassMaterial.GetTexture("_MainTex"), Is.Not.Null);
-                var meadowLayers = grassSettings.FindProperty("detailLayers");
-                Assert.That(meadowLayers.arraySize, Is.GreaterThanOrEqualTo(8), "The whole dig site keeps mixed grass, flowers and ferns.");
-                for (int i = 0; i < meadowLayers.arraySize; i++)
-                {
-                    var layer = meadowLayers.GetArrayElementAtIndex(i);
-                    var mesh = layer.FindPropertyRelative("mesh").objectReferenceValue as Mesh;
-                    var material = layer.FindPropertyRelative("material").objectReferenceValue as Material;
-                    Assert.That(mesh, Is.Not.Null);
-                    StringAssert.StartsWith("Assets/BK/", AssetDatabase.GetAssetPath(mesh));
-                    Assert.That(material, Is.Not.Null);
-                    Assert.That(material.enableInstancing, Is.True);
-                    Assert.That(ShaderUtil.ShaderHasError(material.shader), Is.False);
-                }
+                // The dig plot is bare lakebed ground: no plants grow on the excavatable surface.
+                Assert.That(root.GetComponentInChildren<TerrainVolume>().GetComponents<Component>().Any(c => c.GetType().Name.Contains("Grass")), Is.False);
                 var daylight = root.GetComponentInChildren<ExcavationDaylight>();
                 Assert.That(daylight, Is.Not.Null, "Excavation must attenuate ambient sky light in enclosed soil.");
                 var daylightShader = new SerializedObject(daylight).FindProperty("litShader").objectReferenceValue as Shader;
@@ -155,18 +127,22 @@ namespace SomethingDownThere.Tests
                 foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                 {
                     Assert.That(camp.GetTexture("_Turf" + channel), Is.SameAs(ground.GetTexture("_Turf" + channel)),
-                        "Camp and excavation must use the same pack meadow cap.");
+                        "Camp and excavation must use the same pack sediment cap.");
                     var mask = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(ground.GetTexture("_TurfRoughness")));
                     Assert.That(mask.sRGBTexture, Is.False, "Packed masks are linear data.");
                     Assert.That(mask.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput), "Preserve smoothness alpha.");
                 }
+                // The dig surface cap and the lakebed terrain layer share texture and tiling.
+                var sediment = AssetDatabase.LoadAssetAtPath<TerrainLayer>(LakebedSiteSetup.SedimentLayerPath);
+                Assert.That(sediment.diffuseTexture, Is.SameAs(ground.GetTexture("_TurfAlbedo")));
+                Assert.That(sediment.tileSize.x, Is.EqualTo(ground.GetFloat("_TileMetres")));
                 foreach (string name in new[] { "ComputerStation", "RechargeZone", "ReturnAnchor" })
                 {
                     Transform anchor = root.Find("Surface/" + name);
                     Assert.That(anchor, Is.Not.Null, name);
                     Assert.That(anchor.position.y, Is.InRange(0, 0.2f));
-                    Assert.That(new Vector2(anchor.position.x, anchor.position.z).magnitude,
-                        Is.InRange(SiteLayout.OpeningRadius + .5f, SiteLayout.OpeningRadius + 6), name + " stands beside the opening.");
+                    Assert.That(SiteLayout.BeyondOpening(new Vector2(anchor.position.x, anchor.position.z)),
+                        Is.InRange(.5f, 6), name + " stands beside the opening.");
                 }
                 Assert.That(root.Find("Bedrock").GetComponentsInChildren<PermanentTerrainBoundary>().Length, Is.EqualTo(5));
                 Assert.That(root.Find("Perimeter"), Is.Null,
@@ -210,26 +186,26 @@ namespace SomethingDownThere.Tests
                 Assert.That(collar.sharedMesh, Is.SameAs(rim.GetComponent<MeshFilter>().sharedMesh));
                 for (int i = 0; i < 72; i++)
                 {
-                    Vector3 direction = Quaternion.Euler(0, i * 5, 0) * Vector3.forward;
-                    Ray Down(float radius) => new Ray(direction * radius + Vector3.up * 2, Vector3.down);
-                    Assert.That(collar.Raycast(Down(SiteLayout.OpeningRadius - .1f), out _, 3), Is.False, "The rim never caps the opening.");
-                    Assert.That(collar.Raycast(Down(SiteLayout.OpeningRadius + .1f), out var lip, 3), Is.True);
+                    float compass = i * 5;
+                    Ray Down(float offset) { var p = SiteLayout.OpeningPoint(compass, offset); return new Ray(new Vector3(p.x, 2, p.y), Vector3.down); }
+                    Assert.That(collar.Raycast(Down(-.1f), out _, 3), Is.False, "The rim never caps the opening.");
+                    Assert.That(collar.Raycast(Down(.1f), out var lip, 3), Is.True);
                     Assert.That(lip.point.y, Is.EqualTo(SiteLayout.RimTop).Within(.002f));
-                    Assert.That(ground.Raycast(Down(SiteLayout.OpeningRadius - .1f), out _, 3), Is.False, "The terrain is open over the dig ground.");
-                    Assert.That(ground.Raycast(Down(SiteLayout.RimOuterRadius + .5f), out var beyond, 3), Is.True);
+                    Assert.That(ground.Raycast(Down(-.1f), out _, 3), Is.False, "The terrain is open over the dig ground.");
+                    Assert.That(ground.Raycast(Down(SiteLayout.RimBand + .5f), out var beyond, 3), Is.True);
                     Assert.That(beyond.point.y, Is.EqualTo(SiteLayout.GroundTop).Within(.02f), "Flat permanent ground surrounds the rim.");
                 }
-                // Scenery, water and colliders stay out of the dig column.
-                var column = Physics.OverlapCapsule(Vector3.down * 99, Vector3.up * 3, SiteLayout.OpeningRadius - .05f);
+                // Scenery, water and colliders stay out of the dig column, inside the plot's
+                // inscribed circle with room for the terrain hole's staircase edge.
+                float inscribed = Enumerable.Range(0, 720).Min(i => SiteLayout.OpeningRadius(i * .5f));
+                var column = Physics.OverlapCapsule(Vector3.down * 99, Vector3.up * 3, inscribed - .7f);
                 Assert.That(column.Where(c => c.transform.IsChildOf(environment)), Is.Empty);
                 foreach (var renderer in environment.GetComponentsInChildren<Renderer>())
                 {
                     // Edit-mode particle bounds collapse to the origin; the waterfall splashes are far away.
-                    // The lake surface spans the canyon; its triangles are checked below.
-                    if (renderer is ParticleSystemRenderer || renderer.name == "Lake surface" || renderer.name == "Border stones") continue;
-                    var bounds = renderer.bounds;
-                    float dx = Mathf.Max(0, Mathf.Abs(bounds.center.x) - bounds.extents.x), dz = Mathf.Max(0, Mathf.Abs(bounds.center.z) - bounds.extents.z);
-                    Assert.That(Mathf.Sqrt(dx * dx + dz * dz), Is.GreaterThan(SiteLayout.OpeningRadius - .3f), renderer.name);
+                    // The lake surface and trickles wrap the plot; their vertices are checked below.
+                    if (renderer is ParticleSystemRenderer || renderer.name == "Lake surface" || renderer.name.StartsWith("Trickle")) continue;
+                    Assert.That(NearestBeyond(renderer.bounds), Is.GreaterThan(-.3f), renderer.name);
                 }
                 Assert.That(environment.GetComponentsInChildren<Transform>(true)
                     .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
@@ -240,12 +216,8 @@ namespace SomethingDownThere.Tests
                 Assert.That(ShaderUtil.ShaderHasError(waterMaterial.shader), Is.False);
                 Assert.That(AssetDatabase.GetAssetPath(waterMaterial), Is.EqualTo(LakebedSiteSetup.LakeMaterialPath));
                 Assert.That(lake.GetComponent<Collider>(), Is.Null, "The water surface is not walkable.");
-                Assert.That(lake.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => new Vector2(v.x, v.z).magnitude),
-                    Is.GreaterThan(SiteLayout.RimRadius), "Water never reaches the dig column or rim.");
-                var border = environment.Find("Dig boundary/Border stones");
-                Assert.That(border.GetComponent<Collider>(), Is.Null, "Border pebbles never snag the player.");
-                Assert.That(border.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => new Vector2(v.x, v.z).magnitude),
-                    Is.GreaterThan(SiteLayout.OpeningRadius), "The pebble border stays outside the diggable circle.");
+                Assert.That(lake.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => SiteLayout.BeyondOpening(new Vector2(v.x, v.z))),
+                    Is.GreaterThan(5), "Water never reaches the dig plot or rim.");
                 var probe = environment.GetComponentInChildren<ReflectionProbe>();
                 Assert.That(probe.mode, Is.EqualTo(UnityEngine.Rendering.ReflectionProbeMode.Custom));
                 StringAssert.StartsWith("Assets/BK/PureNature_Highlands/", AssetDatabase.GetAssetPath(probe.customBakedTexture),
@@ -253,6 +225,21 @@ namespace SomethingDownThere.Tests
                 Assert.That(new Bounds(probe.transform.position + probe.center, probe.size).Contains(Vector3.up), Is.True);
                 foreach (var particles in environment.GetComponentsInChildren<ParticleSystemRenderer>(true))
                     Assert.That(particles.sharedMaterial.mainTexture, Is.Not.Null, "Untextured particles render as solid sheets: " + particles.name);
+                // Lakebed channels and debris dress the drained bed, clear of the camp and dig plot.
+                var trickles = environment.Find("Water").Cast<Transform>().Where(t => t.name.StartsWith("Trickle")).ToArray();
+                Assert.That(trickles, Is.Not.Empty, "Drained channels still trickle into the lake.");
+                int lakeQueue = environment.Find("Water/Lake surface").GetComponent<Renderer>().sharedMaterial.renderQueue;
+                foreach (var trickle in trickles)
+                {
+                    Assert.That(trickle.GetComponent<Collider>(), Is.Null, "Trickles are walkable.");
+                    Assert.That(AssetDatabase.GetAssetPath(trickle.GetComponent<Renderer>().sharedMaterial), Is.EqualTo(LakebedSiteSetup.TrickleMaterialPath));
+                    Assert.That(trickle.GetComponent<Renderer>().sharedMaterial.renderQueue, Is.LessThan(lakeQueue),
+                        "Trickles draw first so their mouths hide the lake beneath instead of doubling the water.");
+                    Assert.That(trickle.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => SiteLayout.BeyondOpening(new Vector2(v.x, v.z))),
+                        Is.GreaterThan(LakebedSiteSetup.DressingClearance - .5f), trickle.name);
+                }
+                foreach (var debris in environment.Find("Lakebed debris").GetComponentsInChildren<Renderer>(true))
+                    Assert.That(NearestBeyond(debris.bounds), Is.GreaterThan(LakebedSiteSetup.DressingClearance - 1.5f), debris.name);
                 // Detail switches happen only far from the player, with a timed blend.
                 var detail = environment.GetComponentsInChildren<LODGroup>(true)
                     .Select(l => (group: l, size: l.size * Mathf.Max(Mathf.Abs(l.transform.lossyScale.x),
@@ -261,8 +248,10 @@ namespace SomethingDownThere.Tests
                         .Where(l => l != null).Select(l => (group: l, size: l.size)));
                 foreach (var (lod, size) in detail.Where(d => d.group.lodCount > 1 && d.size >= .5f))
                 {
+                    // Small stones keep full detail until their (vendor) cull, even when that is nearer.
+                    float cull = LakebedSiteSetup.SwitchDistance(size, lod.GetLODs()[lod.lodCount - 1].screenRelativeTransitionHeight);
                     Assert.That(LakebedSiteSetup.SwitchDistance(size, lod.GetLODs()[0].screenRelativeTransitionHeight),
-                        Is.GreaterThanOrEqualTo(LakebedSiteSetup.DetailSwitchDistances[0] - .5f), "Nearby detail must not switch: " + lod.name);
+                        Is.GreaterThanOrEqualTo(Mathf.Min(LakebedSiteSetup.DetailSwitchDistances[0], cull * .9f) - .5f), "Nearby detail must not switch: " + lod.name);
                     if (!lod.transform.IsChildOf(environment.Find("Water")))
                         Assert.That(lod.fadeMode == LODFadeMode.CrossFade && lod.animateCrossFading, Is.True, "Foliage and rocks blend each switch: " + lod.name);
                 }
@@ -286,17 +275,28 @@ namespace SomethingDownThere.Tests
                     .Concat(new[] { root.Find("Surface/SalvageWinch/WinchFixture"), root.Find("Surface/RechargeZone"), root.Find("Player") }))
                 {
                     var position = station.position;
-                    Assert.That(new Vector2(position.x, position.z).magnitude, Is.InRange(SiteLayout.OpeningRadius, SiteLayout.RimRadius + 6), station.name);
+                    Assert.That(SiteLayout.BeyondOpening(new Vector2(position.x, position.z)), Is.InRange(0, 11.5f), station.name);
                     var support = Physics.RaycastAll(position + Vector3.up * 2.5f, Vector3.down, 4, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
                         .Where(h => h.collider.GetComponentInParent<PermanentTerrainBoundary>() != null).ToArray();
                     Assert.That(support, Is.Not.Empty, station.name + " stands on permanent ground.");
                     Assert.That(LakebedSiteSetup.InPlayArea(area, new Vector2(position.x, position.z)), Is.True, station.name + " is inside the play area.");
                     Assert.That(support.Max(h => h.point.y), Is.InRange(SiteLayout.GroundTop - .02f, SiteLayout.RimTop + .01f), station.name);
                 }
-                var grass = new SerializedObject(root.GetComponentInChildren<SurfaceGrassRenderer>());
-                Assert.That(grass.FindProperty("surfaceRadius").floatValue, Is.EqualTo(SiteLayout.OpeningRadius));
             }
             finally { EditorSceneManager.CloseScene(scene, true); }
+        }
+
+        // Smallest distance beyond the plot outline over a bounds footprint; bounds far from the
+        // plot return their plain distance without sampling.
+        private static float NearestBeyond(Bounds bounds)
+        {
+            var closest = new Vector2(Mathf.Clamp(0, bounds.min.x, bounds.max.x), Mathf.Clamp(0, bounds.min.z, bounds.max.z));
+            if (closest.magnitude > 18) return closest.magnitude - 16;
+            float nearest = float.MaxValue;
+            for (float x = Mathf.Max(bounds.min.x, -18); x <= Mathf.Min(bounds.max.x, 18) + .01f; x += .25f)
+            for (float z = Mathf.Max(bounds.min.z, -18); z <= Mathf.Min(bounds.max.z, 18) + .01f; z += .25f)
+                nearest = Mathf.Min(nearest, SiteLayout.BeyondOpening(new Vector2(x, z)));
+            return nearest;
         }
     }
 }

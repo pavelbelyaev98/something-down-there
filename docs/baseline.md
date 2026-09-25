@@ -9,19 +9,19 @@
 - **Input & Comfort:** Unity Input System with full runtime action rebinding. Hold-to-dig by default with a persisted toggle option. Camera FOV slider (55–90°), crosshair toggle, and preferences persistence (`Preferences/*.ini`).
 
 ## 2. Terrain & Excavation (`unity/Assets/Runtime/Terrain/`)
-- **Voxel Engine:** Finite signed density field (24 × 24 × 100 m, authored by `SiteLayout`) running Burst-compiled surface-net meshing (0.125 m resolution) with synchronous collision publication. Reusable native workspaces and contiguous density copies bound per-cut work; support-search scratch memory is allocated during loading. Chunks are materialized on demand: 7,200 possible keys, 144 built on a fresh site, so chunk startup and load cost do not scale with depth.
+- **Voxel Engine:** Finite signed density field (36 × 26 × 100 m, authored by `SiteLayout`) running Burst-compiled surface-net meshing (0.125 m resolution) with synchronous collision publication. Reusable native workspaces and contiguous density copies bound per-cut work; support-search scratch memory is allocated during loading. Chunks are materialized on demand: 11,700 possible keys, 234 built on a fresh site, so chunk startup and load cost do not scale with depth.
 - **Materials:** seeded undulating deposits of soil, clay and rock share the density lattice. Immutable material IDs persist exactly with the hole and are shared by save snapshots without copying; density alone determines occupancy. Surface meshes blend distinct soil grain, warm compacted clay and fractured grey rock textures from these same IDs. World-space mapping and shared halo weights keep chunk edges continuous.
-- **Checkpoints:** dense density (~119 MB) plus compact material IDs (~30 MB for the shipped site) are validated and gzip-Fastest encoded on a worker thread, with bounded combined allocation and a 64 MB packed / 256 MB unpacked budget. Only the current format and excavation layout load; previous formats require a new game.
+- **Checkpoints:** dense density (~194 MB) plus compact material IDs (~48 MB for the shipped site) are validated and gzip-Fastest encoded on a worker thread, with bounded combined allocation and a 64 MB packed / 256 MB unpacked budget. Only the current format and excavation layout load; previous formats require a new game.
 - **Digging:** Hold/toggle repeats shovel scoops through level six, then automatically uses drill-like thin cuts from level seven with sub-cell contact refinement and matching render/collision updates. Soil yields broad rounded cuts, clay narrower smooth shavings, and rock smaller faceted chips. Each affected sample keeps its own resistance; contact selects cadence and proportional energy cost automatically. Successful tool cuts publish material/position/normal/volume feedback for later audio. Every tool tier can cut every family; upgrades improve output. Detached ground and paper-thin strips clear locally while useful ledges remain. Collection preserves cutting cadence with both tool motions.
-- **Admin Tools:** Session-only debug panel (`Ctrl+Shift+F10`) with **Motion: Automatic/Override** for comparing drill cuts with shovel scoops, selection across all tool levels, refill, and X-ray transparent ground (`Ctrl+Shift+X`). X-ray fades soil, hides surface grass and reveals nearby actual finds without changing exposure or collision. Restore normal rules and session load restore opaque ground and motion derived from the owned level.
+- **Admin Tools:** Session-only debug panel (`Ctrl+Shift+F10`) with **Motion: Automatic/Override** for comparing drill cuts with shovel scoops, selection across all tool levels, refill, and X-ray transparent ground (`Ctrl+Shift+X`). X-ray fades soil and reveals nearby actual finds without changing exposure or collision. Restore normal rules and session load restore opaque ground and motion derived from the owned level.
 
 ## 3. Finds & Physics (`unity/Assets/Runtime/Interaction/`)
-- **Finds:** full-size plain rocks form a dense layer immediately beneath the turf, with the ore
+- **Finds:** full-size plain rocks form a dense layer immediately beneath the surface, with the ore
   ladder (coal first) beginning beneath them and deeper bands shifting the mix toward value.
   Placement uses enclosing spheres around actual visual/collision vertices with shallow soil
   cover; banded placement picks a target depth before searching nearby lateral positions, so
-  each band stays populated from its top. A separate lower-reservoir allocation continues the
-  progression. Populations are authored in the source catalogs, apply to new games, and saved
+  each band stays populated from its top. On the shipped site, find centres lie beneath the dig
+  plot (`SiteLayout.FindFootprint`), keeping the accepted density; the grid beyond holds plain soil. A separate lower-reservoir allocation continues the progression. Populations are authored in the source catalogs, apply to new games, and saved
   finds keep their positions. Model size and mass remain authored; retired content is deleted.
 - **Detection & Pickup:** Ordinary finds use aim-assisted reveal, 60% voxel exposure threshold, held aim pickup between digging ticks and immediately after a revealing cut. `FindProximityCollection` also collects clear finds within a close camera-centred area in front of the player during walking or held digging, at any height, with direct visibility and throw/drop exclusion. Released/falling finds have longer aimed reach; station/lifting reach stays separate. Aimed and nearby collection can share a held-input frame with its scheduled terrain cut; neither collection nor its animation adds a delay. With a full bag, the cutting ray passes through common finds to reachable ground while walls, equipment and uniques still block it; finds remain physical and recoverable.
 - **Release:** Nearly exposed finds with clear interiors and only shallow surface contact become dynamic; substantial burial still anchors them. Gravity and collision determine falling/settling.
@@ -48,15 +48,27 @@
 - **Drained lakebed site:** `LakebedSiteSetup` regenerates the surroundings from a 1000 m window
   of the Pure Nature 2: Highlands demo's river canyon: demo terrain, cliffs, peaks, boulders,
   rubble, ruins, trees, rivers and waterfall as vendor prefab instances. The canyon floor is
-  flooded into a widened lake with an exposed bathtub band; one drained mud section on the east
-  shelf holds the round meadow opening. A terrain hole under a narrow soil collar
-  (`Surface/Excavation rim`, the dig meadow's own material) keeps an exact circular edge and a closed
-  roof above the grid corners, which stay reachable for lateral digging. One merged mesh of small
-  pebbles borders the circle; a tinted copy of the Highlands grass layer and sparse terrain grass
-  fade from the rim into the mud, with a few larger stones. One generated lake surface replaces the
-  demo's sea-level planes and never crosses the dig column; the demo's baked canyon probe uses
-  URP box projection and blending. Project-owned lake/river materials and the adapted BK water
-  shader retain ripples with bounded foam and refraction that does not relight the riverbed.
+  flooded into a widened lake with an exposed bathtub band and low sand islands with grassy tops;
+  one drained section on the east shelf holds the dig plot. `SiteLayout` gives the plot a wide,
+  lobed outline that is circular only over the camp arc. A terrain hole under a narrow collar
+  (`Surface/Excavation rim`, the dig ground's own material) follows it exactly and roofs the rest
+  of the rectangular grid, which stays reachable for lateral digging. The pack's gravel, tinted as warm packed sediment, is the lakebed
+  terrain layer; the plot's cap shares its texture and world tiling, slightly paler, inside a band
+  of dark trampled mud. The drained flats mix sediment with darker mud patches, damp silt toward
+  the water, pebble strand lines and waterline sand; a muted olive copy of the canyon's grassy mud
+  (`DryTurf`) covers the higher flats and island tops, while the canyon keeps its vivid grass. Two
+  carved channels wrap the plot into the lake, one splitting at its mouth, beside a dry gully;
+  carving fades out before the collar. Their walkable, collider-free water ribbons
+  (`TrickleWater.mat`) draw just before the lake and hide it under their flooded mouths. Mountains
+  reeds and rushes, feather grass, pebbles, twigs and the canyon grass are terrain details on banks,
+  strand lines and islands; the grasses and reeds use muted, low-gloss project material copies
+  through prefab variants; Highlands rubble plus bare stranded
+  stones (`LakebedRock.mat`) line channels and old waterlines. One generated lake surface follows
+  the carved ground, replaces the demo's sea-level planes and never crosses the dig column; the
+  demo's baked canyon probe uses URP box projection and blending. Project lake, river and trickle
+  materials share silty slate grey-green water that hides the bottom within a few decimetres; the
+  adapted BK water shader retains ripples with bounded foam and refraction that does not relight
+  the riverbed.
   Walls and a 16 m flight ceiling on the Ignore Raycast layer keep the player on
   the drained section; scenery objects and terrain trees unseen from that volume are removed at
   setup (ID-colour renders plus terrain line-of-sight). Scenery reports the permanent-boundary
@@ -71,13 +83,14 @@
   flight and underground camera volumes; mutable soil, its preview, terrain and foliage never
   become baked occluders. Performance refresh preserves placements and terrain sculpting/paint.
   The computer, recharge, return anchor, winch, pads and stands keep their tested cluster on the
-  south rim, lifted onto the lakebed ground; the spawn looks north up the canyon over the opening.
-- **Meadow and soil:** eleven pack grass/flower/fern layers, seeded in change-driven instanced
-  batches. Root support removes uprooted plants; a change-driven surface-density mask clips
-  wind-displaced foliage over openings without clearing intact neighbours. The project grass
-   shader also clips the round perimeter. Pack turf uses continuous top projection and a soft,
-   textured soil transition; noon shadow bias prevents a tessellated self-shadow rim. Pack soil covers the top layer; compacted clay and fractured rock use separate approved texture/normal sets below it. Custom soil art/materials remain stored but unbound. Linear masks,
-  preserved alpha, normal-map imports and the dry smoothness cap prevent white glare.
+  camp arc south of the plot, lifted onto the lakebed ground; the spawn looks north up the canyon
+  over the opening.
+- **Dig ground and soil:** the plot's untouched top is a bare packed-sediment cap with continuous
+  top projection and a soft, textured soil transition; no plants grow on it. Noon shadow bias
+  prevents a tessellated self-shadow rim. Pack soil covers the top layer; compacted clay and
+  fractured rock use separate approved texture/normal sets below it. Custom soil art/materials
+  remain stored but unbound. Linear masks, preserved alpha, normal-map imports and the dry
+  smoothness cap prevent white glare.
 - **Presentation:** the Highlands demo's sky with a larger soft-glow sun disc, flat ambient, warm
   sun colour and exponential haze, a 3 km camera range and almost overhead midday sunlight; custom grass, clouds,
   sun and trial-tool art/imports are deleted. No first-person rig is present; the shaving/scoop

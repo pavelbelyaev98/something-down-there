@@ -23,6 +23,18 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _ClayAlbedo:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ClayMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ClayNormal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ComparisonAlbedo:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -32,6 +44,18 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ComparisonRoughness:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockAlbedo:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockNormal:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -48,36 +72,47 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfAlbedo:
-        m_Texture: {fileID: 2800000, guid: b5cf7bb00a396294abfbe6d4fc8310aa, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7b417fe2262f8e441bf0c073c919b869, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfNormal:
-        m_Texture: {fileID: 2800000, guid: 4b5aadda936bd1440918750ef7e778af, type: 3}
+        m_Texture: {fileID: 2800000, guid: 5c1b7a539904f734885a221d647f5da0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfRoughness:
-        m_Texture: {fileID: 2800000, guid: d63f60f4a40be5c47a8d50701156760b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4da000d92dea41e4095890d9f5394ce8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ClayNormalStrength: 0.25
+    - _ClayTileMetres: 3
     - _ComparisonMaskLayout: 0
     - _ComparisonNormalStrength: 0.55
     - _ComparisonStoneNormalStrength: 0.9
     - _ComparisonTileMetres: 2
+    - _DstBlend: 0
+    - _GroundOpacity: 1
     - _MacroVariation: 0.06
     - _MaskLayout: 0
     - _MaxSmoothness: 0.15
     - _NormalStrength: 0.55
+    - _RockNormalStrength: 0.65
+    - _RockTileMetres: 3
     - _SoilComparison: 0
     - _SoilSplitX: 0
     - _SoilTileMetres: 2
+    - _SrcBlend: 1
     - _StoneNormalStrength: 0.9
     - _SurfaceHeight: 0
-    - _TileMetres: 10
+    - _TileMetres: 6
     - _TurfDepth: 0.045
     - _TurfMaskLayout: 1
-    - _TurfNormalStrength: 1
-    m_Colors: []
+    - _TurfNormalStrength: 0.8
+    - _ZWrite: 1
+    m_Colors:
+    - _ClayTint: {r: 1, g: 1, b: 1, a: 1}
+    - _RockTint: {r: 0.39999998, g: 0.39999998, b: 0.39999998, a: 1}
+    - _TurfTint: {r: 1.0945976, g: 1, b: 0.8962438, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

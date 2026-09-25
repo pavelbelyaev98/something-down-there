@@ -197,7 +197,7 @@ MonoBehaviour:
     RandomOrientation: 1
   - ItemId: unique_reservoir_computer
     AuthoredPlacement: 1
-    AuthoredPosition: {x: 13.5, y: 92, z: 3.7}
+    AuthoredPosition: {x: 19.5, y: 92, z: 4.7}
     AuthoredEuler: {x: 0, y: 202, z: 0}
     Prefab: {fileID: 4858402737689321270, guid: 52f21077ee0957a4bab37a54275e22b1, type: 3}
     AppearanceVariants: []
@@ -217,7 +217,7 @@ MonoBehaviour:
     RandomOrientation: 0
   - ItemId: unique_survey_computer
     AuthoredPlacement: 1
-    AuthoredPosition: {x: 7, y: 86.5, z: 10}
+    AuthoredPosition: {x: 13, y: 86.5, z: 11}
     AuthoredEuler: {x: 0, y: 115, z: 0}
     Prefab: {fileID: 97574190163249461, guid: c097a0c3b3ebd114789c2bc36f3db39d, type: 3}
     AppearanceVariants: []
@@ -237,7 +237,7 @@ MonoBehaviour:
     RandomOrientation: 0
   - ItemId: unique_pump_computer
     AuthoredPlacement: 1
-    AuthoredPosition: {x: 18, y: 79, z: 17}
+    AuthoredPosition: {x: 24, y: 79, z: 18}
     AuthoredEuler: {x: 0, y: -25, z: 0}
     Prefab: {fileID: 702247101548400612, guid: eae2cfa669b13534f83b4157be510223, type: 3}
     AppearanceVariants: []
