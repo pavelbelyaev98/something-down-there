@@ -136,14 +136,14 @@ Material:
     - _CausticOffset: 100
     - _CausticsOffset: 3.5
     - _CausticsScale: 0.4
-    - _CausticsSpeed: 1.5
+    - _CausticsSpeed: 2
     - _ChromaticAberration: 0.1
     - _CousticOffset: 0
     - _Cutoff: 0.5
     - _Depth: 0.3
     - _DetailNormalMapScale: 1
     - _DistanceFade: 50
-    - _DistanceFadeOffset: 2000
+    - _DistanceFadeOffset: 10000
     - _DistanceMax: 100
     - _DistanceMin: 20
     - _DistortionPower1: 0.82
@@ -152,15 +152,15 @@ Material:
     - _EdgeDistance: 0.941
     - _EdgeLength: 50
     - _EdgePower: 1
-    - _EdgesFade: 0.15
+    - _EdgesFade: 0.25
     - _EnvironmentReflections: 1
     - _Float2: 1000
     - _Float3: 0.744
     - _FoamContrast: 10
     - _FoamDepth: 0
-    - _FoamDistance: 0.2
+    - _FoamDistance: 0.4
     - _FoamFalloff: 0
-    - _FoamPower: 0.25
+    - _FoamPower: 0.18
     - _FoamScale: 1.73
     - _FoamSmoothness: 0
     - _FoamSpeed: 0.5
@@ -177,9 +177,9 @@ Material:
     - _Min: 0
     - _Mode: 0
     - _MultiplyOpacity: 1
-    - _NormalPower: 0.269
+    - _NormalPower: 0.294
     - _NormalPower1: 1
-    - _NormalScale: 4
+    - _NormalScale: 1.5
     - _NormalSpeed: 1
     - _NormalTiling: 0.05
     - _OcclusionStrength: 1
@@ -187,7 +187,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: -1
     - _ReceiveShadows: 1
-    - _RefractionPower: 0.15
+    - _RefractionPower: 0.1
     - _SmoothnessPower: 0.94
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -207,9 +207,9 @@ Material:
     - _WaterSmoothness: 0
     - _WaterSpecular: 0
     - _WaterSpeed: 0
-    - _WavesHeight: 0
-    - _WavesScale: 2
-    - _WavesSpeed: 10
+    - _WavesHeight: 0.2
+    - _WavesScale: 1.5
+    - _WavesSpeed: 15
     - _WavesTiling: 0.5
     - _ZWrite: 1
     - __dirty: 0

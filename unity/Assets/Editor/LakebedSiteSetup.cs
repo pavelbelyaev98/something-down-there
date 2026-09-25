@@ -74,7 +74,7 @@ namespace SomethingDownThere.Editor
             {
                 SceneManager.SetActiveScene(scene);
                 var source = demo.GetRootGameObjects().Single(o => o.name == "Terrain").GetComponent<Terrain>();
-                section = Shape(source.terrainData, source.transform.position);
+                section = Shape(source.terrainData, source.transform.position, DrainedRocks(demo));
                 environment = new GameObject("Environment").transform;
                 environment.SetParent(root, false);
                 // Every scenery collider reports the permanent-boundary prompt instead of digging.
@@ -119,6 +119,10 @@ namespace SomethingDownThere.Editor
             public float[,] Uncarved;
             // Metres from the nearest channel bed edge, negative inside a bed.
             public float[,] Channel;
+            // Water surface over the wet beds (demo-space heights), NaN where dry.
+            public float[,] StreamLevel;
+            // Site-local footprints of the demo's boulders on the drained bed; channels bend around them.
+            public List<(Vector2 centre, float radius)> Rocks = new List<(Vector2, float)>();
             public readonly List<Stream> Streams = new List<Stream>();
             public bool[,] Lake;
             public float Extent => WindowCells * Cell;
@@ -145,11 +149,11 @@ namespace SomethingDownThere.Editor
             }
         }
 
-        private static Section Shape(TerrainData source, Vector3 sourcePosition)
+        private static Section Shape(TerrainData source, Vector3 sourcePosition, List<(Vector2, float)> rocks)
         {
             int resolution = source.heightmapResolution;
             if (source.alphamapResolution != resolution - 1) throw new InvalidOperationException("Demo splat map no longer matches its heightmap.");
-            var s = new Section { Cell = source.size.x / (resolution - 1), Height = source.size.y };
+            var s = new Section { Cell = source.size.x / (resolution - 1), Height = source.size.y, Rocks = rocks };
             int Start(float site, float origin) =>
                 Mathf.Clamp(Mathf.RoundToInt((site - origin) / s.Cell) - WindowCells / 2, 0, resolution - 1 - WindowCells) & ~1;
             s.I0 = Start(SiteInDemo.x, sourcePosition.x);
@@ -245,14 +249,31 @@ namespace SomethingDownThere.Editor
 
         private static float Smooth(float t) { t = Mathf.Clamp01(t); return t * t * (3 - 2 * t); }
 
-        private static float DrainedWeight(Vector2 local)
+        private static float DrainedWeight(Vector2 local) => 1 - Smooth((DrainedEdge(local) + 10) / 10);
+
+        // Approximate metres beyond the drained section's outline; negative inside it.
+        private static float DrainedEdge(Vector2 local)
         {
             var q = local - DrainedCentre;
             float angle = Mathf.Atan2(q.y, q.x);
             float normalized = new Vector2(q.x / DrainedRadii.x, q.y / DrainedRadii.y).magnitude;
             float edge = 1 + .09f * Mathf.Sin(3 * angle + 1.3f) + .05f * Mathf.Sin(7 * angle + .4f);
-            float signedMetres = (normalized - edge) * Mathf.Min(DrainedRadii.x, DrainedRadii.y);
-            return 1 - Smooth((signedMetres + 10) / 10);
+            return (normalized - edge) * Mathf.Min(DrainedRadii.x, DrainedRadii.y);
+        }
+
+        // Footprints of the demo's colliding boulders standing on the drained bed.
+        private static List<(Vector2, float)> DrainedRocks(Scene demo)
+        {
+            var rocks = new List<(Vector2, float)>();
+            foreach (string name in new[] { "Boulders", "BigBoulders" })
+            foreach (Transform item in demo.GetRootGameObjects().Single(o => o.name == name).transform)
+            {
+                if (item.GetComponentInChildren<Collider>() == null) continue;
+                var bounds = WorldBounds(item);
+                var centre = new Vector2(bounds.center.x - SiteInDemo.x, bounds.center.z - SiteInDemo.z);
+                if (DrainedEdge(centre) < 5) rocks.Add((centre, Mathf.Max(bounds.extents.x, bounds.extents.z) * .9f));
+            }
+            return rocks;
         }
 
         // Nearly level mud, tilting gently toward the remaining lake in the west, with low
@@ -290,7 +311,7 @@ namespace SomethingDownThere.Editor
             var from = source.terrainData;
             // Create other assets first: an asset import after CreateAsset reloads the unsaved terrain data.
             var sediment = SedimentLayer(s.TerrainPosition);
-            var dryTurf = DryTurfLayer(from);
+            var dryTurf = DryTurfLayer();
             var lakebedDetails = LakebedDetails(from);
             AssetDatabase.DeleteAsset(TerrainDataPath);
             var data = new TerrainData { name = "LakebedTerrain" };
@@ -358,11 +379,12 @@ namespace SomethingDownThere.Editor
             return layer;
         }
 
-        // The canyon's grassy mud, muted to sun-dried olive for the exposed bed and its islands;
-        // the canyon beyond keeps the pack's vivid grass.
-        private static TerrainLayer DryTurfLayer(TerrainData from)
+        // The Mountains pack's natural grass, tinted toward sun-dried olive, for the exposed bed and
+        // its islands; the Highlands lime is too saturated to tint. The canyon keeps its own grass.
+        private static TerrainLayer DryTurfLayer()
         {
-            var source = from.terrainLayers.Single(l => l != null && l.name == "Mud_grass");
+            var source = AssetDatabase.LoadAssetAtPath<TerrainLayer>("Assets/BK/PureNature_Mountains/Textures/Surfaces/Layers/Grass01.terrainlayer");
+            if (source == null) throw new InvalidOperationException("Missing approved Mountains grass layer.");
             var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(DryTurfLayerPath);
             if (layer == null) { layer = new TerrainLayer(); AssetDatabase.CreateAsset(layer, DryTurfLayerPath); }
             layer.diffuseTexture = source.diffuseTexture;
@@ -377,7 +399,7 @@ namespace SomethingDownThere.Editor
             layer.maskMapRemapMin = source.maskMapRemapMin;
             layer.maskMapRemapMax = source.maskMapRemapMax;
             layer.diffuseRemapMin = source.diffuseRemapMin;
-            layer.diffuseRemapMax = Vector4.Scale(source.diffuseRemapMax, new Vector4(.6f, .5f, .4f, 1));
+            layer.diffuseRemapMax = Vector4.Scale(source.diffuseRemapMax, new Vector4(1, .85f, .62f, 1));
             EditorUtility.SetDirty(layer);
             AssetDatabase.SaveAssetIfDirty(layer);
             return layer;
@@ -387,7 +409,8 @@ namespace SomethingDownThere.Editor
         {
             int Layer(string name) => Array.FindIndex(from.terrainLayers, l => l != null && l.name == name);
             int rubble = Layer("Mud_rubble"), mud = Layer("Mud"), sand = Layer("Sand"), gravel = Layer("Sand_rubble");
-            if (new[] { rubble, mud, sand, gravel }.Any(i => i < 0)) throw new InvalidOperationException("Demo terrain layers changed.");
+            int lawn = Layer("Grass"), meadow = Layer("Mud_grass");
+            if (new[] { rubble, mud, sand, gravel, lawn, meadow }.Any(i => i < 0)) throw new InvalidOperationException("Demo terrain layers changed.");
             var source = from.GetAlphamaps(s.I0, s.J0, WindowCells, WindowCells);
             // The project sediment and muted turf layers follow the demo's layers.
             int halo = source.GetLength(2), sediment = halo, grassy = halo + 1, layers = halo + 2;
@@ -400,6 +423,16 @@ namespace SomethingDownThere.Editor
             for (int x = 0; x < WindowCells; x++)
             {
                 var local = s.Local(x + .5f, z + .5f);
+                // The canyon's vivid grass fades into the muted turf on the low ground around the
+                // drained section; the cliff tops keep the pack's colour.
+                float mute = (1 - Smooth((DrainedEdge(local) - 8) / 30)) * Smooth((OldShore + 14 - s.After[z, x]) / 6);
+                if (mute > 0)
+                    foreach (int vivid in new[] { lawn, meadow })
+                    {
+                        float moved = alpha[z, x, vivid] * mute;
+                        alpha[z, x, vivid] -= moved;
+                        alpha[z, x, grassy] += moved;
+                    }
                 float camp = 1 - Smooth((SiteLayout.BeyondOpening(local) - CampFlat) / (CampBlend - CampFlat));
                 float weight = Mathf.Max(s.Lake[z, x] ? Smooth(s.Shore[z, x] / 3) : 0, camp);
                 if (weight <= 0) continue;
@@ -531,13 +564,21 @@ namespace SomethingDownThere.Editor
                     bool small = !peak && name != "Cliffs" && name != "Water" && Mathf.Max(bounds.size.x, bounds.size.z) < 15;
                     if (small && s.Contains(pivot))
                     {
-                        lift = s.Sample(s.After, pivot) - s.Sample(s.Before, pivot);
-                        if (Mathf.Abs(lift) < .05f) lift = 0;
-                        else if (bounds.max.y + lift < WaterLevel + .15f) { skipped++; continue; }
+                        // Follow the reshaped ground by its smallest change under the footprint, so no
+                        // part floats; the rest settles a little deeper. Objects that would end up mostly
+                        // buried (a channel cut beneath one side) are left out.
+                        var (low, high) = Footprint(bounds, xz => s.Sample(s.After, new Vector3(xz.x, 0, xz.y)) - s.Sample(s.Before, new Vector3(xz.x, 0, xz.y)));
+                        if (high - low > Mathf.Max(.3f, bounds.size.y * .7f)) { skipped++; continue; }
+                        lift = Mathf.Abs(low) < .05f && Mathf.Abs(high) < .05f ? 0 : low;
+                        if (lift != 0 && bounds.max.y + lift < WaterLevel + .15f) { skipped++; continue; }
                     }
                     var copy = Copy(item.gameObject, parent);
                     copy.transform.SetPositionAndRotation(pivot + Vector3.up * lift - site, item.rotation);
                     copy.transform.localScale = item.lossyScale;
+                    // Boulders standing in the old lake or on the drained section are bare, water-worn rock
+                    // rather than moss-topped.
+                    if ((name == "Boulders" || name == "BigBoulders") && s.Contains(pivot)
+                        && (s.InLake(pivot) || DrainedWeight(new Vector2(pivot.x - site.x, pivot.z - site.z)) > .5f)) Bare(copy);
                     kept++;
                 }
             }
@@ -583,6 +624,19 @@ namespace SomethingDownThere.Editor
             return bounds;
         }
 
+        // Lowest and highest value of a field across a footprint, sampled inside its XZ bounds.
+        private static (float low, float high) Footprint(Bounds bounds, Func<Vector2, float> field)
+        {
+            float low = float.MaxValue, high = float.MinValue;
+            for (int gz = 0; gz < 3; gz++)
+            for (int gx = 0; gx < 3; gx++)
+            {
+                float value = field(new Vector2(Mathf.Lerp(bounds.min.x, bounds.max.x, .15f + gx * .35f), Mathf.Lerp(bounds.min.z, bounds.max.z, .15f + gz * .35f)));
+                low = Mathf.Min(low, value); high = Mathf.Max(high, value);
+            }
+            return (low, high);
+        }
+
         private static float DistanceXZ(Bounds bounds, Vector3 point)
         {
             float dx = Mathf.Max(0, Mathf.Abs(point.x - bounds.center.x) - bounds.extents.x);
@@ -624,13 +678,13 @@ namespace SomethingDownThere.Editor
             for (int gx = 0; gx < cells; gx++)
             {
                 if (SiteLayout.BeyondOpening(s.Local((gx + .5f) * step, (gz + .5f) * step)) < CampFlat) continue;
-                // Carved ground counts: the lake floods each channel mouth up to the contour where its bed
-                // rises above the water, so no square cell edge crosses a channel. Inland beds stay above
-                // the lake plane. Every sample counts: shore dips between cell corners otherwise leave
-                // straight gaps.
+                // The lake covers the uncarved bed and only the deep part of each carved channel mouth;
+                // shallow channel water is the stream's own, which keeps real depth to its banks (flat
+                // lake water over a nearly level bed draws an irregular polygonal waterline). Every
+                // sample counts: shore dips between cell corners otherwise leave straight gaps.
                 bool wet = false;
                 for (int z = gz * step; z <= (gz + 1) * step && !wet; z++)
-                for (int x = gx * step; x <= (gx + 1) * step && !wet; x++) wet = s.After[z, x] < below;
+                for (int x = gx * step; x <= (gx + 1) * step && !wet; x++) wet = s.Uncarved[z, x] < below || s.After[z, x] < level - .3f;
                 if (!wet) continue;
                 int a = Vertex(gx, gz), b = Vertex(gx + 1, gz), c0 = Vertex(gx, gz + 1), d = Vertex(gx + 1, gz + 1);
                 triangles.AddRange(new[] { a, c0, d, a, d, b });

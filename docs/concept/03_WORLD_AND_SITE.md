@@ -13,7 +13,7 @@ The lakebed excavation is a single contained worksite.
   along old waterlines and sandy banks. Shallow, walkable channels still trickle from seeps at the
   cliff foot, wind around the dig plot and run into the lake, with stony beds, damp banks, reeds,
   rushes and tufts of muted, sun-dried grass (never bright lime); one dry gully joins them. Stranded stones, rubble and twigs lie
-  along channels and waterlines. Low sand islands with grassy tops and the odd boulder stand in
+  along channels and waterlines; boulders on the old bed are bare, water-worn rock. Low sand islands with grassy tops and the odd boulder stand in
   the remaining lake. All lakebed dressing stays clear of the camp and the dig plot.
 - **Dig area:** one wide, irregular plot of bare packed sediment inside the drained section, wider
   east-west than north-south and never a circle, with no fence. Its paler ground stands out
@@ -37,7 +37,8 @@ The lakebed excavation is a single contained worksite.
   meshes and flat tree impostors stay on the distant backdrop, and switches blend. Foliage reads
   as solid canopies, without speckled dither patterns.
 - **Water presentation:** calm, silty slate grey-green lake water, murky rather than blue: the
-  bottom shows only in the shallows, trickles run into the lake without a seam, with restrained
+  bottom shows only in the shallows, stream water fills each channel to a natural waterline and
+  runs into the lake without a seam, bright banks never smear across the surface, with restrained
   shore foam and rippled canyon reflections. Neither refraction nor reflected light may turn
   the shore into a glowing white band; the lake remains scenery outside the play area.
 - **Underground:** fully diggable voxel ground except permanent boundaries.

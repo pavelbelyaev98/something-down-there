@@ -46,7 +46,7 @@ namespace SomethingDownThere.Editor
                 .Where(r => AssetDatabase.GetAssetPath(r.sharedMaterial) == VendorSplashMaterial)
                 .Select(r => PrefabUtility.GetOutermostPrefabInstanceRoot(r.gameObject) ?? r.gameObject).Distinct().ToArray())
                 Undo.DestroyObjectImmediate(splash);
-            var trickle = TrickleMaterial(river);
+            var trickle = TrickleMaterial(lake);
             foreach (var renderer in water.GetComponentsInChildren<Renderer>(true))
             {
                 if (renderer.name.StartsWith("Trickle", StringComparison.Ordinal))
@@ -110,22 +110,18 @@ namespace SomethingDownThere.Editor
             return shader;
         }
 
-        // A shallow run of the same silty water, with finer ripples and a thinner foam line.
-        private static Material TrickleMaterial(Material river)
+        // The streams' water: the lake's own settings, so a stream runs into the lake without a
+        // visible seam in colour, foam or ripples.
+        private static Material TrickleMaterial(Material lake)
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(TrickleMaterialPath);
             if (material == null)
             {
-                material = new Material(river) { name = "TrickleWater" };
-                material.SetFloat("_FoamDistance", .2f);
-                material.SetFloat("_FoamPower", .25f);
-                material.SetFloat("_EdgesFade", .15f);
-                material.SetFloat("_RefractionPower", .15f);
-                material.SetFloat("_NormalScale", 4);
+                material = new Material(lake) { name = "TrickleWater" };
                 AssetDatabase.CreateAsset(material, TrickleMaterialPath);
             }
             // Subsequent setup runs preserve the user's Inspector tuning.
-            material.shader = river.shader;
+            material.shader = lake.shader;
             // Drawn before the lake: its depth write hides the lake plane under the flooded mouth.
             // URP's material validation derives the queue from _QueueOffset, so set both.
             material.SetFloat("_QueueOffset", -1);
@@ -145,7 +141,8 @@ namespace SomethingDownThere.Editor
                 material.SetFloat("_FoamDistance", flowing ? .65f : .4f);
                 material.SetFloat("_FoamPower", flowing ? .35f : .18f);
                 material.SetFloat("_SmoothnessPower", .94f);
-                material.SetFloat("_RefractionPower", .3f);
+                // Low distortion: stronger refraction smears the bright banks across the water.
+                material.SetFloat("_RefractionPower", .1f);
                 material.SetFloat("_EdgesFade", .25f);
                 Silt(material);
                 AssetDatabase.CreateAsset(material, path);

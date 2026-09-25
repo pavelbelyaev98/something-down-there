@@ -45,60 +45,23 @@
 - **Resolution:** rendering is fixed at 100%, with no scale control or stored scale preference. Borderless startup and switching use the current monitor's desktop resolution and aspect ratio; its resolution row reads Desktop. Fullscreen/windowed modes retain supported output choices, including 4K and higher, with timed Keep/Revert confirmation.
 - **Graphics settings:** sun shadows (Off/Low/Medium/High), MSAA, texture mip quality and anisotropic filtering apply immediately and persist as device preferences. Defaults and Graphics reset use High sun shadows, 2× MSAA, full-resolution textures and High filtering; explicit saved choices remain unchanged. Sun shadows use a smaller two-cascade map with smooth filtering, with coarser Medium/Low tiers on the runtime URP clone; local lamp occlusion and the excavation daylight field remain active at every quality level. Depth priming is disabled, so MSAA Off renders the same surfaces as the multisampled settings.
 - **Computer screens:** selling and upgrades share the existing fixed-size parts-board table (`Station.uss` + `ToolkitStationRows`) — money-only header, categories in their own columns, one clickable row per upgrade track, refill service or carried find. One click buys; nothing is selected first and nothing resizes.
-- **Drained lakebed site:** `LakebedSiteSetup` regenerates the surroundings from a 1000 m window
-  of the Pure Nature 2: Highlands demo's river canyon: demo terrain, cliffs, peaks, boulders,
-  rubble, ruins, trees, rivers and waterfall as vendor prefab instances. The canyon floor is
-  flooded into a widened lake with an exposed bathtub band and low sand islands with grassy tops;
-  one drained section on the east shelf holds the dig plot. `SiteLayout` gives the plot a wide,
-  lobed outline that is circular only over the camp arc. A terrain hole under a narrow collar
-  (`Surface/Excavation rim`, the dig ground's own material) follows it exactly and roofs the rest
-  of the rectangular grid, which stays reachable for lateral digging. The pack's gravel, tinted as warm packed sediment, is the lakebed
-  terrain layer; the plot's cap shares its texture and world tiling, slightly paler, inside a band
-  of dark trampled mud. The drained flats mix sediment with darker mud patches, damp silt toward
-  the water, pebble strand lines and waterline sand; a muted olive copy of the canyon's grassy mud
-  (`DryTurf`) covers the higher flats and island tops, while the canyon keeps its vivid grass. Two
-  carved channels wrap the plot into the lake, one splitting at its mouth, beside a dry gully;
-  carving fades out before the collar. Their walkable, collider-free water ribbons
-  (`TrickleWater.mat`) draw just before the lake and hide it under their flooded mouths. Mountains
-  reeds and rushes, feather grass, pebbles, twigs and the canyon grass are terrain details on banks,
-  strand lines and islands; the grasses and reeds use muted, low-gloss project material copies
-  through prefab variants; Highlands rubble plus bare stranded
-  stones (`LakebedRock.mat`) line channels and old waterlines. One generated lake surface follows
-  the carved ground, replaces the demo's sea-level planes and never crosses the dig column; the
-  demo's baked canyon probe uses URP box projection and blending. Project lake, river and trickle
-  materials share silty slate grey-green water that hides the bottom within a few decimetres; the
-  adapted BK water shader retains ripples with bounded foam and refraction that does not relight
-  the riverbed.
-  Walls and a 16 m flight ceiling on the Ignore Raycast layer keep the player on
-  the drained section; scenery objects and terrain trees unseen from that volume are removed at
-  setup (ID-colour renders plus terrain line-of-sight). Scenery reports the permanent-boundary
-  prompt; terrain shadow casting is off because its casters ignore holes. Terrain detail and
-  layered shading fall back sooner outside reachable ground. Scenery and project tree/bush
-  variants keep full detail within about 50 m even at the widest FOV, the coarsest meshes and
-  tree impostors only appear beyond about 200 m, and every switch blends briefly. Project copies
-  of the foliage materials hide edge-on leaf cards over a narrow angle band instead of
-  speckling canopies. The vendor waterfall
-  splash particles are omitted because their material lacks its textures. Backdrop shadow casters are omitted
-  beyond a buffer around the play area. Permanent rocks supply baked occlusion for the ground,
-  flight and underground camera volumes; mutable soil, its preview, terrain and foliage never
-  become baked occluders. Performance refresh preserves placements and terrain sculpting/paint.
-  The computer, recharge, return anchor, winch, pads and stands keep their tested cluster on the
-  camp arc south of the plot, lifted onto the lakebed ground; the spawn looks north up the canyon
-  over the opening.
-- **Dig ground and soil:** the plot's untouched top is a bare packed-sediment cap with continuous
-  top projection and a soft, textured soil transition; no plants grow on it. Noon shadow bias
-  prevents a tessellated self-shadow rim. Pack soil covers the top layer; compacted clay and
-  fractured rock use separate approved texture/normal sets below it. Custom soil art/materials
-  remain stored but unbound. Linear masks, preserved alpha, normal-map imports and the dry
-  smoothness cap prevent white glare.
-- **Presentation:** the Highlands demo's sky with a larger soft-glow sun disc, flat ambient, warm
-  sun colour and exponential haze, a 3 km camera range and almost overhead midday sunlight; custom grass, clouds,
-  sun and trial-tool art/imports are deleted. No first-person rig is present; the shaving/scoop
-  transition follows the tool level, with a comparison override in development admin. The full licensed vendor pack remains available.
-  The project color profile uses the Highlands ACES grade with restrained bloom, warm soil and
-  rich surface colors. Lighting/water can be refreshed without regenerating scenery or terrain;
-  existing project water-material and color-profile tuning survives setup runs.
-  WindowsBuild always targets MainGame.
+- **Drained lakebed site:** generated by `LakebedSiteSetup` from the Highlands demo canyon: terrain,
+  vendor scenery instances, lake, streams, islands, plants and debris. Rerun it instead of hand-editing
+  (see `unity/readme.md`); design decisions live in the [089 spec](tasks/completed/089-highlands-drained-lakebed.md).
+  The plot outline comes from `SiteLayout`; a terrain hole under the permanent rim collar exposes it,
+  and the collar roofs the rest of the grid for lateral digging. Stream water (`Trickles`) draws just
+  before the lake. Walls and a flight ceiling on the Ignore Raycast layer keep the player on the
+  drained section, and scenery unseen from there is removed at setup. Scenery reports the
+  permanent-boundary prompt; the terrain casts no shadows (casters ignore holes). Detail switches
+  happen only far from the player. Baked occlusion uses permanent rocks only, never excavation,
+  terrain or foliage. The stations sit on the camp arc south of the plot.
+- **Dig ground and soil:** the plot's untouched top is a packed-sediment cap sharing the lakebed's
+  pack texture; pack soil, clay and rock textures lie below, blended from saved material IDs. Custom
+  soil art stays stored but unbound.
+- **Presentation:** the Highlands sky, grade and haze with a noon sun (`SunPresentationSetup`).
+  Lighting and water refresh without regenerating the site, keeping Inspector tuning. No
+  first-person rig; the scoop/shave motion follows the tool level. `WindowsBuild` always targets
+  MainGame.
 - **Underground lighting:** `ExcavationDaylight` derives daylight from connected excavated air, keeping shallow and middle-depth ground and short branches readable before gradually fading along deeper or longer routes. Soil and adapted URP Lit finds/boundaries attenuate sun, sky fill and reflections together; sealed rooms admit no daylight and there is no ambient brightness floor.
 - **Work lights:** compact neutral lanterns illuminate a broad area in every direction with local soft shadows, gradual distant falloff and bounded close-range brightness, preserving soil texture beside the light. The point-light shadow atlas fits the entire kit; distant route lamps stop submitting lights while retaining their visible diffuser. No personal light, fuel drain or expiry. Marks conform to collision surfaces and remain readable by their shape when lit.
 
