@@ -15,11 +15,13 @@ through the excavation daylight and ground response, without flattening surface 
 Lanterns light a broad work area with gradual falloff, without bleaching nearby textures or changing the surface grade.
 The lakebed sediment and freshly dug soil read as dry, rough ground: no mirror-like white
 glare or crystal sparkles. Preserve texture relief and contact shadows without a wet sheen.
-The diggable surface is bare packed sediment from the approved pack, the same ground as the
-surrounding lakebed, continuous to cut edges with a soft, natural transition into soil. No
+The diggable surface is bare, dark ground from the approved packs, fading through damp mud into
+the lighter lakebed. Blend the actual textures across the fixed/diggable join with matching scale,
+alignment and surface response, continuous to cut edges; freshly cut topsoil is fine-grained soil
+recoloured away from the surface texture, never rubble that competes with pickable finds. No
 plants grow on it. Avoid sharp sawtooth colouring and dark polygonal outlines around holes.
-Use approved pack textures only; no generated ground patterns. Custom soil art stays an
-inactive option for later, without applying it to the site.
+Use approved pack textures and the project's original soil art (recoloured copies allowed); no
+new generated ground patterns.
 
 - **Zones read instantly:** strong palettes per zone with gradual transitions.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.

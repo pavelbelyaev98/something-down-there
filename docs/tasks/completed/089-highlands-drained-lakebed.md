@@ -1,6 +1,6 @@
 # 089 — Highlands Drained Lakebed Site
 
-**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular unfenced plot of bare pack sediment inside trampled mud, channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
+**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of dark mud outlined by a low collider-free marker on its collar (options compared in Developer admin), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
 
 ## Objective
 Replace the plain round gravel yard with the river section of the approved **Pure Nature 2: Highlands** demo, kept as close to the demo's terrain composition and asset placement as practical, and adapted to the game:
@@ -177,3 +177,35 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
 - Causes: stream cells at the edge of a course's reach kept the water level above dry ground; channel beds dipped below the lake plane wherever one bank was low (the previous mouth ease cut them up to 1.2 m) and rose again, leaving inland pools the flat lake plane under the drained flats showed through; each ground sample took its bed from the single nearest course stretch, which jumps at bends.
 - Fixes: beds stay 3 cm above the lake until the course reaches open lake water, then fall at most 8 cm per metre; carving takes the deepest cut of every stretch in reach and the stream level blends nearby stretches; corners at the edge of the stream grid dip under the ground; the lake covers only uncarved ground and deep mouths. The south stream now rises west of the boulders instead of among them. Checks: no stream-edge vertex above the ground, no isolated below-lake ground on the play area, no floating debris.
 - Rejected: capping the stream surface below both bank tops dried most streams (low banks at the flats); full terrain detail did not change the outlines, so terrain LOD was not the cause.
+
+## Iteration 13 — dark dig plot with a fading band
+- Playtest: the plot read lightest, the trampled band around it darkest, the lakebed light again. Wanted: plot darkest, then dark, fading gradually into the lakebed; pack textures only; variations to compare in Developer admin.
+- The plot cap is the darkest ground (default: the pack gravel tinted dark sediment). A band of `DampMud` (the Highlands mud darkened) starts under the collar skirt and fades over about 8 m, painted over the finished lakebed mix so a comparison can swap it exactly. The old trampled band and the paler cap are gone.
+- `DigGroundComparison` cycles four treatments (dark sediment or dark pack soil caps; narrow, wide or soft bands) on session copies of the ground material, terrain data and band layer; the collider, saves and assets keep the authored data. Switching costs 15–30 ms.
+- The Mountains `Mud01` soil read bright orange under the noon grade even when darkened evenly; its soil treatments use a blue-leaning tint to read brown.
+
+## Iteration 14 — seamless plot edge and no culling in the play area
+- Playtest: every treatment showed two textures meeting at the collar; grass disappeared around the camp when walking away.
+- Seam: the cap and the terrain band were different textures with different mapping, so no paint weight could hide their mesh join. The ground shader now blends the cap into the band's own terrain layer inside the outline (`_BandInnerFade`, from an edge-distance map baked from `SiteLayout`) and renders it exactly as the terrain does: same texture, tint, relief, mask remap and world alignment (the `DampMud` layer's tile offset is world-aligned, it is non-metallic and shares the cap's smoothness ceiling). The terrain band covers the join fully to 1.5 m, then fades. All four treatments (dark mud, dark sediment, dark pack soil, wide fade) join without a line; the default uses the band texture itself, darkened toward the centre.
+- Culling: the terrain detail distance was 40 m. It now covers the play area corner to corner from the flight ceiling plus 40 m; scenery in or within 40 m of the play area, and the near tree variants, never cull from inside it. LOD switch distances are unchanged. Editor cost at three viewpoints: about twice the triangles, about 600 more draw calls, GPU time up 0.4–0.8 ms.
+- Rejected: another agent's attempt with a separate blend mask and pushed-out LOD switches was reverted before this pass.
+
+## Iteration 15 — chosen dig ground, original canyon, matching topsoil
+- Playtest: keep "Dark mud, wide fade" and drop the rest; the canyon ground had changed from the demo; dug soil looked too different from the surface.
+- The comparison is removed (runtime component, admin button, terrain material override); the chosen treatment is authored: the canyon mud darkened toward the plot centre over 8 m inside the outline, a full band to 1.5 m beyond it and a fade over about 16 m.
+- Canyon: `DampMud` had replaced the demo's Mud layer, darkening and shifting every mud slope in the canyon, and the muted-grass fade reached the banks around the lakebed. `DampMud` is now appended as the lakebed's own layer (nine layers, no measurable GPU cost), the band and the lakebed's damp silt paint it only on lakebed and camp ground, and the muted grass stays inside the old lakebed. Outside the old shoreline the terrain paint equals the demo's.
+- Topsoil: soil now uses the same Highlands mud and world mapping as the cap. A darker tint than the cap read almost black in the pit's shade; it matches the band instead, lighter than the dark surface layer as real subsoil is. The Mountains `Mud01` copies are no longer used and were deleted.
+
+## Iteration 16 — stony topsoil and a marked dig boundary
+- Playtest: the dug topsoil (the surface mud, lighter) looked like dung and too close to the surface; the diggable area needed a clear edge, e.g. rocks touching end to end, plus two alternatives.
+- Topsoil: the Highlands `Mud_rubble` at a 6 m tile, slightly greyed. Rejected in the pit: `Sand_rubble` and `Sand` (too bright, spotty), Mountains `Gravel` (dark asphalt).
+- Boundary (`LakebedSiteSetup.Boundary`, Developer admin **Dig boundary**): a ring of Mountains `Stone1b`–`3b` (0.5–0.75 m, overlapping, 35–45 % sunk, merged at their middle LOD into one draw); timber stakes with red-and-white tape at knee height, open at the winch; half-sunk logs of Highlands ash bark end to end. All sit on the collar clear of the dig ground and carry no colliders.
+- Cost: separate full-detail stones added about 550 draw calls and 0.7 ms GPU (the play area never switches their detail); the merged ring draws like the other two options.
+- Rejected: thin dark logs (read as a hose).
+
+## Iteration 17 — fine-grained topsoil candidates
+- Playtest: all three boundaries are good; the `Mud_rubble` soil shows fist-sized stones that read like pickable finds. Wanted 4–6 soil variations from existing textures (copies may be modified) or the original soil art, recoloured.
+- `TopsoilVariants` (Developer admin **Dig soil**) switches the ground material's soil for the session and restores the authored first option on exit. Options: the original soil art as Loam (default), Dark loam and Olive silt; Mountains `Mud01` as Clay loam and Damp humus; Highlands `Sand` as Grey silt.
+- The original soil's grey pebbles turned blue under the tints strong enough to neutralise its orange, so it uses a copy with 30 % of its saturation (`Soil_Albedo_Muted.png`) and mild warm tints.
+- Rejected: `Mud02` (grass patches), lightly tinted `Sand` (pale yellow even at a quarter brightness).
+- Seen, not changed: the clay deposit (gravel tinted terracotta) reads saturated red at the pit floor.

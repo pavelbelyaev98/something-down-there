@@ -13,6 +13,28 @@ namespace SomethingDownThere.Editor
     {
         private const string TreesFolder = Folder + "/Trees";
         private const string FoliageFolder = TreesFolder + "/Materials";
+        // Grass, props and scenery in and this far around the play area never disappear from
+        // anywhere the player can stand or fly.
+        public const float SurroundingMargin = 40;
+
+        // Farthest camera-to-ground distance across the play area, from the flight ceiling.
+        public static float PlayViewDistance()
+        {
+            var outline = PlayArea();
+            float span = 0;
+            foreach (var a in outline) foreach (var b in outline) span = Mathf.Max(span, Vector2.Distance(a, b));
+            return Mathf.Sqrt(span * span + (FlightCeiling + 2) * (FlightCeiling + 2));
+        }
+
+        // Camera distance an object must stay visible to: from the farthest point of the play area,
+        // for objects in or near it; zero leaves the vendor culling for the far backdrop.
+        private static float PlayVisibleDistance(Vector2[] outline, Vector3 centre, float size)
+        {
+            var point = new Vector2(centre.x, centre.z);
+            float nearest = InPlayArea(outline, point) ? 0 : outline.Min(o => Vector2.Distance(o, point));
+            if (nearest > SurroundingMargin) return 0;
+            return outline.Max(o => Vector3.Distance(new Vector3(o.x, FlightCeiling + 2, o.y), centre)) + size;
+        }
 
         [MenuItem("Tools/Something Down There/Refresh Lakebed Performance")]
         public static void ConfigurePerformance()
@@ -35,7 +57,8 @@ namespace SomethingDownThere.Editor
             Undo.RecordObject(terrain, "Tune lakebed backdrop detail");
             terrain.heightmapPixelError = 6;
             terrain.basemapDistance = 150;
-            terrain.detailObjectDistance = 40;
+            // Grass and pebbles cover the whole play area and its surroundings from any position.
+            terrain.detailObjectDistance = Mathf.Ceil((PlayViewDistance() + SurroundingMargin) / 10) * 10;
             terrain.drawInstanced = true;
             EditorUtility.SetDirty(terrain);
 
@@ -75,8 +98,9 @@ namespace SomethingDownThere.Editor
                 var source = PrefabUtility.GetCorrespondingObjectFromSource(lod);
                 if (source == null || source.lodCount != lod.lodCount || lod.lodCount == 0) continue;
                 var scale = lod.transform.lossyScale;
+                float size = lod.size * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
                 Undo.RecordObject(lod, "Keep lakebed detail changes distant");
-                DistantDetail(lod, source.GetLODs(), lod.size * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+                DistantDetail(lod, source.GetLODs(), size, PlayVisibleDistance(outline, lod.transform.TransformPoint(lod.localReferencePoint), size));
                 PrefabUtility.RecordPrefabInstancePropertyModifications(lod);
             }
             ConfigureTreeDetail(terrain, footprint);
@@ -132,13 +156,16 @@ namespace SomethingDownThere.Editor
         public static float SwitchDistance(float worldSize, float screenHeight) =>
             worldSize / (2 * Mathf.Tan(CameraPreferences.MaximumFov * .5f * Mathf.Deg2Rad) * screenHeight);
 
-        private static void DistantDetail(LODGroup lod, LOD[] vendor, float worldSize)
+        private static void DistantDetail(LODGroup lod, LOD[] vendor, float worldSize, float neverCullWithin = 0)
         {
             var levels = lod.GetLODs();
             int last = levels.Length - 1;
-            // Horizon silhouettes are never culled sooner than the vendor intended.
-            levels[last].screenRelativeTransitionHeight = vendor[last].screenRelativeTransitionHeight * .5f;
             float atOneMetre = worldSize / (2 * Mathf.Tan(CameraPreferences.MaximumFov * .5f * Mathf.Deg2Rad));
+            // Horizon silhouettes are never culled sooner than the vendor intended, and nothing the
+            // play area can see is culled at all from inside it.
+            levels[last].screenRelativeTransitionHeight = vendor[last].screenRelativeTransitionHeight * .5f;
+            if (neverCullWithin > 0)
+                levels[last].screenRelativeTransitionHeight = Mathf.Min(levels[last].screenRelativeTransitionHeight, atOneMetre / neverCullWithin);
             bool blend = true;
             for (int i = last - 1; i >= 0; i--)
             {
@@ -194,7 +221,8 @@ namespace SomethingDownThere.Editor
             try
             {
                 var lod = instance.GetComponent<LODGroup>();
-                if (lod != null && lod.lodCount > 0) DistantDetail(lod, lod.GetLODs(), lod.size);
+                if (lod != null && lod.lodCount > 0)
+                    DistantDetail(lod, lod.GetLODs(), lod.size, backdrop ? 0 : PlayViewDistance() + SurroundingMargin);
                 foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
                 {
                     UseProjectFoliage(renderer);

@@ -53,11 +53,18 @@
   before the lake. Walls and a flight ceiling on the Ignore Raycast layer keep the player on the
   drained section, and scenery unseen from there is removed at setup. Scenery reports the
   permanent-boundary prompt; the terrain casts no shadows (casters ignore holes). Detail switches
-  happen only far from the player. Baked occlusion uses permanent rocks only, never excavation,
+  happen only far from the player; terrain grass and anything in or near the play area are never
+  culled from inside it (`LakebedSiteSetup.PlayViewDistance`). Baked occlusion uses permanent rocks only, never excavation,
   terrain or foliage. The stations sit on the camp arc south of the plot.
-- **Dig ground and soil:** the plot's untouched top is a packed-sediment cap sharing the lakebed's
-  pack texture; pack soil, clay and rock textures lie below, blended from saved material IDs. Custom
-  soil art stays stored but unbound.
+- **Dig ground and soil:** the plot's untouched top is the Highlands mud darkened toward its centre;
+  toward the outline it becomes the terrain's damp band (`DampMud`, the lakebed's own layer) using
+  an edge-distance map from `SiteLayout`, and the band fades into the lakebed. Freshly cut topsoil
+  is the original soil art (a muted colour copy, tinted); clay and rock textures lie below, blended from
+  saved material IDs. Developer admin → **Dig soil** cycles six topsoil candidates for the session
+  (`TopsoilVariants`). The canyon outside the old lakebed keeps the demo's own layers and paint.
+- **Dig boundary:** a low collider-free marker on the collar outlines the plot. Three options are
+  authored (stone ring, survey tape, timber edging); the stone ring shows, and Developer admin →
+  **Dig boundary** cycles them for the session (`DigBoundaryMarkers`).
 - **Presentation:** the Highlands sky, grade and haze with a noon sun (`SunPresentationSetup`).
   Lighting and water refresh without regenerating the site, keeping Inspector tuning. No
   first-person rig; the scoop/shave motion follows the tool level. `WindowsBuild` always targets

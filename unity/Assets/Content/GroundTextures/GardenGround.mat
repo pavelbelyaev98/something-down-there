@@ -12,7 +12,8 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _BANDBLEND_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -23,6 +24,18 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BandAlbedo:
+        m_Texture: {fileID: 2800000, guid: da55130d8a454b5abe8c49dbe89ba8ef, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BandMask:
+        m_Texture: {fileID: 2800000, guid: 76d64b994b264b0ca2864b43c5b88e6a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BandNormal:
+        m_Texture: {fileID: 2800000, guid: 8066c10484024ce3b1ff17efa6e7340e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ClayAlbedo:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -45,6 +58,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _ComparisonRoughness:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DigEdge:
+        m_Texture: {fileID: 2800000, guid: 44b96b8d1280d514cb44b410efaaca25, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RockAlbedo:
@@ -72,19 +89,23 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfAlbedo:
-        m_Texture: {fileID: 2800000, guid: 7b417fe2262f8e441bf0c073c919b869, type: 3}
+        m_Texture: {fileID: 2800000, guid: da55130d8a454b5abe8c49dbe89ba8ef, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfNormal:
-        m_Texture: {fileID: 2800000, guid: 5c1b7a539904f734885a221d647f5da0, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8066c10484024ce3b1ff17efa6e7340e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfRoughness:
-        m_Texture: {fileID: 2800000, guid: 4da000d92dea41e4095890d9f5394ce8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 76d64b994b264b0ca2864b43c5b88e6a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BandBlend: 1
+    - _BandInnerFade: 8
+    - _BandNormalStrength: 1
+    - _BandTileMetres: 20
     - _ClayNormalStrength: 0.25
     - _ClayTileMetres: 3
     - _ComparisonMaskLayout: 0
@@ -105,14 +126,19 @@ Material:
     - _SrcBlend: 1
     - _StoneNormalStrength: 0.9
     - _SurfaceHeight: 0
-    - _TileMetres: 6
+    - _TileMetres: 20
     - _TurfDepth: 0.045
     - _TurfMaskLayout: 1
     - _TurfNormalStrength: 0.8
     - _ZWrite: 1
     m_Colors:
+    - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
+    - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
+    - _BandTint: {r: 0.8322835, g: 0.8094681, b: 0.78577685, a: 1}
     - _ClayTint: {r: 1, g: 1, b: 1, a: 1}
+    - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
     - _RockTint: {r: 0.39999998, g: 0.39999998, b: 0.39999998, a: 1}
-    - _TurfTint: {r: 1.0945976, g: 1, b: 0.8962438, a: 1}
+    - _SoilTint: {r: 1, g: 1, b: 1, a: 1}
+    - _TurfTint: {r: 0.6799757, g: 0.65762764, b: 0.64216644, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -43,8 +43,7 @@ namespace SomethingDownThere.Editor
         private const float PlayAreaInset = 9f;
         // Highest point the player's feet can reach above the lakebed ground.
         public const float FlightCeiling = 16f;
-        // Metres beyond the plot outline: plants and debris stay this far out, and a band of
-        // trampled mud surrounds the plot out to about twice that.
+        // Metres beyond the plot outline that plants and debris keep clear.
         public const float DressingClearance = 3f;
         // The rim collar's roof reaches this far past the grid rectangle, under the terrain.
         private const float CollarOverlap = .5f;
@@ -85,6 +84,7 @@ namespace SomethingDownThere.Editor
                 BuildTrickles(section, environment.Find("Water"));
                 CopyReflections(demo, environment);
                 ScatterDebris(section, environment, stations);
+                BuildDigBoundary(environment);
             }
             finally
             {
@@ -98,6 +98,7 @@ namespace SomethingDownThere.Editor
             MainGameSceneBuilder.PlaceBedrock(root.Find("Bedrock"));
             root.GetComponentInChildren<Camera>().farClipPlane = 3000;
             GroundTextureSetup.ConfigureGroundMaterials(root);
+            BuildTopsoilVariants(environment, soil);
             SunPresentationSetup.Configure();
             ConfigureWater(root);
             ConfigurePerformance(root);
@@ -312,6 +313,7 @@ namespace SomethingDownThere.Editor
             // Create other assets first: an asset import after CreateAsset reloads the unsaved terrain data.
             var sediment = SedimentLayer(s.TerrainPosition);
             var dryTurf = DryTurfLayer();
+            var dampMud = DampMudLayer(s.TerrainPosition);
             var lakebedDetails = LakebedDetails(from);
             AssetDatabase.DeleteAsset(TerrainDataPath);
             var data = new TerrainData { name = "LakebedTerrain" };
@@ -327,8 +329,8 @@ namespace SomethingDownThere.Editor
             data.wavingGrassStrength = from.wavingGrassStrength;
             data.wavingGrassTint = from.wavingGrassTint;
             data.alphamapResolution = WindowCells;
-            // Up to eight layers keep the terrain to two splat passes.
-            data.terrainLayers = from.terrainLayers.Append(sediment).Append(dryTurf).ToArray();
+            // The demo's layers stay untouched; the lakebed's own layers follow them.
+            data.terrainLayers = from.terrainLayers.Append(sediment).Append(dryTurf).Append(dampMud).ToArray();
             data.SetAlphamaps(0, 0, Paint(from, s));
             data.SetDetailScatterMode(from.detailScatterMode);
             int detailScale = (from.heightmapResolution - 1) / from.detailResolution;
@@ -412,8 +414,9 @@ namespace SomethingDownThere.Editor
             int lawn = Layer("Grass"), meadow = Layer("Mud_grass");
             if (new[] { rubble, mud, sand, gravel, lawn, meadow }.Any(i => i < 0)) throw new InvalidOperationException("Demo terrain layers changed.");
             var source = from.GetAlphamaps(s.I0, s.J0, WindowCells, WindowCells);
-            // The project sediment and muted turf layers follow the demo's layers.
-            int halo = source.GetLength(2), sediment = halo, grassy = halo + 1, layers = halo + 2;
+            // The project sediment, muted turf and damp silt layers follow the demo's layers; the
+            // demo's own layers stay untouched, so the canyon keeps its original ground.
+            int halo = source.GetLength(2), sediment = halo, grassy = halo + 1, silt = halo + 2, layers = halo + 3;
             var alpha = new float[WindowCells, WindowCells, layers];
             for (int z = 0; z < WindowCells; z++)
             for (int x = 0; x < WindowCells; x++)
@@ -423,9 +426,9 @@ namespace SomethingDownThere.Editor
             for (int x = 0; x < WindowCells; x++)
             {
                 var local = s.Local(x + .5f, z + .5f);
-                // The canyon's vivid grass fades into the muted turf on the low ground around the
-                // drained section; the cliff tops keep the pack's colour.
-                float mute = (1 - Smooth((DrainedEdge(local) - 8) / 30)) * Smooth((OldShore + 14 - s.After[z, x]) / 6);
+                // On the old lakebed's shore band the canyon's vivid grass gives way to the muted
+                // turf; beyond the old shoreline the canyon keeps the demo's paint.
+                float mute = s.Lake[z, x] ? 1 - Smooth((DrainedEdge(local) - 8) / 30) : 0;
                 if (mute > 0)
                     foreach (int vivid in new[] { lawn, meadow })
                     {
@@ -439,7 +442,7 @@ namespace SomethingDownThere.Editor
                 float h = s.After[z, x], a = h - WaterLevel;
                 float patches = Noise(local, 9, 3.1f), growth = Noise(local, 14, 5.3f), grain = Noise(local, 4, 1.7f);
                 Array.Clear(target, 0, layers);
-                if (a < -.15f) { target[sand] = .75f; target[mud] = .25f; }
+                if (a < -.15f) { target[sand] = .75f; target[silt] = .25f; }
                 else if (s.Drained[z, x] > .35f)
                 {
                     // Packed sediment on the flats; damp dark silt toward the water and channels;
@@ -449,7 +452,7 @@ namespace SomethingDownThere.Editor
                     // Broad darker mud patches break up the pale sediment, as on a real drying bed.
                     float mudPatch = Smooth((Noise(local, 16, 2.6f) - .45f) / .2f);
                     target[sediment] = (1 - damp) * (1.1f + .3f * grain) * (1 - .65f * mudPatch);
-                    target[mud] = damp + (1 - damp) * (.25f * (1 - grain) + .9f * mudPatch);
+                    target[silt] = damp + (1 - damp) * (.25f * (1 - grain) + .9f * mudPatch);
                     // Channel beds are dark stony mud under the water, never pale beach sand.
                     float beach = Smooth((c - .3f) / .8f);
                     target[rubble] = Smooth((patches - .58f) / .1f) * (1 - damp) + 2.2f * Smooth((.3f - c) / .6f);
@@ -463,29 +466,38 @@ namespace SomethingDownThere.Editor
                     // Grassy island tops over sandy, gravelly rims sorted by the water.
                     float top = Smooth((IslandHeight(local) - WaterLevel - .12f) / .15f);
                     target[sand] = (1 - top) * (.8f + .4f * grain);
-                    target[mud] = .45f * (1 - top) * (1 - grain);
+                    target[silt] = .45f * (1 - top) * (1 - grain);
                     target[gravel] = .5f * (1 - top) * Smooth((patches - .5f) / .2f);
                     target[grassy] = 1.5f * top;
                 }
                 else
                 {
                     target[gravel] = .6f + .4f * patches;
-                    target[mud] = .5f * grain;
+                    target[silt] = .5f * grain;
                     target[sand] = 1.5f * Smooth((WaterLevel + .6f - h) / .5f);
                 }
                 if (camp > 0)
                 {
-                    // Around the plot and camp: dark trampled mud along its edge, then packed sediment
-                    // with worked patches and gravel. The paler plot stands out inside it.
-                    float trampled = 1 - Smooth((SiteLayout.BeyondOpening(local) - DressingClearance) / 3.5f);
+                    // Around the plot and camp: packed sediment with worked patches and gravel.
                     for (int l = 0; l < layers; l++) target[l] *= 1 - camp;
-                    target[sediment] += camp * (1 + .25f * grain) * (1 - .7f * trampled);
-                    target[mud] += camp * (.35f * Smooth((patches - .45f) / .2f) + 1.2f * trampled * (.6f + .4f * grain));
+                    target[sediment] += camp * (1 + .25f * grain);
+                    target[silt] += camp * .35f * Smooth((patches - .45f) / .2f);
                     target[rubble] += camp * .45f * Smooth((growth - .55f) / .15f);
                 }
                 float total = target.Sum(), mixed = 0;
                 for (int l = 0; l < layers; l++) { alpha[z, x, l] = Mathf.Lerp(alpha[z, x, l], target[l] / total, weight); mixed += alpha[z, x, l]; }
                 for (int l = 0; l < layers; l++) alpha[z, x, l] /= mixed;
+            }
+            // Last, the damp band that fully covers the collar join and fades into the lakebed; it
+            // stays on the lakebed and camp ground, never on the canyon.
+            for (int z = 0; z < WindowCells; z++)
+            for (int x = 0; x < WindowCells; x++)
+            {
+                var local = s.Local(x + .5f, z + .5f);
+                float camp = 1 - Smooth((SiteLayout.BeyondOpening(local) - CampFlat) / (CampBlend - CampFlat));
+                float band = DigBand(local) * Mathf.Max(s.Lake[z, x] ? Smooth(s.Shore[z, x] / 3) : 0, camp);
+                if (band <= 0) continue;
+                for (int l = 0; l < layers; l++) alpha[z, x, l] = alpha[z, x, l] * (1 - band) + (l == silt ? band : 0);
             }
             return alpha;
         }

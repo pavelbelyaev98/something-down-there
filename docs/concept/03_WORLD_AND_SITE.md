@@ -15,9 +15,16 @@ The lakebed excavation is a single contained worksite.
   rushes and tufts of muted, sun-dried grass (never bright lime); one dry gully joins them. Stranded stones, rubble and twigs lie
   along channels and waterlines; boulders on the old bed are bare, water-worn rock. Low sand islands with grassy tops and the odd boulder stand in
   the remaining lake. All lakebed dressing stays clear of the camp and the dig plot.
-- **Dig area:** one wide, irregular plot of bare packed sediment inside the drained section, wider
-  east-west than north-south and never a circle, with no fence. Its paler ground stands out
-  within a band of darker trampled mud. No grass grows on the plot. The stations stand on its south side, looking north up the canyon.
+- **Dig area:** one wide, irregular plot of bare ground inside the drained section, wider
+  east-west than north-south and never a circle, with no tall fence. A low, continuous marker on the
+  permanent ground outlines it, so where digging starts and stops reads at a glance (candidates are
+  compared in Developer admin). The plot is the darkest ground on
+  site; it blends into a dark damp band at its edge, with no visible texture line, and the band
+  fades gradually into the lighter lakebed. No grass grows on the plot; cuts expose fine-grained
+  subsoil coloured apart from the cracked surface mud, with no stone shapes that could pass for
+  finds (candidates are compared in Developer admin). The canyon beyond the old lakebed keeps the original
+  demo ground. The stations stand on its south side, looking north up
+  the canyon.
 - **Play area:** the player stays on the drained section: invisible walls follow its edge at the
   water line and a flight ceiling stops the jetpack about 16 m above the ground. Scenery that can
   never be seen from inside this volume is left out.
@@ -35,7 +42,8 @@ The lakebed excavation is a single contained worksite.
   occlusion, preserving its silhouette from the ground and flight ceiling. Detail reduction is
   for far scenery only: rocks, trees and bushes keep full detail near the player, the coarsest
   meshes and flat tree impostors stay on the distant backdrop, and switches blend. Foliage reads
-  as solid canopies, without speckled dither patterns.
+  as solid canopies, without speckled dither patterns. Grass, props and scenery in and around the
+  play area never disappear from anywhere the player can stand or fly.
 - **Water presentation:** calm, silty slate grey-green lake water, murky rather than blue: the
   bottom shows only in the shallows, stream water fills each channel to a natural waterline and
   runs into the lake without a seam, bright banks never smear across the surface, with restrained

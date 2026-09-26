@@ -113,12 +113,14 @@ namespace SomethingDownThere.Tests
                 foreach (string kind in new[] { "Soil", "Turf" })
                 foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                     Assert.That(ground.GetTexture("_" + kind + channel), Is.Not.Null, kind + channel);
-                StringAssert.StartsWith(GroundTextureSetup.PackTextureFolder, AssetDatabase.GetAssetPath(ground.GetTexture("_SoilAlbedo")),
-                    "Pack ground uses project copies with close-range texture imports.");
+                // Freshly cut topsoil is the first compared soil, distinct from the cracked surface mud.
+                var topsoil = LakebedSiteSetup.TopsoilOptions()[0];
+                Assert.That(ground.GetTexture("_SoilAlbedo"), Is.SameAs(topsoil.Albedo));
+                Assert.That(ground.GetTexture("_SoilAlbedo"), Is.Not.SameAs(ground.GetTexture("_TurfAlbedo")), "Cuts must not repeat the surface texture.");
                 Assert.That(ground.GetFloat("_SoilComparison"), Is.Zero, "Pack ground covers the entire dig site.");
                 foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                     Assert.That(ground.GetTexture("_Comparison" + channel), Is.Null, "Inactive custom soil must not remain bound to active terrain.");
-                Assert.That(ground.GetFloat("_MaskLayout"), Is.EqualTo(1));
+                Assert.That(ground.GetFloat("_MaskLayout"), Is.EqualTo(topsoil.PackMask ? 1 : 0));
                 Assert.That(ground.GetFloat("_ComparisonMaskLayout"), Is.Zero);
                 Assert.That(ground.GetFloat("_TurfMaskLayout"), Is.EqualTo(1));
                 Assert.That(ground.GetFloat("_MaxSmoothness"), Is.LessThanOrEqualTo(.15f));
@@ -127,15 +129,57 @@ namespace SomethingDownThere.Tests
                 foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                 {
                     Assert.That(camp.GetTexture("_Turf" + channel), Is.SameAs(ground.GetTexture("_Turf" + channel)),
-                        "Camp and excavation must use the same pack sediment cap.");
-                    var mask = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(ground.GetTexture("_TurfRoughness")));
-                    Assert.That(mask.sRGBTexture, Is.False, "Packed masks are linear data.");
+                        "Camp and excavation must use the same pack surface cap.");
+                    // Project pack copies import masks as linear data; a cap wearing the band's own
+                    // terrain texture keeps the vendor import so it reads exactly like the terrain.
+                    string maskPath = AssetDatabase.GetAssetPath(ground.GetTexture("_TurfRoughness"));
+                    var mask = (TextureImporter)AssetImporter.GetAtPath(maskPath);
+                    if (maskPath.StartsWith(GroundTextureSetup.PackTextureFolder))
+                        Assert.That(mask.sRGBTexture, Is.False, "Packed masks are linear data.");
+                    else
+                        Assert.That(ground.GetTexture("_TurfRoughness"), Is.SameAs(ground.GetTexture("_BandMask")), "A vendor cap mask is the band's own.");
                     Assert.That(mask.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput), "Preserve smoothness alpha.");
                 }
-                // The dig surface cap and the lakebed terrain layer share texture and tiling.
-                var sediment = AssetDatabase.LoadAssetAtPath<TerrainLayer>(LakebedSiteSetup.SedimentLayerPath);
-                Assert.That(sediment.diffuseTexture, Is.SameAs(ground.GetTexture("_TurfAlbedo")));
-                Assert.That(sediment.tileSize.x, Is.EqualTo(ground.GetFloat("_TileMetres")));
+                // No texture line at the collar join: the cap blends into the terrain's damp band and
+                // renders it with the same texture, tint, tiling and world alignment; the terrain band
+                // fully covers the join and fades outward into the lakebed.
+                var lakebed = root.Find("Environment").GetComponentInChildren<Terrain>();
+                int bandLayer = System.Array.FindIndex(lakebed.terrainData.terrainLayers, l => l != null && l.name == "DampMud");
+                Assert.That(bandLayer, Is.GreaterThanOrEqualTo(0), "The lakebed has the damp band layer.");
+                var band = lakebed.terrainData.terrainLayers[bandLayer];
+                foreach (var cap in new[] { ground, camp })
+                {
+                    Assert.That(cap.GetFloat("_BandBlend"), Is.EqualTo(1), cap.name);
+                    Assert.That(cap.GetTexture("_BandAlbedo"), Is.SameAs(band.diffuseTexture), cap.name);
+                    Assert.That(cap.GetFloat("_BandTileMetres"), Is.EqualTo(band.tileSize.x), cap.name);
+                    Assert.That(Vector4.Distance(cap.GetColor("_BandTint").linear, band.diffuseRemapMax), Is.LessThan(.002f), cap.name);
+                }
+                for (int axis = 0; axis < 2; axis++)
+                {
+                    float position = axis == 0 ? lakebed.transform.position.x : lakebed.transform.position.z;
+                    float phase = Mathf.Repeat(band.tileOffset[axis] - position, band.tileSize[axis]);
+                    Assert.That(Mathf.Min(phase, band.tileSize[axis] - phase), Is.LessThan(.01f), "The band layer is world-aligned like the cap.");
+                }
+                float BandAt(float compass, float offset)
+                {
+                    var p = SiteLayout.OpeningPoint(compass, offset);
+                    var data = lakebed.terrainData;
+                    int x = Mathf.FloorToInt((p.x - lakebed.transform.position.x) / data.size.x * data.alphamapResolution);
+                    int z = Mathf.FloorToInt((p.y - lakebed.transform.position.z) / data.size.z * data.alphamapResolution);
+                    return data.GetAlphamaps(x, z, 1, 1)[0, 0, bandLayer];
+                }
+                float beyondBand = 0;
+                for (float compass = 0; compass < 360; compass += 30)
+                {
+                    Assert.That(BandAt(compass, 1.3f), Is.GreaterThan(.97f), "The band fully covers the collar join at " + compass);
+                    beyondBand += BandAt(compass, LakebedSiteSetup.BandStart + LakebedSiteSetup.BandWidth * 1.3f) / 12;
+                }
+                // The band's layer is also the lakebed's own damp mud, which remains in patches beyond it.
+                Assert.That(beyondBand, Is.LessThan(.5f), "The band fades out into the lakebed.");
+                // The canyon keeps the demo's own ground layers; the lakebed's layers follow them.
+                var demoLayers = lakebed.terrainData.terrainLayers.Take(6).ToArray();
+                Assert.That(demoLayers.All(l => AssetDatabase.GetAssetPath(l).StartsWith("Assets/BK/PureNature_Highlands/")), Is.True,
+                    "The canyon ground keeps the original demo layers.");
                 foreach (string name in new[] { "ComputerStation", "RechargeZone", "ReturnAnchor" })
                 {
                     Transform anchor = root.Find("Surface/" + name);
@@ -162,6 +206,10 @@ namespace SomethingDownThere.Tests
                 Physics.SyncTransforms();
                 var environment = root.Find("Environment");
                 Assert.That(environment, Is.Not.Null);
+                var soils = environment.GetComponentInChildren<TopsoilVariants>();
+                Assert.That(new SerializedObject(soils).FindProperty("ground").objectReferenceValue,
+                    Is.SameAs(new SerializedObject(root.GetComponentInChildren<TerrainVolume>()).FindProperty("soilMaterial").objectReferenceValue),
+                    "The soil comparison switches the dig ground itself.");
                 Assert.That(environment.GetComponent<PermanentTerrainBoundary>().CanDig, Is.False);
                 var terrain = root.GetComponentsInChildren<Terrain>(true).Single();
                 Assert.That(terrain.transform.IsChildOf(environment), Is.True);
@@ -203,13 +251,26 @@ namespace SomethingDownThere.Tests
                 foreach (var renderer in environment.GetComponentsInChildren<Renderer>())
                 {
                     // Edit-mode particle bounds collapse to the origin; the waterfall splashes are far away.
-                    // The lake surface and trickles wrap the plot; their vertices are checked below.
+                    // The lake surface, trickles and dig boundary wrap the plot; their vertices are checked below.
                     if (renderer is ParticleSystemRenderer || renderer.name == "Lake surface" || renderer.name.StartsWith("Trickle")) continue;
+                    if (renderer.transform.IsChildOf(environment.Find("Dig boundary"))) continue;
                     Assert.That(NearestBeyond(renderer.bounds), Is.GreaterThan(-.3f), renderer.name);
                 }
                 Assert.That(environment.GetComponentsInChildren<Transform>(true)
                     .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
                     "Runtime static batching of the vendor scenery exhausts memory on every scene load.");
+                // One dig boundary option outlines the plot on its permanent collar, without colliders.
+                var boundary = environment.Find("Dig boundary");
+                var markers = boundary.Cast<Transform>().ToArray();
+                Assert.That(markers.Count(m => m.gameObject.activeSelf), Is.EqualTo(1), "One boundary option shows at a time.");
+                Assert.That(boundary.GetComponentsInChildren<Collider>(true), Is.Empty, "Digging, aiming and the winch cable pass the boundary.");
+                foreach (var marker in boundary.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    var reach = marker.sharedMesh.vertices.Select(v => marker.transform.TransformPoint(v))
+                        .Select(v => SiteLayout.BeyondOpening(new Vector2(v.x, v.z))).ToArray();
+                    Assert.That(reach.Min(), Is.GreaterThan(0), marker.name + " stays off the dig ground.");
+                    Assert.That(reach.Max(), Is.LessThan(SiteLayout.RimBand + .35f), marker.name + " stands on the collar.");
+                }
                 var lake = environment.Find("Water/Lake surface");
                 var waterMaterial = lake.GetComponent<Renderer>().sharedMaterial;
                 Assert.That(waterMaterial.shader.name, Is.EqualTo(LakebedSiteSetup.WaterShaderName));
@@ -240,6 +301,9 @@ namespace SomethingDownThere.Tests
                 }
                 foreach (var debris in environment.Find("Lakebed debris").GetComponentsInChildren<Renderer>(true))
                     Assert.That(NearestBeyond(debris.bounds), Is.GreaterThan(LakebedSiteSetup.DressingClearance - 1.5f), debris.name);
+                // Grass and pebbles reach across the whole play area from its farthest point and ceiling.
+                Assert.That(terrain.detailObjectDistance, Is.GreaterThanOrEqualTo(LakebedSiteSetup.PlayViewDistance()));
+                var outline = LakebedSiteSetup.PlayArea();
                 // Detail switches happen only far from the player, with a timed blend.
                 var detail = environment.GetComponentsInChildren<LODGroup>(true)
                     .Select(l => (group: l, size: l.size * Mathf.Max(Mathf.Abs(l.transform.lossyScale.x),
@@ -250,6 +314,11 @@ namespace SomethingDownThere.Tests
                 {
                     // Small stones keep full detail until their (vendor) cull, even when that is nearer.
                     float cull = LakebedSiteSetup.SwitchDistance(size, lod.GetLODs()[lod.lodCount - 1].screenRelativeTransitionHeight);
+                    // Nothing in the play area is culled from anywhere inside it.
+                    var centre = lod.transform.TransformPoint(lod.localReferencePoint);
+                    if (lod.gameObject.scene.IsValid() && LakebedSiteSetup.InPlayArea(outline, new Vector2(centre.x, centre.z)))
+                        Assert.That(cull, Is.GreaterThanOrEqualTo(outline.Max(o => Vector3.Distance(new Vector3(o.x, LakebedSiteSetup.FlightCeiling, o.y), centre))),
+                            "Play-area scenery never disappears: " + lod.name);
                     Assert.That(LakebedSiteSetup.SwitchDistance(size, lod.GetLODs()[0].screenRelativeTransitionHeight),
                         Is.GreaterThanOrEqualTo(Mathf.Min(LakebedSiteSetup.DetailSwitchDistances[0], cull * .9f) - .5f), "Nearby detail must not switch: " + lod.name);
                     if (!lod.transform.IsChildOf(environment.Find("Water")))

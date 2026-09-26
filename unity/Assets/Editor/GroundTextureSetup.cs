@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -16,6 +17,37 @@ namespace SomethingDownThere.Editor
         public const string ShaderName = "Something Down There/Ground Triplanar";
         public const string SedimentPath = "Assets/Content/Nature/ReservoirSediment.mat";
         public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
+        // The original soil art's own mapping and relief.
+        public const float OriginalSoilTileMetres = 2, OriginalSoilRelief = .55f, OriginalStoneRelief = .9f;
+        public const string MutedSoilAlbedoPath = Folder + "Soil_Albedo_Muted.png";
+        // Share of the original soil colour's saturation its muted copy keeps.
+        private const float SoilMuting = .3f;
+
+        // The original soil colour with its orange muted and its pebbles still neutral, so a tint sets
+        // the soil's hue without colouring the pebbles. Delete the copy to regenerate it.
+        public static Texture2D MutedSoilAlbedo()
+        {
+            var muted = AssetDatabase.LoadAssetAtPath<Texture2D>(MutedSoilAlbedoPath);
+            if (muted != null) return muted;
+            var image = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                if (!image.LoadImage(File.ReadAllBytes(Folder + "Soil_Albedo.png")))
+                    throw new InvalidOperationException("Unreadable original soil colour.");
+                var pixels = image.GetPixels32();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    Color.RGBToHSV(pixels[i], out float hue, out float saturation, out float value);
+                    pixels[i] = Color.HSVToRGB(hue, saturation * SoilMuting, value);
+                }
+                image.SetPixels32(pixels);
+                File.WriteAllBytes(MutedSoilAlbedoPath, image.EncodeToPNG());
+            }
+            finally { UnityEngine.Object.DestroyImmediate(image); }
+            AssetDatabase.ImportAsset(MutedSoilAlbedoPath);
+            ConfigureImport(MutedSoilAlbedoPath, "Albedo");
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(MutedSoilAlbedoPath);
+        }
 
         [MenuItem("Tools/Something Down There/Configure Pack Lakebed Ground")]
         public static void ConfigurePackGround()
@@ -43,18 +75,12 @@ namespace SomethingDownThere.Editor
             }
             Undo.RecordObject(sediment, "Use pack lakebed ground");
             sediment.shader = shader;
+            // Retain custom art and its material, but don't pull it into the
+            // active terrain or player build through dormant comparison slots.
             foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-            {
-                sediment.SetTexture("_Soil" + channel, PackTexture("Mud01", channel));
-                // Retain custom art and its material, but don't pull it into the
-                // active terrain or player build through dormant comparison slots.
                 sediment.SetTexture("_Comparison" + channel, null);
-            }
             ConfigureSurfaceCap(sediment, terrain.SurfaceHeight);
-            sediment.SetFloat("_MaskLayout", 1);
-            sediment.SetFloat("_SoilTileMetres", 4.2f);
-            sediment.SetFloat("_NormalStrength", .45f);
-            sediment.SetFloat("_StoneNormalStrength", .55f);
+            LakebedSiteSetup.ConfigureTopsoil(sediment);
             ConfigureDeposits(sediment);
             sediment.SetFloat("_SoilComparison", 0);
             sediment.SetFloat("_SoilSplitX", terrain.transform.TransformPoint(
@@ -84,24 +110,23 @@ namespace SomethingDownThere.Editor
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
         }
 
-        // The dig surface wears the surrounding lakebed's packed sediment (same pack texture and
-        // tiling), a little paler and drier than the trampled mud outside its fence.
+        // The lakebed's packed sediment terrain layer.
         public static readonly Color PackedSedimentTint = new Color(1.12f, .9f, .68f, 1);
-        public static readonly Color DriedSedimentTint = new Color(1.22f, 1, .78f, 1);
         public const float PackedSedimentTileMetres = 6;
 
+        // Dry ground never turns glossy; the damp band's terrain layer shares this ceiling.
+        public const float MaxGroundSmoothness = .15f;
+
+        // The dig surface cap follows the authored dig ground treatment: the darkest ground on site,
+        // blending into the terrain's damp band at the plot outline.
         private static void ConfigureSurfaceCap(Material material, float surfaceHeight)
         {
-            foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-                material.SetTexture("_Turf" + channel, PackTexture("Gravel", channel));
-            // Colour properties are linearised for the shader; terrain layer remaps are not.
-            material.SetColor("_TurfTint", DriedSedimentTint.gamma);
+            LakebedSiteSetup.ConfigureDigGround(material);
             material.SetFloat("_TurfMaskLayout", 1);
-            material.SetFloat("_TileMetres", PackedSedimentTileMetres);
             material.SetFloat("_TurfNormalStrength", .8f);
             material.SetFloat("_SurfaceHeight", surfaceHeight);
             material.SetFloat("_TurfDepth", .045f);
-            material.SetFloat("_MaxSmoothness", .15f);
+            material.SetFloat("_MaxSmoothness", MaxGroundSmoothness);
             material.SetFloat("_MacroVariation", .06f);
         }
 
@@ -197,9 +222,9 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_SoilComparison", 0);
             material.SetFloat("_MaskLayout", 0f); // Original: roughness R, contact G, stone coverage B.
             material.SetFloat("_MaxSmoothness", .15f);
-            material.SetFloat("_SoilTileMetres", 2f);
-            material.SetFloat("_NormalStrength", 0.55f);
-            material.SetFloat("_StoneNormalStrength", 0.9f);
+            material.SetFloat("_SoilTileMetres", OriginalSoilTileMetres);
+            material.SetFloat("_NormalStrength", OriginalSoilRelief);
+            material.SetFloat("_StoneNormalStrength", OriginalStoneRelief);
             material.SetFloat("_SurfaceHeight", terrain.SurfaceHeight);
             material.SetFloat("_TurfDepth", .045f);
             material.SetFloat("_MacroVariation", 0.06f);
@@ -296,7 +321,7 @@ namespace SomethingDownThere.Editor
             EditorUtility.SetDirty(renderer);
         }
 
-        private static void ConfigureImport(string path, string channel, bool packedMask = false)
+        internal static void ConfigureImport(string path, string channel, bool packedMask = false)
         {
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
             importer.textureType = channel == "Normal" ? TextureImporterType.NormalMap : TextureImporterType.Default;

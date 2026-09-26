@@ -12,7 +12,8 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _BANDBLEND_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -23,6 +24,18 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BandAlbedo:
+        m_Texture: {fileID: 2800000, guid: da55130d8a454b5abe8c49dbe89ba8ef, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BandMask:
+        m_Texture: {fileID: 2800000, guid: 76d64b994b264b0ca2864b43c5b88e6a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BandNormal:
+        m_Texture: {fileID: 2800000, guid: 8066c10484024ce3b1ff17efa6e7340e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ClayAlbedo:
         m_Texture: {fileID: 2800000, guid: 7b417fe2262f8e441bf0c073c919b869, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -47,6 +60,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DigEdge:
+        m_Texture: {fileID: 2800000, guid: 44b96b8d1280d514cb44b410efaaca25, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _RockAlbedo:
         m_Texture: {fileID: 2800000, guid: 723ada8ec3c07694d80a213e9beb919d, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -60,31 +77,35 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilAlbedo:
-        m_Texture: {fileID: 2800000, guid: aa7a2512f32c88340a05b0f4e08c8268, type: 3}
+        m_Texture: {fileID: 2800000, guid: 04ecf086fd528fe40ad05755a2cbffd6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilNormal:
-        m_Texture: {fileID: 2800000, guid: 488933da49528c04e97ca1f520da4b7d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilRoughness:
-        m_Texture: {fileID: 2800000, guid: b6a47f331f5f71b409e55a7e43bddcd8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfAlbedo:
-        m_Texture: {fileID: 2800000, guid: 7b417fe2262f8e441bf0c073c919b869, type: 3}
+        m_Texture: {fileID: 2800000, guid: da55130d8a454b5abe8c49dbe89ba8ef, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfNormal:
-        m_Texture: {fileID: 2800000, guid: 5c1b7a539904f734885a221d647f5da0, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8066c10484024ce3b1ff17efa6e7340e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TurfRoughness:
-        m_Texture: {fileID: 2800000, guid: 4da000d92dea41e4095890d9f5394ce8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 76d64b994b264b0ca2864b43c5b88e6a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BandBlend: 1
+    - _BandInnerFade: 8
+    - _BandNormalStrength: 1
+    - _BandTileMetres: 20
     - _ClayNormalStrength: 0.22
     - _ClayTileMetres: 2.8
     - _ComparisonMaskLayout: 0
@@ -94,25 +115,30 @@ Material:
     - _DstBlend: 0
     - _GroundOpacity: 1
     - _MacroVariation: 0.06
-    - _MaskLayout: 1
+    - _MaskLayout: 0
     - _MaxSmoothness: 0.15
-    - _NormalStrength: 0.45
+    - _NormalStrength: 0.55
     - _RockNormalStrength: 0.6
     - _RockTileMetres: 3.2
     - _SoilComparison: 0
     - _SoilSplitX: 0
-    - _SoilTileMetres: 4.2
+    - _SoilTileMetres: 2
     - _SrcBlend: 1
-    - _StoneNormalStrength: 0.55
+    - _StoneNormalStrength: 0.9
     - _SurfaceHeight: 0
-    - _TileMetres: 6
+    - _TileMetres: 20
     - _TurfDepth: 0.045
     - _TurfMaskLayout: 1
     - _TurfNormalStrength: 0.8
     - _ZWrite: 1
     m_Colors:
+    - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
+    - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
+    - _BandTint: {r: 0.8322835, g: 0.8094681, b: 0.78577685, a: 1}
     - _ClayTint: {r: 0.92, g: 0.46, b: 0.27, a: 1}
+    - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
     - _RockTint: {r: 0.4, g: 0.4, b: 0.4, a: 1}
-    - _TurfTint: {r: 1.0945976, g: 1, b: 0.8962438, a: 1}
+    - _SoilTint: {r: 0.6097116, g: 0.56572837, b: 0.49560964, a: 1}
+    - _TurfTint: {r: 0.6799757, g: 0.65762764, b: 0.64216644, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

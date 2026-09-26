@@ -574,6 +574,10 @@ namespace SomethingDownThere
             Button(grid, "Reset ground...", player.RequestTerrainReset);
             Button(grid, "Unlimited battery: " + (player.UnlimitedBattery ? "ON" : "OFF"), player.ToggleAdminUnlimitedBattery);
             Button(grid, "X-ray: " + (player.AdminXray ? "ON" : "OFF"), player.ToggleAdminXray, player.Discoveries != null);
+            if (DigBoundaryMarkers.Active != null)
+                Button(grid, "Dig boundary: " + DigBoundaryMarkers.Active.CurrentName, () => { DigBoundaryMarkers.Active.Next(); QueueRefresh(); });
+            if (TopsoilVariants.Active != null)
+                Button(grid, "Dig soil: " + TopsoilVariants.Active.CurrentName, () => { TopsoilVariants.Active.Next(); QueueRefresh(); });
             Button(grid, "Add $500", player.GrantAdminMoney);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);
             Button(actions, "Resume digging", player.CloseMenu, true, "primary");

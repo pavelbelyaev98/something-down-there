@@ -5,6 +5,7 @@ Shader "Something Down There/Ground Triplanar"
         _SoilAlbedo("Soil colour", 2D) = "white" {}
         [Normal] _SoilNormal("Soil normal", 2D) = "bump" {}
         _SoilRoughness("Soil mask (see mask layout)", 2D) = "white" {}
+        _SoilTint("Soil tint", Color) = (1,1,1,1)
         _ClayAlbedo("Clay colour", 2D) = "white" {}
         [Normal] _ClayNormal("Clay normal", 2D) = "bump" {}
         _ClayMask("Clay occlusion (G)", 2D) = "white" {}
@@ -21,6 +22,18 @@ Shader "Something Down There/Ground Triplanar"
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
         _TurfTint("Surface cap tint", Color) = (1,1,1,1)
+        _BandAlbedo("Surrounding band colour", 2D) = "white" {}
+        [Normal] _BandNormal("Surrounding band normal", 2D) = "bump" {}
+        _BandMask("Surrounding band mask", 2D) = "white" {}
+        _BandTint("Surrounding band tint", Color) = (1,1,1,1)
+        _BandTileMetres("Surrounding band tile metres", Float) = 20
+        _BandNormalStrength("Surrounding band relief", Float) = 1
+        _BandMaskMin("Surrounding band mask minimum", Vector) = (0,0,0,0)
+        _BandMaskMax("Surrounding band mask maximum", Vector) = (1,1,1,1)
+        _DigEdge("Metres beyond the dig plot outline", 2D) = "black" {}
+        _DigEdgeRect("Edge map origin (xy) and inverse size (zw)", Vector) = (0,0,1,1)
+        _BandInnerFade("Cap fade into the band inside the edge (metres)", Float) = 4
+        [Toggle] _BandBlend("Blend the cap into the surrounding band", Float) = 0
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _MaskLayout("Mask layout", Float) = 0
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _TurfMaskLayout("Turf mask layout", Float) = 0
         [Toggle] _SoilComparison("Compare soil on the west half", Float) = 0
@@ -71,7 +84,9 @@ Shader "Something Down There/Ground Triplanar"
             float _ComparisonStoneNormalStrength;
             float _MaxSmoothness;
             float _GroundOpacity;
-            float4 _ClayTint, _RockTint, _TurfTint;
+            float4 _ClayTint, _RockTint, _TurfTint, _SoilTint;
+            float4 _BandTint, _BandMaskMin, _BandMaskMax, _DigEdgeRect;
+            float _BandTileMetres, _BandNormalStrength, _BandInnerFade, _BandBlend;
             float _ClayTileMetres, _RockTileMetres;
             float _ClayNormalStrength, _RockNormalStrength;
         CBUFFER_END
@@ -81,6 +96,10 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_TurfAlbedo); SAMPLER(sampler_TurfAlbedo);
         TEXTURE2D(_TurfNormal); SAMPLER(sampler_TurfNormal);
         TEXTURE2D(_TurfRoughness); SAMPLER(sampler_TurfRoughness);
+        // The band samples the terrain layer's own textures with their own filtering.
+        TEXTURE2D(_BandAlbedo); SAMPLER(sampler_BandAlbedo);
+        TEXTURE2D(_BandNormal); TEXTURE2D(_BandMask);
+        TEXTURE2D(_DigEdge); SAMPLER(sampler_DigEdge);
         TEXTURE2D(_ComparisonAlbedo); SAMPLER(sampler_ComparisonAlbedo);
         TEXTURE2D(_ComparisonNormal); SAMPLER(sampler_ComparisonNormal);
         TEXTURE2D(_ComparisonRoughness); SAMPLER(sampler_ComparisonRoughness);
@@ -205,7 +224,7 @@ Shader "Something Down There/Ground Triplanar"
             float3 covered = stoneCoverage * eligible;
             float mineral = smoothstep(0.15, 0.65, max(covered.x, max(covered.y, covered.z)));
             weights = lerp(weights, mineralWeights, mineral);
-            colour = cx * weights.x + cy * weights.y + cz * weights.z;
+            colour = (cx * weights.x + cy * weights.y + cz * weights.z) * (useComparison ? 1 : _SoilTint.rgb);
             // Authored B coverage gives stones their own relief without
             // amplifying the accepted soil grain or adding texture lookups.
             half3 nx = UnpackNormalScale(SOIL_SAMPLE(Normal, uvX, dxX, dyX), lerp(normalStrength, stoneNormalStrength, maskX.b));
@@ -237,6 +256,29 @@ Shader "Something Down There/Ground Triplanar"
                 float turfScale = soilTileMetres / max(_TileMetres, 0.05);
                 half3 grassY = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb * _TurfTint.rgb;
                 half3 grass = grassY;
+                half3 gy = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfNormalStrength);
+                half2 turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg;
+                turfMask.g = lerp(0.65, 1, turfMask.g);
+                // Toward the plot outline the cap becomes the terrain's damp band itself: the same
+                // texture, tint, relief, mask remap and world mapping, so the collar joins the
+                // terrain without a texture line and the darker plot fades in from inside the edge.
+                half band = 0;
+                [branch] if (_BandBlend > 0.5)
+                {
+                    float beyond = SAMPLE_TEXTURE2D_LOD(_DigEdge, sampler_DigEdge, (position.xz - _DigEdgeRect.xy) * _DigEdgeRect.zw, 0).r;
+                    band = smoothstep(-max(_BandInnerFade, 0.01), 0, beyond);
+                }
+                [branch] if (band > 0.001)
+                {
+                    float bandScale = 1 / max(_BandTileMetres, 0.05);
+                    float2 bandUV = position.xz * bandScale, bandDx = positionDx.xz * bandScale, bandDy = positionDy.xz * bandScale;
+                    half3 bandColour = SAMPLE_TEXTURE2D_GRAD(_BandAlbedo, sampler_BandAlbedo, bandUV, bandDx, bandDy).rgb * _BandTint.rgb;
+                    half3 bandNormal = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BandNormal, sampler_BandAlbedo, bandUV, bandDx, bandDy), _BandNormalStrength);
+                    half4 bandMask = SAMPLE_TEXTURE2D_GRAD(_BandMask, sampler_BandAlbedo, bandUV, bandDx, bandDy) * (_BandMaskMax - _BandMaskMin) + _BandMaskMin;
+                    grass = lerp(grass, bandColour, band);
+                    gy = normalize(lerp(gy, bandNormal, band));
+                    turfMask = lerp(turfMask, half2(1 - bandMask.a, bandMask.g), band);
+                }
                 half leaf = saturate((grass.g - grass.r * 0.7) * 3.5);
                 half drift = GROUND_SAMPLE(_TurfAlbedo, position.xz * 0.61, positionDx.xz * 0.61, positionDy.xz * 0.61).r;
                 float fringeDepth = _TurfDepth * (0.75 + leaf * 0.15 + drift * 0.1);
@@ -245,15 +287,13 @@ Shader "Something Down There/Ground Triplanar"
                 float edge = depth - fringeDepth;
                 half turf = (1 - smoothstep(-edgeWidth, edgeWidth, edge))
                     * smoothstep(-0.2, -0.05, n.y);
-                half3 gy = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfNormalStrength);
                 // The thin cap fringe shares the surface lighting. Following the
                 // steep soil normal here draws a dark polygonal outline on each cut.
                 half3 turfNormal = half3(0, 1, 0);
                 normal = normalize(lerp(normal, ProjectGroundNormal(turfNormal, half3(0, 1, 0), axisSign, gy, gy, gy), turf));
                 colour = lerp(colour, grass, turf);
-                half2 turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg;
                 roughness = lerp(roughness, turfMask.r, turf);
-                occlusion = lerp(occlusion, lerp(0.65, 1, turfMask.g), turf);
+                occlusion = lerp(occlusion, turfMask.g, turf);
             }
         }
         void DepositSurface(TEXTURE2D_PARAM(albedoMap, albedoSampler),
