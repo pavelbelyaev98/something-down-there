@@ -138,7 +138,10 @@ Material:
     - _ComparisonTileMetres: 2
     - _ConcreteNormalStrength: 0.45
     - _ConcreteTileMetres: 2
+    - _CrackDarkness: 0.9
     - _DstBlend: 0
+    - _FractureDarkening: 0.3
+    - _FractureTileMetres: 0.9
     - _GravelNormalStrength: 0.8
     - _GravelTileMetres: 2.5
     - _GroundOpacity: 1

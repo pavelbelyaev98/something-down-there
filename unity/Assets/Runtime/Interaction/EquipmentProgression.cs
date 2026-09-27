@@ -33,6 +33,10 @@ namespace SomethingDownThere
         private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.7f, .7f, .5f, 1.8f);
         // Clay basins' old pond clay: clean, smooth shavings that bite clearly easier than clay (the tell).
         private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(1f, .88f, .92f, 1.15f);
+        // Beside a crack: broken rock crumbles ~1.5x faster than rock (the tell, felt in the dark);
+        // the crack line itself cuts exactly like it. Broken concrete ~3.5x concrete.
+        private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(1f, .88f, .88f, 1.25f);
+        private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.85f, .85f, .7f, 1.45f);
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
@@ -41,11 +45,15 @@ namespace SomethingDownThere
             TerrainMaterialId.Gravel => Gravel,
             TerrainMaterialId.Concrete => Concrete,
             TerrainMaterialId.PondClay => PondClay,
+            TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack => FracturedRock,
+            TerrainMaterialId.FracturedConcrete => FracturedConcrete,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
-        // Softest to hardest; each family keeps its resistance at every tier.
+        // Softest to hardest; each family keeps its resistance at every tier. Families sharing one
+        // response (fractured rock and its crack line) are one hardness class.
         public static readonly TerrainMaterialId[] HardnessOrder =
-            { TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.Clay, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
+            { TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack,
+              TerrainMaterialId.Clay, TerrainMaterialId.FracturedConcrete, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40 };

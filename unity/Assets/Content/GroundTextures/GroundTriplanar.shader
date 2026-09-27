@@ -38,6 +38,9 @@ Shader "Something Down There/Ground Triplanar"
         _ZoneDepths("Zone borders (rock, ancient) and blend half-width in metres", Vector) = (75,112.5,3,0)
         _StrataStrength("Colour band strength", Range(0, 0.3)) = 0
         _StrataCool("Grey-blue share of clay bands", Range(0, 1)) = 0
+        _FractureTileMetres("Fractured grain tile metres", Float) = 0.9
+        _FractureDarkening("Fractured band darkening", Range(0, 1)) = 0.3
+        _CrackDarkness("Crack line darkness", Range(0, 1)) = 0.9
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
@@ -97,6 +100,7 @@ Shader "Something Down There/Ground Triplanar"
             float _GravelTileMetres, _ConcreteTileMetres, _GravelNormalStrength, _ConcreteNormalStrength;
             float4 _PondClayTint, _ClayDeepTint, _RockColdTint, _ZoneDepths;
             float _PondClayTileMetres, _PondClayNormalStrength, _StrataStrength, _StrataCool;
+            float _FractureTileMetres, _FractureDarkening, _CrackDarkness;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -424,6 +428,21 @@ Shader "Something Down There/Ground Triplanar"
             // Old sediment is layered: the clay's darker bands turn grey-blue between orange ones.
             colour = lerp(colour, colour * half3(0.72, 0.86, 1.05), saturate(-strata) * _StrataCool * weights.y * below);
             colour *= 1 + strata * _StrataStrength * below;
+            // Cracks read by line and grain, not colour alone: the band beside a crack gets a fine,
+            // high-relief broken grain and darkens; the crack itself is a thin near-black line.
+            half fracture = saturate(materials2.y), crack = saturate(materials2.z);
+            [branch] if (fracture > 0.001)
+            {
+                DepositSurface(TEXTURE2D_ARGS(_RockAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_RockNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_RockMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _FractureTileMetres, (half3)1, _RockNormalStrength * 1.8,
+                    layerColour, layerNormal, layerOcclusion);
+                normal = normalize(lerp(normal, layerNormal, fracture * 0.85));
+                colour *= lerp((half3)1, saturate(layerColour * 1.6) * (1 - _FractureDarkening), fracture);
+                half crackLine = smoothstep(0.12, 0.5, crack);
+                colour *= 1 - crackLine * _CrackDarkness;
+                roughness = lerp(roughness, 1, crackLine);
+            }
         }
         ENDHLSL
 

@@ -52,9 +52,11 @@ MonoBehaviour:
     CoreShare: 0.9
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_copper
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -72,9 +74,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_iron
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -92,9 +96,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_silver
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -112,9 +118,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_gold
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -132,9 +140,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_emerald
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -152,9 +162,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_ruby
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -172,9 +184,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: mineral_diamond
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -192,9 +206,11 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02y
+    HostGrounds: 020608y
     HostWeights:
     - 3
+    - 9
+    - 9
   - ItemId: unique_reservoir_computer
     AuthoredPlacement: 1
     AuthoredPosition: {x: 19.5, y: 142, z: 4.7}

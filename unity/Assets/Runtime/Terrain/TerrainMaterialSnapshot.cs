@@ -7,13 +7,14 @@ namespace SomethingDownThere
     // Saved as bytes: append new families, never renumber. Hardness order is
     // EquipmentProgression.HardnessOrder, not the declaration order.
     // PondClay is the clay basins' soft old pond clay (and sealed rooms' settled silt).
-    public enum TerrainMaterialId : byte { Soil, Clay, Rock, Gravel, Concrete, PondClay }
+    // FracturedRock/FracturedConcrete are the bands beside a crack; Crack is the crack line.
+    public enum TerrainMaterialId : byte { Soil, Clay, Rock, Gravel, Concrete, PondClay, FracturedRock, FracturedConcrete, Crack }
 
     // Immutable identities share the density lattice, including samples excavated into air.
     // Captures can share this object with the save worker without copying the world.
     public sealed class TerrainMaterialSnapshot
     {
-        public const TerrainMaterialId Last = TerrainMaterialId.PondClay;
+        public const TerrainMaterialId Last = TerrainMaterialId.Crack;
         private readonly byte[] samples;
         public int Length => samples.Length;
         public TerrainMaterialId this[int index] => (TerrainMaterialId)samples[index];

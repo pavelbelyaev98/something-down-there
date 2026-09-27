@@ -22,6 +22,10 @@ namespace SomethingDownThere
         public const float SurfaceSoil = 1.1f, PlaceTop = 3f;
 
         public enum PlaceKind : byte { Rubble, Structure, RockMass, Basin }
+        // Crack field (noise units): the line within CrackCore of a sheet, the fractured band within
+        // CrackBand. Gate biases: how much of each body's sheets exist (rock masses are criss-crossed).
+        public const float CrackCore = .017f, CrackBand = .055f;
+        private const float MassCracks = .35f, ConcreteCracks = .25f, ZoneRockCracks = -.05f;
 
         // Grid-local metres. Rotation maps local offsets into the place's own axes.
         public struct Place
@@ -166,7 +170,9 @@ namespace SomethingDownThere
                 {
                     var place = Places[slice[i]];
                     if (math.any(p < place.Min) || math.any(p > place.Max)) continue;
-                    if (InPlace(place, p, out var material)) return material;
+                    if (InPlace(place, p, out var material))
+                        return material == TerrainMaterialId.Rock ? Cracked(p, material, MassCracks)
+                            : material == TerrainMaterialId.Concrete ? Cracked(p, material, ConcreteCracks) : material;
                 }
                 int zone = 0;
                 for (int b = 0; b < Borders.Length; b++)
@@ -182,12 +188,24 @@ namespace SomethingDownThere
                     }
                     break;
                 }
-                return zone switch
-                {
-                    0 => GravelLens(p, depth) ? TerrainMaterialId.Gravel : TerrainMaterialId.Soil,
-                    1 => TerrainMaterialId.Clay,
-                    _ => Vein(p, zone == 2 ? .065f : .05f)
-                };
+                if (zone == 0) return GravelLens(p, depth) ? TerrainMaterialId.Gravel : TerrainMaterialId.Soil;
+                if (zone == 1) return TerrainMaterialId.Clay;
+                var ground = Vein(p, zone == 2 ? .065f : .05f);
+                return ground == TerrainMaterialId.Rock ? Cracked(p, ground, ZoneRockCracks) : ground;
+            }
+
+            // Two families of crack sheets, each a finite patch where its gate is open; sheets thin
+            // toward the gate's edge, so cracks branch where families cross and fade out.
+            private TerrainMaterialId Cracked(float3 p, TerrainMaterialId ground, float bias)
+            {
+                float distance = 1;
+                float gate = noise.snoise(p * .055f + Offsets.xwz + 7.1f) + bias;
+                if (gate > 0) distance = math.abs(noise.snoise(p * new float3(.13f, .1f, .13f) + Offsets.yxw + 21.3f)) / math.saturate(gate * 4);
+                gate = noise.snoise(p * .06f + Offsets.zyw + 13.7f) + bias;
+                if (gate > 0) distance = math.min(distance, math.abs(noise.snoise(p * new float3(.1f, .16f, .1f) + Offsets.wzx + 37.9f)) / math.saturate(gate * 4));
+                if (distance < CrackCore) return TerrainMaterialId.Crack;
+                if (distance < CrackBand) return ground == TerrainMaterialId.Concrete ? TerrainMaterialId.FracturedConcrete : TerrainMaterialId.FracturedRock;
+                return ground;
             }
 
             // Flattened lenses of loose gravel in the recent fill, below the first scrapes.

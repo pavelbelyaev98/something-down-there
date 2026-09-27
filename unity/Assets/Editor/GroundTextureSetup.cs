@@ -137,6 +137,10 @@ namespace SomethingDownThere.Editor
             material.SetVector("_ZoneDepths", new Vector4(TerrainGround.ZoneBorders[1], TerrainGround.ZoneBorders[2], 3, 0));
             material.SetFloat("_StrataStrength", .13f);
             material.SetFloat("_StrataCool", .6f);
+            // Cracks (096): fine broken grain beside the line, a thin near-black line.
+            material.SetFloat("_FractureTileMetres", .9f);
+            material.SetFloat("_FractureDarkening", .3f);
+            material.SetFloat("_CrackDarkness", .9f);
             EditorUtility.SetDirty(material);
         }
 

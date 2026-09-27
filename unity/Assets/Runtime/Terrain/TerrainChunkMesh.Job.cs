@@ -103,7 +103,7 @@ namespace SomethingDownThere
             }
 
             // Streams (clay, rock, concrete, 1 - gravel) and (pond clay, fractured, crack, 1 - backfill),
-            // soil the remainder; the second stream's later families arrive with their tasks.
+            // soil the remainder. Fractured ground and cracks overlay their base (rock or concrete).
             // Meshes without them read (0,0,0,1) and two-channel meshes (x,y,0,1): plain soil.
             private void SurfaceMaterials(float3 point, out Vector4 weights, out Vector4 weights2)
             {
@@ -112,7 +112,7 @@ namespace SomethingDownThere
                 float3 t = p - cell;
                 int index = SampleIndex(cell);
                 float4 result = 0; // clay, rock, concrete, gravel
-                float pond = 0;
+                float pond = 0, fractured = 0, crack = 0;
                 for (int c = 0; c < 8; c++)
                 {
                     int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
@@ -121,6 +121,9 @@ namespace SomethingDownThere
                     if (material == (byte)TerrainMaterialId.Clay) result.x += weight;
                     else if (material == (byte)TerrainMaterialId.Rock) result.y += weight;
                     else if (material == (byte)TerrainMaterialId.Concrete) result.z += weight;
+                    else if (material == (byte)TerrainMaterialId.FracturedRock) { result.y += weight; fractured += weight; }
+                    else if (material == (byte)TerrainMaterialId.FracturedConcrete) { result.z += weight; fractured += weight; }
+                    else if (material == (byte)TerrainMaterialId.Crack) { result.y += weight; fractured += weight; crack += weight; }
                     else if (material == (byte)TerrainMaterialId.Gravel) result.w += weight;
                     else if (material == (byte)TerrainMaterialId.PondClay) pond += weight;
                 }
@@ -128,7 +131,7 @@ namespace SomethingDownThere
                 float total = math.max(1f, math.csum(result) + pond);
                 result /= total; pond /= total;
                 weights = new Vector4(result.x, result.y, result.z, 1 - result.w);
-                weights2 = new Vector4(pond, 0, 0, 1);
+                weights2 = new Vector4(pond, math.saturate(fractured), math.saturate(crack), 1);
             }
 
             private void Triangle(int a,int b,int c)

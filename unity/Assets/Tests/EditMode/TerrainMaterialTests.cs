@@ -14,10 +14,12 @@ namespace SomethingDownThere.Tests
         // Mesh weights are (clay, rock, concrete, 1 - gravel); soil is the remainder.
         private static readonly Vector4 SoilWeight = new Vector4(0, 0, 0, 1);
 
-        [TestCase(TerrainMaterialId.Soil, 0, 0, 0, 1, 0)] [TestCase(TerrainMaterialId.Clay, 1, 0, 0, 1, 0)]
-        [TestCase(TerrainMaterialId.Rock, 0, 1, 0, 1, 0)] [TestCase(TerrainMaterialId.Gravel, 0, 0, 0, 0, 0)]
-        [TestCase(TerrainMaterialId.Concrete, 0, 0, 1, 1, 0)] [TestCase(TerrainMaterialId.PondClay, 0, 0, 0, 1, 1)]
-        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float clay, float rock, float concrete, float notGravel, float pond)
+        [TestCase(TerrainMaterialId.Soil, 0, 0, 0, 1, 0, 0, 0)] [TestCase(TerrainMaterialId.Clay, 1, 0, 0, 1, 0, 0, 0)]
+        [TestCase(TerrainMaterialId.Rock, 0, 1, 0, 1, 0, 0, 0)] [TestCase(TerrainMaterialId.Gravel, 0, 0, 0, 0, 0, 0, 0)]
+        [TestCase(TerrainMaterialId.Concrete, 0, 0, 1, 1, 0, 0, 0)] [TestCase(TerrainMaterialId.PondClay, 0, 0, 0, 1, 1, 0, 0)]
+        [TestCase(TerrainMaterialId.FracturedRock, 0, 1, 0, 1, 0, 1, 0)] [TestCase(TerrainMaterialId.FracturedConcrete, 0, 0, 1, 1, 0, 1, 0)]
+        [TestCase(TerrainMaterialId.Crack, 0, 1, 0, 1, 0, 1, 1)]
+        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float clay, float rock, float concrete, float notGravel, float pond, float fractured, float crack)
         {
             var grid = new ExcavationGrid(new Vector3Int(16, 16, 16), .2f);
             var saved = grid.Capture(); saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Materials.Length, material);
@@ -32,7 +34,7 @@ namespace SomethingDownThere.Tests
                 var expected = new Vector4(clay, rock, concrete, notGravel);
                 foreach (var weight in weights) Assert.That((weight - expected).sqrMagnitude, Is.LessThan(1e-10f));
                 var second = new List<Vector4>(); mesh.GetUVs(3, second);
-                foreach (var weight in second) Assert.That((weight - new Vector4(pond, 0, 0, 1)).sqrMagnitude, Is.LessThan(1e-10f));
+                foreach (var weight in second) Assert.That((weight - new Vector4(pond, fractured, crack, 1)).sqrMagnitude, Is.LessThan(1e-10f));
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
@@ -124,9 +126,15 @@ namespace SomethingDownThere.Tests
             CollectionAssert.AreEquivalent(Enum.GetValues(typeof(TerrainMaterialId)), EquipmentProgression.HardnessOrder);
             foreach (var profile in EquipmentProgression.ToolProfiles())
             {
-                float softerRate = float.MaxValue;
+                // Families sharing one response (fractured rock and its crack line) form one class:
+                // each class stays below the slowest member of the softer class.
+                float softerRate = float.MaxValue, classMinimum = float.MaxValue;
+                MaterialToolResponse? classResponse = null;
                 foreach (TerrainMaterialId material in EquipmentProgression.HardnessOrder)
                 {
+                    var response = EquipmentProgression.MaterialResponse(material);
+                    if (!classResponse.HasValue || !response.Equals(classResponse.Value))
+                    { softerRate = classMinimum; classMinimum = float.MaxValue; classResponse = response; }
                     var grid = Homogeneous(material);
                     Vector3 top = new Vector3(1.5f, grid.Extent.y, 1.5f);
                     bool cut = scoop
@@ -136,13 +144,14 @@ namespace SomethingDownThere.Tests
                     float rate = grid.LastRemovedVolume / (profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval);
                     Assert.That(rate, Is.GreaterThan(previous[(int)material]), $"{material} must improve with each tier.");
                     Assert.That(rate, Is.LessThan(softerRate), $"{material} must retain its resistance.");
-                    previous[(int)material] = rate; softerRate = rate;
+                    previous[(int)material] = rate; classMinimum = Mathf.Min(classMinimum, rate);
                 }
             }
         }
 
         [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Clay)] [TestCase(TerrainMaterialId.Rock)]
         [TestCase(TerrainMaterialId.Gravel)] [TestCase(TerrainMaterialId.Concrete)] [TestCase(TerrainMaterialId.PondClay)]
+        [TestCase(TerrainMaterialId.FracturedRock)] [TestCase(TerrainMaterialId.FracturedConcrete)]
         public void AutomaticMotionImprovesFreshAndSustainedOutputAcrossTheDrillMilestone(TerrainMaterialId material)
         {
             float previousFresh = 0, previousSustained = 0;
@@ -170,9 +179,15 @@ namespace SomethingDownThere.Tests
                 Assert.That(clay[level - 1], Is.GreaterThanOrEqualTo(soil[level - 2]), $"Clay at level {level} vs soil at {level - 1}");
                 Assert.That(rock[level - 1], Is.GreaterThanOrEqualTo(clay[level - 2]), $"Rock at level {level} vs clay at {level - 1}");
             }
-            // Basins are clay's tell: clearly easier than the clay around them at every level.
+            // Tells: basins bite clearly easier than the clay around them; the band beside a crack
+            // clearly easier than the rock or concrete it breaks, at every level.
+            float[] concrete = Sustained(TerrainMaterialId.Concrete);
             for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
+            {
                 Assert.That(Output(TerrainMaterialId.PondClay, level).sustained, Is.GreaterThan(clay[level - 1] * 1.15f), $"Pond clay at level {level}");
+                Assert.That(Output(TerrainMaterialId.FracturedRock, level).sustained, Is.GreaterThan(rock[level - 1] * 1.4f), $"Fractured rock at level {level}");
+                Assert.That(Output(TerrainMaterialId.FracturedConcrete, level).sustained, Is.GreaterThan(concrete[level - 1] * 2f), $"Fractured concrete at level {level}");
+            }
         }
 
         // Fresh and sustained output (m3/s) of the automatic motion boring straight down.

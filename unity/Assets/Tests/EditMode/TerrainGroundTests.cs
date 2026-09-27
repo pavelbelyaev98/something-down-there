@@ -28,6 +28,7 @@ namespace SomethingDownThere.Tests
             var ids = Site(seed);
             // Per zone, the share of each family away from the bands, sampled every 4th column.
             var counts = new int[4, (int)TerrainMaterialSnapshot.Last + 1];
+            int placeCracks = 0;
             var band = new HashSet<byte>[3];
             for (int b = 0; b < 3; b++) band[b] = new HashSet<byte>();
             for (int z = 0; z <= SiteLayout.Size.z; z += 4)
@@ -57,7 +58,8 @@ namespace SomethingDownThere.Tests
             Assert.That(Share(1, TerrainMaterialId.PondClay), Is.GreaterThan(0), "Zone 2 holds clay basins.");
             for (int zone = 2; zone < 4; zone++)
             {
-                Assert.That(Share(zone, TerrainMaterialId.Rock), Is.GreaterThan(.65f), $"Zone {zone + 1} is rock.");
+                Assert.That(Share(zone, TerrainMaterialId.Rock, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack), Is.GreaterThan(.65f), $"Zone {zone + 1} is rock.");
+                Assert.That(Share(zone, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack), Is.InRange(.01f, .12f), $"Zone {zone + 1} rock carries cracks.");
                 Assert.That(Share(zone, TerrainMaterialId.Clay, TerrainMaterialId.Gravel), Is.InRange(.08f, .3f), $"Zone {zone + 1} is veined.");
             }
             Assert.That(Share(2, TerrainMaterialId.Concrete), Is.GreaterThan(0), "Zone 3 holds waterworks concrete.");
@@ -102,6 +104,36 @@ namespace SomethingDownThere.Tests
             Assert.That(reached, Is.True, $"Seed {seed}: no soft path through the rock zone.");
         }
 
+        // Rock masses are criss-crossed by cracks and every concrete body carries some (concept 03 §5).
+        [TestCase(2718)] [TestCase(12)]
+        public void RockMassesAndConcreteCarryCracks(int seed)
+        {
+            var ids = Site(seed);
+            foreach (var place in TerrainGround.Places(SiteLayout.Size, SiteLayout.CellSize, seed))
+            {
+                if (place.Kind == TerrainGround.PlaceKind.Basin || place.Kind == TerrainGround.PlaceKind.Rubble) continue;
+                int cracked = 0, body = 0;
+                var min = Vector3Int.FloorToInt((Vector3)place.Min / SiteLayout.CellSize);
+                var max = Vector3Int.CeilToInt((Vector3)place.Max / SiteLayout.CellSize);
+                for (int z = Mathf.Max(0, min.z); z <= Mathf.Min(SiteLayout.Size.z, max.z); z += 2)
+                for (int y = Mathf.Max(0, min.y); y <= Mathf.Min(SiteLayout.Size.y, max.y); y += 2)
+                for (int x = Mathf.Max(0, min.x); x <= Mathf.Min(SiteLayout.Size.x, max.x); x += 2)
+                {
+                    var id = (TerrainMaterialId)ids[Index(x, y, z)];
+                    bool broken = id == TerrainMaterialId.FracturedRock || id == TerrainMaterialId.FracturedConcrete || id == TerrainMaterialId.Crack;
+                    if (broken || id == (place.Kind == TerrainGround.PlaceKind.RockMass ? TerrainMaterialId.Rock : TerrainMaterialId.Concrete)) body++;
+                    if (broken) cracked++;
+                }
+                Assert.That(cracked, Is.GreaterThan(0), $"Seed {seed}: {place.Kind} at depth {SiteLayout.Extent.y - place.Centre.y:F1} has no cracks.");
+                Assert.That(cracked, Is.LessThan(body * .45f), $"Seed {seed}: {place.Kind} is more crack than body.");
+            }
+            // Cracks stay inside rock and concrete: never in the recent fill's soil or gravel.
+            for (int z = 0; z <= SiteLayout.Size.z; z += 5)
+            for (int x = 0; x <= SiteLayout.Size.x; x += 5)
+            for (int y = SiteLayout.Size.y - Mathf.FloorToInt(TerrainGround.PlaceTop / SiteLayout.CellSize); y <= SiteLayout.Size.y; y++)
+                Assert.That(ids[Index(x, y, z)], Is.Not.EqualTo((byte)TerrainMaterialId.Crack).And.Not.EqualTo((byte)TerrainMaterialId.FracturedRock));
+        }
+
         [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]
         public void PlacesSitUnderThePlotInTheirZonesWithoutOverlapping(int seed)
         {
@@ -142,7 +174,7 @@ namespace SomethingDownThere.Tests
             Assert.That(watch.Elapsed.TotalSeconds, Is.LessThan(1.5), "Generation runs at every session start.");
             Assert.That(Random.state, Is.EqualTo(random));
             Assert.That(TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, 4242).ToArray(), Is.EqualTo(first));
-            Assert.That(first.Distinct().OrderBy(v => v), Is.EqualTo(new byte[] { 0, 1, 2, 3, 4, 5 }));
+            Assert.That(first.Distinct().OrderBy(v => v), Is.EqualTo(Enumerable.Range(0, (int)TerrainMaterialSnapshot.Last + 1).Select(v => (byte)v)));
             // The first metre stays soil everywhere: first scrapes and the permanent bank.
             for (int z = 0; z <= SiteLayout.Size.z; z += 7)
             for (int x = 0; x <= SiteLayout.Size.x; x += 7)

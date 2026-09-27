@@ -335,7 +335,7 @@ namespace SomethingDownThere
                         side = material == TerrainMaterialId.Rock
                             ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f))) - radius
                             // Concrete breaks into clean square chips with flat floors.
-                            : material == TerrainMaterialId.Concrete ? Mathf.Max(Mathf.Abs(u), Mathf.Abs(v)) - radius
+                            : material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete ? Mathf.Max(Mathf.Abs(u), Mathf.Abs(v)) - radius
                             : Mathf.Sqrt(u * u + v * v) - radius;
                         // A shallow faceted chip, versus the clay's smooth elliptical shave.
                         if (material == TerrainMaterialId.Rock) floor += Mathf.Abs(u * .3f + v * .2f) * shaveDepth / radius;
@@ -370,8 +370,11 @@ namespace SomethingDownThere
                     // The superellipse is at least max(a,b). Reject unchanged samples
                     // with that cheap bound before powers/noise, especially in deep pits.
                     if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
-                    float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete ? (Mathf.Max(a, b) - 1) * length
-                        : material == TerrainMaterialId.Clay || material == TerrainMaterialId.PondClay ? (Mathf.Sqrt(a * a + b * b) - 1) * length
+                    float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete
+                        ? (Mathf.Max(a, b) - 1) * length
+                        // Clays and broken rock crumble into smooth elliptical cuts.
+                        : material == TerrainMaterialId.Clay || material == TerrainMaterialId.PondClay || material == TerrainMaterialId.FracturedRock
+                            || material == TerrainMaterialId.Crack ? (Mathf.Sqrt(a * a + b * b) - 1) * length
                         : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
                     // Loose stones indent the scoop edge (never widen it, like the shave).
                     if (material == TerrainMaterialId.Gravel) side += Grain(index) * length * .1f;
