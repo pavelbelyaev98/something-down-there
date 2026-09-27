@@ -44,7 +44,7 @@ new generated ground patterns.
 - Match the Highlands colour grade with restrained bloom, calming only its lime greens. Water is silty and murky rather than
   blue, with subtle shore foam and reflected scenery; shallow refraction preserves the underlying
   ground's lighting instead of bleaching it. Tune project-owned shader/material copies.
-- Custom grass clump, cloud and sun art and the rejected first-person tool experiments are removed.
+- Custom grass clump, cloud and sun art are removed; the first-person tool is modelled with the rig (`001`).
   Preserve the full licensed pack for future use; tune project-owned copies.
 - No AI-generated images or textures; custom Blender models and approved licensed assets share one style guide.
  AI-assisted modeling with real references is allowed.

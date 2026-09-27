@@ -8,6 +8,7 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
 2. **Game Design Authority:** Read `docs/concept/00_README.md` and relevant concept chapters (`docs/concept/01`–`15`).
 3. **Current Codebase:** Check `docs/architecture.md` for system ownership and `docs/baseline.md` for what is currently built.
    - *Note:* Existing baseline mechanics and art are working prototype features, **not** signed-off or final. They are expected to be refactored or replaced to match `docs/concept/`.
+4. **Playtests Owed:** `docs/playtests/` holds one note per playtest the user still has to do. The user deletes a note after playing it, so a missing note means played; never recreate one. Format and rules: `docs/playtests/README.md`.
 
 ## 2. Task Workflow (Just-In-Time Planning)
 
@@ -25,11 +26,12 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
   3. The completed spec is moved from `docs/tasks/<id>-<slug>.md` to `docs/tasks/completed/<id>-<slug>.md` to preserve architectural decisions, and its header is rewritten to a 1–2 sentence final-state summary.
   4. If a baseline system was refactored or replaced, update `docs/baseline.md` so it remains an accurate snapshot of working code.
   5. The task's queue entry is removed from `docs/tasks.md`; no per-task completion records are written there. A fully completed phase collapses to one line pointing at `docs/tasks/completed/`.
+  6. Every change the user can feel in play has a playtest note in `docs/playtests/`, written in the same change (a pending note for the same feature is updated, not duplicated). A/B variants stay in the code until the user names a winner in chat, then the loser is removed through the post-playtest protocol. Only a task whose own outcome is a playtest verdict (such as a pass/fail that decides what gets built) keeps its queue entry until the answer arrives.
 
 ## 3. Minimal Documentation & Data Rules
 
 - **Strict Scannability:** Keep documentation minimal and concise. No session narratives, chat transcripts, or command logs. Target under 60 lines for roadmap/status files; task specs may be as thorough as needed. A pending queue entry keeps its title, concept refs, and goal with constraints. Do not shorten it to a bare title.
-- **Single Source of Truth:** pending work → `docs/tasks.md`; decisions & history → spec files in `docs/tasks/completed/`; current state → `docs/baseline.md`; design intent → `docs/concept/`; system ownership → `docs/architecture.md`; tooling setup → `unity/readme.md`. Facts are linked, never copied.
+- **Single Source of Truth:** pending work → `docs/tasks.md`; decisions & history → spec files in `docs/tasks/completed/`; current state → `docs/baseline.md`; design intent → `docs/concept/`; system ownership → `docs/architecture.md`; tooling setup → `unity/readme.md`; playtests the user still owes → `docs/playtests/`. Facts are linked, never copied.
 - **Rewrite, Don't Append:** `docs/baseline.md` is a present-tense snapshot: rewrite affected sections in place; no task IDs, dates, or migration history. `docs/tasks.md` never stores test counts, build status, prices, or iteration logs. A completed spec header states only a decision that is still true. It must not state a count, price, or layout the game no longer uses. Rejected attempts stay in the spec body so they are not re-run.
 - **Lean Snapshot Docs:** `docs/baseline.md`, `docs/architecture.md` and `unity/readme.md` state only what a new session needs: what exists, who owns it, constraints code must respect, and how to run or regenerate it. Keep visual tuning, colours, counts, layout descriptions, rationale and fix history out of them; that belongs in the task spec, linked where useful.
 - **Data-Driven Architecture:** **Never store item prices, coordinates, or tool stats in Markdown files.**
@@ -43,7 +45,7 @@ Docs-driven first-person excavation game built in Unity. Runtime code lives in `
 
 ## 4. Post-Playtest Design Iteration Protocol
 
-When the user playtests a build and modifies or redesigns a feature:
+When the user playtests a build and modifies or redesigns a feature (a deleted playtest note means it was played; answers such as an A/B winner or a pass/fail arrive in chat):
 1. **Update `docs/concept/` In Place:** Update the relevant section in `docs/concept/` to record the new design intent (the concept docs are the living source of truth).
 2. **Apply Code & Data Changes:** Adjust C# logic and balance numbers in `catalog.json` or `EquipmentProgression.cs`.
 3. **Keep `docs/baseline.md` Accurate:** Update the working system snapshot in `docs/baseline.md` so subsequent tasks never rely on obsolete assumptions.
