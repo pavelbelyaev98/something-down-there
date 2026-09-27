@@ -164,7 +164,7 @@ namespace SomethingDownThere
                 return;
             }
             var extent = (Vector3)terrain.Dimensions * terrain.CellSize;
-            var placements = catalog != null ? catalog.Generate(extent, seed, terrain.MaterialAtLocal) : Generate(extent, count, seed);
+            var placements = catalog != null ? catalog.Generate(extent, seed, terrain.MaterialAtLocal, terrain.Rooms) : Generate(extent, count, seed);
             for (int i = 0; i < placements.Length; i++)
             {
                 var placement = placements[i];
@@ -240,7 +240,9 @@ namespace SomethingDownThere
         // (DiscoveryCatalog host ground). A group is chosen in proportion to weight x candidates
         // seen, so density follows the weight at the same depth; spread ranking then picks
         // inside the group. Depths never move.
-        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null, Func<int, Vector3, float> hostWeight = null)
+        // Seats (NaN x for none) place a find exactly there: finds half-sunk in a sealed room's silt,
+        // inside a reservation that keeps ordinary finds out.
+        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null, Func<int, Vector3, float> hostWeight = null, Vector3[] seats = null)
         {
             if (!ExcavationGrid.Finite(extent.x) || !ExcavationGrid.Finite(extent.y) || !ExcavationGrid.Finite(extent.z)
                 || extent.x < 8 || extent.y < 4 || extent.z < 8 || total < 1 || total > MaximumPopulation
@@ -268,6 +270,12 @@ namespace SomethingDownThere
             float Range(float min, float max) => Mathf.Lerp(min, max, (float)random.NextDouble());
             for (int i = 0; i < total; i++)
             {
+                if (seats != null && !float.IsNaN(seats[i].x))
+                {
+                    grid.Add(i, seats[i], radii == null ? MaximumFindRadius : radii[i]);
+                    result[i] = new DiscoveryPlacement(seats[i], Quaternion.Euler(Range(0, 360), Range(0, 360), Range(0, 360)), i % 3);
+                    continue;
+                }
                 bool placed = false;
                 bool shallow = i < shallowCount;
                 bool banded = !shallow && depthBands != null && depthBands[i].y > 0;

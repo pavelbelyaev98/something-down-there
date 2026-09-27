@@ -119,9 +119,11 @@ namespace SomethingDownThere.Tests
                 for (int y = Mathf.Max(0, min.y); y <= Mathf.Min(SiteLayout.Size.y, max.y); y += 2)
                 for (int x = Mathf.Max(0, min.x); x <= Mathf.Min(SiteLayout.Size.x, max.x); x += 2)
                 {
+                    // The box also holds surrounding ground: count only this body's own family.
                     var id = (TerrainMaterialId)ids[Index(x, y, z)];
-                    bool broken = id == TerrainMaterialId.FracturedRock || id == TerrainMaterialId.FracturedConcrete || id == TerrainMaterialId.Crack;
-                    if (broken || id == (place.Kind == TerrainGround.PlaceKind.RockMass ? TerrainMaterialId.Rock : TerrainMaterialId.Concrete)) body++;
+                    bool mass = place.Kind == TerrainGround.PlaceKind.RockMass;
+                    bool broken = mass ? id == TerrainMaterialId.FracturedRock || id == TerrainMaterialId.Crack : id == TerrainMaterialId.FracturedConcrete;
+                    if (broken || id == (mass ? TerrainMaterialId.Rock : TerrainMaterialId.Concrete)) body++;
                     if (broken) cracked++;
                 }
                 Assert.That(cracked, Is.GreaterThan(0), $"Seed {seed}: {place.Kind} at depth {SiteLayout.Extent.y - place.Centre.y:F1} has no cracks.");
@@ -172,6 +174,76 @@ namespace SomethingDownThere.Tests
             var middle = segments[segments.Length / 4];
             var sample = Vector3Int.RoundToInt((Vector3)((middle.A + middle.B) * .5f) / SiteLayout.CellSize);
             Assert.That(ids[Index(sample.x, sample.y, sample.z)], Is.EqualTo((byte)TerrainMaterialId.Gravel));
+        }
+
+        // Concept 03 §5 sealed rooms: one or two per zone inside concrete structures, roofed, with a
+        // silt floor, and a shell of at least 0.4 m everywhere.
+        [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]
+        public void SealedRoomsSitInsideTheirStructuresInTheSedimentAndStone(int seed)
+        {
+            var rooms = TerrainGround.Rooms(SiteLayout.Size, SiteLayout.CellSize, seed);
+            foreach (int zone in new[] { 1, 2 })
+                Assert.That(rooms.Count(r => r.Zone == zone), Is.InRange(1, 2), $"Seed {seed}: rooms in zone {zone + 1}");
+            foreach (var room in rooms)
+            {
+                var air = (Vector3)(room.AirCentre) ;
+                Assert.That(room.AirHalf.x + room.Wall, Is.LessThanOrEqualTo(room.OuterHalf.x + .001f));
+                Assert.That(room.AirHalf.z + room.Wall, Is.LessThanOrEqualTo(room.OuterHalf.z + .001f));
+                Assert.That(air.y + room.AirHalf.y + room.Wall, Is.LessThanOrEqualTo(room.OuterHalf.y + .001f), "Roofed.");
+                Assert.That(room.SiltTop - (-room.OuterHalf.y + room.Wall), Is.GreaterThanOrEqualTo(.45f - .001f), "Settled silt floor.");
+                Assert.That(room.Wall, Is.GreaterThanOrEqualTo(.4f));
+                Assert.That(room.AirHalf.y * 2, Is.GreaterThan(1.3f), "Room to stand in.");
+                var seats = TerrainGround.Seats(room);
+                Assert.That(seats.Length, Is.InRange(2, 5));
+                for (int i = 0; i < seats.Length; i++)
+                {
+                    var local = Unity.Mathematics.math.mul(room.ToLocal, (Unity.Mathematics.float3)seats[i] - room.Centre);
+                    Assert.That(Mathf.Abs(local.x), Is.LessThan(room.AirHalf.x - .4f));
+                    Assert.That(Mathf.Abs(local.z), Is.LessThan(room.AirHalf.z - .4f));
+                    Assert.That(local.y, Is.EqualTo(room.SiltTop).Within(.001f), "On the silt surface; finds sink into it by their size.");
+                    for (int j = 0; j < i; j++) Assert.That(Vector3.Distance(seats[i], seats[j]), Is.GreaterThanOrEqualTo(TerrainGround.SeatSpacing - .3f));
+                }
+            }
+        }
+
+        // The seeded grid carves each room's air, closed on every side: flooding the air from the
+        // room's middle never leaves its structure, and the floor is silt.
+        [Test]
+        public void SeededGridCarvesClosedRoomsWithSiltFloors()
+        {
+            // A narrow deep fixture: zone-2 structures fit, rooms land anywhere on a non-shipped grid.
+            var size = new Vector3Int(112, 600, 112);
+            var grid = new ExcavationGrid(size, .125f, 77);
+            Assert.That(grid.Rooms.Length, Is.GreaterThan(0));
+            foreach (var room in grid.Rooms)
+            {
+                var centre = room.ToGrid(room.AirCentre);
+                Assert.That(grid.IsSolid(centre), Is.False, "The room holds air.");
+                Assert.That(grid.MaterialAt(room.ToGrid(new Unity.Mathematics.float3(0, room.SiltTop - .2f, 0))), Is.EqualTo(TerrainMaterialId.PondClay));
+                Assert.That(grid.IsSolid(room.ToGrid(new Unity.Mathematics.float3(0, room.SiltTop - .2f, 0))), Is.True, "Silt floor.");
+                var start = Vector3Int.RoundToInt(centre / .125f);
+                var seen = new HashSet<Vector3Int> { start };
+                var queue = new Queue<Vector3Int>(); queue.Enqueue(start);
+                var outerMin = Vector3Int.FloorToInt((Vector3)room.Min / .125f) - Vector3Int.one;
+                var outerMax = Vector3Int.CeilToInt((Vector3)room.Max / .125f) + Vector3Int.one;
+                while (queue.Count > 0)
+                {
+                    var s = queue.Dequeue();
+                    Assert.That(s.x > outerMin.x && s.y > outerMin.y && s.z > outerMin.z && s.x < outerMax.x && s.y < outerMax.y && s.z < outerMax.z,
+                        Is.True, "Room air leaks out of its structure.");
+                    foreach (var step in new[] { Vector3Int.right, Vector3Int.left, Vector3Int.up, Vector3Int.down, new Vector3Int(0, 0, 1), new Vector3Int(0, 0, -1) })
+                    {
+                        var n = s + step;
+                        if (seen.Contains(n) || grid.Sample(n.x, n.y, n.z) > 0) continue;
+                        seen.Add(n); queue.Enqueue(n);
+                    }
+                }
+                Assert.That(seen.Count, Is.GreaterThan(200), "A room, not a bubble.");
+            }
+            // The admin reset closes them again.
+            grid.RemoveSphere(grid.Rooms[0].ToGrid(grid.Rooms[0].AirCentre), 3, out _);
+            grid.Reset();
+            Assert.That(grid.IsSolid(grid.Rooms[0].ToGrid(new Unity.Mathematics.float3(grid.Rooms[0].AirHalf.x + grid.Rooms[0].Wall * .5f, grid.Rooms[0].AirCentre.y, 0))), Is.True);
         }
 
         [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]

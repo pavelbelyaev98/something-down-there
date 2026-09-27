@@ -33,6 +33,9 @@ namespace SomethingDownThere
         // ground into a thin roof. Lateral digging under the site starts below it.
         private float[] bankBeyond;
         private float bankDepth;
+        // Sealed rooms (TerrainGround) of a seeded grid: their air is part of untouched ground.
+        private readonly TerrainGround.Room[] rooms = Array.Empty<TerrainGround.Room>();
+        public TerrainGround.Room[] Rooms => rooms;
         public Vector3Int Size { get; }
         public float CellSize { get; }
         public Vector3 Extent => (Vector3)Size * CellSize;
@@ -80,6 +83,7 @@ namespace SomethingDownThere
             density = new PagedDensity(strideZ * (size.z + 1));
             materials = materialSeed.HasValue ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value)
                 : TerrainMaterialSnapshot.Uniform(density.Length);
+            if (materialSeed.HasValue) rooms = TerrainGround.Rooms(size, cellSize, materialSeed.Value);
             // Reserve the support-search workspace during loading, not on the
             // first live cut (the full-depth site's buffer is tens of megabytes).
             supportState = new byte[density.Length];
@@ -109,6 +113,7 @@ namespace SomethingDownThere
             for (int y = 0; y <= Size.y; y++)
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
+            foreach (var room in rooms) CarveRoom(room);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
             LastDetachedSamples = LastSupportVisitedSamples = 0;
@@ -119,6 +124,25 @@ namespace SomethingDownThere
             lowestCarvedY = Size.y;
             severedSamples.Clear();
             ClearSupportSearch();
+        }
+
+        // A sealed room's air: a smooth signed-distance box, inside its structure's shell.
+        private void CarveRoom(TerrainGround.Room room)
+        {
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)room.Min / CellSize));
+            Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)room.Max / CellSize));
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+            {
+                var local = Unity.Mathematics.math.mul(room.ToLocal, new Unity.Mathematics.float3(x, y, z) * CellSize - room.Centre) - room.AirCentre;
+                var d = Unity.Mathematics.math.abs(local) - room.AirHalf;
+                float outside = Unity.Mathematics.math.length(Unity.Mathematics.math.max(d, 0))
+                    + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                if (outside >= band) continue;
+                int index = x + y * strideY + z * strideZ;
+                density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
+            }
         }
 
         // Horizontal ghost samples extend the border; mesh vertices are clipped at the

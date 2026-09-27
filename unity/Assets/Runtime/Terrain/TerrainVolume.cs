@@ -136,6 +136,7 @@ namespace SomethingDownThere
             for (int z = 0; z < dimensions.z; z += chunkSize)
             for (int x = 0; x < dimensions.x; x += chunkSize)
                 Refresh(new Vector3Int(x / chunkSize, surfaceLayer, z / chunkSize));
+            MaterializeRooms();
         }
 
         public bool IsSolid(Vector3 worldPoint) => grid != null && grid.IsSolid(transform.InverseTransformPoint(worldPoint));
@@ -183,6 +184,7 @@ namespace SomethingDownThere
             {
                 grid.Restore(snapshot);
                 excavationSeed = seed;
+                roomsOpened = null;
                 foreach (var chunk in chunks.Values) chunk.Collider.enabled = false;
                 var slice = Stopwatch.StartNew();
                 int surfaceLayer = (dimensions.y - 1) / chunkSize;
@@ -283,6 +285,7 @@ namespace SomethingDownThere
             {
                 ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
                 PourUndercutGravel(changed);
+                CheckBreakIn(changed, hit.point);
             }
             return true;
         }

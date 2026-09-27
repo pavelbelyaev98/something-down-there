@@ -25,11 +25,17 @@ namespace SomethingDownThere
             Poured?.Invoke(LastPourVolume, transform.TransformPoint(centre));
         }
 
-        private void EmitPour(BoundsInt samples, float volume)
+        // Pooled debris for pours and break-ins; none without the authored materials.
+        private bool EnsureDebrisParticles()
         {
             if (pourChips == null && pourChipsMaterial != null) pourChips = CreatePourParticles("Gravel pour chips", pourChipsMaterial, false);
             if (pourDust == null && pourDustMaterial != null) pourDust = CreatePourParticles("Gravel pour dust", pourDustMaterial, true);
-            if (pourChips == null || pourDust == null) return;
+            return pourChips != null && pourDust != null;
+        }
+
+        private void EmitPour(BoundsInt samples, float volume)
+        {
+            if (!EnsureDebrisParticles()) return;
             Vector3 low = (Vector3)samples.min * cellSize, high = (Vector3)samples.max * cellSize;
             int chips = Mathf.Clamp(Mathf.RoundToInt(volume * 30), 24, 220), puffs = chips / 5;
             for (int i = 0; i < chips + puffs; i++)

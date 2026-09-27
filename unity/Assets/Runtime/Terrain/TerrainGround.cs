@@ -25,7 +25,7 @@ namespace SomethingDownThere
         // Crack field (noise units): the line within CrackCore of a sheet, the fractured band within
         // CrackBand. Gate biases: how much of each body's sheets exist (rock masses are criss-crossed).
         public const float CrackCore = .017f, CrackBand = .055f;
-        private const float MassCracks = .35f, ConcreteCracks = .25f, ZoneRockCracks = -.05f;
+        private const float MassCracks = .35f, ConcreteCracks = .25f, SealedCracks = .35f, ZoneRockCracks = -.05f;
 
         // Grid-local metres. Rotation maps local offsets into the place's own axes.
         public struct Place
@@ -36,6 +36,67 @@ namespace SomethingDownThere
             public float3x3 ToLocal;
             public float Wall;
             public float3 Min, Max;
+            // Sealed structures (098) are roofed rooms: a silt floor Silt thick and air above it.
+            public byte Sealed;
+            public float Silt;
+        }
+
+        // A sealed room's air, in its structure's local frame (Centre, ToLocal): the box above the
+        // silt floor and under the roof. SiltTop is the local height of the silt surface.
+        public struct Room
+        {
+            public int Zone;
+            public float3 Centre, AirCentre, AirHalf, OuterHalf;
+            public float3x3 ToLocal;
+            public float SiltTop, Wall;
+            public float3 Min, Max;
+            public Vector3 ToGrid(float3 local) => (Vector3)(Centre + math.mul(math.transpose(ToLocal), local));
+            // Inside the room (its air or its silt floor), in grid-local metres.
+            public bool Inside(Vector3 grid)
+            {
+                var local = math.mul(ToLocal, (float3)grid - Centre);
+                return math.abs(local.x) <= AirHalf.x && math.abs(local.z) <= AirHalf.z
+                    && local.y >= -OuterHalf.y + Wall && local.y <= AirCentre.y + AirHalf.y;
+            }
+        }
+
+        public static Room[] Rooms(Vector3Int size, float cellSize, int seed)
+        {
+            var rooms = new List<Room>();
+            foreach (var place in Places(size, cellSize, seed))
+            {
+                if (place.Kind != PlaceKind.Structure || place.Sealed == 0) continue;
+                float floor = -place.HalfSize.y + place.Wall, roof = place.HalfSize.y - place.Wall, silt = floor + place.Silt;
+                rooms.Add(new Room { Zone = place.Zone, Centre = place.Centre, ToLocal = place.ToLocal, Wall = place.Wall,
+                    OuterHalf = place.HalfSize, SiltTop = silt, AirCentre = new float3(0, (silt + roof) * .5f, 0),
+                    AirHalf = new float3(place.HalfSize.x - place.Wall, (roof - silt) * .5f, place.HalfSize.z - place.Wall),
+                    Min = place.Min, Max = place.Max });
+            }
+            return rooms.ToArray();
+        }
+
+        // Where finds settle in a room's silt (grid-local points on its surface): spread over the
+        // floor, at least SeatSpacing apart and clear of the walls.
+        // A seated find sinks SeatSink of its own radius below the seat: about a third shows, short
+        // of collection, so the reveal-by-silhouette survives (concept 03 §5).
+        public const float SeatSpacing = 1.2f, SeatSink = .35f, RoomHeadroom = 1.9f;
+        public static Vector3[] Seats(Room room)
+        {
+            var seats = new List<Vector3>();
+            float2 span = room.AirHalf.xz - .55f;
+            int across = Mathf.Clamp(Mathf.FloorToInt(span.x * 2 / SeatSpacing) + 1, 1, 3);
+            int deep = Mathf.Clamp(Mathf.FloorToInt(span.y * 2 / SeatSpacing) + 1, 1, 2);
+            for (int i = 0; i < across; i++)
+            for (int j = 0; j < deep; j++)
+            {
+                if (seats.Count == 5) break;
+                float x = across == 1 ? 0 : math.lerp(-span.x, span.x, i / (float)(across - 1));
+                float z = deep == 1 ? 0 : math.lerp(-span.y, span.y, j / (float)(deep - 1));
+                // Stagger alternate rows so the floor never reads as a grid.
+                if (deep > 1 && j == 1) x += (i % 2 == 0 ? .25f : -.25f);
+                seats.Add(room.ToGrid(new float3(x, room.SiltTop, z)));
+            }
+            return seats.ToArray();
         }
 
         public static int ZoneAt(float depth)
@@ -80,6 +141,16 @@ namespace SomethingDownThere
                                 PlaceKind.RockMass => new float3(Range(2f, 3.5f), Range(1.6f, 2.8f), Range(2f, 3.5f)),
                                 _ => new float3(Range(2.5f, 4.5f), Range(1.2f, 2.4f), Range(2.5f, 4.5f)),
                             };
+                            // The zone's first structure always hides a room; a second one sometimes. A
+                            // room keeps ~1.9 m of air above its silt so the player can stand in it.
+                            byte sealedRoom = 0; float silt = 0, wall = 0;
+                            if (kind == PlaceKind.Structure)
+                            {
+                                wall = Range(.4f, .5f);
+                                sealedRoom = (byte)(n == 0 || Next() < .5f ? 1 : 0);
+                                silt = sealedRoom != 0 ? Range(.45f, .6f) : 0;
+                                if (sealedRoom != 0) half.y = math.max(half.y, wall + (silt + RoomHeadroom) * .5f);
+                            }
                             float reach = math.length(half.xz);
                             float depth = Range(top + half.y, bottom - half.y);
                             if (bottom - top < half.y * 2 + .5f || depth + half.y > extent.y - .5f) break;
@@ -90,7 +161,7 @@ namespace SomethingDownThere
                             var toLocal = math.transpose(new float3x3(quaternion.EulerXYZ(tilt, yaw, roll)));
                             float3 bound = kind == PlaceKind.Rubble ? math.length(half) : new float3(reach, half.y, reach);
                             var place = new Place { Kind = kind, Zone = zone, Centre = centre, HalfSize = half, ToLocal = toLocal,
-                                Wall = kind == PlaceKind.Structure ? Range(.4f, .5f) : 0, Min = centre - bound - .1f, Max = centre + bound + .1f };
+                                Wall = wall, Sealed = sealedRoom, Silt = silt, Min = centre - bound - .1f, Max = centre + bound + .1f };
                             bool clear = true;
                             foreach (var other in places)
                                 clear &= math.any(place.Min > other.Max + 1) || math.any(other.Min > place.Max + 1);
@@ -244,9 +315,10 @@ namespace SomethingDownThere
                 {
                     var place = Places[slice[i]];
                     if (math.any(p < place.Min) || math.any(p > place.Max)) continue;
-                    if (InPlace(place, p, out var material))
-                        return material == TerrainMaterialId.Rock ? Cracked(p, material, MassCracks)
-                            : material == TerrainMaterialId.Concrete ? Cracked(p, material, ConcreteCracks) : material;
+                    // Only a place's solid shell cracks, never a room's air or its silt.
+                    if (InPlace(place, p, out var material, out bool shell))
+                        return !shell ? material : material == TerrainMaterialId.Rock ? Cracked(p, material, MassCracks)
+                            : material == TerrainMaterialId.Concrete ? Cracked(p, material, place.Sealed != 0 ? SealedCracks : ConcreteCracks) : material;
                 }
                 int zone = 0;
                 for (int b = 0; b < Borders.Length; b++)
@@ -319,10 +391,11 @@ namespace SomethingDownThere
                 return noise.snoise(p * .11f + Offsets.zxy + 91.3f) > .55f ? TerrainMaterialId.Gravel : TerrainMaterialId.Clay;
             }
 
-            private bool InPlace(Place place, float3 p, out TerrainMaterialId material)
+            private bool InPlace(Place place, float3 p, out TerrainMaterialId material, out bool shell)
             {
                 float3 q = math.mul(place.ToLocal, p - place.Centre);
                 material = TerrainMaterialId.Soil;
+                shell = true;
                 switch (place.Kind)
                 {
                     case PlaceKind.Rubble:
@@ -330,9 +403,15 @@ namespace SomethingDownThere
                         return math.all(math.abs(q) <= place.HalfSize);
                     case PlaceKind.Structure:
                         if (math.any(math.abs(q) > place.HalfSize)) return false;
-                        // Walls and floor are concrete; the open-topped interior is soil.
-                        bool interior = math.all(math.abs(q.xz) < place.HalfSize.xz - place.Wall) && q.y > -place.HalfSize.y + place.Wall;
-                        material = interior ? TerrainMaterialId.Soil : TerrainMaterialId.Concrete;
+                        // Walls and floor are concrete; the open-topped interior is soil. A sealed
+                        // one is roofed too, with a silt floor and air above (carved by the grid);
+                        // air near the silt keeps its silt identity so the floor reads as silt.
+                        float floor = -place.HalfSize.y + place.Wall;
+                        bool interior = math.all(math.abs(q.xz) < place.HalfSize.xz - place.Wall) && q.y > floor
+                            && (place.Sealed == 0 || q.y < place.HalfSize.y - place.Wall);
+                        material = !interior ? TerrainMaterialId.Concrete : place.Sealed == 0 ? TerrainMaterialId.Soil
+                            : q.y < floor + place.Silt + .3f ? TerrainMaterialId.PondClay : TerrainMaterialId.Concrete;
+                        shell = !interior;
                         return true;
                     case PlaceKind.RockMass:
                         material = TerrainMaterialId.Rock;

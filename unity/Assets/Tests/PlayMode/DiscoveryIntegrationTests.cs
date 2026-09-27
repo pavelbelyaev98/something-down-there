@@ -127,7 +127,10 @@ namespace SomethingDownThere.Tests
             Assert.That(generated.Select(f => f.Item.Id).Distinct().Count(), Is.EqualTo(field.Catalog.TotalCount));
             Assert.That(generated.Count(f => f.ContentId.StartsWith("mineral_")),
                 Is.EqualTo(field.Catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).Sum(e => e.Count)));
-            Assert.That(field.Finds.All(f => f.Exposure == 0), Is.True);
+            // Every find starts buried, except those settled half-sunk in a sealed room's silt: partly
+            // exposed to the room's dark air, but never collectible before the player digs.
+            Assert.That(field.Finds.Where(f => !InSealedRoom(f)).All(f => f.Exposure == 0), Is.True);
+            Assert.That(field.Finds.Where(InSealedRoom).All(f => !f.Collectible), Is.True);
             var find = PrepareUprightFind();
             Aim(find.transform.position + Vector3.up * 2, find.transform.position);
             player.ToggleAdminXray();
@@ -168,7 +171,8 @@ namespace SomethingDownThere.Tests
             terrain.ResetExcavation();
             Assert.That(find.Collected, Is.True);
             Assert.That(find.gameObject.activeSelf, Is.False);
-            Assert.That(field.Finds.Skip(1).All(f => f.Exposure == 0), Is.True);
+            // Reset reburies everything except the half-sunk finds of the re-carved sealed rooms.
+            Assert.That(field.Finds.Skip(1).Where(f => !InSealedRoom(f)).All(f => f.Exposure == 0), Is.True);
             Assert.That(player.Inventory.Count, Is.EqualTo(1));
         }
 
@@ -727,9 +731,10 @@ namespace SomethingDownThere.Tests
             yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
             Assert.That(field.Finds.Count(f => f.GetComponent<MeshRenderer>().enabled), Is.LessThan(field.Finds.Count / 20),
                 "Only conservative surface-edge bounds may render in pristine soil.");
-            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight)
+            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !InSealedRoom(f))
                 .All(f => !f.GetComponent<MeshRenderer>().enabled), Is.True);
-            Assert.That(field.Finds.All(f => !f.GetComponent<FindPhysics>().enabled), Is.True);
+            Assert.That(field.Finds.Where(f => !InSealedRoom(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True);
+            Assert.That(field.Finds.Where(InSealedRoom).All(f => !f.GetComponent<FindPhysics>().Released), Is.True, "Half-sunk finds stay anchored.");
             Assert.That(field.Finds.All(f => f.GetComponent<MeshCollider>().enabled), Is.True,
                 "Soil-occluded targeting and collision remain available, including tiny slivers.");
             var before = field.Capture();
@@ -747,9 +752,16 @@ namespace SomethingDownThere.Tests
             var after = field.Capture();
             Assert.That(after.Select(f => f.Item.Id), Is.EqualTo(before.Select(f => f.Item.Id)));
             Assert.That(after.Select(f => f.Position), Is.EqualTo(before.Select(f => f.Position)));
-            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight)
+            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !InSealedRoom(f))
                 .All(f => !f.GetComponent<MeshRenderer>().enabled), Is.True);
-            Assert.That(field.Finds.All(f => !f.GetComponent<FindPhysics>().enabled), Is.True);
+            Assert.That(field.Finds.Where(f => !InSealedRoom(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True);
+        }
+
+        // Seated half-sunk in a sealed room's silt (concept 03 §5).
+        private bool InSealedRoom(BuriedFind find)
+        {
+            var local = terrain.transform.InverseTransformPoint(find.transform.position);
+            return terrain.Rooms.Any(room => room.Inside(local));
         }
 
         [Test]

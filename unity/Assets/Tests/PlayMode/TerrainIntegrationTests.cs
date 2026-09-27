@@ -160,13 +160,23 @@ namespace SomethingDownThere.Tests
         {
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
-            // A 100 m volume only materializes the top layer that owns the ground plane.
+            // A deep volume only materializes the top layer that owns the ground plane, plus the
+            // sealed rooms' chunks so their far walls exist the moment the player breaks in.
             var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
             Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
-            Assert.That(terrain.ChunkCount, Is.EqualTo(chunks.x * chunks.z));
-            string surfaceLayer = ((terrain.Dimensions.y - 1) / 16).ToString();
+            Assert.That(terrain.Rooms.Length, Is.GreaterThanOrEqualTo(2));
+            int surfaceLayer = (terrain.Dimensions.y - 1) / 16, deep = 0;
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
-                Assert.That(chunk.name.Split(',')[1], Is.EqualTo(surfaceLayer), "Only the surface layer is materialized.");
+            {
+                var key = chunk.name.Split(',').Select(v => int.Parse(new string(v.Where(c => char.IsDigit(c) || c == '-').ToArray()))).ToArray();
+                if (key[1] == surfaceLayer) continue;
+                deep++;
+                var centre = (new Vector3(key[0], key[1], key[2]) + Vector3.one * .5f) * SiteLayout.ChunkSize * SiteLayout.CellSize;
+                Assert.That(terrain.Rooms.Any(room => Vector3.Distance(centre, room.ToGrid(room.AirCentre)) < 8), Is.True,
+                    "Below the surface only sealed rooms are materialized.");
+            }
+            Assert.That(deep, Is.GreaterThan(0));
+            Assert.That(terrain.ChunkCount, Is.EqualTo(chunks.x * chunks.z + deep));
             Assert.That(terrain.Revision, Is.Zero);
             foreach (Vector3 origin in new[] { new Vector3(-7, 2, -7), new Vector3(0, 2, 0), new Vector3(7, 2, 7) })
             {
@@ -812,6 +822,36 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryDig(), Is.False);
             Assert.That(player.Battery.Charge, Is.EqualTo(paid));
             Assert.That(notifications, Is.EqualTo(5));
+        }
+
+        // Concept 03 §5 / 09 §4: the seeded room is closed and dark; digging through its wall opens it
+        // once, and dust drifts in.
+        [UnityTest]
+        public IEnumerator BreakingThroughASealedRoomWallOpensItOnce()
+        {
+            var room = terrain.Rooms[0];
+            var grid = (ExcavationGrid)typeof(TerrainVolume).GetField("grid",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(terrain);
+            // A working pocket just outside one wall, leaving the wall whole.
+            var outside = room.ToGrid(new Unity.Mathematics.float3(room.OuterHalf.x + .55f, room.AirCentre.y, 0));
+            grid.RemoveSphere(outside, .45f, out _);
+            yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
+            var inside = terrain.transform.TransformPoint(room.ToGrid(room.AirCentre));
+            Assert.That(terrain.IsSolid(inside), Is.False, "The room holds air.");
+            int opened = 0;
+            terrain.BrokeIntoRoom += (index, point) => opened++;
+            var from = terrain.transform.TransformPoint(outside);
+            for (int i = 0; i < 160 && opened == 0; i++)
+            {
+                Physics.SyncTransforms();
+                if (!Physics.Raycast(from, (inside - from).normalized, out var hit, 3)) break;
+                terrain.TryToolCut(hit, .4f, false);
+            }
+            Assert.That(opened, Is.EqualTo(1), "Digging through the wall breaks into the room.");
+            Physics.SyncTransforms();
+            Assert.That(Physics.Raycast(from, (inside - from).normalized, out var through, 6), Is.True);
+            Assert.That(Vector3.Distance(through.point, from), Is.GreaterThan(Vector3.Distance(inside, from)), "The opening sees into the room.");
+            Assert.That(terrain.TryToolCut(through, .4f, false) && opened == 1, Is.True, "Opening only happens once.");
         }
 
         private void PlacePlayer(Vector3 position)

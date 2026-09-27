@@ -121,7 +121,8 @@ namespace SomethingDownThere
         }
 
         // ground: grid-local material sampler (the excavation's immutable field); null ignores host ground.
-        public DiscoveryPlacement[] Generate(Vector3 extent, int seed, Func<Vector3, TerrainMaterialId> ground = null)
+        // rooms: the excavation's sealed rooms; ordinary finds keep out, and a few settle in their silt.
+        public DiscoveryPlacement[] Generate(Vector3 extent, int seed, Func<Vector3, TerrainMaterialId> ground = null, TerrainGround.Room[] rooms = null)
         {
             Validate();
             var shallow = new List<int>(); var remaining = new List<int>();
@@ -166,6 +167,27 @@ namespace SomethingDownThere
                 reserved.Add(new DiscoveryReservation(p,entryRadii[i]));
                 authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
             }
+            // Each seat in a room's silt takes the next find whose depth band covers it and that fits,
+            // sunk a third of its size under the surface: counts and bands are unchanged (03 §5).
+            Vector3[] seats = null;
+            if (rooms != null && rooms.Length > 0)
+            {
+                seats = new Vector3[radii.Length];
+                for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
+                foreach (var room in rooms)
+                {
+                    reserved.Add(new DiscoveryReservation((Vector3)room.Centre, Unity.Mathematics.math.length(room.OuterHalf) + .2f));
+                    float silt = room.SiltTop - (-room.OuterHalf.y + room.Wall);
+                    foreach (var seat in TerrainGround.Seats(room))
+                    {
+                        float depth = extent.y - seat.y;
+                        for (int i = ShallowCount; i < seats.Length; i++)
+                            if (float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y
+                                && radii[i] * (1 + TerrainGround.SeatSink) <= silt)
+                            { seats[i] = seat + Vector3.down * radii[i] * TerrainGround.SeatSink; break; }
+                    }
+                }
+            }
             Func<int, Vector3, float> weight = null;
             if (ground != null)
                 weight = (i, position) =>
@@ -175,7 +197,7 @@ namespace SomethingDownThere
                         : HostWeight(entry.HostGrounds, entry.HostWeights, ground, position, radii[i]);
                 };
             var layout = DiscoveryField.Generate(extent, shallow.Count, seed, ShallowCount, radii, bands, covers, reserved.ToArray(),
-                SiteLayout.FindFootprint(extent), weight);
+                SiteLayout.FindFootprint(extent), weight, seats);
             for (int i = 0; i < layout.Length; i++)
             {
                 int index = shallow[i];
