@@ -141,7 +141,7 @@ namespace SomethingDownThere.Tests
                         ? grid.RemoveScoop(top - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62, .1f, out _, true)
                         : grid.RemoveShave(top, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62);
                     Assert.That(cut, Is.True);
-                    float rate = grid.LastRemovedVolume / (profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval);
+                    float rate = grid.LastRemovedVolume / profile.CadenceMultiplier;
                     Assert.That(rate, Is.GreaterThan(previous[(int)material]), $"{material} must improve with each tier.");
                     Assert.That(rate, Is.LessThan(softerRate), $"{material} must retain its resistance.");
                     previous[(int)material] = rate; classMinimum = Mathf.Min(classMinimum, rate);
@@ -201,8 +201,7 @@ namespace SomethingDownThere.Tests
             saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, material);
             grid.Restore(saved);
             bool drill = EquipmentProgression.UsesDrill(level);
-            float interval = .35f * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval
-                * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
+            float interval = .35f * profile.CadenceMultiplier * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
             float first = 0;
             for (int cut = 0; cut < 12; cut++)
             {
@@ -262,8 +261,8 @@ namespace SomethingDownThere.Tests
                 surface.y -= .028f * EquipmentProgression.MaterialResponse(material).Penetration;
             }
             var lip = new Vector3(1.5f, 1.93f, 1.5f);
-            Assert.That(grid.IsSolid(lip + Vector3.right * .5f), Is.EqualTo(solidX));
-            Assert.That(grid.IsSolid(lip + Vector3.forward * .5f), Is.EqualTo(solidZ));
+            Assert.That(grid.IsSolid(lip + Vector3.right * .45f), Is.EqualTo(solidX));
+            Assert.That(grid.IsSolid(lip + Vector3.forward * .45f), Is.EqualTo(solidZ));
         }
 
         [TestCase("id")] [TestCase("count")] [TestCase("truncated")]

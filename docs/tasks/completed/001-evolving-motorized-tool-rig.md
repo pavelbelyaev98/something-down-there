@@ -137,3 +137,6 @@ pickup, aiming or the view, and a purchase changes it instantly.
 - Strokes now turn the tool about its socket (a lever from the far grip swung the head too far).
 - Rejected: the diagonal lance pose across the lower half (`Logs/001-stages.png`), and a roll that
   turned the blade edge-on (`Logs/001-poseD2.png`).
+- Second playtest: still too large and too busy. The rig is about three quarters of its previous
+  size (only the head shows in the corner) and every stroke, shudder and drill chatter moves about
+  half as far (`Logs/001-small.png`).

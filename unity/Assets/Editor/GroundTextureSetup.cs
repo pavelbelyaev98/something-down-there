@@ -161,10 +161,11 @@ namespace SomethingDownThere.Editor
             material.SetVector("_ZoneDepths", new Vector4(TerrainGround.ZoneBorders[1], TerrainGround.ZoneBorders[2], 3, 0));
             material.SetFloat("_StrataStrength", .13f);
             material.SetFloat("_StrataCool", .6f);
-            // Cracks (096): fine broken grain beside the line, a thin near-black line.
+            // Cracks (096): a paler band of angular shards beside a pale mineral line with dark edges.
             material.SetFloat("_FractureTileMetres", .9f);
-            material.SetFloat("_FractureDarkening", .3f);
-            material.SetFloat("_CrackDarkness", .9f);
+            material.SetFloat("_FractureShardMetres", .16f);
+            material.SetFloat("_FractureLift", .35f);
+            material.SetColor("_CrackColour", new Color(.86f, .84f, .78f));
             // Backfill (099): dark loose stones with blocky clay chunks.
             material.SetColor("_BackfillTint", new Color(.62f, .5f, .4f));
             material.SetFloat("_BackfillChunkMetres", .4f);

@@ -139,9 +139,9 @@ Material:
     - _ComparisonTileMetres: 2
     - _ConcreteNormalStrength: 0.45
     - _ConcreteTileMetres: 2
-    - _CrackDarkness: 0.9
     - _DstBlend: 0
-    - _FractureDarkening: 0.3
+    - _FractureLift: 0.35
+    - _FractureShardMetres: 0.16
     - _FractureTileMetres: 0.9
     - _GravelNormalStrength: 0.8
     - _GravelTileMetres: 2.5
@@ -168,6 +168,7 @@ Material:
     - _TurfNormalStrength: 0.8
     - _ZWrite: 1
     m_Colors:
+    - _CrackColour: {r: 0.86, g: 0.84, b: 0.78, a: 1}
     - _BackfillTint: {r: 0.62, g: 0.5, b: 0.4, a: 1}
     - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}

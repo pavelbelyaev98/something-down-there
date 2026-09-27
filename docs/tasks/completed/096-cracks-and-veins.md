@@ -100,3 +100,7 @@ itself, which `026` (C4 along cracks) reads.
   ground with coloured markers for cracks (red), gravel, backfill, pond clay and concrete within 20 m.
   Clay veins and rock masses were left out after a first version drowned the cracks in 115k vein
   markers (`Logs/gx-rock.png` shows the final view in the rock zone).
+- The user still saw no cracks in the rock zone: its own texture is full of dark hairlines, so the
+  near-black crack line disappeared among them. Following `09` §2 ("pale crack lines"), the band
+  beside a crack now renders paler and broken into angular, individually lit shards, and the crack
+  line is a pale mineral seam with dark edges (`Logs/crack-rock2.png`, one work light).

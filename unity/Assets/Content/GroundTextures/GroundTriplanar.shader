@@ -39,8 +39,9 @@ Shader "Something Down There/Ground Triplanar"
         _StrataStrength("Colour band strength", Range(0, 0.3)) = 0
         _StrataCool("Grey-blue share of clay bands", Range(0, 1)) = 0
         _FractureTileMetres("Fractured grain tile metres", Float) = 0.9
-        _FractureDarkening("Fractured band darkening", Range(0, 1)) = 0.3
-        _CrackDarkness("Crack line darkness", Range(0, 1)) = 0.9
+        _FractureShardMetres("Fractured shard size metres", Float) = 0.16
+        _FractureLift("Fractured band paleness", Range(0, 1)) = 0.35
+        _CrackColour("Crack line mineral colour", Color) = (0.86, 0.84, 0.78, 1)
         _BackfillTint("Backfill loose fill tint (gravel textures)", Color) = (0.62,0.5,0.4,1)
         _BackfillChunkMetres("Backfill chunk size", Float) = 0.4
         _TurfAlbedo("Turf colour", 2D) = "white" {}
@@ -102,7 +103,8 @@ Shader "Something Down There/Ground Triplanar"
             float _GravelTileMetres, _ConcreteTileMetres, _GravelNormalStrength, _ConcreteNormalStrength;
             float4 _PondClayTint, _ClayDeepTint, _RockColdTint, _ZoneDepths;
             float _PondClayTileMetres, _PondClayNormalStrength, _StrataStrength, _StrataCool;
-            float _FractureTileMetres, _FractureDarkening, _CrackDarkness;
+            float _FractureTileMetres, _FractureShardMetres, _FractureLift;
+            half4 _CrackColour;
             float4 _BackfillTint;
             float _BackfillChunkMetres;
         CBUFFER_END
@@ -432,8 +434,9 @@ Shader "Something Down There/Ground Triplanar"
             // Old sediment is layered: the clay's darker bands turn grey-blue between orange ones.
             colour = lerp(colour, colour * half3(0.72, 0.86, 1.05), saturate(-strata) * _StrataCool * weights.y * below);
             colour *= 1 + strata * _StrataStrength * below;
-            // Cracks read by line and grain, not colour alone: the band beside a crack gets a fine,
-            // high-relief broken grain and darkens; the crack itself is a thin near-black line.
+            // Cracks read by line and grain, not colour alone (the rock's own texture is full of dark
+            // hairlines): the band beside a crack is paler, broken into angular shards that catch the
+            // light differently; the crack itself is a pale mineral-filled line with thin dark edges.
             // Backfill reads by grain: blocky chunks of clay among dark loose stones break the banding.
             half backfill = saturate(1 - materials2.w);
             [branch] if (backfill > 0.001)
@@ -465,11 +468,22 @@ Shader "Something Down There/Ground Triplanar"
                     TEXTURE2D_ARGS(_RockNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_RockMask, sampler_SoilRoughness),
                     position, dx, dy, n, _FractureTileMetres, (half3)1, _RockNormalStrength * 1.8,
                     layerColour, layerNormal, layerOcclusion);
-                normal = normalize(lerp(normal, layerNormal, fracture * 0.85));
-                colour *= lerp((half3)1, saturate(layerColour * 1.6) * (1 - _FractureDarkening), fracture);
-                half crackLine = smoothstep(0.12, 0.5, crack);
-                colour *= 1 - crackLine * _CrackDarkness;
-                roughness = lerp(roughness, 1, crackLine);
+                // Shards: warped cells, each tilted and lit on its own.
+                float3 q = position / max(_FractureShardMetres, 0.02);
+                q += sin(q.yzx * 1.3 + q.zxy * 0.7) * 0.45;
+                float3 cell = floor(q);
+                float3 h = frac(sin(float3(dot(cell, float3(12.9898, 78.233, 37.719)), dot(cell, float3(39.346, 11.135, 83.155)),
+                    dot(cell, float3(73.156, 52.235, 9.151)))) * 43758.5453);
+                half3 tilt = (half3)(h * 2 - 1) * 0.55;
+                half3 shardNormal = normalize(lerp(layerNormal, normalize(layerNormal + tilt), 0.8));
+                normal = normalize(lerp(normal, shardNormal, fracture * 0.9));
+                half shade = lerp(0.8, 1.2, (half)h.x);
+                half3 broken = lerp(layerColour, (half3)dot(layerColour, half3(0.3, 0.59, 0.11)), 0.5);
+                broken = saturate(broken * (1 + _FractureLift) * shade + _FractureLift * 0.12);
+                colour = lerp(colour, broken, fracture);
+                half core = smoothstep(0.38, 0.7, crack), rim = smoothstep(0.1, 0.38, crack) * (1 - core);
+                colour = lerp(colour * (1 - rim * 0.65), _CrackColour.rgb, core);
+                roughness = lerp(roughness, 1, max(core, fracture * 0.5));
             }
         }
         ENDHLSL

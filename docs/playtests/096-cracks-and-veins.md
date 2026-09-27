@@ -5,12 +5,12 @@
 Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
 ## Try
-- Find a crack: a thin near-black line inside a band of broken-looking rock or concrete.
+- Find a crack: a pale seam with dark edges inside a paler band of shattered, angular rock or concrete.
 - Dig along it, then dig plain rock beside it, and compare.
 
 ## Good feels like
-- Digging along a crack is noticeably faster (about 1.5× rock, about 2.4× in concrete) and turns up
-  more ore.
+- Digging along a crack takes clearly bigger bites (about 1.5× rock, about 2.4× in concrete) and
+  turns up more ore.
 - The crack reads by its line and broken grain in lamp light, not only by colour.
 
 ## Tell the agent

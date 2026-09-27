@@ -709,9 +709,7 @@ namespace SomethingDownThere
             }
             var terrain = target as TerrainVolume;
             var material = terrain != null ? terrain.ToolMaterialAt(hit) : TerrainMaterialId.Soil;
-            float intervalScale = EquipmentProgression.MaterialResponse(material).Interval;
-            scheduledDigInterval *= intervalScale;
-            float cost = EffectiveDigEnergy * intervalScale;
+            float cost = EffectiveDigEnergy;
             if (!UnlimitedBattery && !Battery.CanSpend(cost)) { ShowFeedback("Not enough charge to dig - return to recharge"); return false; }
             bool accepted = terrain != null
                 ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled)

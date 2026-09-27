@@ -17,6 +17,7 @@ Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill m
 - Each zone feels like its own place, not the same stack repeated.
 - Arriving in a new zone after one tool purchase never feels slower than the zone before.
 - Rock is never a wall: a softer vein is always there to follow.
+- Hard ground never slows the tool's pace: its bites just get smaller.
 - Borders are short, wavy mixed bands, not flat lines.
 
 ## Tell the agent

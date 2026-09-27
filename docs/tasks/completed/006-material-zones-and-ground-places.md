@@ -160,3 +160,11 @@ list; noise is `Unity.Mathematics` simplex. Target: full 150 m grid well under 1
 - Every New Game still uses the scene's fixed seeds (excavation 2718, discoveries 90127);
   per-save randomization is not wired (see `077`).
 - Beyond the plot the zones continue as plain ground (no places, no finds).
+
+## Iteration (playtest 2026-09-27)
+
+- The user found hard ground just slowed the digging. Hardness is now bite size only: every ground
+  keeps the tool's cadence and fuel per stroke, and each response's width, length and depth absorbed
+  its old cadence factor (cube root of the old slowdown per axis, backfill widened a little). Sustained
+  output per ground and level stayed within about ±7% of before, so the zone rule and hardness order
+  hold unchanged; backfill with the drill is 1.35× soil (was 1.47×).

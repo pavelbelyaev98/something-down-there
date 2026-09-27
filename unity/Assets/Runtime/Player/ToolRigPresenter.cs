@@ -23,7 +23,7 @@ namespace SomethingDownThere
         // Rising from the bottom-right corner with the blade face turned to the view; only the head
         // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
         private static readonly Vector3 RestPosition = new Vector3(.28f, -.25f, -.05f), RestEuler = new Vector3(-35f, -22f, 6f);
-        private const float ModelScale = .34f;
+        private const float ModelScale = .26f;
         // Strokes turn the tool about its socket, so the head dips instead of the whole shaft swinging.
         private static readonly Vector3 Pivot = new Vector3(0f, 0f, .9f);
 
@@ -103,24 +103,24 @@ namespace SomethingDownThere
                 switch (family)
                 {
                     case MotionFamily.Scoop:
-                        offset = new Vector3(-.004f, -.022f * (sink ? 1.4f : 1f), .012f) * (jab * reach);
-                        turn = new Vector3(14f * jab + 6f * scoop, 0f, -6f * jab);
+                        offset = new Vector3(-.002f, -.01f * (sink ? 1.4f : 1f), .005f) * (jab * reach);
+                        turn = new Vector3(6f * jab + 2.5f * scoop, 0f, -2.5f * jab);
                         break;
                     case MotionFamily.Bite:
-                        offset = new Vector3(0f, -.012f, .012f) * (jab * reach);
-                        turn = new Vector3(8f * jab, 0f, 0f);
+                        offset = new Vector3(0f, -.006f, .005f) * (jab * reach);
+                        turn = new Vector3(3.5f * jab, 0f, 0f);
                         break;
                     default:
                         float shudder = Mathf.Sin(stroke * 38f) * (1f - stroke);
-                        offset = new Vector3(0f, -.01f, .008f) * (jab * reach) + new Vector3(.002f, .002f, 0f) * shudder;
-                        turn = new Vector3(6f * jab + 1.5f * shudder, 0f, 0f);
+                        offset = new Vector3(0f, -.005f, .004f) * (jab * reach) + new Vector3(.0008f, .0008f, 0f) * shudder;
+                        turn = new Vector3(2.5f * jab + .6f * shudder, 0f, 0f);
                         break;
                 }
             }
             if (player.ShavingEnabled && cutting)
             {
-                float t = Time.time * 31f, chatter = (family == MotionFamily.Hard ? .0024f : .0012f) * power;
-                offset += new Vector3((Mathf.PerlinNoise(t, 0f) - .5f) * chatter, (Mathf.PerlinNoise(0f, t) - .5f) * chatter - .004f, .004f);
+                float t = Time.time * 31f, chatter = (family == MotionFamily.Hard ? .0008f : .0004f) * power;
+                offset += new Vector3((Mathf.PerlinNoise(t, 0f) - .5f) * chatter, (Mathf.PerlinNoise(0f, t) - .5f) * chatter - .0015f, .0015f);
             }
             float away = lowered * lowered * (3f - 2f * lowered);
             offset += new Vector3(.03f, -.2f, -.02f) * away;

@@ -2,11 +2,13 @@ namespace SomethingDownThere
 {
     public enum EquipmentKind { Shovel, Inventory, Fuel, Jetpack }
 
+    // How one ground shapes the tool's bite. Hardness shows as bite size, never as cadence: every
+    // ground keeps the tool's rhythm, and harder ground takes smaller, shallower bites.
     public readonly struct MaterialToolResponse
     {
-        public readonly float Width, Length, Penetration, Interval;
-        public MaterialToolResponse(float width, float length, float penetration, float interval)
-        { Width = width; Length = length; Penetration = penetration; Interval = interval; }
+        public readonly float Width, Length, Penetration;
+        public MaterialToolResponse(float width, float length, float penetration)
+        { Width = width; Length = length; Penetration = penetration; }
     }
 
     public readonly struct JetpackProfile
@@ -31,23 +33,23 @@ namespace SomethingDownThere
         public const float FuelPerCredit = 100f;
         public const float ShavingIntervalScale = 0.1f;
         public const float ShavingDepthRatio = 0.12f;
-        // Relative to the owned tool: every tier retains material character and all
-        // families remain diggable. Fuel follows cadence, preserving powered drain.
-        private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);
-        private static readonly MaterialToolResponse Clay = new MaterialToolResponse(1f, .76f, .85f, 1.15f);
-        private static readonly MaterialToolResponse Rock = new MaterialToolResponse(.84f, .84f, .65f, 1.4f);
+        // Relative to the owned tool: every tier retains material character and all families remain
+        // diggable. Each stroke costs the same fuel, so hard ground costs more fuel per metre.
+        private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f);
+        private static readonly MaterialToolResponse Clay = new MaterialToolResponse(.955f, .726f, .81f);
+        private static readonly MaterialToolResponse Rock = new MaterialToolResponse(.75f, .75f, .58f);
         // Loose stones: a broad bite whose grainy edge and floor (ExcavationGrid) leave it a little slower than soil.
-        private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.1f, 1f, 1f, 1.08f);
-        // Tough but never a wall: small, shallow chips at a slow cadence still make visible progress.
-        private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.7f, .7f, .5f, 1.8f);
+        private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.07f, .975f, .975f);
+        // Tough but never a wall: small, shallow chips still make visible progress.
+        private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.575f, .575f, .41f);
         // Clay basins' old pond clay: clean, smooth shavings that bite clearly easier than clay (the tell).
-        private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(1f, .88f, .92f, 1.15f);
+        private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(.954f, .84f, .878f);
         // Beside a crack: broken rock crumbles ~1.5x faster than rock (the tell, felt in the dark);
-        // the crack line itself cuts exactly like it. Broken concrete ~3.5x concrete.
-        private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(1f, .88f, .88f, 1.25f);
-        private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.85f, .85f, .7f, 1.45f);
+        // the crack line itself cuts exactly like it. Broken concrete ~2.4x concrete.
+        private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(.928f, .817f, .817f);
+        private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.75f, .75f, .62f);
         // Backfill: loose, mixed refill; the tool suddenly sinks in (the disturbed-ground tell).
-        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.1f, 1.05f, 1.25f, .85f);
+        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.2f, 1.14f, 1.35f);
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,

@@ -139,15 +139,18 @@ have their own surprises"; this is the same pull.
 
 ## 4. Materials and their tells
 
-Six ground types, each different in **how it digs, what it hides and how it points somewhere**:
+Six ground types, each different in **how it digs, what it hides and how it points somewhere**.
+Hardness shows as **bite size, never a slower rhythm**: the tool keeps its pace in every ground, and
+harder ground takes smaller, shallower bites (softer ground and tells take bigger ones). A player who
+hits rock sees the bites shrink instead of feeling the machine stall.
 
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
 | Soil     | Fast, broad rounded cuts                       | Disturbed ground                       | Rubbish, junk, plain rocks                          |
 | Gravel   | Loose grainy cuts; trickles; pours when undercut | Channels: winding old riverbeds      | Heavy things: coins, tokens, metal, nuggets         |
 | Clay     | Steady, narrow smooth shavings                 | Disturbed ground; basins               | Bones, wood, leather, fossils, organic things       |
-| Rock     | Slow faceted chips                             | Cracks and veins                       | Ore                                                 |
-| Concrete | Slowest; small square chips and sparks, but the starting tool always makes visible progress | Cracks from old damage | Waterworks and village items; rooms behind it |
+| Rock     | Small faceted chips                            | Cracks and veins                       | Ore                                                 |
+| Concrete | Smallest square chips and sparks, but the starting tool always makes visible progress | Cracks from old damage | Waterworks and village items; rooms behind it |
 | Backfill | Loose and mixed; digs fast                     | It *is* the tell                       | Whatever someone buried                             |
 
 The ancient zone adds its own material with its contact signature
@@ -184,8 +187,10 @@ Shared rules for all tells:
 
 #### Cracks and veins (rock, concrete)
 
-- A crack shows as a thin dark line where a cut crosses it. The rock beside a crack is fractured and
-  digs noticeably faster; cutting across it is ordinary rock speed.
+- A crack shows as a pale, mineral-filled line with dark edges where a cut crosses it, inside a paler
+  band of shattered rock broken into angular shards; the rock's own texture is full of dark hairlines,
+  so a dark line alone would not read. The fractured band takes clearly bigger bites; cutting across
+  it is ordinary rock.
 - Cracks branch. Some open into an ore vein or end at a find; some thin out. Minerals really do
   collect in rock cracks, so veins and cracks are one feature.
 - In concrete, cracks run from old damage toward weak spots and into the rooms behind walls.

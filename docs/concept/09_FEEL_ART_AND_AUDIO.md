@@ -110,8 +110,8 @@ as [World and Site](03_WORLD_AND_SITE.md); the exact material list remains open:
 | Clay / sediment | Sticky or resistant, steady | Clumps / flat chips | Wet thump / muffled crunch |
 | Gravel | Trickles; pours when undercut | Loose stones | Rattle; rushing slide on a pour |
 | Backfill (disturbed ground) | Loose, fast, mixed | Mixed crumbs and chunks | Soft, hollow give |
-| Rock | Slow, chipping | Shards | Sharp crack |
-| Diggable concrete | Tough; early tools still make visible progress | Sparks, dust | Grinding screech |
+| Rock | Small chipping bites at the tool's own pace | Shards | Sharp crack |
+| Diggable concrete | Smallest bites; early tools still make visible progress | Sparks, dust | Grinding screech |
 
 **Impossibility signature:** ancient fabricated materials add one small, consistent response on top
 of the working groups — an unusually clean cut, a glass-like resonance, dust that settles too
@@ -130,7 +130,7 @@ Ambience and feedback only. **No music. No voice acting**.
   footsteps, jetpack thrust, C4 blast (bigger along cracks), yard cleaning spray, salvage release
   sounds if a special release is adopted, machine interactions, pickup chimes, the computer's sale feedback.
 - **No audio-only clues.** Every sound that carries information has a visual counterpart, and every
-  tell is also felt through dig speed. The frozen detector is silent by design and readable while muted.
+  tell is also felt through bite size. The frozen detector is silent by design and readable while muted.
 - **No threat-adjacent audio anywhere.** The deep zone hums; it never breathes, whispers, follows or
   stalks. Nothing in the mix implies a presence, and the impossible-material resonance never sounds
   like a response ([Ending and Mystery](11_ENDING_AND_MYSTERY.md)).
