@@ -1,6 +1,6 @@
 # 001 — Evolving Motorized Tool Rig
 
-**Status:** complete. The tool is an original Blender kit whose parts are named by level range; `ToolRigPresenter` shows it rising from the bottom-right corner (head and the bolt-ons clustered behind it: shovel, bolt-on machine, drill at level 7, nozzle cannon at 10), turns only the tool about its socket per material family and lowers it away for menus, held finds, placements and recovery marking.
+**Status:** complete. The tool is an original Blender kit whose parts are named by level range; `ToolRigPresenter` shows it rising from the bottom edge right of centre (head and the bolt-ons clustered behind it: shovel, bolt-on machine, drill at level 7, nozzle cannon at 10), turns only the tool about its socket per material family and lowers it away for menus, held finds, placements and recovery marking.
 
 ## Objective
 
@@ -142,3 +142,5 @@ pickup, aiming or the view, and a purchase changes it instantly.
   half as far (`Logs/001-small.png`).
 - Third playtest: a bit more visible (scale 0.30) and a small thrust along the tool instead of a
   dig swing.
+- Fourth playtest: moved a few centimetres toward the centre so it rises from the bottom edge, not
+  the corner (`Logs/rig-x.png`, bottom left).

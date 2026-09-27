@@ -20,9 +20,9 @@ namespace SomethingDownThere
 
         [SerializeField] private FpsPlayer player;
         [SerializeField] private Transform model;
-        // Rising from the bottom-right corner with the blade face turned to the view; only the head
+        // Rising from the bottom edge right of centre with the blade face turned to the view; only the head
         // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
-        private static readonly Vector3 RestPosition = new Vector3(.28f, -.25f, -.05f), RestEuler = new Vector3(-35f, -22f, 6f);
+        private static readonly Vector3 RestPosition = new Vector3(.21f, -.25f, -.05f), RestEuler = new Vector3(-35f, -18f, 6f);
         private const float ModelScale = .3f;
         // Strokes turn the tool about its socket, so the head dips instead of the whole shaft swinging.
         private static readonly Vector3 Pivot = new Vector3(0f, 0f, .9f);

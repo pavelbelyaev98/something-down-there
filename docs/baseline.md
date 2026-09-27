@@ -76,7 +76,7 @@
 - **Presentation:** the Highlands sky, grade and haze with a noon sun (`SunPresentationSetup`); a hue curve calms the packs' lime greens.
   Lighting and water refresh without regenerating the site, keeping Inspector tuning. `WindowsBuild`
   always targets MainGame.
-- **Tool rig:** the one machine rises from the bottom-right corner, no hands, showing its head and
+- **Tool rig:** the one machine rises from the bottom edge right of centre, no hands, showing its head and
   what is bolted right behind it: an original Blender kit (`art/tool-rig`) whose parts are named by
   the tool levels they appear at, from a plain shovel to a drill (level 7) and a nozzle cannon
   (level 10); a purchase or admin level swaps parts instantly. Its visible head sits within about
