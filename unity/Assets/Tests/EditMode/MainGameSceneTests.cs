@@ -113,15 +113,12 @@ namespace SomethingDownThere.Tests
                 foreach (string kind in new[] { "Soil", "Turf" })
                 foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                     Assert.That(ground.GetTexture("_" + kind + channel), Is.Not.Null, kind + channel);
-                // Freshly cut topsoil is the first compared soil, distinct from the cracked surface mud.
-                var topsoil = LakebedSiteSetup.TopsoilOptions()[0];
-                Assert.That(ground.GetTexture("_SoilAlbedo"), Is.SameAs(topsoil.Albedo));
+                // Freshly cut topsoil is clay loam (the Mountains mud), distinct from the cracked surface mud.
+                var clayLoam = AssetDatabase.LoadAssetAtPath<TerrainLayer>("Assets/BK/PureNature_Mountains/Textures/Surfaces/Layers/Mud01.terrainlayer");
+                Assert.That(ground.GetTexture("_SoilAlbedo"), Is.SameAs(clayLoam.diffuseTexture));
                 Assert.That(ground.GetTexture("_SoilAlbedo"), Is.Not.SameAs(ground.GetTexture("_TurfAlbedo")), "Cuts must not repeat the surface texture.");
-                Assert.That(ground.GetFloat("_SoilComparison"), Is.Zero, "Pack ground covers the entire dig site.");
-                foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-                    Assert.That(ground.GetTexture("_Comparison" + channel), Is.Null, "Inactive custom soil must not remain bound to active terrain.");
-                Assert.That(ground.GetFloat("_MaskLayout"), Is.EqualTo(topsoil.PackMask ? 1 : 0));
-                Assert.That(ground.GetFloat("_ComparisonMaskLayout"), Is.Zero);
+                Assert.That(Vector4.Distance(ground.GetColor("_SoilTint").linear, LakebedSiteSetup.ClayLoamTint), Is.LessThan(.002f));
+                Assert.That(ground.GetFloat("_MaskLayout"), Is.EqualTo(1));
                 Assert.That(ground.GetFloat("_TurfMaskLayout"), Is.EqualTo(1));
                 Assert.That(ground.GetFloat("_MaxSmoothness"), Is.LessThanOrEqualTo(.15f));
                 Assert.That(preview.GetComponent<Renderer>().sharedMaterial, Is.SameAs(ground));
@@ -140,13 +137,18 @@ namespace SomethingDownThere.Tests
                         Assert.That(ground.GetTexture("_TurfRoughness"), Is.SameAs(ground.GetTexture("_BandMask")), "A vendor cap mask is the band's own.");
                     Assert.That(mask.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput), "Preserve smoothness alpha.");
                 }
-                // No texture line at the collar join: the cap blends into the terrain's damp band and
-                // renders it with the same texture, tint, tiling and world alignment; the terrain band
-                // fully covers the join and fades outward into the lakebed.
+                // No texture line at the collar join: the whole plot keeps the dark cap, and beyond the
+                // outline the collar and the terrain lighten it into the damp band with one shared
+                // share map, rendering the same texture, tiling and world alignment.
                 var lakebed = root.Find("Environment").GetComponentInChildren<Terrain>();
-                int bandLayer = System.Array.FindIndex(lakebed.terrainData.terrainLayers, l => l != null && l.name == "DampMud");
+                int bandLayer = System.Array.FindIndex(lakebed.terrainData.terrainLayers, l => l != null && l.name == LakebedSiteSetup.DampMudName);
+                int capLayer = System.Array.FindIndex(lakebed.terrainData.terrainLayers, l => l != null && l.name == LakebedSiteSetup.DigCapName);
                 Assert.That(bandLayer, Is.GreaterThanOrEqualTo(0), "The lakebed has the damp band layer.");
+                Assert.That(capLayer, Is.GreaterThanOrEqualTo(0), "The lakebed continues the plot's dark cap beyond the outline.");
                 var band = lakebed.terrainData.terrainLayers[bandLayer];
+                var capMud = lakebed.terrainData.terrainLayers[capLayer];
+                Assert.That(capMud.diffuseTexture, Is.SameAs(band.diffuseTexture));
+                Assert.That(Vector4.Distance(ground.GetColor("_TurfTint").linear, capMud.diffuseRemapMax), Is.LessThan(.002f), "The terrain's cap matches the plot.");
                 foreach (var cap in new[] { ground, camp })
                 {
                     Assert.That(cap.GetFloat("_BandBlend"), Is.EqualTo(1), cap.name);
@@ -160,26 +162,39 @@ namespace SomethingDownThere.Tests
                     float phase = Mathf.Repeat(band.tileOffset[axis] - position, band.tileSize[axis]);
                     Assert.That(Mathf.Min(phase, band.tileSize[axis] - phase), Is.LessThan(.01f), "The band layer is world-aligned like the cap.");
                 }
-                float BandAt(float compass, float offset)
+                var data = lakebed.terrainData;
+                Vector2Int Texel(float compass, float offset)
                 {
                     var p = SiteLayout.OpeningPoint(compass, offset);
-                    var data = lakebed.terrainData;
-                    int x = Mathf.FloorToInt((p.x - lakebed.transform.position.x) / data.size.x * data.alphamapResolution);
-                    int z = Mathf.FloorToInt((p.y - lakebed.transform.position.z) / data.size.z * data.alphamapResolution);
-                    return data.GetAlphamaps(x, z, 1, 1)[0, 0, bandLayer];
+                    return new Vector2Int(Mathf.FloorToInt((p.x - lakebed.transform.position.x) / data.size.x * data.alphamapResolution),
+                        Mathf.FloorToInt((p.y - lakebed.transform.position.z) / data.size.z * data.alphamapResolution));
+                }
+                float LayerAt(float compass, float offset, int layer)
+                {
+                    var t = Texel(compass, offset);
+                    return data.GetAlphamaps(t.x, t.y, 1, 1)[0, 0, layer];
                 }
                 float beyondBand = 0;
                 for (float compass = 0; compass < 360; compass += 30)
                 {
-                    Assert.That(BandAt(compass, 1.3f), Is.GreaterThan(.97f), "The band fully covers the collar join at " + compass);
-                    beyondBand += BandAt(compass, LakebedSiteSetup.BandStart + LakebedSiteSetup.BandWidth * 1.3f) / 12;
+                    // The paint samples each texel's centre.
+                    var texel = Texel(compass, 1.3f);
+                    var centre = new Vector2(lakebed.transform.position.x + (texel.x + .5f) * data.size.x / data.alphamapResolution,
+                        lakebed.transform.position.z + (texel.y + .5f) * data.size.z / data.alphamapResolution);
+                    Assert.That(LayerAt(compass, 1.3f, capLayer), Is.EqualTo(1 - LakebedSiteSetup.DigBandShare(centre)).Within(.02f), "The cap lightens as the collar does at " + compass);
+                    Assert.That(LayerAt(compass, 1.3f, capLayer) + LayerAt(compass, 1.3f, bandLayer), Is.GreaterThan(.97f), "Cap and band cover the collar join at " + compass);
+                    Assert.That(LayerAt(compass, LakebedSiteSetup.CapFade * 1.3f, capLayer), Is.LessThan(.03f), "The cap has lightened into the band at " + compass);
+                    beyondBand += LayerAt(compass, LakebedSiteSetup.BandStart + LakebedSiteSetup.BandWidth * 1.3f, bandLayer) / 12;
                 }
                 // The band's layer is also the lakebed's own damp mud, which remains in patches beyond it.
                 Assert.That(beyondBand, Is.LessThan(.5f), "The band fades out into the lakebed.");
-                // The canyon keeps the demo's own ground layers; the lakebed's layers follow them.
-                var demoLayers = lakebed.terrainData.terrainLayers.Take(6).ToArray();
-                Assert.That(demoLayers.All(l => AssetDatabase.GetAssetPath(l).StartsWith("Assets/BK/PureNature_Highlands/")), Is.True,
-                    "The canyon ground keeps the original demo layers.");
+                // One grass: the demo's two green layers are gone; its other ground layers remain, and the
+                // lakebed's own layers follow them.
+                var layerNames = lakebed.terrainData.terrainLayers.Select(l => l.name).ToArray();
+                Assert.That(layerNames, Does.Not.Contain("Grass").And.Not.Contain("Mud_grass"), "Every grass is the one muted turf.");
+                Assert.That(layerNames.Count(n => n == "DryTurf"), Is.EqualTo(1));
+                Assert.That(lakebed.terrainData.terrainLayers.Take(4).All(l => AssetDatabase.GetAssetPath(l).StartsWith("Assets/BK/PureNature_Highlands/")), Is.True,
+                    "The canyon keeps the demo's other ground layers.");
                 foreach (string name in new[] { "ComputerStation", "RechargeZone", "ReturnAnchor" })
                 {
                     Transform anchor = root.Find("Surface/" + name);
@@ -206,10 +221,6 @@ namespace SomethingDownThere.Tests
                 Physics.SyncTransforms();
                 var environment = root.Find("Environment");
                 Assert.That(environment, Is.Not.Null);
-                var soils = environment.GetComponentInChildren<TopsoilVariants>();
-                Assert.That(new SerializedObject(soils).FindProperty("ground").objectReferenceValue,
-                    Is.SameAs(new SerializedObject(root.GetComponentInChildren<TerrainVolume>()).FindProperty("soilMaterial").objectReferenceValue),
-                    "The soil comparison switches the dig ground itself.");
                 Assert.That(environment.GetComponent<PermanentTerrainBoundary>().CanDig, Is.False);
                 var terrain = root.GetComponentsInChildren<Terrain>(true).Single();
                 Assert.That(terrain.transform.IsChildOf(environment), Is.True);
@@ -237,7 +248,10 @@ namespace SomethingDownThere.Tests
                     float compass = i * 5;
                     Ray Down(float offset) { var p = SiteLayout.OpeningPoint(compass, offset); return new Ray(new Vector3(p.x, 2, p.y), Vector3.down); }
                     Assert.That(collar.Raycast(Down(-.1f), out _, 3), Is.False, "The rim never caps the opening.");
-                    Assert.That(collar.Raycast(Down(.1f), out var lip, 3), Is.True);
+                    // The inner edge bevels up from the dig surface; the collar top is flat beyond it.
+                    Assert.That(collar.Raycast(Down(.05f), out var edge, 3), Is.True);
+                    Assert.That(edge.point.y, Is.LessThan(SiteLayout.RimLip + .01f), "No step along the outline.");
+                    Assert.That(collar.Raycast(Down(SiteLayout.RimBevel + .1f), out var lip, 3), Is.True);
                     Assert.That(lip.point.y, Is.EqualTo(SiteLayout.RimTop).Within(.002f));
                     Assert.That(ground.Raycast(Down(-.1f), out _, 3), Is.False, "The terrain is open over the dig ground.");
                     Assert.That(ground.Raycast(Down(SiteLayout.RimBand + .5f), out var beyond, 3), Is.True);
@@ -259,10 +273,9 @@ namespace SomethingDownThere.Tests
                 Assert.That(environment.GetComponentsInChildren<Transform>(true)
                     .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
                     "Runtime static batching of the vendor scenery exhausts memory on every scene load.");
-                // One dig boundary option outlines the plot on its permanent collar, without colliders.
+                // Survey tape outlines the plot on its permanent collar, without colliders.
                 var boundary = environment.Find("Dig boundary");
-                var markers = boundary.Cast<Transform>().ToArray();
-                Assert.That(markers.Count(m => m.gameObject.activeSelf), Is.EqualTo(1), "One boundary option shows at a time.");
+                Assert.That(boundary.Cast<Transform>().Select(m => m.name), Is.EqualTo(new[] { "Survey tape" }));
                 Assert.That(boundary.GetComponentsInChildren<Collider>(true), Is.Empty, "Digging, aiming and the winch cable pass the boundary.");
                 foreach (var marker in boundary.GetComponentsInChildren<MeshFilter>(true))
                 {

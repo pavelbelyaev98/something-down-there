@@ -16,23 +16,26 @@ The lakebed excavation is a single contained worksite.
   along channels and waterlines; boulders on the old bed are bare, water-worn rock. Low sand islands with grassy tops and the odd boulder stand in
   the remaining lake. All lakebed dressing stays clear of the camp and the dig plot.
 - **Dig area:** one wide, irregular plot of bare ground inside the drained section, wider
-  east-west than north-south and never a circle, with no tall fence. A low, continuous marker on the
-  permanent ground outlines it, so where digging starts and stops reads at a glance (candidates are
-  compared in Developer admin). The plot is the darkest ground on
-  site; it blends into a dark damp band at its edge, with no visible texture line, and the band
-  fades gradually into the lighter lakebed. No grass grows on the plot; cuts expose fine-grained
-  subsoil coloured apart from the cracked surface mud, with no stone shapes that could pass for
-  finds (candidates are compared in Developer admin). The canyon beyond the old lakebed keeps the original
-  demo ground. The stations stand on its south side, looking north up
+  east-west than north-south and never a circle, with no tall fence. It reads as a construction or
+  excavation site: survey stakes with red-and-white barrier tape on the permanent ground outline it,
+  so where digging starts and stops reads at a glance. Its edge bumps in and out every few metres, so
+  cuts along it never follow one clean curve, and no step or line marks the edge before digging. The
+  whole plot is the darkest ground on site, evenly; the lightening starts on the permanent ground
+  just beyond the edge, through a dark damp band with no visible texture line, and fades gradually
+  into the lighter lakebed. No grass grows on the plot; cuts expose lighter clay loam coloured apart
+  from the cracked surface mud, with no stone shapes that could pass for finds. The canyon beyond the
+  old lakebed keeps the demo's ground, with one grass everywhere: a turf in the same green as the
+  grass blades growing on it, so ground and blades read as one from every angle. The stations stand on its south side, looking north up
   the canyon.
 - **Play area:** the player stays on the drained section: invisible walls follow its edge at the
   water line and a flight ceiling stops the jetpack about 16 m above the ground. Scenery that can
   never be seen from inside this volume is left out.
 - **Dimensions:** `SiteLayout` owns the opening, rim and subsurface allocation. Depth remains
   at least 100 m; the footprint leaves useful lateral room for branches. Finds keep their
-  accepted density beneath the plot and just under its edge; ground further out is plain soil.
-- **Boundary:** the rim and lakebed ground cannot be dug from above. The saved rectangular
-  subsurface grid remains accessible beneath them for lateral digging.
+  accepted density beneath the plot, wholly inside its edge; ground further out is plain soil.
+- **Boundary:** the rim and lakebed ground cannot be dug from above. Under them, the top 1.2 m is
+  a permanent soil bank, so a pit edge is a solid soil wall, never a thin roof over a hollow. The
+  saved rectangular subsurface grid remains accessible below the bank for lateral digging.
 - **Lighting:** solar-noon presentation with the sun almost directly overhead and short shadows.
   Use the Highlands demo's sky, ambient colour, sun colour and baked canyon reflections; custom
   sun/cloud artwork is retired. The sky's sun reads as a clear disc with a soft glow, not the

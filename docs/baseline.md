@@ -56,15 +56,19 @@
   happen only far from the player; terrain grass (at High view distance) and anything in or near the play area are never
   culled from inside it (`LakebedSiteSetup.PlayViewDistance`). Baked occlusion uses permanent rocks only, never excavation,
   terrain or foliage. The stations sit on the camp arc south of the plot.
-- **Dig ground and soil:** the plot's untouched top is the Highlands mud darkened toward its centre;
-  toward the outline it becomes the terrain's damp band (`DampMud`, the lakebed's own layer) using
-  an edge-distance map from `SiteLayout`, and the band fades into the lakebed. Freshly cut topsoil
-  is the original soil art (a muted colour copy, tinted); clay, gravel, rock and concrete textures lie
-  below, blended from saved material IDs. Developer admin → **Dig soil** cycles six topsoil candidates for the session
-  (`TopsoilVariants`). The canyon outside the old lakebed keeps the demo's own layers and paint.
-- **Dig boundary:** a low collider-free marker on the collar outlines the plot. Three options are
-  authored (stone ring, survey tape, timber edging); the stone ring shows, and Developer admin →
-  **Dig boundary** cycles them for the session (`DigBoundaryMarkers`).
+- **Dig ground and soil:** the plot's untouched top is the Highlands mud, evenly darkened (the
+  cap). Beyond the outline the collar and the terrain (`DigCap` layer) lighten it into the damp band
+  (`DampMud`) with one shared share map (`DigBandShare`), and the band fades into the lakebed. The
+  collar's inner edge bevels up from the dig surface, so no step shows along the outline, and the
+  physical edge wobbles around the smooth find footprint (`SiteLayout.OpeningRadius` vs
+  `FootprintRadius`). Freshly cut topsoil is clay loam (the Mountains mud, tinted); clay, gravel, rock
+  and concrete textures lie below, blended from saved material IDs. Terrain grass is one turf (`DryTurf`),
+  tinted to the canyon grass blades' green; the demo's two grass layers are dropped. Beyond the edge
+  the top 1.2 m is a permanent soil bank (`SiteLayout.BankDepth`, enforced on tool cuts by
+  `ExcavationGrid`), so pit edges are soil walls; find centres stay 0.5 m inside the edge. The canyon otherwise keeps the demo's layers
+  and paint.
+- **Dig boundary:** survey stakes with red-and-white tape on the collar outline the plot (collider-free,
+  open where the winch cable enters).
 - **Presentation:** the Highlands sky, grade and haze with a noon sun (`SunPresentationSetup`); a hue curve calms the packs' lime greens.
   Lighting and water refresh without regenerating the site, keeping Inspector tuning. No
   first-person rig; the scoop/shave motion follows the tool level. `WindowsBuild` always targets

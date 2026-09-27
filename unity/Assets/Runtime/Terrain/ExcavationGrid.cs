@@ -27,6 +27,12 @@ namespace SomethingDownThere
         private readonly Dictionary<int, byte> remnantState = new Dictionary<int, byte>(2048);
         private const float RemnantMaxWidth = 0.25f, RemnantMaxExtent = 0.5f, RemnantMaxVolume = 0.03f;
         private int lowestCarvedY;
+        // Permanent soil (SiteLayout's bank): per column, metres beyond the plot outline. Samples
+        // beyond it and within bankDepth of the top keep at least the bank's own distance field,
+        // so tools leave a solid soil wall along the outline instead of undercutting the permanent
+        // ground into a thin roof. Lateral digging under the site starts below it.
+        private float[] bankBeyond;
+        private float bankDepth;
         public Vector3Int Size { get; }
         public float CellSize { get; }
         public Vector3 Extent => (Vector3)Size * CellSize;
@@ -40,6 +46,18 @@ namespace SomethingDownThere
         public float LastRemnantVolume { get; private set; }
         public int LastRemnantCheckedSamples { get; private set; }
         public long SnapshotCopiedBytes => density.CopiedBytes;
+
+        public void SetBank(float[] beyondPerColumn, float depth)
+        {
+            if (beyondPerColumn != null && beyondPerColumn.Length != (Size.x + 1) * (Size.z + 1))
+                throw new ArgumentException("The bank needs one distance per column.", nameof(beyondPerColumn));
+            bankBeyond = beyondPerColumn;
+            bankDepth = depth;
+        }
+
+        // The bank's signed distance at a sample: positive inside the permanent soil.
+        private float Bank(int x, int y, int z) =>
+            Mathf.Min(bankBeyond[x + z * (Size.x + 1)], bankDepth - (Size.y - y) * CellSize);
 
         public static void ValidateDimensions(Vector3Int size, float cellSize)
         {
@@ -370,6 +388,7 @@ namespace SomethingDownThere
                 }
                 else cut = delta.magnitude - radius;
                 float after = Mathf.Max(-band, Mathf.Min(before, cut));
+                if (bankBeyond != null) after = Mathf.Max(after, Mathf.Min(before, Bank(x, y, z)));
                 if (before - after < 0.00001f) continue;
                 density[index] = after;
                 if (before > 0) remnantSeeds.Add(index);
@@ -476,6 +495,7 @@ namespace SomethingDownThere
             var p = SampleCoordinates(index);
             if (p.x < 2 || p.x > Size.x - 2 || p.y < 2 || p.y >= Size.y
                 || p.z < 2 || p.z > Size.z - 2 || p.y < lowestCarvedY) return;
+            if (bankBeyond != null && Bank(p.x, p.y, p.z) > 0) return;
             float maxWidth = Mathf.Min(CellSize * .5f, .0625f);
             if (ThinAcross(index, 1, maxWidth) || ThinAcross(index, strideY, maxWidth, Size.y - p.y)
                 || ThinAcross(index, strideZ, maxWidth)) remnantComponent.Add(index);

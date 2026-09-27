@@ -4,28 +4,31 @@ using UnityEngine;
 
 namespace SomethingDownThere.Editor
 {
-    // The dig plot reads darkest: its surface cap is the canyon mud darkened toward the plot centre,
-    // and toward the outline it becomes the terrain's damp band itself (same texture, tint and world
-    // mapping), so the collar joins the terrain without a texture line. Beyond it the band fades into
-    // the light lakebed. Freshly cut topsoil below is fine-grained, recoloured away from the surface
-    // mud, with no stone shapes that could pass for finds.
+    // The whole dig plot reads darkest: its surface cap is the canyon mud darkened. Beyond the outline
+    // the permanent ground lightens from that dark mud through the terrain's damp band into the light
+    // lakebed, so where digging ends reads clearly. The collar and the terrain share one band share
+    // (DigBandShare) and the same mud texture, relief and world mapping, so they join without a
+    // texture line. Freshly cut topsoil below is clay loam, with no stone shapes that could pass for finds.
     public static partial class LakebedSiteSetup
     {
         public const string DampMudLayerPath = Folder + "/DampMud.terrainlayer";
-        public const string DigEdgePath = Folder + "/DigEdgeDistance.asset";
-        public const string DampMudName = "DampMud";
+        public const string DigCapLayerPath = Folder + "/DigCap.terrainlayer";
+        public const string DigBandSharePath = Folder + "/DigBandShare.asset";
+        public const string DampMudName = "DampMud", DigCapName = "DigCap";
         private const string CanyonMudLayerPath = "Assets/BK/PureNature_Highlands/Textures/Surfaces/TerrainLayers/Mud.terrainlayer";
         private const string MountainMudLayerPath = "Assets/BK/PureNature_Mountains/Textures/Surfaces/Layers/Mud01.terrainlayer";
-        private const string SandLayerPath = "Assets/BK/PureNature_Highlands/Textures/Surfaces/TerrainLayers/Sand.terrainlayer";
-        // Linear multipliers on the canyon mud: the damp band and the plot's darkest centre.
+        // Linear multipliers on the canyon mud: the damp band and the plot's dark cap.
         private static readonly Color DampMudTint = new Color(.66f, .62f, .58f, 1);
         public static readonly Color DigCapTint = new Color(.42f, .39f, .37f, 1);
-        // Metres inside the outline over which the plot darkens; the band covers the terrain fully
-        // out to BandStart beyond it, past the collar skirt, then fades over about BandWidth.
-        public const float DigInnerFade = 8, BandStart = 1.5f, BandWidth = 16;
-        // The edge map covers the grid and its collar around the site origin.
+        // Metres beyond the outline over which the dark cap lightens into the damp band; the band
+        // then fades into the lakebed over about BandWidth.
+        public const float CapFade = 3.5f, BandStart = CapFade, BandWidth = 16;
+        // The share map covers the grid and its collar around the site origin.
         private const float DigEdgeHalfSpan = 20;
         private const int DigEdgeResolution = 256;
+        // Freshly cut topsoil: the Mountains mud as clay loam, tinted away from the orange surface.
+        public static readonly Color ClayLoamTint = new Color(.62f, .98f, 1.25f, 1);
+        public const float ClayLoamTileMetres = 4;
 
         private static TerrainLayer CanyonMud()
         {
@@ -43,16 +46,30 @@ namespace SomethingDownThere.Editor
             return 1 - t * t * (3 - 2 * t);
         }
 
-        // The canyon mud darkened as damp silt: the lakebed's own layer for the band around the plot
-        // and the wet ground by the water. World-aligned, dry and non-metallic, exactly as the dig
-        // ground's shader renders it; the demo's own Mud layer stays untouched.
-        private static TerrainLayer DampMudLayer(Vector3 terrainPosition)
+        // How far the dark cap has lightened toward the damp band: none inside the plot, all of it
+        // CapFade beyond the outline (a little sooner or later along it). The collar shader and the
+        // terrain paint both use this.
+        public static float DigBandShare(Vector2 local)
         {
-            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(DampMudLayerPath);
-            if (layer == null) { layer = new TerrainLayer(); AssetDatabase.CreateAsset(layer, DampMudLayerPath); }
+            float grain = Mathf.PerlinNoise(local.x / 2.5f + 7.1f, local.y / 2.5f + 29.3f);
+            float t = Mathf.Clamp01(SiteLayout.BeyondOpening(local) / (CapFade * (.8f + .4f * grain)));
+            return t * t * (3 - 2 * t);
+        }
+
+        // The canyon mud darkened: as damp silt for the lakebed's band around the plot and the wet
+        // ground by the water, or as the plot's own dark cap just beyond its outline. World-aligned,
+        // dry and non-metallic, exactly as the dig ground's shader renders it; the demo's own Mud
+        // layer stays untouched.
+        private static TerrainLayer DampMudLayer(Vector3 terrainPosition) => MudLayer(DampMudLayerPath, DampMudName, DampMudTint, terrainPosition);
+        private static TerrainLayer DigCapLayer(Vector3 terrainPosition) => MudLayer(DigCapLayerPath, DigCapName, DigCapTint, terrainPosition);
+
+        private static TerrainLayer MudLayer(string path, string name, Color tint, Vector3 terrainPosition)
+        {
+            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(path);
+            if (layer == null) { layer = new TerrainLayer(); AssetDatabase.CreateAsset(layer, path); }
             EditorUtility.CopySerialized(CanyonMud(), layer);
-            layer.name = DampMudName;
-            layer.diffuseRemapMax = DampMudTint;
+            layer.name = name;
+            layer.diffuseRemapMax = tint;
             layer.tileOffset = new Vector2(Mathf.Repeat(terrainPosition.x, layer.tileSize.x), Mathf.Repeat(terrainPosition.z, layer.tileSize.y));
             var min = layer.maskMapRemapMin;
             var max = layer.maskMapRemapMax;
@@ -66,21 +83,21 @@ namespace SomethingDownThere.Editor
             return layer;
         }
 
-        // Metres beyond the plot outline (SiteLayout) over the grid and collar, for the shader.
-        private static Texture2D DigEdgeDistance()
+        // DigBandShare over the grid and collar, for the shader.
+        private static Texture2D DigBandShareMap()
         {
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(DigEdgePath);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(DigBandSharePath);
             if (texture == null)
             {
                 texture = new Texture2D(DigEdgeResolution, DigEdgeResolution, TextureFormat.RHalf, false, true)
-                    { name = "DigEdgeDistance", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
-                AssetDatabase.CreateAsset(texture, DigEdgePath);
+                    { name = "DigBandShare", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+                AssetDatabase.CreateAsset(texture, DigBandSharePath);
             }
             var pixels = new ushort[DigEdgeResolution * DigEdgeResolution];
             float cell = DigEdgeHalfSpan * 2 / DigEdgeResolution;
             for (int z = 0; z < DigEdgeResolution; z++)
             for (int x = 0; x < DigEdgeResolution; x++)
-                pixels[z * DigEdgeResolution + x] = Mathf.FloatToHalf(SiteLayout.BeyondOpening(
+                pixels[z * DigEdgeResolution + x] = Mathf.FloatToHalf(DigBandShare(
                     new Vector2(-DigEdgeHalfSpan + (x + .5f) * cell, -DigEdgeHalfSpan + (z + .5f) * cell)));
             texture.SetPixelData(pixels, 0);
             texture.Apply(false, false);
@@ -88,50 +105,20 @@ namespace SomethingDownThere.Editor
             return texture;
         }
 
-        // Freshly cut topsoil candidates, compared in Developer admin; the first is authored into the
-        // ground material. The original soil art (its muted colour copy) and plain pack soils, tinted
-        // away from the orange surface mud. Clay and rock keep their own textures.
-        public static TopsoilVariants.Soil[] TopsoilOptions() => new[]
+        // Freshly cut topsoil: clay loam from the Mountains mud. Clay and rock keep their own textures.
+        public static void ConfigureTopsoil(Material material)
         {
-            OriginalSoil("Loam", new Color(.33f, .28f, .21f)),
-            OriginalSoil("Dark loam", new Color(.24f, .2f, .15f)),
-            OriginalSoil("Olive silt", new Color(.3f, .31f, .26f)),
-            PackSoil("Clay loam", MountainMudLayerPath, new Color(.45f, .75f, 1), 4),
-            PackSoil("Damp humus", MountainMudLayerPath, new Color(.32f, .55f, .9f), 4),
-            PackSoil("Grey silt", SandLayerPath, new Color(.1f, .1f, .11f), 5),
-        };
-
-        private static TopsoilVariants.Soil OriginalSoil(string name, Color tint)
-        {
-            Texture2D Channel(string channel) =>
-                AssetDatabase.LoadAssetAtPath<Texture2D>(GroundTextureSetup.Folder + "Soil_" + channel + ".png")
-                ?? throw new InvalidOperationException("Missing original soil art: " + channel);
-            return new TopsoilVariants.Soil
-            {
-                Name = name, Albedo = GroundTextureSetup.MutedSoilAlbedo(), Normal = Channel("Normal"), Mask = Channel("Roughness"), Tint = tint,
-                TileMetres = GroundTextureSetup.OriginalSoilTileMetres,
-                Relief = GroundTextureSetup.OriginalSoilRelief, StoneRelief = GroundTextureSetup.OriginalStoneRelief,
-            };
-        }
-
-        private static TopsoilVariants.Soil PackSoil(string name, string layerPath, Color tint, float tileMetres)
-        {
-            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(layerPath);
-            if (layer == null) throw new InvalidOperationException("Missing approved pack soil " + layerPath);
-            return new TopsoilVariants.Soil
-            {
-                Name = name, Albedo = layer.diffuseTexture, Normal = layer.normalMapTexture, Mask = layer.maskMapTexture,
-                PackMask = true, Tint = tint, TileMetres = tileMetres, Relief = layer.normalScale, StoneRelief = layer.normalScale,
-            };
-        }
-
-        public static void ConfigureTopsoil(Material material) => TopsoilVariants.Apply(material, TopsoilOptions()[0]);
-
-        private static void BuildTopsoilVariants(Transform environment, Material ground)
-        {
-            var variants = new GameObject("Topsoil variants").AddComponent<TopsoilVariants>();
-            variants.transform.SetParent(environment, false);
-            variants.Configure(ground, TopsoilOptions());
+            var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(MountainMudLayerPath);
+            if (layer == null) throw new InvalidOperationException("Missing approved Mountains mud " + MountainMudLayerPath);
+            material.SetTexture("_SoilAlbedo", layer.diffuseTexture);
+            material.SetTexture("_SoilNormal", layer.normalMapTexture);
+            material.SetTexture("_SoilRoughness", layer.maskMapTexture);
+            material.SetFloat("_MaskLayout", 1);
+            // Colour properties are linearised for the shader.
+            material.SetColor("_SoilTint", ClayLoamTint.gamma);
+            material.SetFloat("_SoilTileMetres", ClayLoamTileMetres);
+            material.SetFloat("_NormalStrength", layer.normalScale);
+            material.SetFloat("_StoneNormalStrength", layer.normalScale);
         }
 
         // Binds the plot's surface cap and the damp band to a dig ground material. Before the lakebed
@@ -156,8 +143,7 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_BandNormalStrength", band.normalScale);
             material.SetVector("_BandMaskMin", band.maskMapRemapMin);
             material.SetVector("_BandMaskMax", band.maskMapRemapMax);
-            material.SetFloat("_BandInnerFade", DigInnerFade);
-            material.SetTexture("_DigEdge", DigEdgeDistance());
+            material.SetTexture("_DigEdge", DigBandShareMap());
             float inverse = 1 / (DigEdgeHalfSpan * 2);
             material.SetVector("_DigEdgeRect", new Vector4(-DigEdgeHalfSpan, -DigEdgeHalfSpan, inverse, inverse));
         }

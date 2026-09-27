@@ -42,21 +42,11 @@ Shader "Something Down There/Ground Triplanar"
         _BandNormalStrength("Surrounding band relief", Float) = 1
         _BandMaskMin("Surrounding band mask minimum", Vector) = (0,0,0,0)
         _BandMaskMax("Surrounding band mask maximum", Vector) = (1,1,1,1)
-        _DigEdge("Metres beyond the dig plot outline", 2D) = "black" {}
+        _DigEdge("Band share beyond the dig plot outline", 2D) = "black" {}
         _DigEdgeRect("Edge map origin (xy) and inverse size (zw)", Vector) = (0,0,1,1)
-        _BandInnerFade("Cap fade into the band inside the edge (metres)", Float) = 4
         [Toggle] _BandBlend("Blend the cap into the surrounding band", Float) = 0
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _MaskLayout("Mask layout", Float) = 0
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _TurfMaskLayout("Turf mask layout", Float) = 0
-        [Toggle] _SoilComparison("Compare soil on the west half", Float) = 0
-        _SoilSplitX("Soil comparison split (world X)", Float) = 0
-        _ComparisonAlbedo("Comparison soil colour", 2D) = "white" {}
-        [Normal] _ComparisonNormal("Comparison soil normal", 2D) = "bump" {}
-        _ComparisonRoughness("Comparison soil mask", 2D) = "white" {}
-        [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _ComparisonMaskLayout("Comparison mask layout", Float) = 0
-        _ComparisonTileMetres("Comparison soil tile metres", Float) = 2
-        _ComparisonNormalStrength("Comparison soil relief", Range(0, 2)) = 0.55
-        _ComparisonStoneNormalStrength("Comparison stone relief", Range(0, 2)) = 0.9
         _MaxSmoothness("Dry ground maximum smoothness", Range(0, 1)) = 0.15
         _TileMetres("Turf tile metres", Float) = 1
         _SoilTileMetres("Soil tile metres", Float) = 2
@@ -88,17 +78,11 @@ Shader "Something Down There/Ground Triplanar"
             float _MacroVariation;
             float _MaskLayout;
             float _TurfMaskLayout;
-            float _SoilComparison;
-            float _SoilSplitX;
-            float _ComparisonMaskLayout;
-            float _ComparisonTileMetres;
-            float _ComparisonNormalStrength;
-            float _ComparisonStoneNormalStrength;
             float _MaxSmoothness;
             float _GroundOpacity;
             float4 _ClayTint, _RockTint, _TurfTint, _SoilTint;
             float4 _BandTint, _BandMaskMin, _BandMaskMax, _DigEdgeRect;
-            float _BandTileMetres, _BandNormalStrength, _BandInnerFade, _BandBlend;
+            float _BandTileMetres, _BandNormalStrength, _BandBlend;
             float _ClayTileMetres, _RockTileMetres;
             float _ClayNormalStrength, _RockNormalStrength;
             float4 _GravelTint, _ConcreteTint;
@@ -114,9 +98,6 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_BandAlbedo); SAMPLER(sampler_BandAlbedo);
         TEXTURE2D(_BandNormal); TEXTURE2D(_BandMask);
         TEXTURE2D(_DigEdge); SAMPLER(sampler_DigEdge);
-        TEXTURE2D(_ComparisonAlbedo); SAMPLER(sampler_ComparisonAlbedo);
-        TEXTURE2D(_ComparisonNormal); SAMPLER(sampler_ComparisonNormal);
-        TEXTURE2D(_ComparisonRoughness); SAMPLER(sampler_ComparisonRoughness);
         // Identical repeat/trilinear imports share sampler states across layers.
         TEXTURE2D(_ClayAlbedo); TEXTURE2D(_ClayNormal); TEXTURE2D(_ClayMask);
         TEXTURE2D(_RockAlbedo); TEXTURE2D(_RockNormal); TEXTURE2D(_RockMask);
@@ -159,22 +140,7 @@ Shader "Something Down There/Ground Triplanar"
         // projection sign. Sign boundaries must not select an unrelated coarse mip.
         #define GROUND_SAMPLE(tex, uv, dx, dy) SAMPLE_TEXTURE2D_GRAD(tex, sampler##tex, uv, dx, dy)
 
-        half4 SampleGroundSoil(TEXTURE2D_PARAM(primaryTexture, primarySampler),
-            TEXTURE2D_PARAM(comparisonTexture, comparisonSampler),
-            float2 uv, float2 dx, float2 dy, bool useComparison)
-        {
-            // Gradients are derived from continuous world position before the
-            // split, so even a cut crossing it retains stable mip selection.
-            half4 sampled = half4(0, 0, 0, 0);
-            [branch] if (useComparison)
-                sampled = SAMPLE_TEXTURE2D_GRAD(comparisonTexture, comparisonSampler, uv, dx, dy);
-            else
-                sampled = SAMPLE_TEXTURE2D_GRAD(primaryTexture, primarySampler, uv, dx, dy);
-            return sampled;
-        }
-        #define SOIL_SAMPLE(channel, uv, dx, dy) SampleGroundSoil( \
-            TEXTURE2D_ARGS(_Soil##channel, sampler_Soil##channel), \
-            TEXTURE2D_ARGS(_Comparison##channel, sampler_Comparison##channel), uv, dx, dy, useComparison)
+        #define SOIL_SAMPLE(channel, uv, dx, dy) SAMPLE_TEXTURE2D_GRAD(_Soil##channel, sampler_Soil##channel, uv, dx, dy)
 
         half3 DecodeGroundMask(half4 mask, float layout)
         {
@@ -203,11 +169,10 @@ Shader "Something Down There/Ground Triplanar"
             // Exclude stretched grazing projections from the soil blend.
             half3 weights = smoothstep(bestAxis - 0.16, bestAxis, axis);
             weights /= max(dot(weights, 1.0), 0.0001);
-            bool useComparison = _SoilComparison > 0.5 && position.x < _SoilSplitX;
-            float soilTileMetres = max(useComparison ? _ComparisonTileMetres : _SoilTileMetres, 0.05);
-            float maskLayout = useComparison ? _ComparisonMaskLayout : _MaskLayout;
-            float normalStrength = useComparison ? _ComparisonNormalStrength : _NormalStrength;
-            float stoneNormalStrength = useComparison ? _ComparisonStoneNormalStrength : _StoneNormalStrength;
+            float soilTileMetres = max(_SoilTileMetres, 0.05);
+            float maskLayout = _MaskLayout;
+            float normalStrength = _NormalStrength;
+            float stoneNormalStrength = _StoneNormalStrength;
             float3 p = position / soilTileMetres;
             float3 pDx = positionDx / soilTileMetres;
             float3 pDy = positionDy / soilTileMetres;
@@ -259,7 +224,7 @@ Shader "Something Down There/Ground Triplanar"
             float3 covered = stoneCoverage * eligible;
             float mineral = smoothstep(0.15, 0.65, max(covered.x, max(covered.y, covered.z)));
             weights = lerp(weights, mineralWeights, mineral);
-            colour = (cx * weights.x + cy * weights.y + cz * weights.z) * (useComparison ? 1 : _SoilTint.rgb);
+            colour = (cx * weights.x + cy * weights.y + cz * weights.z) * _SoilTint.rgb;
             // Surface-gradient projection: a flat normal map reproduces the
             // density-gradient mesh normal exactly, including blended slopes.
             normal = ProjectGroundNormal(n, weights, axisSign, nx, ny, nz);
@@ -283,31 +248,30 @@ Shader "Something Down There/Ground Triplanar"
             float edgeWidth = max(_TurfDepth * 0.45, (abs(positionDx.y) + abs(positionDy.y)) * 0.65);
             if (depth < _TurfDepth * 1.5 + 0.02)
             {
-                float turfScale = soilTileMetres / max(_TileMetres, 0.05);
-                half3 grassY = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb * _TurfTint.rgb;
-                half3 grass = grassY;
-                half3 gy = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfNormalStrength);
-                half2 turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg;
-                turfMask.g = lerp(0.65, 1, turfMask.g);
-                // Toward the plot outline the cap becomes the terrain's damp band itself: the same
-                // texture, tint, relief, mask remap and world mapping, so the collar joins the
-                // terrain without a texture line and the darker plot fades in from inside the edge.
-                half band = 0;
+                half3 grass, gy;
+                half2 turfMask;
                 [branch] if (_BandBlend > 0.5)
                 {
-                    float beyond = SAMPLE_TEXTURE2D_LOD(_DigEdge, sampler_DigEdge, (position.xz - _DigEdgeRect.xy) * _DigEdgeRect.zw, 0).r;
-                    band = smoothstep(-max(_BandInnerFade, 0.01), 0, beyond);
-                }
-                [branch] if (band > 0.001)
-                {
+                    // The cap is the terrain's own mud: the plot keeps the dark cap tint, and beyond the
+                    // outline the permanent collar lightens toward the damp band with the share the
+                    // terrain paint uses (LakebedSiteSetup.DigBandShare). Same texture, relief, mask
+                    // remap and world mapping as the terrain layers, so collar and terrain join
+                    // without a texture line.
+                    half band = SAMPLE_TEXTURE2D_LOD(_DigEdge, sampler_DigEdge, (position.xz - _DigEdgeRect.xy) * _DigEdgeRect.zw, 0).r;
                     float bandScale = 1 / max(_BandTileMetres, 0.05);
                     float2 bandUV = position.xz * bandScale, bandDx = positionDx.xz * bandScale, bandDy = positionDy.xz * bandScale;
-                    half3 bandColour = SAMPLE_TEXTURE2D_GRAD(_BandAlbedo, sampler_BandAlbedo, bandUV, bandDx, bandDy).rgb * _BandTint.rgb;
-                    half3 bandNormal = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BandNormal, sampler_BandAlbedo, bandUV, bandDx, bandDy), _BandNormalStrength);
+                    grass = SAMPLE_TEXTURE2D_GRAD(_BandAlbedo, sampler_BandAlbedo, bandUV, bandDx, bandDy).rgb * lerp(_TurfTint.rgb, _BandTint.rgb, band);
+                    gy = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BandNormal, sampler_BandAlbedo, bandUV, bandDx, bandDy), _BandNormalStrength);
                     half4 bandMask = SAMPLE_TEXTURE2D_GRAD(_BandMask, sampler_BandAlbedo, bandUV, bandDx, bandDy) * (_BandMaskMax - _BandMaskMin) + _BandMaskMin;
-                    grass = lerp(grass, bandColour, band);
-                    gy = normalize(lerp(gy, bandNormal, band));
-                    turfMask = lerp(turfMask, half2(1 - bandMask.a, bandMask.g), band);
+                    turfMask = half2(1 - bandMask.a, bandMask.g);
+                }
+                else
+                {
+                    float turfScale = soilTileMetres / max(_TileMetres, 0.05);
+                    grass = GROUND_SAMPLE(_TurfAlbedo, uvY * turfScale, dxY * turfScale, dyY * turfScale).rgb * _TurfTint.rgb;
+                    gy = UnpackNormalScale(GROUND_SAMPLE(_TurfNormal, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfNormalStrength);
+                    turfMask = DecodeGroundMask(GROUND_SAMPLE(_TurfRoughness, uvY * turfScale, dxY * turfScale, dyY * turfScale), _TurfMaskLayout).rg;
+                    turfMask.g = lerp(0.65, 1, turfMask.g);
                 }
                 half leaf = saturate((grass.g - grass.r * 0.7) * 3.5);
                 half drift = GROUND_SAMPLE(_TurfAlbedo, position.xz * 0.61, positionDx.xz * 0.61, positionDy.xz * 0.61).r;

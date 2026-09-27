@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -19,35 +18,6 @@ namespace SomethingDownThere.Editor
         public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
         // The original soil art's own mapping and relief.
         public const float OriginalSoilTileMetres = 2, OriginalSoilRelief = .55f, OriginalStoneRelief = .9f;
-        public const string MutedSoilAlbedoPath = Folder + "Soil_Albedo_Muted.png";
-        // Share of the original soil colour's saturation its muted copy keeps.
-        private const float SoilMuting = .3f;
-
-        // The original soil colour with its orange muted and its pebbles still neutral, so a tint sets
-        // the soil's hue without colouring the pebbles. Delete the copy to regenerate it.
-        public static Texture2D MutedSoilAlbedo()
-        {
-            var muted = AssetDatabase.LoadAssetAtPath<Texture2D>(MutedSoilAlbedoPath);
-            if (muted != null) return muted;
-            var image = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            try
-            {
-                if (!image.LoadImage(File.ReadAllBytes(Folder + "Soil_Albedo.png")))
-                    throw new InvalidOperationException("Unreadable original soil colour.");
-                var pixels = image.GetPixels32();
-                for (int i = 0; i < pixels.Length; i++)
-                {
-                    Color.RGBToHSV(pixels[i], out float hue, out float saturation, out float value);
-                    pixels[i] = Color.HSVToRGB(hue, saturation * SoilMuting, value);
-                }
-                image.SetPixels32(pixels);
-                File.WriteAllBytes(MutedSoilAlbedoPath, image.EncodeToPNG());
-            }
-            finally { UnityEngine.Object.DestroyImmediate(image); }
-            AssetDatabase.ImportAsset(MutedSoilAlbedoPath);
-            ConfigureImport(MutedSoilAlbedoPath, "Albedo");
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(MutedSoilAlbedoPath);
-        }
 
         [MenuItem("Tools/Something Down There/Configure Pack Lakebed Ground")]
         public static void ConfigurePackGround()
@@ -75,27 +45,15 @@ namespace SomethingDownThere.Editor
             }
             Undo.RecordObject(sediment, "Use pack lakebed ground");
             sediment.shader = shader;
-            // Retain custom art and its material, but don't pull it into the
-            // active terrain or player build through dormant comparison slots.
-            foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-                sediment.SetTexture("_Comparison" + channel, null);
             ConfigureSurfaceCap(sediment, terrain.SurfaceHeight);
             LakebedSiteSetup.ConfigureTopsoil(sediment);
             ConfigureDeposits(sediment);
-            sediment.SetFloat("_SoilComparison", 0);
-            sediment.SetFloat("_SoilSplitX", terrain.transform.TransformPoint(
-                new Vector3(terrain.Dimensions.x * terrain.CellSize * .5f, 0, 0)).x);
-            sediment.SetFloat("_ComparisonMaskLayout", 0);
-            sediment.SetFloat("_ComparisonTileMetres", 2);
-            sediment.SetFloat("_ComparisonNormalStrength", .55f);
-            sediment.SetFloat("_ComparisonStoneNormalStrength", .9f);
             EditorUtility.SetDirty(sediment);
 
             var camp = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
             if (camp == null) throw new InvalidOperationException("Keep the existing camp material.");
             Undo.RecordObject(camp, "Use the pack lakebed surface cap");
             ConfigureSurfaceCap(camp, terrain.SurfaceHeight);
-            camp.SetFloat("_SoilComparison", 0);
             EditorUtility.SetDirty(camp);
             var settings = new SerializedObject(terrain);
             settings.FindProperty("soilMaterial").objectReferenceValue = sediment;
@@ -232,7 +190,6 @@ namespace SomethingDownThere.Editor
                 material.SetTexture("_" + kind + channel, AssetDatabase.LoadAssetAtPath<Texture2D>(path));
             }
             ConfigureSurfaceCap(material, terrain.SurfaceHeight);
-            material.SetFloat("_SoilComparison", 0);
             material.SetFloat("_MaskLayout", 0f); // Original: roughness R, contact G, stone coverage B.
             material.SetFloat("_MaxSmoothness", .15f);
             material.SetFloat("_SoilTileMetres", OriginalSoilTileMetres);

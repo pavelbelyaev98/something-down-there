@@ -76,14 +76,14 @@ $map = @(
     @{ Pattern = '^unity/Assets/Runtime/Player/ShovelState\.cs$'; Play = @('TerrainIntegrationTests', 'ShavingIntegrationTests', 'FpsUiInputTests') },
     @{ Pattern = '^unity/Assets/Runtime/Player/'; Play = @('FpsPlayerTests', 'FpsUiInputTests', 'TerrainIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Terrain/ExcavationDaylight'; Play = @('ExcavationDaylightIntegrationTests') },
-    @{ Pattern = '^unity/Assets/Runtime/Terrain/SiteLayout\.cs$'; Play = @('TerrainIntegrationTests', 'ShavingIntegrationTests', 'DiscoveryIntegrationTests'); Population = $true },
+    @{ Pattern = '^unity/Assets/Runtime/Terrain/SiteLayout\.cs$'; Play = @('TerrainIntegrationTests', 'ShavingIntegrationTests', 'DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests'); Population = $true },
     @{ Pattern = '^unity/Assets/Runtime/Terrain/'; Play = @('TerrainIntegrationTests', 'ShavingIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Persistence/'; Play = @('SaveIntegrationTests', 'StartupMenuTests') },
     @{ Pattern = '^unity/Assets/Runtime/UI/Toolkit/GameMenuView\.cs$'; Play = @('FpsUiInputTests', 'StartupMenuTests') },
     @{ Pattern = '^unity/Assets/Runtime/UI/'; Play = @('FpsUiInputTests') },
     # Benchmark fixtures, editor tooling and project settings: EditMode only.
     @{ Pattern = '^unity/Assets/Runtime/Validation/|^unity/Assets/Editor/|^unity/Assets/Settings/|^unity/ProjectSettings/|^unity/Packages/'; Play = @() },
-    @{ Pattern = '^unity/Assets/Scenes/MainGame\.unity$'; Play = @('StartupMenuTests') }
+    @{ Pattern = '^unity/Assets/Scenes/MainGame(\.unity$|/)'; Play = @('StartupMenuTests') }
 )
 # Batchmode runs [Explicit] tests only when a name filter selects them directly.
 $populationSweep = 'SomethingDownThere.Tests.DiscoveryCatalogTests'
@@ -130,18 +130,21 @@ function Test-Commit([string]$sha) {
 }
 
 # Files: path -> content hash last tested green. A path absent from Files was clean at Head.
+# Play: path -> content hash whose PlayMode classes passed while EditMode failed, so a rerun
+# repeats EditMode only.
 function Read-State {
     if (-not (Test-Path $statePath)) { return $null }
     try { $raw = Get-Content $statePath -Raw | ConvertFrom-Json } catch { return $null }
     if (-not $raw.head -or -not (Test-Commit $raw.head)) { return $null }
-    $files = @{}
+    $files = @{}; $play = @{}
     if ($raw.files) { foreach ($p in $raw.files.PSObject.Properties) { $files[$p.Name] = [string]$p.Value } }
-    return @{ Head = [string]$raw.head; Files = $files; Updated = [string]$raw.updated; LastFull = [string]$raw.lastFull }
+    if ($raw.play) { foreach ($p in $raw.play.PSObject.Properties) { $play[$p.Name] = [string]$p.Value } }
+    return @{ Head = [string]$raw.head; Files = $files; Play = $play; Updated = [string]$raw.updated; LastFull = [string]$raw.lastFull }
 }
 
-function Write-State([string]$head, [hashtable]$files, [string]$lastFull) {
+function Write-State([string]$head, [hashtable]$files, [hashtable]$play, [string]$lastFull) {
     New-Item -ItemType Directory -Force (Split-Path $statePath) | Out-Null
-    [pscustomobject]@{ head = $head; updated = (Get-Date).ToString('yyyy-MM-dd HH:mm'); lastFull = $lastFull; files = $files } |
+    [pscustomobject]@{ head = $head; updated = (Get-Date).ToString('yyyy-MM-dd HH:mm'); lastFull = $lastFull; files = $files; play = $play } |
         ConvertTo-Json -Depth 3 | Set-Content -Path $statePath -Encoding UTF8
 }
 
@@ -171,12 +174,18 @@ $checks = @{}
 $play = New-Object 'System.Collections.Generic.HashSet[string]'
 $unknown = New-Object System.Collections.Generic.List[string]
 $broad = $false; $population = $false
+# PlayMode classes already passed for this exact content (only EditMode failed last time).
+function Test-PlayPassed([string]$file) {
+    return -not $explicitPaths -and -not $Full -and $state -and $state.Play.ContainsKey($file) -and $state.Play[$file] -eq $hashes[$file]
+}
 foreach ($file in $changed) {
     $c = Get-Checks $file
     $checks[$file] = $c
     if ($null -eq $c) { continue }
-    foreach ($name in $c.Play) { [void]$play.Add($name) }
-    if ($c.Broad) { $broad = $true }
+    if (-not (Test-PlayPassed $file)) {
+        foreach ($name in $c.Play) { [void]$play.Add($name) }
+        if ($c.Broad) { $broad = $true }
+    }
     if ($c.Population) { $population = $true }
     if ($c.Unknown) { $unknown.Add($file) }
 }
@@ -207,29 +216,31 @@ $unattributed = $false
 
 # Records every changed path whose checks all passed; see Read-State for the format.
 function Save-Results {
-    $passed = @($changed | Where-Object {
+    $playOk = @($changed | Where-Object {
         $c = $checks[$_]
-        if ($null -eq $c) { return $true }
-        if ($SkipEditMode -or $editFailed -or $unattributed -or ($c.Broad -and $assemblyFailed)) { return $false }
+        if ($null -eq $c -or (Test-PlayPassed $_)) { return $true }
+        if ($unattributed -or ($c.Broad -and $assemblyFailed)) { return $false }
         foreach ($name in $c.Play) { if ($failedClasses.Contains($name)) { return $false } }
         return $true
     })
+    $passed = @($playOk | Where-Object { $null -eq $checks[$_] -or -not ($SkipEditMode -or $editFailed) })
     $previousFull = if ($state) { $state.LastFull } else { '' }
     $fullStamp = if ($Full -and $failed -eq 0) { (Get-Date).ToString('yyyy-MM-dd HH:mm') } else { $previousFull }
     if ($explicitPaths) {
         # Hand-scoped runs only refine an existing record; they never vouch for other paths.
         if (-not $state) { return }
         foreach ($p in $passed) { $state.Files[$p] = $hashes[$p] }
-        Write-State $state.Head $state.Files $fullStamp
+        Write-State $state.Head $state.Files $state.Play $fullStamp
     } elseif ($passed.Count -eq $changed.Count) {
         # Everything uncommitted now holds tested content; clean paths match HEAD.
         $files = @{}
         foreach ($p in $dirty) { $files[$p] = $hashes[$p] }
-        Write-State $head $files $fullStamp
+        Write-State $head $files @{} $fullStamp
     } else {
-        if (-not $state) { $state = @{ Head = $head; Files = @{} } }
-        foreach ($p in $passed) { $state.Files[$p] = $hashes[$p] }
-        Write-State $state.Head $state.Files $fullStamp
+        if (-not $state) { $state = @{ Head = $head; Files = @{}; Play = @{} } }
+        foreach ($p in $playOk) { if ($null -ne $checks[$p]) { $state.Play[$p] = $hashes[$p] } }
+        foreach ($p in $passed) { $state.Files[$p] = $hashes[$p]; $state.Play.Remove($p) }
+        Write-State $state.Head $state.Files $state.Play $fullStamp
     }
 }
 
@@ -254,8 +265,10 @@ function Invoke-BatchTests([string]$mode, [string]$filter) {
     return $LASTEXITCODE
 }
 
+# The Editor drops CLI requests while it reloads for Play Mode; that reads as "no status yet".
 function Get-TestStatus {
-    $raw = (& unity command test_status --project-path $projectPath --format json | ConvertFrom-Json).data.result
+    try { $raw = (& unity command test_status --project-path $projectPath --format json | ConvertFrom-Json).data.result }
+    catch { return $null }
     if (-not $raw) { return $null }
     return ($raw | ConvertFrom-Json)
 }
@@ -291,9 +304,11 @@ function Invoke-UnityTests([string]$mode, [string]$filter, [bool]$explicit = $fa
     while ($true) {
         Start-Sleep -Seconds 2
         $status = Get-TestStatus
-        if ($null -ne $status -and $status.status -eq 'running') { $started = $true }
-        elseif ($started -or ($null -ne $status -and $status.duration -ne $before.duration)) { return $status }
         if ((Get-Date) -gt $deadline) { throw "Test run timed out: $mode $filter" }
+        if ($null -eq $status) { continue }
+        if ($status.status -eq 'running') { $started = $true; continue }
+        # Only a finished run counts; a transitional status is not a result.
+        if ($status.status -in 'completed', 'error' -and ($started -or $status.duration -ne $before.duration)) { return $status }
     }
 }
 
@@ -321,7 +336,14 @@ function Sync-Scripts {
     if ($state.failed) { throw "Scripts have compile errors: $($state.errors | ConvertTo-Json -Depth 5 -Compress)" }
 }
 
+# Failures in a run; a run that did not complete counts as one.
+function Get-Failures($result) {
+    if ($result.status -ne 'completed' -or $null -eq $result.summary) { return [Math]::Max(1, [int]$result.summary.failed) }
+    return [int]$result.summary.failed
+}
+
 function Write-Result($result) {
+    if ($result.status -ne 'completed') { Write-Host "  FAIL run did not complete: $($result.message)" -ForegroundColor Red; return }
     Write-Host ("  total {0}  passed {1}  failed {2}  ({3:N0}s)" -f $result.summary.total, $result.summary.passed, $result.summary.failed, $result.duration)
     foreach ($test in ($result.results | Where-Object { $_.Status -ne 'Passed' })) {
         Write-Host ("  FAIL {0}`n       {1}" -f $test.FullName, ($test.Message -split "`n")[0]) -ForegroundColor Red
@@ -361,26 +383,27 @@ if (-not $SkipEditMode) {
     Write-Host "`nEditMode assembly$(if ($population -or $Full) { ' + [Explicit]' })" -ForegroundColor Green
     $result = Invoke-UnityTests 'editor' $null ($population -or $Full)
     Write-Result $result
-    $failed += $result.summary.failed
-    if ($result.summary.failed -gt 0) { $editFailed = $true }
+    $failed += Get-Failures $result
+    if ((Get-Failures $result) -gt 0) { $editFailed = $true }
 }
 
 if ($Full -or $broad) {
     Write-Host "`nPlayMode assembly$(if ($Full) { ' + [Explicit]' })" -ForegroundColor Green
     $result = Invoke-UnityTests 'playmode' $null ([bool]$Full)
     Write-Result $result
-    $failed += $result.summary.failed
-    if ($result.summary.failed -gt 0) { $assemblyFailed = $true }
+    $failed += Get-Failures $result
+    if ((Get-Failures $result) -gt 0) { $assemblyFailed = $true }
+    if ($result.status -ne 'completed') { $unattributed = $true }
     foreach ($test in ($result.results | Where-Object { $_.Status -ne 'Passed' })) { [void]$failedClasses.Add((Get-TestClass $test.FullName)) }
 } else {
     foreach ($name in ($play | Sort-Object)) {
         Write-Host "`nPlayMode $name" -ForegroundColor Green
         $result = Invoke-UnityTests 'playmode' $name
         Write-Result $result
-        $failed += $result.summary.failed
-        if ($result.summary.failed -gt 0) { [void]$failedClasses.Add($name) }
+        $failed += Get-Failures $result
+        if ((Get-Failures $result) -gt 0) { [void]$failedClasses.Add($name) }
         # A selected class that runs nothing means the mapping points at a missing class.
-        if ($result.summary.total -eq 0) {
+        if ($result.status -eq 'completed' -and $result.summary.total -eq 0) {
             $failed++; [void]$failedClasses.Add($name)
             Write-Host "  FAIL no tests ran for '$name': fix the mapping in tools/test-changed.ps1" -ForegroundColor Red
         }

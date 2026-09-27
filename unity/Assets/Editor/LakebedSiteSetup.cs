@@ -98,7 +98,6 @@ namespace SomethingDownThere.Editor
             MainGameSceneBuilder.PlaceBedrock(root.Find("Bedrock"));
             root.GetComponentInChildren<Camera>().farClipPlane = 3000;
             GroundTextureSetup.ConfigureGroundMaterials(root);
-            BuildTopsoilVariants(environment, soil);
             SunPresentationSetup.Configure();
             ConfigureWater(root);
             ConfigurePerformance(root);
@@ -314,6 +313,7 @@ namespace SomethingDownThere.Editor
             var sediment = SedimentLayer(s.TerrainPosition);
             var dryTurf = DryTurfLayer();
             var dampMud = DampMudLayer(s.TerrainPosition);
+            var digCap = DigCapLayer(s.TerrainPosition);
             var lakebedDetails = LakebedDetails(from);
             AssetDatabase.DeleteAsset(TerrainDataPath);
             var data = new TerrainData { name = "LakebedTerrain" };
@@ -329,9 +329,13 @@ namespace SomethingDownThere.Editor
             data.wavingGrassStrength = from.wavingGrassStrength;
             data.wavingGrassTint = from.wavingGrassTint;
             data.alphamapResolution = WindowCells;
-            // The demo's layers stay untouched; the lakebed's own layers follow them.
-            data.terrainLayers = from.terrainLayers.Append(sediment).Append(dryTurf).Append(dampMud).ToArray();
-            data.SetAlphamaps(0, 0, Paint(from, s));
+            // The demo's layers stay untouched; the lakebed's own layers follow them. Layers the paint
+            // no longer uses (the demo's two grasses) are dropped: fewer terrain passes.
+            var layers = from.terrainLayers.Append(sediment).Append(dryTurf).Append(dampMud).Append(digCap).ToArray();
+            var alpha = Paint(from, s);
+            DropUnusedLayers(ref layers, ref alpha);
+            data.terrainLayers = layers;
+            data.SetAlphamaps(0, 0, alpha);
             data.SetDetailScatterMode(from.detailScatterMode);
             int detailScale = (from.heightmapResolution - 1) / from.detailResolution;
             data.SetDetailResolution(WindowCells / detailScale, from.detailResolutionPerPatch);
@@ -381,8 +385,12 @@ namespace SomethingDownThere.Editor
             return layer;
         }
 
-        // The Mountains pack's natural grass, tinted toward sun-dried olive, for the exposed bed and
-        // its islands; the Highlands lime is too saturated to tint. The canyon keeps its own grass.
+        // The one ground grass everywhere: the Mountains pack's natural grass, nudged toward the green
+        // of the canyon's grass blades so blades and ground read as one colour from every angle
+        // (an olive turf under them looked dark and yellow from above). The Highlands lime is too
+        // saturated to tint.
+        public static readonly Vector4 TurfTint = new Vector4(1, 1.22f, 1.2f, 1);
+
         private static TerrainLayer DryTurfLayer()
         {
             var source = AssetDatabase.LoadAssetAtPath<TerrainLayer>("Assets/BK/PureNature_Mountains/Textures/Surfaces/Layers/Grass01.terrainlayer");
@@ -401,7 +409,7 @@ namespace SomethingDownThere.Editor
             layer.maskMapRemapMin = source.maskMapRemapMin;
             layer.maskMapRemapMax = source.maskMapRemapMax;
             layer.diffuseRemapMin = source.diffuseRemapMin;
-            layer.diffuseRemapMax = Vector4.Scale(source.diffuseRemapMax, new Vector4(1, .85f, .62f, 1));
+            layer.diffuseRemapMax = Vector4.Scale(source.diffuseRemapMax, TurfTint);
             EditorUtility.SetDirty(layer);
             AssetDatabase.SaveAssetIfDirty(layer);
             return layer;
@@ -416,7 +424,7 @@ namespace SomethingDownThere.Editor
             var source = from.GetAlphamaps(s.I0, s.J0, WindowCells, WindowCells);
             // The project sediment, muted turf and damp silt layers follow the demo's layers; the
             // demo's own layers stay untouched, so the canyon keeps its original ground.
-            int halo = source.GetLength(2), sediment = halo, grassy = halo + 1, silt = halo + 2, layers = halo + 3;
+            int halo = source.GetLength(2), sediment = halo, grassy = halo + 1, silt = halo + 2, cap = halo + 3, layers = halo + 4;
             var alpha = new float[WindowCells, WindowCells, layers];
             for (int z = 0; z < WindowCells; z++)
             for (int x = 0; x < WindowCells; x++)
@@ -426,16 +434,14 @@ namespace SomethingDownThere.Editor
             for (int x = 0; x < WindowCells; x++)
             {
                 var local = s.Local(x + .5f, z + .5f);
-                // On the old lakebed's shore band the canyon's vivid grass gives way to the muted
-                // turf; beyond the old shoreline the canyon keeps the demo's paint.
-                float mute = s.Lake[z, x] ? 1 - Smooth((DrainedEdge(local) - 8) / 30) : 0;
-                if (mute > 0)
-                    foreach (int vivid in new[] { lawn, meadow })
-                    {
-                        float moved = alpha[z, x, vivid] * mute;
-                        alpha[z, x, vivid] -= moved;
-                        alpha[z, x, grassy] += moved;
-                    }
+                // One grass everywhere: the canyon's two greens (a darker lawn and a lighter meadow)
+                // mixed into blotches with hard edges against the lakebed turf, so all grass is the
+                // muted turf and the demo's patch shapes keep only its coverage.
+                foreach (int vivid in new[] { lawn, meadow })
+                {
+                    alpha[z, x, grassy] += alpha[z, x, vivid];
+                    alpha[z, x, vivid] = 0;
+                }
                 float camp = 1 - Smooth((SiteLayout.BeyondOpening(local) - CampFlat) / (CampBlend - CampFlat));
                 float weight = Mathf.Max(s.Lake[z, x] ? Smooth(s.Shore[z, x] / 3) : 0, camp);
                 if (weight <= 0) continue;
@@ -499,7 +505,36 @@ namespace SomethingDownThere.Editor
                 if (band <= 0) continue;
                 for (int l = 0; l < layers; l++) alpha[z, x, l] = alpha[z, x, l] * (1 - band) + (l == silt ? band : 0);
             }
+            // The plot's dark cap continues just beyond the outline and lightens into the band, with
+            // the share the collar shader uses, so the ground lightens where digging stops.
+            for (int z = 0; z < WindowCells; z++)
+            for (int x = 0; x < WindowCells; x++)
+            {
+                var local = s.Local(x + .5f, z + .5f);
+                float dark = 1 - DigBandShare(local);
+                if (dark <= 0) continue;
+                for (int l = 0; l < layers; l++) alpha[z, x, l] = alpha[z, x, l] * (1 - dark) + (l == cap ? dark : 0);
+            }
             return alpha;
+        }
+
+        // Removes layers with no weight anywhere, with their alphamap channels.
+        private static void DropUnusedLayers(ref TerrainLayer[] layers, ref float[,,] alpha)
+        {
+            int rows = alpha.GetLength(0), columns = alpha.GetLength(1), count = alpha.GetLength(2);
+            var used = new bool[count];
+            for (int z = 0; z < rows; z++)
+            for (int x = 0; x < columns; x++)
+            for (int l = 0; l < count; l++) used[l] |= alpha[z, x, l] > 0;
+            var keep = Enumerable.Range(0, count).Where(l => used[l]).ToArray();
+            if (keep.Length == count) return;
+            var compact = new float[rows, columns, keep.Length];
+            for (int z = 0; z < rows; z++)
+            for (int x = 0; x < columns; x++)
+            for (int k = 0; k < keep.Length; k++) compact[z, x, k] = alpha[z, x, keep[k]];
+            var kept = layers;
+            layers = keep.Select(l => kept[l]).ToArray();
+            alpha = compact;
         }
 
         private static void CopyDetails(TerrainData from, Section s, TerrainData data, int scale, Rect[] stations)
@@ -769,18 +804,23 @@ namespace SomethingDownThere.Editor
                 float reach = Mathf.Min(dx > 1e-4f ? halfX / dx : float.MaxValue, dz > 1e-4f ? halfZ / dz : float.MaxValue);
                 return new Vector3(Mathf.Sin(c), 0, Mathf.Cos(c)) * reach;
             }
-            Vector3 top = Vector3.up * SiteLayout.RimTop, skirt = Vector3.up * (SiteLayout.GroundTop - .015f), bottom = Vector3.up * SiteLayout.RimBottom;
+            // The inner edge sits just above the dig surface and bevels up to the collar top, so the
+            // untouched plot shows no step or shadow line along the outline.
+            Vector3 top = Vector3.up * SiteLayout.RimTop, lip = Vector3.up * SiteLayout.RimLip;
+            Vector3 skirt = Vector3.up * (SiteLayout.GroundTop - .015f), bottom = Vector3.up * SiteLayout.RimBottom;
             for (int i = 0; i < segments; i++)
             {
                 // Descending compass keeps the collar's faces pointing up.
                 float a = 90 - i * 360f / segments, b = 90 - (i + 1) * 360f / segments;
                 Vector3 ia = Point(a, 0), ib = Point(b, 0), ca = Point(a, SiteLayout.RimBand), cb = Point(b, SiteLayout.RimBand);
+                Vector3 ba = Point(a, SiteLayout.RimBevel), bb = Point(b, SiteLayout.RimBevel);
                 Vector3 la = Point(a, SiteLayout.RimBand + .35f), lb = Point(b, SiteLayout.RimBand + .35f), oa = Outer(a), ob = Outer(b);
-                Quad(ia + top, ib + top, cb + top, ca + top);
+                Quad(ia + lip, ib + lip, bb + top, ba + top);
+                Quad(ba + top, bb + top, cb + top, ca + top);
                 Quad(ca + top, cb + top, lb + skirt, la + skirt);
                 Quad(la + skirt, lb + skirt, ob, oa);
                 Quad(ia + bottom, oa + bottom, ob + bottom, ib + bottom);
-                Quad(ia + top, ia + bottom, ib + bottom, ib + top);
+                Quad(ia + lip, ia + bottom, ib + bottom, ib + lip);
                 Quad(oa, ob, ob + bottom, oa + bottom);
             }
             var mesh = new Mesh { name = "ExcavationRim" };

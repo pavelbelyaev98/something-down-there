@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -47,6 +48,12 @@ namespace SomethingDownThere.Tests
                 Assert.That(SiteLayout.BeyondOpening(point * 1.01f), Is.GreaterThan(0));
             }
             Assert.That(widest, Is.GreaterThan(deepest + 2), "The plot is wider than it is deep.");
+            // The physical edge bumps in and out of the smooth plot outline, so cuts never follow one
+            // clean curve; find centres stay a find's reach inside it.
+            var offsets = Enumerable.Range(0, 720).Select(i => SiteLayout.OpeningRadius(i * .5f) - SiteLayout.PlotRadius(i * .5f)).ToArray();
+            Assert.That(SiteLayout.FindInset, Is.GreaterThanOrEqualTo(DiscoveryField.MaximumFindRadius));
+            Assert.That(offsets.Max(), Is.GreaterThan(.2f).And.LessThanOrEqualTo(SiteLayout.EdgeWobble));
+            Assert.That(offsets.Min(), Is.LessThan(-.2f).And.GreaterThanOrEqualTo(-SiteLayout.EdgeWobble));
         }
     }
 }

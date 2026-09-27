@@ -9,6 +9,23 @@ namespace SomethingDownThere.Tests
     public sealed class ExcavationGridTests
     {
         [Test]
+        public void PermanentBankKeepsASoilWallAtTheEdgeAndAllowsTunnelsBelowIt()
+        {
+            // The edge runs along x = 1.6 m; the bank holds the top 0.8 m beyond it.
+            var grid = new ExcavationGrid(new Vector3Int(32, 32, 16), .1f);
+            var beyond = new float[33 * 17];
+            for (int z = 0; z <= 16; z++) for (int x = 0; x <= 32; x++) beyond[x + z * 33] = x * .1f - 1.6f;
+            grid.SetBank(beyond, .8f);
+            float top = grid.Extent.y;
+            for (int i = 0; i < 6; i++) grid.RemoveSphere(new Vector3(1.6f, top - .3f, .8f), .7f, out _);
+            Assert.That(grid.IsSolid(new Vector3(1.4f, top - .3f, .8f)), Is.False, "Cuts clear the plot side of the edge.");
+            Assert.That(grid.IsSolid(new Vector3(1.75f, top - .3f, .8f)), Is.True, "Cuts never undercut the permanent ground near the surface.");
+            Assert.That(grid.IsSolid(new Vector3(1.75f, top - .05f, .8f)), Is.True);
+            grid.RemoveSphere(new Vector3(2f, top - 1.6f, .8f), .6f, out _);
+            Assert.That(grid.IsSolid(new Vector3(2.2f, top - 1.6f, .8f)), Is.False, "Lateral digging under the site starts below the bank.");
+        }
+
+        [Test]
         public void BatchedExposureMatchesScalarSamplingAfterCutsRotationScalingAndRestore()
         {
             var grid = new ExcavationGrid(new Vector3Int(37, 20, 34), .125f);

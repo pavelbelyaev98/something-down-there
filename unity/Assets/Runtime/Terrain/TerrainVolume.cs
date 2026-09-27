@@ -125,6 +125,7 @@ namespace SomethingDownThere
             if ((transform.lossyScale - Vector3.one).sqrMagnitude > 0.0001f)
                 throw new InvalidOperationException("TerrainVolume requires unit scale; configure its dimensions instead.");
             grid = new ExcavationGrid(dimensions, cellSize, excavationSeed);
+            grid.SetBank(SiteLayout.BankColumns(dimensions, cellSize), SiteLayout.BankDepth);
             if (untouchedPreview != null) untouchedPreview.SetActive(false);
             chunkRoot = new GameObject("Chunks").transform;
             chunkRoot.SetParent(transform, false);

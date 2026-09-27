@@ -111,7 +111,7 @@ namespace SomethingDownThere.Tests
                 for (float x = .8f; x <= SiteLayout.Extent.x - .8f; x += .5f)
                     for (float z = .8f; z <= SiteLayout.Extent.z - .8f; z += .5f)
                     {
-                        if (SiteLayout.BeyondOpening(new Vector2(x, z) + corner) > 0) continue;
+                        if (SiteLayout.BeyondFootprint(new Vector2(x, z) + corner) > 0) continue;
                         int cx = Mathf.FloorToInt(x / 2f), cz = Mathf.FloorToInt(z / 2f);
                         float distance = float.MaxValue;
                         for (int ox = -1; ox <= 1; ox++)
@@ -219,7 +219,7 @@ namespace SomethingDownThere.Tests
                     // Fallen objects cannot enter this count: positions are the original generation.
                     var patches = new System.Collections.Generic.List<int>();
                     var corner = new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
-                    bool InPlot(float x, float z) => SiteLayout.BeyondOpening(new Vector2(x, z) + corner) <= 0;
+                    bool InPlot(float x, float z) => SiteLayout.BeyondFootprint(new Vector2(x, z) + corner) <= 0;
                     for (float x = 0; x + 3 <= SiteLayout.Extent.x; x += 3) for (float z = 0; z + 3 <= SiteLayout.Extent.z; z += 3)
                         if (InPlot(x, z) && InPlot(x + 3, z) && InPlot(x, z + 3) && InPlot(x + 3, z + 3))
                             patches.Add(fresh.Count(i => layout[i].Position.x >= x && layout[i].Position.x < x + 3
