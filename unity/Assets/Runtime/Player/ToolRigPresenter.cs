@@ -23,7 +23,7 @@ namespace SomethingDownThere
         // Rising from the bottom-right corner with the blade face turned to the view; only the head
         // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
         private static readonly Vector3 RestPosition = new Vector3(.28f, -.25f, -.05f), RestEuler = new Vector3(-35f, -22f, 6f);
-        private const float ModelScale = .26f;
+        private const float ModelScale = .3f;
         // Strokes turn the tool about its socket, so the head dips instead of the whole shaft swinging.
         private static readonly Vector3 Pivot = new Vector3(0f, 0f, .9f);
 
@@ -98,23 +98,17 @@ namespace SomethingDownThere
             if (stroke < 1f)
             {
                 stroke = Mathf.Min(1f, stroke + dt / strokeSeconds);
-                float jab = Mathf.Sin(stroke * Mathf.PI), scoop = Mathf.Sin(stroke * Mathf.PI * 2f);
+                float jab = Mathf.Sin(stroke * Mathf.PI);
                 float reach = (sink ? 1.5f : 1f) * (crisp ? 1.1f : 1f) * power;
-                switch (family)
+                // A small thrust along the tool, never a swing: soft ground takes a longer push, hard
+                // ground a short jab with a little shudder.
+                Vector3 along = Quaternion.Euler(RestEuler) * Vector3.forward;
+                float thrust = family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f;
+                offset = along * (thrust * reach * jab);
+                if (family == MotionFamily.Hard)
                 {
-                    case MotionFamily.Scoop:
-                        offset = new Vector3(-.002f, -.01f * (sink ? 1.4f : 1f), .005f) * (jab * reach);
-                        turn = new Vector3(6f * jab + 2.5f * scoop, 0f, -2.5f * jab);
-                        break;
-                    case MotionFamily.Bite:
-                        offset = new Vector3(0f, -.006f, .005f) * (jab * reach);
-                        turn = new Vector3(3.5f * jab, 0f, 0f);
-                        break;
-                    default:
-                        float shudder = Mathf.Sin(stroke * 38f) * (1f - stroke);
-                        offset = new Vector3(0f, -.005f, .004f) * (jab * reach) + new Vector3(.0008f, .0008f, 0f) * shudder;
-                        turn = new Vector3(2.5f * jab + .6f * shudder, 0f, 0f);
-                        break;
+                    float shudder = Mathf.Sin(stroke * 38f) * (1f - stroke);
+                    offset += new Vector3(.0008f, .0008f, 0f) * shudder;
                 }
             }
             if (player.ShavingEnabled && cutting)

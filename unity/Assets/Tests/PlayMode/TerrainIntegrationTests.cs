@@ -122,14 +122,17 @@ namespace SomethingDownThere.Tests
             float energy = player.Battery.Charge, beforeStroke = terrain.RemovedVolume;
             // The weaker top tier may need a few paid strokes to cut the pillar through;
             // whichever stroke severs it must clear the column inside that same stroke.
-            int severingStrokes = 0;
-            float paidEnergy = 0;
+            int severingStrokes = 0, releases = 0;
+            float paidEnergy = 0, strokeReleased = 0;
+            // Thin soil left hanging may slump in the same stroke (its own commit and volume).
+            terrain.Released += (kind, volume, centre) => { releases++; strokeReleased += volume; };
             // Mixed deposits can shed a small chip before the crown itself detaches.
             while (terrain.IsSolid(crown) && severingStrokes < 10)
             {
                 beforeStroke = terrain.RemovedVolume;
+                strokeReleased = 0;
                 Assert.That(player.TryDig(), Is.True);
-                paidEnergy += player.EffectiveDigEnergy;
+                paidEnergy += player.EffectiveDigEnergy * EquipmentProgression.MaterialResponse(player.LastDigMaterial).Interval;
                 severingStrokes++;
             }
             Assert.That(severingStrokes, Is.LessThanOrEqualTo(10), "Even a mixed hard pillar must yield to the top tier.");
@@ -139,8 +142,8 @@ namespace SomethingDownThere.Tests
             Assert.That(Hit(new Vector3(0, 2, 0), Vector3.down).point.y, Is.LessThan(-3),
                 "The crown's collider must disappear before the accepted dig returns.");
             Assert.That(player.Battery.Charge, Is.EqualTo(energy - paidEnergy).Within(.001f));
-            Assert.That(terrain.Revision, Is.EqualTo(revision + severingStrokes));
-            Assert.That(terrain.RemovedVolume - beforeStroke, Is.EqualTo(player.LastScoopVolume).Within(0.001f));
+            Assert.That(terrain.Revision, Is.EqualTo(revision + severingStrokes + releases));
+            Assert.That(terrain.RemovedVolume - beforeStroke, Is.EqualTo(player.LastScoopVolume + strokeReleased).Within(0.001f));
             Assert.That(terrain.GetComponentsInChildren<Rigidbody>(), Is.Empty);
             foreach (var collider in terrain.GetComponentsInChildren<MeshCollider>().Where(c => c.enabled))
                 Assert.That(collider.sharedMesh, Is.SameAs(collider.GetComponent<MeshFilter>().sharedMesh));
@@ -487,7 +490,8 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.LastRebuiltChunkCount, Is.InRange(4, 12));
             Assert.That(notifications, Is.EqualTo(1));
             Assert.That(notification.Contains(tip), Is.True, "Discovery exposure receives the cleared remnant bounds.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
+            Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy
+                * EquipmentProgression.MaterialResponse(player.LastDigMaterial).Interval).Within(.001f));
             Assert.That(terrain.Revision, Is.EqualTo(1));
             Assert.That(player.LastScoopVolume, Is.EqualTo(terrain.RemovedVolume).Within(0.00001f));
             Assert.That(terrain.TryDig(oldTipHit), Is.False);
@@ -793,9 +797,10 @@ namespace SomethingDownThere.Tests
                 Assert.That(terrain.ToolMaterialAt(hit), Is.EqualTo(material));
                 float charge = player.Battery.Charge;
                 Assert.That(player.TryDig(), Is.True);
-                // Every ground keeps the tool's rhythm and fuel per stroke; hardness is bite size.
-                Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
-                Assert.That(player.LastDigInterval, Is.EqualTo(player.EffectiveDigInterval).Within(.00001f));
+                // Hardness is mostly bite size and a little cadence; fuel follows cadence.
+                float scale = EquipmentProgression.MaterialResponse(material).Interval;
+                Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy * scale).Within(.001f));
+                Assert.That(player.LastDigInterval, Is.EqualTo(player.EffectiveDigInterval * scale).Within(.00001f));
                 Assert.That(player.LastDigMaterial, Is.EqualTo(material));
                 Assert.That(notifications, Is.EqualTo(i + 1));
                 Assert.That(feedback.Material, Is.EqualTo(material));
@@ -809,13 +814,13 @@ namespace SomethingDownThere.Tests
             Quaternion cameraRotation = player.ViewCamera.transform.rotation;
             Assert.That(player.TryPrimaryAction(), Is.True);
             int strokes = player.SuccessfulStrokes;
-            player.Tick(default, player.EffectiveDigInterval * .9f);
+            player.Tick(default, player.EffectiveDigInterval * 1.05f);
             player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
-            Assert.That(player.TryPrimaryAction(), Is.False, "The tool's interval still applies in rock.");
+            Assert.That(player.TryPrimaryAction(), Is.False, "Rock's slightly slower stroke outlasts the soil interval.");
             Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
             player.Tick(default, player.EffectiveDigInterval * .2f);
             player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
-            Assert.That(player.TryPrimaryAction(), Is.True, "Rock keeps the tool's own rhythm; only the bite shrinks.");
+            Assert.That(player.TryPrimaryAction(), Is.True, "The next rock cut resumes automatically after its interval.");
             float paid = player.Battery.Charge;
             player.OpenMenu(PlayerMenu.Pause);
             Assert.That(player.TryDig(), Is.False);

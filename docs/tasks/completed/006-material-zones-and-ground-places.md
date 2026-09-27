@@ -168,3 +168,7 @@ list; noise is `Unity.Mathematics` simplex. Target: full 150 m grid well under 1
   its old cadence factor (cube root of the old slowdown per axis, backfill widened a little). Sustained
   output per ground and level stayed within about ±7% of before, so the zone rule and hardness order
   hold unchanged; backfill with the drill is 1.35× soil (was 1.47×).
+- Third playtest: grounds felt alike and the tool too strong. Hardness is now mostly bite size with
+  a little stroke time again, each stroke throws its ground's debris, and the tool ladder follows the
+  user's level 1/10 dials; the zone rule is checked two purchases later at the working levels. See
+  [100](100-ground-lab-and-ground-releases.md).

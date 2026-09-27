@@ -599,6 +599,10 @@ namespace SomethingDownThere
                 string markPrompt = worksiteTools.MarkPrompt();
                 if (!string.IsNullOrEmpty(markPrompt)) TargetPrompt = markPrompt;
             }
+            // Ground Lab: name the bay and ground under the crosshair from anywhere on the plot.
+            if (string.IsNullOrEmpty(TargetPrompt) && Persistence != null && Persistence.State == WorldSaveState.Lab
+                && TryGetTarget(40f, out var far) && Contract<TerrainVolume>(far.collider) == excavationTerrain)
+                TargetPrompt = GroundLab.Describe(far.point, excavationTerrain.MaterialAt(far.point - far.normal * .05f));
         }
 
         internal void SuppressWorldActions()
@@ -709,7 +713,9 @@ namespace SomethingDownThere
             }
             var terrain = target as TerrainVolume;
             var material = terrain != null ? terrain.ToolMaterialAt(hit) : TerrainMaterialId.Soil;
-            float cost = EffectiveDigEnergy;
+            float intervalScale = EquipmentProgression.MaterialResponse(material).Interval;
+            scheduledDigInterval *= intervalScale;
+            float cost = EffectiveDigEnergy * intervalScale;
             if (!UnlimitedBattery && !Battery.CanSpend(cost)) { ShowFeedback("Not enough charge to dig - return to recharge"); return false; }
             bool accepted = terrain != null
                 ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled)
@@ -719,7 +725,7 @@ namespace SomethingDownThere
             LastDigInterval = scheduledDigInterval;
             SpendEnergy(cost);
             SuccessfulStrokes++;
-            LastScoopVolume = target is TerrainVolume volume ? volume.LastRemovedVolume : 0;
+            LastScoopVolume = target is TerrainVolume volume ? volume.LastCutVolume : 0;
             DigPulse = 1;
             RefreshTargetPrompt();
             TryAutomaticRescue();
@@ -817,6 +823,15 @@ namespace SomethingDownThere
 
         // Finds ground tells on purpose: transparent ground with coloured markers for every ground
         // that is not its zone's main ground (cracks, gravel, backfill, pond clay, concrete, ...).
+        // Ground Lab sessions start with unlimited battery; everything else stays as in the game.
+        public void BeginGroundLab()
+        {
+            if (!AdminAvailable) return;
+            unlimitedBattery = true;
+            ShowFeedback("Ground Lab: unlimited battery on. Ctrl+Shift+1-9/0 picks a tool level; nothing here is saved.");
+            MenuChanged?.Invoke();
+        }
+
         public void ToggleAdminGroundXray()
         {
             if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
@@ -908,6 +923,80 @@ namespace SomethingDownThere
                 if (level < Shovel.LevelCount) text.Append('\n');
             }
             return text.ToString();
+        }
+
+        public enum GroundDial { Width, Length, Depth, Speed }
+        // Developer ground tuning: dials one ground's bite for the session (EquipmentProgression overrides).
+        public TerrainMaterialId AdminGround { get; private set; } = TerrainMaterialId.Soil;
+        public bool HasAdminGroundTuning => AdminAvailable && EquipmentProgression.HasResponseOverrides;
+        public static readonly TerrainMaterialId[] TunableGrounds =
+        {
+            TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.Backfill, TerrainMaterialId.Clay, TerrainMaterialId.PondClay,
+            TerrainMaterialId.Rock, TerrainMaterialId.FracturedRock, TerrainMaterialId.Concrete, TerrainMaterialId.FracturedConcrete
+        };
+
+        public void CycleAdminGround()
+        {
+            if (!focused || !AdminAvailable) return;
+            int index = System.Array.IndexOf(TunableGrounds, AdminGround);
+            AdminGround = TunableGrounds[(index + 1) % TunableGrounds.Length];
+            MenuChanged?.Invoke();
+        }
+
+        public float AdminGroundValue(GroundDial dial)
+        {
+            var response = EquipmentProgression.MaterialResponse(AdminGround);
+            return dial == GroundDial.Width ? response.Width : dial == GroundDial.Length ? response.Length
+                : dial == GroundDial.Depth ? response.Penetration : response.Interval;
+        }
+
+        public void SetAdminGround(GroundDial dial, float value)
+        {
+            if (!AdminAvailable || !(value > 0)) return;
+            var r = EquipmentProgression.MaterialResponse(AdminGround);
+            EquipmentProgression.OverrideResponse(AdminGround, new MaterialToolResponse(
+                dial == GroundDial.Width ? value : r.Width, dial == GroundDial.Length ? value : r.Length,
+                dial == GroundDial.Depth ? value : r.Penetration, dial == GroundDial.Speed ? value : r.Interval));
+        }
+
+        public void ResetAdminGroundTuning()
+        {
+            if (!focused || !AdminAvailable) return;
+            EquipmentProgression.ClearResponseOverrides();
+            ShowFeedback("Ground tuning back to the authored values");
+            MenuChanged?.Invoke();
+        }
+
+        public static string GroundTable()
+        {
+            var table = new System.Text.StringBuilder("Ground: width / length / depth x the tool's bite, speed x its stroke time\n");
+            foreach (var ground in TunableGrounds)
+            {
+                var r = EquipmentProgression.MaterialResponse(ground);
+                table.Append($"{ground}: {r.Width:0.00} / {r.Length:0.00} / {r.Penetration:0.00}, speed {r.Interval:0.00}x - {EquipmentProgression.GroundEffect(ground)}\n");
+            }
+            return table.ToString().TrimEnd();
+        }
+
+        public void PrintAdminGroundTuning()
+        {
+            if (!focused || !AdminAvailable) return;
+            var source = new System.Text.StringBuilder();
+            foreach (var ground in TunableGrounds)
+            {
+                var r = EquipmentProgression.MaterialResponse(ground);
+                source.Append($"        {ground} = new MaterialToolResponse({r.Width:0.###}f, {r.Length:0.###}f, {r.Penetration:0.###}f, {r.Interval:0.###}f);\n");
+            }
+            string printed = source.ToString();
+            Debug.Log(printed);
+            try
+            {
+                string path = System.IO.Path.Combine(Application.persistentDataPath, "ground-tuning.txt");
+                System.IO.File.WriteAllText(path, printed);
+                ShowFeedback("Ground tuning saved beside your saves as ground-tuning.txt");
+            }
+            catch (System.Exception error) { ShowFeedback("Could not write ground-tuning.txt: " + error.Message); }
+            MenuChanged?.Invoke();
         }
 
         public void PrintAdminTuning()

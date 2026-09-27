@@ -2,13 +2,13 @@ namespace SomethingDownThere
 {
     public enum EquipmentKind { Shovel, Inventory, Fuel, Jetpack }
 
-    // How one ground shapes the tool's bite. Hardness shows as bite size, never as cadence: every
-    // ground keeps the tool's rhythm, and harder ground takes smaller, shallower bites.
+    // How one ground shapes the tool's bite. Hardness shows mostly as bite size (width, length,
+    // depth) and a little as cadence (Interval, relative to the tool's own stroke time).
     public readonly struct MaterialToolResponse
     {
-        public readonly float Width, Length, Penetration;
-        public MaterialToolResponse(float width, float length, float penetration)
-        { Width = width; Length = length; Penetration = penetration; }
+        public readonly float Width, Length, Penetration, Interval;
+        public MaterialToolResponse(float width, float length, float penetration, float interval)
+        { Width = width; Length = length; Penetration = penetration; Interval = interval; }
     }
 
     public readonly struct JetpackProfile
@@ -34,23 +34,48 @@ namespace SomethingDownThere
         public const float ShavingIntervalScale = 0.1f;
         public const float ShavingDepthRatio = 0.12f;
         // Relative to the owned tool: every tier retains material character and all families remain
-        // diggable. Each stroke costs the same fuel, so hard ground costs more fuel per metre.
-        private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f);
-        private static readonly MaterialToolResponse Clay = new MaterialToolResponse(.955f, .726f, .81f);
-        private static readonly MaterialToolResponse Rock = new MaterialToolResponse(.75f, .75f, .58f);
+        // diggable. Fuel follows cadence, so a slower stroke costs proportionally more.
+        private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);
+        private static readonly MaterialToolResponse Clay = new MaterialToolResponse(.98f, .745f, .831f, 1.08f);
+        private static readonly MaterialToolResponse Rock = new MaterialToolResponse(.786f, .786f, .608f, 1.15f);
         // Loose stones: a broad bite whose grainy edge and floor (ExcavationGrid) leave it a little slower than soil.
-        private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.07f, .975f, .975f);
+        private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.081f, .985f, .985f, 1.03f);
         // Tough but never a wall: small, shallow chips still make visible progress.
-        private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.575f, .575f, .41f);
+        private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.619f, .619f, .442f, 1.25f);
         // Clay basins' old pond clay: clean, smooth shavings that bite clearly easier than clay (the tell).
-        private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(.954f, .84f, .878f);
-        // Beside a crack: broken rock crumbles ~1.5x faster than rock (the tell, felt in the dark);
-        // the crack line itself cuts exactly like it. Broken concrete ~2.4x concrete.
-        private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(.928f, .817f, .817f);
-        private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.75f, .75f, .62f);
+        private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(.97f, .854f, .892f, 1.05f);
+        // Beside a crack: broken rock takes ~1.5x rock's bite, and a cut into the band breaks it
+        // loose along the crack (ExcavationGrid.TryRelease). Broken concrete ~2.4x concrete.
+        private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(.94f, .828f, .828f, 1.04f);
+        private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.774f, .774f, .64f, 1.1f);
         // Backfill: loose, mixed refill; the tool suddenly sinks in (the disturbed-ground tell).
-        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.2f, 1.14f, 1.35f);
-        public static MaterialToolResponse MaterialResponse(TerrainMaterialId material) => material switch
+        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.167f, 1.109f, 1.313f, .92f);
+        // Developer ground tuning: session-only replacements for the authored responses. A crack
+        // line follows its fractured band.
+        private static readonly MaterialToolResponse?[] ResponseOverrides = new MaterialToolResponse?[(int)TerrainMaterialSnapshot.Last + 1];
+        public static bool HasResponseOverrides => System.Array.Exists(ResponseOverrides, value => value.HasValue);
+        public static void OverrideResponse(TerrainMaterialId material, MaterialToolResponse response) => ResponseOverrides[(int)material] = response;
+        public static void ClearResponseOverrides() => System.Array.Clear(ResponseOverrides, 0, ResponseOverrides.Length);
+        public static MaterialToolResponse MaterialResponse(TerrainMaterialId material)
+        {
+            var key = material == TerrainMaterialId.Crack ? TerrainMaterialId.FracturedRock : material;
+            return ResponseOverrides[(int)key] ?? AuthoredResponse(key);
+        }
+        // What each ground does beyond its bite (concept 03 section 4), for the developer ground table.
+        public static string GroundEffect(TerrainMaterialId material) => material switch
+        {
+            TerrainMaterialId.Soil => "Thin roofs and shelves under 1 m slump when undercut",
+            TerrainMaterialId.Gravel => "Pours when undercut (3 m section); heavy finds",
+            TerrainMaterialId.Clay => "Steady narrow shavings; never collapses",
+            TerrainMaterialId.PondClay => "Basin and odd-spot tell: bites easier than clay",
+            TerrainMaterialId.Rock => "Small faceted chips; cracks and veins are its tells",
+            TerrainMaterialId.Concrete => "Smallest square chips; cracked walls lead into rooms",
+            TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack => "Crack band: a cut breaks it loose along the crack",
+            TerrainMaterialId.FracturedConcrete => "Cracked concrete: a cut breaks it loose along the crack",
+            TerrainMaterialId.Backfill => "Disturbed ground: sinks in; slumps when undercut (2 m)",
+            _ => ""
+        };
+        public static MaterialToolResponse AuthoredResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
             TerrainMaterialId.Clay => Clay,
@@ -72,17 +97,22 @@ namespace SomethingDownThere
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40 };
         private static readonly float[] Fuel = { 50, 50, 100, 100, 150, 200, 250, 300, 400 };
-        // Zone rule (concept 03): each level outpaces the next zone's main ground one level
-        // down (clay at L >= soil at L-1, rock at L >= clay at L-1), so arriving in a zone after
-        // one purchase never feels like a restart. Shovel levels therefore grow evenly (~1.84x).
-        public static ShovelProfile[] ToolProfiles() => new[]
+        // User-set ends (playtest 2026-09-27): level 1 bites 0.229 m at 2.11x the stroke time, level
+        // 10 bites 0.708 m at 2.63x with 1.42 m extra reach. Shovel levels grow evenly (~1.13x),
+        // the drill (level 7) is a clear step up (~1.27x) so it out-digs the last shovel even on
+        // fresh rock, then grows evenly to level 10; cadence and reach grow linearly. A zone's main
+        // ground is matched two purchases later.
+        private static readonly float[] BiteRadii = { .229f, .2596f, .2943f, .3336f, .3782f, .4287f, .5445f, .5943f, .6487f, .708f };
+        public static ShovelProfile[] ToolProfiles()
         {
-            new ShovelProfile(.230000f, 1.60f, 0f), new ShovelProfile(.275600f, 1.50f, .2f),
-            new ShovelProfile(.330000f, 1.40f, .4f), new ShovelProfile(.392000f, 1.30f, .6f),
-            new ShovelProfile(.469000f, 1.20f, .8f), new ShovelProfile(.560000f, 1.10f, 1f),
-            new ShovelProfile(.680000f, 1.00f, 1.2f), new ShovelProfile(.800000f, .90f, 1.4f),
-            new ShovelProfile(.940000f, .80f, 1.6f), new ShovelProfile(1.100000f, .70f, 1.8f)
-        };
+            var profiles = new ShovelProfile[LevelCount];
+            for (int i = 0; i < LevelCount; i++)
+            {
+                float t = i / (float)(LevelCount - 1);
+                profiles[i] = new ShovelProfile(BiteRadii[i], (float)System.Math.Round(2.11 + (2.63 - 2.11) * t, 3), (float)System.Math.Round(1.42 * t, 3));
+            }
+            return profiles;
+        }
         // Jetpack (concept 04 section 5): every level climbs faster and cheaper per metre (1.00 -> 0.50
         // energy/m); level 1 is the starter pack. Hover hold arrives with the first purchase.
         public const int HoverLevel = 2;

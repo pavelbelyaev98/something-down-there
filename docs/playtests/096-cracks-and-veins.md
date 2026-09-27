@@ -9,8 +9,8 @@ Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill m
 - Dig along it, then dig plain rock beside it, and compare.
 
 ## Good feels like
-- Digging along a crack takes clearly bigger bites (about 1.5× rock, about 2.4× in concrete) and
-  turns up more ore.
+- A cut into the seam breaks the band loose along the crack in one go (pale shards and dust), so
+  following a crack is dramatically faster than plain rock and turns up more ore.
 - The crack reads by its line and broken grain in lamp light, not only by colour.
 
 ## Tell the agent

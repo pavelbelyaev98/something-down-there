@@ -225,6 +225,7 @@ namespace SomethingDownThere
                 Button(startupActions, "Continue", save.LoadGame, save.HasSavedGame && !tuning);
                 Button(startupActions, "New Game", save.RequestNewGame, !tuning);
                 var settings = Button(startupActions, "Settings", player.ShowSettings, !tuning);
+                if (FpsPlayer.AdminBuild) Button(startupActions, "Ground Lab", save.StartGroundLab, !tuning);
                 Button(startupActions, "Quit", save.RequestExit, true, "quiet");
                 startupNote.text = tuning ? "Tuning graphics for this PC…" : save.HasSavedGame ? "" : "No saved game";
                 Show(startupNote, tuning || !save.HasSavedGame);
@@ -270,7 +271,12 @@ namespace SomethingDownThere
                 pauseActions.Clear();
                 Button(pauseActions, "Resume", player.CloseMenu);
                 var comfort = Button(pauseActions, "Settings", player.ShowSettings);
-                if (player.Persistence != null) Button(pauseActions, "Save and quit", player.Persistence.RequestExit, true, "quiet");
+                if (player.Persistence != null && player.Persistence.State == WorldSaveState.Lab)
+                {
+                    Button(pauseActions, "Leave Ground Lab", player.Persistence.LeaveGroundLab);
+                    Button(pauseActions, "Quit", player.Persistence.RequestExit, true, "quiet");
+                }
+                else if (player.Persistence != null) Button(pauseActions, "Save and quit", player.Persistence.RequestExit, true, "quiet");
                 if (player.AdminAvailable) Button(pauseActions, "Developer admin", player.ShowAdminMenu);
                 CameraChanged();
                 DeviceChanged();
@@ -581,6 +587,27 @@ namespace SomethingDownThere
             Button(tuningActions, "Print tool tuning", player.PrintAdminTuning);
             Button(tuningActions, "Reset tool tuning", player.ResetAdminTuning, player.HasAdminTuning);
             tuningTable = Text(scroll, "Tool tuning table", player.AdminTuningSummary(), "body");
+            // Ground tuning: one ground at a time, live for the session; the table lists every ground.
+            Text(scroll, "Ground tuning", "Ground tuning - how each ground shapes the bite (1 = soil). Session only; print to keep.", "body");
+            var groundActions = Element(scroll, "admin-actions");
+            Button(groundActions, "Ground: " + player.AdminGround, player.CycleAdminGround);
+            var groundRows = new ToolkitSettingsRows(scroll, scroll);
+            Label groundTable = null;
+            Action groundDialled = () => { if (groundTable != null) groundTable.text = FpsPlayer.GroundTable(); };
+            foreach (var dial in new[] { FpsPlayer.GroundDial.Width, FpsPlayer.GroundDial.Length, FpsPlayer.GroundDial.Depth, FpsPlayer.GroundDial.Speed })
+            {
+                var d = dial;
+                string label = d == FpsPlayer.GroundDial.Speed ? "Stroke time (lower is faster)" : "Bite " + d.ToString().ToLowerInvariant();
+                navigation.Add(groundRows.Slider("adminGround" + d, label, 20, 250,
+                    () => Mathf.RoundToInt(player.AdminGroundValue(d) * 100f),
+                    value => { player.SetAdminGround(d, value / 100f); groundRows.Refresh(); groundDialled(); },
+                    value => (value / 100f).ToString("0.00") + "x", valueName: "adminGround" + d + "Value"));
+            }
+            groundRows.Refresh();
+            var groundTools = Element(scroll, "admin-actions");
+            Button(groundTools, "Print ground tuning", player.PrintAdminGroundTuning);
+            Button(groundTools, "Reset ground tuning", player.ResetAdminGroundTuning, player.HasAdminGroundTuning);
+            groundTable = Text(scroll, "Ground tuning table", FpsPlayer.GroundTable(), "body");
             Button(grid, "Refill battery", player.RefillAdminBattery);
             Button(grid, "Return to surface", player.AdminReturnToSurface);
             Button(grid, "Reset ground...", player.RequestTerrainReset);
@@ -627,6 +654,14 @@ namespace SomethingDownThere
                 Button(actions, "Retry", save.Retry, true, "primary");
                 Button(actions, "Back to menu", save.RefreshStartup);
                 Button(actions, "Quit", save.RequestExit, true, "quiet");
+                return;
+            }
+            if (save.State == WorldSaveState.Lab)
+            {
+                title.text = "Ground Lab";
+                Text(scroll, "Body", "Every ground in its own bay, plus mixes. Aim at a bay to read it. Nothing here is saved.", "body");
+                Button(actions, "Start digging", player.CloseMenu, true, "primary");
+                Button(actions, "Leave Ground Lab", save.LeaveGroundLab);
                 return;
             }
             if (save.State == WorldSaveState.Creating)

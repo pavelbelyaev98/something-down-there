@@ -34,7 +34,9 @@ namespace SomethingDownThere
         private float[] bankBeyond;
         private float bankDepth;
         // The seeded ground's rooms, pits and odd spots; sealed rooms' air is part of untouched ground.
-        public TerrainGround.GroundLayout Layout { get; } = TerrainGround.GroundLayout.Empty;
+        public TerrainGround.GroundLayout Layout { get; private set; } = TerrainGround.GroundLayout.Empty;
+        // Ground Lab air boxes (grid-local metres), carved on every reset; null for the site.
+        private List<(Vector3 min, Vector3 max)> labCavities;
         public TerrainGround.Room[] Rooms => Layout.Rooms;
         public Vector3Int Size { get; }
         public float CellSize { get; }
@@ -114,6 +116,7 @@ namespace SomethingDownThere
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
             foreach (var room in Layout.Rooms) CarveRoom(room);
+            if (labCavities != null) foreach (var (min, max) in labCavities) CarveBox(min, max);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
             LastDetachedSamples = LastSupportVisitedSamples = 0;
@@ -124,6 +127,32 @@ namespace SomethingDownThere
             lowestCarvedY = Size.y;
             severedSamples.Clear();
             ClearSupportSearch();
+        }
+
+        // Developer Ground Lab: labelled bays of every ground instead of the seeded site.
+        public void UseGroundLab()
+        {
+            materials = GroundLab.Materials(Size, CellSize);
+            Layout = TerrainGround.GroundLayout.Empty;
+            labCavities = GroundLab.Cavities(Size, CellSize);
+            Reset();
+        }
+
+        private void CarveBox(Vector3 min, Vector3 max)
+        {
+            Vector3 centre = (min + max) * .5f, half = (max - min) * .5f;
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt(min / CellSize) - Vector3Int.one);
+            Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt(max / CellSize) + Vector3Int.one);
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+            {
+                var d = new Vector3(Mathf.Abs(x * CellSize - centre.x), Mathf.Abs(y * CellSize - centre.y), Mathf.Abs(z * CellSize - centre.z)) - half;
+                float outside = Vector3.Max(d, Vector3.zero).magnitude + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                if (outside >= band) continue;
+                int index = x + y * strideY + z * strideZ;
+                density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
+            }
         }
 
         // A sealed room's air: a smooth signed-distance box, inside its structure's shell.

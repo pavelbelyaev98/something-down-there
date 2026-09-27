@@ -13,6 +13,7 @@ Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill m
 - The pour is a surprise but fair: the gravel within about 3 m slides down as debris with dust, finds
   inside drop and can be collected, and nothing is lost.
 - After one pour you start reading the ceiling before you undercut it.
+- Undercut backfill and thin soil roofs (under a metre) slump the same harmless way; clay never does.
 
 ## Tell the agent
 - Whether pours feel too big, too small or too frequent, and any debris that floats or traps you.

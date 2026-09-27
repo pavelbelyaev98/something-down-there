@@ -61,7 +61,8 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0;
-            player.SelectAdminLevel(4);
+            // Level 6 reaches the ground behind the find even after the first bite deepens it.
+            player.SelectAdminLevel(6);
             if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
             PlacePickupCutFixture(find, nearby);
             AimPickupCutFixture(find, nearby ? .7f : 0);
@@ -75,7 +76,9 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.Revision, Is.EqualTo(revision + 1));
             Assert.That(player.Battery.Charge, Is.EqualTo(charge - player.EffectiveDigEnergy).Within(.001f));
             Assert.That(player.TryPrimaryAction(), Is.False, "Collection must not allow a second cut before its cadence.");
-            player.Tick(new FpsInputFrame { DigHeld = true }, player.EffectiveDigInterval);
+            // A hair over one interval: the stroke time is not a round number, so exactly one interval
+            // can leave a float remainder on the cooldown.
+            player.Tick(new FpsInputFrame { DigHeld = true }, player.EffectiveDigInterval * 1.01f);
             Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 2), "Continue while the pickup visual is active.");
         }
 

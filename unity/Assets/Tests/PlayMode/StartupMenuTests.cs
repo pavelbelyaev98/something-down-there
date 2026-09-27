@@ -108,8 +108,10 @@ namespace SomethingDownThere.Tests
             Assert.That(save.HasSavedGame, Is.False);
             Assert.That(MenuTestUI.Button(player, "Continue").enabledSelf, Is.False);
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("New Game"));
-            Assert.That(MenuTestUI.View(player).CurrentScreen.Query<Button>().ToList().Select(b => b.text),
-                Is.EqualTo(new[] { "Continue", "New Game", "Settings", "Quit" }));
+            // Development builds (and the Editor) add the Ground Lab after Settings.
+            var expected = FpsPlayer.AdminBuild ? new[] { "Continue", "New Game", "Settings", "Ground Lab", "Quit" }
+                : new[] { "Continue", "New Game", "Settings", "Quit" };
+            Assert.That(MenuTestUI.View(player).CurrentScreen.Query<Button>().ToList().Select(b => b.text), Is.EqualTo(expected));
             Assert.That(player.GetComponent<FpsHud>().View.Root.ClassListContains("hidden"), Is.True);
             Assert.That(UnityEngine.Cursor.lockState, Is.EqualTo(CursorLockMode.None));
             var position = player.transform.position;

@@ -82,3 +82,8 @@ leaves floating specks or deletes a find. C4 under gravel triggers it later (`02
   rushing slide/rattle audio) is `031`/`028`.
 - The pour fires only from tool cuts (`TryToolCut`); fixtures and the winch never pour. `026`
   calls the same grid method for C4 under gravel.
+
+## Iteration (playtest 2026-09-27)
+
+- The pour became one of several ground releases: undercut backfill and thin soil (under 1 m) now
+  slump too, and crack bands break loose; see [100](100-ground-lab-and-ground-releases.md).

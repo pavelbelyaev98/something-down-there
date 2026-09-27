@@ -140,18 +140,19 @@ have their own surprises"; this is the same pull.
 ## 4. Materials and their tells
 
 Six ground types, each different in **how it digs, what it hides and how it points somewhere**.
-Hardness shows as **bite size, never a slower rhythm**: the tool keeps its pace in every ground, and
-harder ground takes smaller, shallower bites (softer ground and tells take bigger ones). A player who
-hits rock sees the bites shrink instead of feeling the machine stall.
+Hardness shows mostly as **bite size** and only a little as rhythm: harder ground takes smaller,
+shallower bites at a slightly slower stroke (softer ground and tells take bigger ones), and every
+stroke throws that ground's own chips and dust. A player who hits rock sees the bites shrink instead
+of feeling the machine stall.
 
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
-| Soil     | Fast, broad rounded cuts                       | Disturbed ground                       | Rubbish, junk, plain rocks                          |
+| Soil     | Fast, broad rounded cuts; thin roofs and shelves (under a metre) slump when undercut | Disturbed ground                       | Rubbish, junk, plain rocks                          |
 | Gravel   | Loose grainy cuts; trickles; pours when undercut | Channels: winding old riverbeds      | Heavy things: coins, tokens, metal, nuggets         |
 | Clay     | Steady, narrow smooth shavings                 | Disturbed ground; basins               | Bones, wood, leather, fossils, organic things       |
 | Rock     | Small faceted chips                            | Cracks and veins                       | Ore                                                 |
 | Concrete | Smallest square chips and sparks, but the starting tool always makes visible progress | Cracks from old damage | Waterworks and village items; rooms behind it |
-| Backfill | Loose and mixed; digs fast                     | It *is* the tell                       | Whatever someone buried                             |
+| Backfill | Loose and mixed; digs fast; slumps when undercut | It *is* the tell                       | Whatever someone buried                             |
 
 The ancient zone adds its own material with its contact signature
 ([Ending and Mystery](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)).
@@ -189,8 +190,9 @@ Shared rules for all tells:
 
 - A crack shows as a pale, mineral-filled line with dark edges where a cut crosses it, inside a paler
   band of shattered rock broken into angular shards; the rock's own texture is full of dark hairlines,
-  so a dark line alone would not read. The fractured band takes clearly bigger bites; cutting across
-  it is ordinary rock.
+  so a dark line alone would not read. A cut into the band breaks it loose along the crack in one go
+  (about a metre, further with a bigger tool), with pale shards and dust; cutting across the rock
+  beside it is ordinary rock.
 - Cracks branch. Some open into an ore vein or end at a find; some thin out. Minerals really do
   collect in rock cracks, so veins and cracks are one feature.
 - In concrete, cracks run from old damage toward weak spots and into the rooms behind walls.
@@ -237,7 +239,8 @@ map ("a gravel channel off to the left, worth a look"); that is knowledge, not a
 
 ### Local cleanup rules
 
-- These are cutting responses, visual debris and the bounded gravel pour, never a global collapse
+- These are cutting responses, visual debris and the bounded releases (gravel pours, backfill and
+  thin-soil slumps, crack breaks), never a global collapse
   hazard.
 - Paper-thin soil fins and ribbons crumble as they are carved, even when long or attached at both
   ends. Remove their collision with their visible geometry; thicker useful ledges remain stable.
@@ -361,8 +364,9 @@ Sealed rooms keep that moment without cave networks.
 
 No lava, gas, oxygen, hunger, earthquakes, temperature damage, or monsters. The only pressure
 is the shared battery, the bag's capacity, and the player's own greed — all soft, all fair, all
-recoverable (see [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md)). The gravel pour is a
-reward, not a hazard: it never harms, buries or traps the player.
+recoverable (see [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md)). The gravel pour, the
+slumps and the crack breaks are rewards, not hazards: each is a few metres of removal only, and never
+harms, buries or traps the player.
 
 *Why:* in the research, survival friction is the steadiest complaint: A Game About Digging a
 Hole's fall damage and exploding battery, One Man's Trash's worms, Keep Digging 2.0 "patched in

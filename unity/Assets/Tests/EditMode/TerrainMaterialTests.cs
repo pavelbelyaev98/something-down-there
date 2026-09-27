@@ -141,7 +141,7 @@ namespace SomethingDownThere.Tests
                         ? grid.RemoveScoop(top - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62, .1f, out _, true)
                         : grid.RemoveShave(top, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62);
                     Assert.That(cut, Is.True);
-                    float rate = grid.LastRemovedVolume / profile.CadenceMultiplier;
+                    float rate = grid.LastRemovedVolume / (profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval);
                     Assert.That(rate, Is.GreaterThan(previous[(int)material]), $"{material} must improve with each tier.");
                     Assert.That(rate, Is.LessThan(softerRate), $"{material} must retain its resistance.");
                     previous[(int)material] = rate; classMinimum = Mathf.Min(classMinimum, rate);
@@ -166,19 +166,19 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        // Concept 03 zone rule: one purchase always outpaces the next zone's main ground, so a
-        // player arriving in clay or rock one level up never feels a restart.
+        // Concept 03 zone rule: arriving in a zone at the level a player typically owns there never
+        // feels like a restart. Clay is the working ground around levels 3-6 and rock from about the
+        // drill (level 7); at those levels two purchases outpace the previous zone's main ground.
         [Test]
         public void OneLevelOutpacesTheNextZonesMainGround()
         {
             float[] Sustained(TerrainMaterialId material) => Enumerable.Range(1, EquipmentProgression.LevelCount)
                 .Select(level => Output(material, level).sustained).ToArray();
             float[] soil = Sustained(TerrainMaterialId.Soil), clay = Sustained(TerrainMaterialId.Clay), rock = Sustained(TerrainMaterialId.Rock);
-            for (int level = 2; level <= EquipmentProgression.LevelCount; level++)
-            {
-                Assert.That(clay[level - 1], Is.GreaterThanOrEqualTo(soil[level - 2]), $"Clay at level {level} vs soil at {level - 1}");
-                Assert.That(rock[level - 1], Is.GreaterThanOrEqualTo(clay[level - 2]), $"Rock at level {level} vs clay at {level - 1}");
-            }
+            for (int level = 3; level <= 6; level++)
+                Assert.That(clay[level - 1], Is.GreaterThanOrEqualTo(soil[level - 3]), $"Clay at level {level} vs soil at {level - 2}");
+            for (int level = 6; level <= EquipmentProgression.LevelCount; level++)
+                Assert.That(rock[level - 1], Is.GreaterThanOrEqualTo(clay[level - 3]), $"Rock at level {level} vs clay at {level - 2}");
             // Tells: basins bite clearly easier than the clay around them; the band beside a crack
             // clearly easier than the rock or concrete it breaks, at every level.
             float[] concrete = Sustained(TerrainMaterialId.Concrete);
@@ -201,7 +201,8 @@ namespace SomethingDownThere.Tests
             saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, material);
             grid.Restore(saved);
             bool drill = EquipmentProgression.UsesDrill(level);
-            float interval = .35f * profile.CadenceMultiplier * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
+            float interval = .35f * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval
+                * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
             float first = 0;
             for (int cut = 0; cut < 12; cut++)
             {

@@ -88,8 +88,8 @@ Responsive shovel strokes develop into controlled continuous drilling:
 - The camera never shakes or jerks from digging. No motion effects are added just to have toggles
  for them.
 - Audio is per material: sand hisses, clay thumps, rock cracks, concrete grinds.
-- **Tell feedback:** hitting a crack, the tool bites faster with a crisper sound and the crack line
- runs ahead on the cut face; entering backfill, the tool suddenly sinks in with looser crumbs;
+- **Tell feedback:** hitting a crack, the band breaks loose along it with pale shards and a crisper
+ sound; entering backfill, the tool suddenly sinks in with looser crumbs;
  undercutting gravel, a rushing slide and rattle ends in quiet and a small pile of finds. The change
  is felt in the hands first, so it works in the dark.
 - **Breaking into a sealed room:** the wall gives, dust drifts into darkness, and the first lamp

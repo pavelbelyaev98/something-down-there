@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 namespace SomethingDownThere
 {
-    public enum WorldSaveState { Loading, Ready, Saving, Recovery, LoadFailed, WriteFailed, ConfirmQuit, Startup, ConfirmNewGame, Creating, NewGameFailed }
+    public enum WorldSaveState { Loading, Ready, Saving, Recovery, LoadFailed, WriteFailed, ConfirmQuit, Startup, ConfirmNewGame, Creating, NewGameFailed, Lab }
 
     [DefaultExecutionOrder(500), DisallowMultipleComponent, RequireComponent(typeof(FpsPlayer))]
     public sealed partial class WorldSaveController : MonoBehaviour
@@ -17,7 +17,7 @@ namespace SomethingDownThere
         // Save tests shorten the wait; the game always uses the default.
         public double AutosaveSeconds { get; set; } = DefaultAutosaveSeconds;
         public WorldSaveState State { get; private set; } = WorldSaveState.Loading;
-        public bool BlocksPlay => exitRequested || State != WorldSaveState.Ready && State != WorldSaveState.Saving;
+        public bool BlocksPlay => exitRequested || State != WorldSaveState.Ready && State != WorldSaveState.Saving && State != WorldSaveState.Lab;
         public string SaveDirectory { get; private set; }
         public string ErrorDetail { get; private set; } = "";
         public bool ProfileInUse { get; private set; }
@@ -313,7 +313,8 @@ namespace SomethingDownThere
 
         public void RequestExit()
         {
-            if (State == WorldSaveState.Startup || State == WorldSaveState.ConfirmNewGame || State == WorldSaveState.NewGameFailed) { QuitNow(); return; }
+            if (State == WorldSaveState.Startup || State == WorldSaveState.ConfirmNewGame || State == WorldSaveState.NewGameFailed
+                || State == WorldSaveState.Lab) { QuitNow(); return; }
             if (State == WorldSaveState.Creating) { exitRequested = true; return; }
             if (State == WorldSaveState.Loading || State == WorldSaveState.LoadFailed || State == WorldSaveState.Recovery) { QuitNow(); return; }
             if (State == WorldSaveState.WriteFailed) { SetState(WorldSaveState.ConfirmQuit); return; }
@@ -328,7 +329,7 @@ namespace SomethingDownThere
         public void ConfirmUnsavedExit() { if (State == WorldSaveState.ConfirmQuit) QuitNow(); }
         private bool WantsToQuit()
         {
-            if (allowQuit || State == WorldSaveState.Startup || State == WorldSaveState.ConfirmNewGame || State == WorldSaveState.NewGameFailed
+            if (allowQuit || State == WorldSaveState.Startup || State == WorldSaveState.ConfirmNewGame || State == WorldSaveState.NewGameFailed || State == WorldSaveState.Lab
                 || State == WorldSaveState.Loading || State == WorldSaveState.LoadFailed || State == WorldSaveState.Recovery) return true;
             RequestExit();
             return false;

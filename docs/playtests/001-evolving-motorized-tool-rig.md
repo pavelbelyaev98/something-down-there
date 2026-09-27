@@ -11,8 +11,8 @@ to preview every level.
 
 ## Good feels like
 - One machine growing ridiculous: shovel, bolted-on motor and batteries, a drill, finally a cannon.
-- Strokes feel different per ground (wide scoop in soil, short bites in clay, hard jabs in rock); the
-  drill spins and chatters while cutting; the camera itself never moves.
+- Each stroke is a small thrust along the tool (longer in soft ground, a short jab in hard ground);
+  the drill spins while cutting; the camera itself never moves.
 - It rises from the bottom-right corner and takes little space, like A Game About Digging a Hole;
   it never covers the crosshair or what you are digging, and never sticks through a wall.
 

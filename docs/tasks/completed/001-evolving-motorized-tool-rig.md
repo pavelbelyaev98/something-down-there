@@ -140,3 +140,5 @@ pickup, aiming or the view, and a purchase changes it instantly.
 - Second playtest: still too large and too busy. The rig is about three quarters of its previous
   size (only the head shows in the corner) and every stroke, shudder and drill chatter moves about
   half as far (`Logs/001-small.png`).
+- Third playtest: a bit more visible (scale 0.30) and a small thrust along the tool instead of a
+  dig swing.

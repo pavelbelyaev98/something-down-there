@@ -455,7 +455,7 @@ namespace SomethingDownThere.Tests
             Physics.SyncTransforms();
             Assert.That(Physics.Raycast(terrain.transform.TransformPoint(new Vector3(12, top - 5.4f, 12)), Vector3.up, out var ceiling, 3), Is.True);
             Assert.That(terrain.TryToolCut(ceiling, .35f, false), Is.True);
-            Assert.That(terrain.LastPourVolume, Is.GreaterThan(1), "Cutting into the gravel ceiling pours the pocket.");
+            Assert.That(terrain.ReleasedVolume(GroundRelease.GravelPour), Is.GreaterThan(1), "Cutting into the gravel ceiling pours the pocket.");
             yield return WaitForSimulation(2f);
             Assert.That(find != null && find.gameObject.activeInHierarchy, Is.True, "A pour never deletes a find.");
             Assert.That(find.Item.InstanceId, Is.EqualTo(identity));

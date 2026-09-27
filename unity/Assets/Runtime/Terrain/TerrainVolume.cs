@@ -45,6 +45,9 @@ namespace SomethingDownThere
         public float CellSize => cellSize;
         public float RemovedVolume => grid?.RemovedVolume ?? 0;
         public float LastRemovedVolume => grid?.LastRemovedVolume ?? 0;
+        // The last tool cut's own volume, before any ground it released (LastRemovedVolume then
+        // reports the release).
+        public float LastCutVolume { get; private set; }
         public float LastDetachedVolume => grid?.LastDetachedVolume ?? 0;
         public int LastDetachedSamples => grid?.LastDetachedSamples ?? 0;
         public int LastSupportVisitedSamples => grid?.LastSupportVisitedSamples ?? 0;
@@ -258,6 +261,7 @@ namespace SomethingDownThere
             }
             else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed, adaptMaterials)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
+            LastCutVolume = LastRemovedVolume;
             CommitEdit(changed);
             LastMeshMilliseconds = timer.Elapsed.TotalMilliseconds - LastGridMilliseconds;
             timer.Stop();
@@ -266,7 +270,8 @@ namespace SomethingDownThere
             if (adaptMaterials)
             {
                 ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
-                PourUndercutGravel(changed);
+                EmitStroke(material, hit.point, hit.normal, LastRemovedVolume);
+                ReleaseGround(changed, radius);
                 CheckBreakIn(changed, hit.point);
             }
             return true;
@@ -310,6 +315,19 @@ namespace SomethingDownThere
         {
             if (grid == null) return;
             grid.Reset();
+            RebuildAfterReset();
+        }
+
+        // Developer Ground Lab (GroundLab): the grid refilled with its bays; session only.
+        public void UseGroundLab()
+        {
+            if (grid == null) return;
+            grid.UseGroundLab();
+            RebuildAfterReset();
+        }
+
+        private void RebuildAfterReset()
+        {
             int surfaceLayer = (dimensions.y - 1) / chunkSize;
             var released = new List<Vector3Int>();
             foreach (var pair in chunks)

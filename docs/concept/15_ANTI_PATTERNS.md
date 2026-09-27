@@ -33,7 +33,7 @@ See [Fuel and recovery](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery).
 | Punish falls with health/chip damage | Harmless landing feedback; no battery loss, input lock or ordinary-fall recovery |
 | Add hunger, oxygen, warmth, food, overheating or other upkeep meters | No additional upkeep meters |
 | Charge for battery refills | Recharging at camp is free; a price that grows with battery size punishes upgrading (Keep Digging) |
-| Make the ground itself dangerous | Gravel pours and C4 never harm, bury or trap the player; no cave-ins |
+| Make the ground itself dangerous | Pours, slumps, crack breaks and C4 only remove a few metres of ground; they never harm, bury or trap the player; no cave-ins |
 | Make darkness a hazard or horror | Unlit ground is near-black, but lamps are always available and nothing in the dark can hurt the player |
 | Drain battery for looking, reading or standing still | Drain only on powered actions |
 | Add a day/night cycle, forced rest or time-gated content | The battery and the player's greed are the only pressure; the clock never gates digging or content |

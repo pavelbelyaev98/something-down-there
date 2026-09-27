@@ -104,3 +104,5 @@ itself, which `026` (C4 along cracks) reads.
   near-black crack line disappeared among them. Following `09` §2 ("pale crack lines"), the band
   beside a crack now renders paler and broken into angular, individually lit shards, and the crack
   line is a pale mineral seam with dark edges (`Logs/crack-rock2.png`, one work light).
+- Third playtest: cracks still "did nothing". A cut into the band now breaks it loose along the
+  crack (see [100](100-ground-lab-and-ground-releases.md)).

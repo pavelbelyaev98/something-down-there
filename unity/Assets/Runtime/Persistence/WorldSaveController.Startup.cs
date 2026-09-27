@@ -51,6 +51,31 @@ namespace SomethingDownThere
             else StartCoroutine(CreateNewGame());
         }
 
+        // Developer Ground Lab: the bays instead of the site, never saved (no store, never
+        // initialized, so nothing is captured or written); leaving reloads MainGame.
+        public void StartGroundLab()
+        {
+            if (!FpsPlayer.AdminBuild || State != WorldSaveState.Startup || player.Menu != PlayerMenu.MainMenu || terrain == null) return;
+            StartCoroutine(OpenGroundLab());
+        }
+
+        private IEnumerator OpenGroundLab()
+        {
+            SetState(WorldSaveState.Creating);
+            player.ShowPersistenceMenu();
+            yield return null;
+            terrain.UseGroundLab();
+            SetState(WorldSaveState.Lab);
+            player.CloseMenu();
+            player.BeginGroundLab();
+        }
+
+        public void LeaveGroundLab()
+        {
+            if (State != WorldSaveState.Lab) return;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(gameObject.scene.name);
+        }
+
         public void CancelNewGame()
         {
             if (State == WorldSaveState.ConfirmNewGame) RefreshStartup();

@@ -545,7 +545,8 @@ namespace SomethingDownThere.Tests
             devices.Press(mouse.leftButton, queueEventOnly: true); yield return null; yield return null;
             Assert.That(dig.HitsRemaining, Is.EqualTo(2));
             yield return Key(keyboard.qKey);
-            yield return new WaitForSecondsRealtime(.7f);
+            // One real stroke interval (plus frame slack) must pass for the held dig's next stroke.
+            yield return new WaitForSecondsRealtime(player.EffectiveDigInterval + .15f);
             Assert.That(dig.HitsRemaining, Is.LessThan(2));
             devices.Release(mouse.leftButton, queueEventOnly: true); yield return null;
             devices.Press(mouse.leftButton, queueEventOnly: true); yield return null; yield return null;
