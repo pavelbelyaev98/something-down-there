@@ -10,15 +10,33 @@ namespace SomethingDownThere.Tests
     public sealed class DiscoveryCatalogTests
     {
         private static DiscoveryCatalog Catalog => AssetDatabase.LoadAssetAtPath<DiscoveryCatalog>("Assets/Content/Discoveries/DiscoveryCatalog.asset");
+        // Seeded layouts are pure functions of the catalog, so tests share them. Keyed by the
+        // catalog's serialized content: an edited catalog never reuses an old layout.
+        private static readonly System.Collections.Generic.Dictionary<(int, int), DiscoveryPlacement[]> Layouts
+            = new System.Collections.Generic.Dictionary<(int, int), DiscoveryPlacement[]>();
+        // Default runs check the seeds the fixed-seed tests already generate; the [Explicit]
+        // 20-seed sweeps run when catalog or placement code changes (tools/test-changed.ps1)
+        // and with -Full.
+        private const string PopulationSweep = "20-seed population sweep: runs when catalog or placement code changes, and with -Full.";
+        private static readonly int[] QuickSeeds = { 12, 991, 90127 };
+        private static System.Collections.Generic.IEnumerable<int> Seeds(bool sweep) => sweep ? Enumerable.Range(0, 20) : QuickSeeds;
+
+        private static DiscoveryPlacement[] Layout(int seed)
+        {
+            var catalog = Catalog;
+            var key = (seed, JsonUtility.ToJson(catalog).GetHashCode());
+            if (!Layouts.TryGetValue(key, out var layout)) Layouts[key] = layout = catalog.Generate(SiteLayout.Extent, seed);
+            return layout;
+        }
 
         [TestCase(90127)] [TestCase(12)] [TestCase(991)]
         public void TrialPopulationIsReproducibleWithExactQuotasAndBuriedClearance(int seed)
         {
             var catalog = Catalog; catalog.Validate();
-            var extent = SiteLayout.Extent; var layout = catalog.Generate(extent,seed);
+            var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5500,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -35,16 +53,21 @@ namespace SomethingDownThere.Tests
                 Assert.That(hull.triangles.Length/3,Is.LessThanOrEqualTo(220));
                 Assert.That((hull.bounds.size-mesh.bounds.size).magnitude,Is.LessThan(.0001f));
                 Assert.That(mesh.bounds.center.magnitude,Is.LessThan(.0001f));
+                Assert.That(mesh.lodCount,Is.GreaterThan(1),"Finds carry Mesh LOD levels, so the view-distance setting reaches them.");
                 var renderer=entry.Prefab.GetComponent<MeshRenderer>();
                 Assert.That(renderer.sharedMaterial.GetTexture("_BaseMap"),Is.Not.Null);
                 if (entry.Prefab.Kind == DiscoveryKind.Common) Assert.That(renderer.sharedMaterial.GetTexture("_BumpMap"),Is.Not.Null);
                 bool buried = true;
-                foreach(var placement in layout.Where(p=>p.PrefabIndex==index))
+                // One seed sweeps every rotated vertex; the others share the same placement code.
+                var vertices = new System.Collections.Generic.Dictionary<int, Vector3[]>();
+                foreach(var placement in seed == 90127 ? layout.Where(p=>p.PrefabIndex==index) : Enumerable.Empty<DiscoveryPlacement>())
                 {
                     // The prefab's authored shrink moves real soil clearance with it.
                     var appearance = entry.Appearance(placement.AppearanceIndex);
                     var scale = appearance.transform.localScale;
-                    foreach(var vertex in appearance.GetComponent<MeshFilter>().sharedMesh.vertices)
+                    if (!vertices.TryGetValue(placement.AppearanceIndex, out var points))
+                        vertices[placement.AppearanceIndex] = points = appearance.GetComponent<MeshFilter>().sharedMesh.vertices;
+                    foreach(var vertex in points)
                     {
                         var world=placement.Position+placement.Rotation*Vector3.Scale(vertex, scale);
                         buried &= world.x >= 0 && world.x <= extent.x && world.y >= 0 && world.y <= extent.y-.01f && world.z >= 0 && world.z <= extent.z;
@@ -55,16 +78,16 @@ namespace SomethingDownThere.Tests
             AssertSeparated(layout, catalog.Entries.Select(e => e.PlacementRadius).ToArray(), seed);
         }
 
-        [Test]
-        public void ShallowEncountersCoverTheTopAndStartingRimAcrossSeeds()
+        [TestCase(false)] [TestCase(true, Explicit = true, Reason = PopulationSweep)]
+        public void ShallowEncountersCoverTheTopAndStartingRimAcrossSeeds(bool sweep)
         {
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
-            Assert.That(catalog.ShallowCount, Is.EqualTo(750));
-            CollectionAssert.AreEqual(new[] { 750, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
-            for (int seed = 0; seed < 100; seed++)
+            Assert.That(catalog.ShallowCount, Is.EqualTo(640));
+            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
+            foreach (int seed in Seeds(sweep))
             {
-                var layout = catalog.Generate(SiteLayout.Extent, seed);
+                var layout = Layout(seed);
                 var top = layout.Take(catalog.ShallowCount).ToArray();
                 // The source catalog owns the cover above the real mesh envelope.
                 Assert.That(top.All(p => SiteLayout.Extent.y - p.Position.y >= radii[p.PrefabIndex] + catalog.Entries[p.PrefabIndex].ShallowMinCover - .0001f
@@ -83,6 +106,8 @@ namespace SomethingDownThere.Tests
                     list.Add(new Vector2(p.Position.x, p.Position.z));
                 }
                 var corner = new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
+                // One assertion per seed for the emptiest sample; thousands of NUnit calls dominated the run.
+                float worst = 0; Vector2 worstAt = default;
                 for (float x = .8f; x <= SiteLayout.Extent.x - .8f; x += .5f)
                     for (float z = .8f; z <= SiteLayout.Extent.z - .8f; z += .5f)
                     {
@@ -93,8 +118,9 @@ namespace SomethingDownThere.Tests
                         for (int oz = -1; oz <= 1; oz++)
                             if (rug.TryGetValue((cx + ox, cz + oz), out var list))
                                 foreach (var p in list) distance = Mathf.Min(distance, Vector2.Distance(new Vector2(x, z), p));
-                        Assert.That(distance, Is.LessThanOrEqualTo(1.5f), $"Seed {seed}, topsoil at {x}, {z}");
+                        if (distance > worst) { worst = distance; worstAt = new Vector2(x, z); }
                     }
+                Assert.That(worst, Is.LessThanOrEqualTo(1.5f), $"Seed {seed}, topsoil at {worstAt.x}, {worstAt.y}");
                 AssertSeparated(layout, radii, seed);
             }
 
@@ -108,7 +134,7 @@ namespace SomethingDownThere.Tests
             var hulls = Enumerable.Range(0, rock.AppearanceCount).Select(i =>
                 rock.Appearance(i).GetComponent<MeshCollider>().sharedMesh.vertices.Select(v =>
                     Vector3.Scale(v, rock.Appearance(i).transform.localScale)).ToArray()).ToArray();
-            var top = catalog.Generate(SiteLayout.Extent, seed).Take(catalog.ShallowCount);
+            var top = Layout(seed).Take(catalog.ShallowCount);
             int reachable = 0;
             foreach (var placement in top)
             {
@@ -117,7 +143,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(soilCover, Is.GreaterThanOrEqualTo(.01f), "Nothing should poke through untouched turf.");
                 if (soilCover <= .2f) reachable++;
             }
-            Assert.That(reachable, Is.GreaterThanOrEqualTo(700),
+            Assert.That(reachable, Is.GreaterThanOrEqualTo(600),
                 "The first shallow scrape must reach most of the denser rock layer without shrinking models.");
             Assert.That(rock.Prefab.GetComponent<MeshFilter>().sharedMesh.bounds.size.x, Is.GreaterThan(.4f));
         }
@@ -127,6 +153,7 @@ namespace SomethingDownThere.Tests
             // Bucket by the largest envelope any pair can require, so a 5,000 find carpet
             // stays linear instead of thirteen million pair checks per seed.
             float cell = radii.Max() * 2 + DiscoveryField.SoilClearance;
+            int shallowCount = Catalog.ShallowCount;
             var buckets = new System.Collections.Generic.Dictionary<(int, int, int), System.Collections.Generic.List<int>>();
             for (int i = 0; i < layout.Length; i++)
             {
@@ -148,7 +175,7 @@ namespace SomethingDownThere.Tests
                     {
                         if (j >= i) continue;
                         float required = radii[layout[i].PrefabIndex] + radii[layout[j].PrefabIndex]
-                            + (i < 750 ? DiscoveryField.SoilClearance : DiscoveryField.BandedSoilClearance) - .0001f;
+                            + (i < shallowCount ? DiscoveryField.SoilClearance : DiscoveryField.BandedSoilClearance) - .0001f;
                         if ((p - layout[j].Position).sqrMagnitude < required * required)
                             Assert.Fail($"Seed {seed}: placements {i} and {j} overlap their soil envelopes.");
                     }
@@ -156,17 +183,17 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        [Test]
-        public void FreshDigFacesInTheFirstMetresApproachTheAcceptedShallowDensity()
+        [TestCase(false)] [TestCase(true, Explicit = true, Reason = PopulationSweep)]
+        public void FreshDigFacesInTheFirstMetresApproachTheAcceptedShallowDensity(bool sweep)
         {
             var catalog = Catalog;
             var hulls = catalog.Entries.Select(e => Enumerable.Range(0, e.AppearanceCount).Select(i =>
                 e.Appearance(i).GetComponent<MeshCollider>().sharedMesh.vertices.Select(v =>
                     Vector3.Scale(v, e.Appearance(i).transform.localScale)).ToArray()).ToArray()).ToArray();
             float[] floors = { 1, 1.5f, 2, 2.5f, 3, 4 };
-            for (int seed = 0; seed < 20; seed++)
+            foreach (int seed in Seeds(sweep))
             {
-                var layout = catalog.Generate(SiteLayout.Extent, seed);
+                var layout = Layout(seed);
                 var tops = new float[layout.Length]; var bottoms = new float[layout.Length];
                 for (int i = 0; i < layout.Length; i++)
                 {
@@ -212,6 +239,7 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
+        [Explicit(PopulationSweep)]
         public void DepthMixSlidesFromJunkToValueAndKeepsScatteredOutliers()
         {
             var catalog = Catalog;
@@ -220,7 +248,7 @@ namespace SomethingDownThere.Tests
             int outlierSeeds = 0, deepCheapTotal = 0, highRichTotal = 0;
             for (int seed = 0; seed < 20; seed++)
             {
-                var layout = catalog.Generate(SiteLayout.Extent, seed);
+                var layout = Layout(seed);
                 Assert.That(DepthShare(layout, catalog, 2, 6, cheap), Is.GreaterThanOrEqualTo(.45f), $"Seed {seed}: the top layers must stay junk-heavy.");
                 Assert.That(DepthShare(layout, catalog, 20, 31, cheap), Is.LessThanOrEqualTo(.05f), $"Seed {seed}: junk must not dominate deep ground.");
                 Assert.That(DepthShare(layout, catalog, 2, 8, rich), Is.LessThanOrEqualTo(.15f), $"Seed {seed}: rich finds must stay rare near the surface.");
@@ -258,16 +286,16 @@ namespace SomethingDownThere.Tests
             return total == 0 ? 0f : hits / (float)total;
         }
 
-        [Test]
-        public void MineralBandsHaveIncreasingValuesAndLateralCoverageAcrossSeeds()
+        [TestCase(false)] [TestCase(true, Explicit = true, Reason = PopulationSweep)]
+        public void MineralBandsHaveIncreasingValuesAndLateralCoverageAcrossSeeds(bool sweep)
         {
             var catalog = Catalog;
             var minerals = catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).ToArray();
             CollectionAssert.AreEqual(new[] { "Coal", "Copper", "Iron", "Silver", "Gold", "Emerald", "Ruby", "Diamond" }, minerals.Select(e => e.Prefab.DisplayName));
             CollectionAssert.AreEqual(new[] { 4, 5, 6, 9, 13, 20, 30, 45 }, minerals.Select(e => e.Prefab.SaleValue));
-            for (int seed = 0; seed < 20; seed++)
+            foreach (int seed in Seeds(sweep))
             {
-                var layout = catalog.Generate(SiteLayout.Extent, seed);
+                var layout = Layout(seed);
                 foreach (var entry in minerals)
                 {
                     int index = Array.IndexOf(catalog.Entries, entry);
@@ -313,13 +341,13 @@ namespace SomethingDownThere.Tests
             finally { UnityEngine.Object.DestroyImmediate(catalog); }
         }
 
-        [Test]
-        public void LowerReservoirHasFindsInEveryMetreAcrossSeeds()
+        [TestCase(false)] [TestCase(true, Explicit = true, Reason = PopulationSweep)]
+        public void LowerReservoirHasFindsInEveryMetreAcrossSeeds(bool sweep)
         {
-            for (int seed = 0; seed < 20; seed++)
+            foreach (int seed in Seeds(sweep))
             {
                 var slices = new int[67];
-                foreach (var placement in Catalog.Generate(SiteLayout.Extent, seed))
+                foreach (var placement in Layout(seed))
                 {
                     int index = Mathf.FloorToInt(SiteLayout.Extent.y - placement.Position.y) - 32;
                     if (index >= 0 && index < slices.Length) slices[index]++;
@@ -380,8 +408,8 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var rock = catalog.Entries.Single(e => e.ItemId == "common_rock");
             // Rocks are the shallow layer: every saved appearance must resolve and restore.
-            Assert.That(rock.Count, Is.EqualTo(5500));
-            Assert.That(rock.ShallowCount, Is.EqualTo(750));
+            Assert.That(rock.Count, Is.EqualTo(5390));
+            Assert.That(rock.ShallowCount, Is.EqualTo(640));
             Assert.That(rock.AppearanceCount, Is.EqualTo(3));
             var seen = new System.Collections.Generic.HashSet<string>();
             for (int i = 0; i < rock.AppearanceCount; i++)
@@ -390,7 +418,6 @@ namespace SomethingDownThere.Tests
                 seen.Add(prefab.SaveContentId);
                 Assert.That(prefab.DisplayName, Is.EqualTo("Rock"));
                 Assert.That(prefab.SaleValue, Is.EqualTo(2));
-                Assert.That(prefab.Size, Is.EqualTo(FindSize.Large));
                 Assert.That(prefab.RequiredExposure, Is.EqualTo(.6f));
                 Assert.That(prefab.DetectorEligible, Is.False);
                 Assert.That(catalog.Resolve(prefab.SaveContentId), Is.SameAs(prefab));
@@ -400,7 +427,7 @@ namespace SomethingDownThere.Tests
             // Shipped types seed full tilt, not just yaw, across the rock population.
             bool tipped = false, inverted = false;
             foreach (int seed in new[] { 90127, 12, 991 })
-                foreach (var placement in catalog.Generate(SiteLayout.Extent, seed))
+                foreach (var placement in Layout(seed))
                 {
                     if (catalog.Entries[placement.PrefabIndex].ItemId != "common_rock") continue;
                     float up = Vector3.Dot(placement.Rotation * Vector3.up, Vector3.up);

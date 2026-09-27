@@ -151,7 +151,7 @@ namespace SomethingDownThere.Tests
             Assert.That(first.CanMark, Is.False);
             Assert.That(detector.SignalLevel, Is.Zero, "Partial reveal turns the signal off immediately, without a selection delay.");
             detector.Tick();
-            Assert.That(detector.Target, Is.Null, "Revealed objects never become fallback targets.");
+            Assert.That(detector.Target, Is.Null, $"Revealed objects never become fallback targets (got {detector.Target?.SaveContentId}, exposure {detector.Target?.Exposure}).");
 
             long revision = field.PopulationRevision;
             var saved = field.Capture();

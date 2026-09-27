@@ -209,3 +209,6 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
 - The original soil's grey pebbles turned blue under the tints strong enough to neutralise its orange, so it uses a copy with 30 % of its saturation (`Soil_Albedo_Muted.png`) and mild warm tints.
 - Rejected: `Mud02` (grass patches), lightly tinted `Sand` (pale yellow even at a quarter brightness).
 - Seen, not changed: the clay deposit (gravel tinted terracotta) reads saturated red at the pit floor.
+
+## Iteration: calmer grass
+- Playtest: grass read too green overall. The Highlands lime is painted into terrain and rock textures alike, so a `ColorCurves` hue-vs-saturation curve on `ReservoirPostProcess` (`SunPresentationSetup.ConfigureGrassGrade`, menu *Configure Grass Grade*) scales yellow-green to green saturation down to about two thirds. Soil, sand, clay, rock, sky and water keep the grade. Retinting the vendor textures was rejected: dozens of 4K copies for one colour change.

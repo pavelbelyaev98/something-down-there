@@ -33,7 +33,8 @@ namespace SomethingDownThere
         public sealed class Workspace : IDisposable
         {
             internal NativeList<Vector3> Vertices, Normals;
-            internal NativeList<Vector2> UVs, MaterialWeights;
+            internal NativeList<Vector2> UVs;
+            internal NativeList<Vector4> MaterialWeights;
             internal NativeList<int> Triangles;
             internal NativeArray<float> Corners, NativeSamples;
             internal NativeArray<byte> NativeMaterials;
@@ -48,7 +49,7 @@ namespace SomethingDownThere
                     Vertices=new NativeList<Vector3>(cells,Allocator.Persistent);
                     Normals=new NativeList<Vector3>(cells,Allocator.Persistent);
                     UVs=new NativeList<Vector2>(cells,Allocator.Persistent);
-                    MaterialWeights=new NativeList<Vector2>(cells,Allocator.Persistent);
+                    MaterialWeights=new NativeList<Vector4>(cells,Allocator.Persistent);
                     Triangles=new NativeList<int>(cells*18,Allocator.Persistent);
                     Corners=new NativeArray<float>(8,Allocator.Persistent);
                 }

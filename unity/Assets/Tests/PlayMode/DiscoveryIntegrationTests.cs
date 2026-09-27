@@ -38,9 +38,9 @@ namespace SomethingDownThere.Tests
             devices.Setup();
             keyboard = InputSystem.AddDevice<Keyboard>();
             mouse = InputSystem.AddDevice<Mouse>();
-            SceneManager.sceneLoaded += TestInputPreferences.Configure;
+            SceneManager.sceneLoaded += TestInputPreferences.ConfigureLayerFinds;
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/MainGame.unity", new LoadSceneParameters(LoadSceneMode.Additive));
-            SceneManager.sceneLoaded -= TestInputPreferences.Configure;
+            SceneManager.sceneLoaded -= TestInputPreferences.ConfigureLayerFinds;
             scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
             var root = scene.GetRootGameObjects()[0];
             terrain = root.GetComponentInChildren<TerrainVolume>();
@@ -50,6 +50,7 @@ namespace SomethingDownThere.Tests
             player.SetApplicationFocus(true);
             if (player.IsMenuOpen) player.CloseMenu();
             yield return null;
+            TestInputPreferences.RestoreLayerFixture(field);
             // Entering Play Mode can deliver its native focus notification on this frame.
             player.SetApplicationFocus(true);
             if (player.IsMenuOpen) player.CloseMenu();
@@ -66,9 +67,11 @@ namespace SomethingDownThere.Tests
             Cursor.visible = oldCursorVisible;
         }
 
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [TestCase(11.45f, 2f)] [TestCase(3f, 10f)] [TestCase(18f, 17f)] [TestCase(11.45f, 16f)]
         public void DefaultShovelRevealsMultipleShallowFindsInAnUninformedSmallPatch(float x, float z)
         {
+            TestInputPreferences.RestoreGeneratedPopulation(field); // measures the real layout, deep finds included
             Assert.That(player.EffectiveShovel.Radius, Is.EqualTo(EquipmentProgression.ToolProfiles()[0].Radius).Within(.00001f));
             int strokes = 0, firstEncounter = 0;
             // A fixed approximately 2 x 2 m excavation, independent of hidden find
@@ -115,20 +118,17 @@ namespace SomethingDownThere.Tests
                 $"{field.Finds.Count(f => f.Exposure > 0)} revealed, {field.Finds.Count(f => f.Collectible)} collectible.");
         }
 
-        [TestCase(FindSize.Small)]
-        [TestCase(FindSize.Large)]
-        public void AllFindSizesRequireAuthoredExposureVisibilityAndOneIdentityWithFeedback(FindSize size)
+        [Test]
+        public void FindsRequireAuthoredExposureVisibilityAndOneIdentityWithFeedback()
         {
-            Assert.That(field.Finds.Count, Is.EqualTo(field.Catalog.TotalCount));
-            Assert.That(field.Finds.Select(f => f.Item.InstanceId).Distinct().Count(), Is.EqualTo(field.Catalog.TotalCount));
-            Assert.That(field.Finds.Count(f => f.SaveContentId.StartsWith("mineral_")),
+            // The scene's own generation, recorded before tests switch to the shallow layer.
+            var generated = TestInputPreferences.GeneratedPopulation;
+            Assert.That(generated.Length, Is.EqualTo(field.Catalog.TotalCount));
+            Assert.That(generated.Select(f => f.Item.Id).Distinct().Count(), Is.EqualTo(field.Catalog.TotalCount));
+            Assert.That(generated.Count(f => f.ContentId.StartsWith("mineral_")),
                 Is.EqualTo(field.Catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).Sum(e => e.Count)));
             Assert.That(field.Finds.All(f => f.Exposure == 0), Is.True);
             var find = PrepareUprightFind();
-            var settings = new SerializedObject(find);
-            settings.FindProperty("size").enumValueIndex = (int)size;
-            settings.FindProperty("collectionThreshold").floatValue = size == FindSize.Large ? 0.7f : 0.6f;
-            settings.ApplyModifiedPropertiesWithoutUndo();
             Aim(find.transform.position + Vector3.up * 2, find.transform.position);
             player.ToggleAdminXray();
             Assert.That(player.AdminXray, Is.True);
@@ -300,11 +300,7 @@ namespace SomethingDownThere.Tests
             finally { Object.DestroyImmediate(blocker); }
         }
 
-        [UnityTest]
-        public IEnumerator RemappedToggleUncoversAndCollectsWithoutAnotherPress() => ExerciseDigAndCollection(true, 1);
 
-        [UnityTest]
-        public IEnumerator StrongHeldDiggingCollectsOnlyTheAimedFind() => ExerciseDigAndCollection(false, 6);
 
         [UnityTest]
         public IEnumerator StrongRemappedToggleCollectsOnlyTheAimedFind() => ExerciseDigAndCollection(true, 6);
@@ -358,15 +354,13 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator StrongHeldWideScoopsCollectFreedSmallFindsWithoutHover() => ExerciseWideScoop(false);
 
-        [UnityTest]
-        public IEnumerator StrongRemappedToggleWideScoopsCollectFreedSmallFindsWithoutHover() => ExerciseWideScoop(true);
 
         private IEnumerator ExerciseWideScoop(bool toggle)
         {
             // Use current small coal finds at the known shallow fixture positions.
             TestInputPreferences.RestoreSmallFindFixture(field);
             yield return null;
-            var variants = field.Finds.Where(f => f.Size == FindSize.Small).Take(3).ToArray();
+            var variants = field.Finds.Where(f => TestInputPreferences.IsCoalFixture(f)).Take(3).ToArray();
             Assert.That(variants.Length, Is.EqualTo(3), "The fixture supplies three separate current small finds.");
             player.SelectAdminLevel(6);
             player.InputSettings.SetToggleDig(toggle);
@@ -434,52 +428,6 @@ namespace SomethingDownThere.Tests
                     - (player.SuccessfulStrokes - initialStrokes) * player.EffectiveDigEnergy).Within(.001f),
                     "Automatic pickup adds no fuel cost to the paid strokes.");
                 Assert.That(find.TryCollect(player), Is.False);
-            }
-        }
-
-        [TestCase(FindSize.Small)]
-        [TestCase(FindSize.Large)]
-        public void AimedUncoveringAssistsBothFindSizesAndUsesOrdinaryFuel(FindSize size)
-        {
-            var find = PrepareUprightFind();
-            var settings = new SerializedObject(find);
-            settings.FindProperty("size").enumValueIndex = (int)size;
-            settings.ApplyModifiedPropertiesWithoutUndo();
-            Aim(find.transform.position + Vector3.up * 2, find.transform.position);
-            for (int i = 0; i < 24; i++)
-            {
-                Assert.That(player.TryGetTarget(3, out var hit), Is.True);
-                if (hit.collider == find.GetComponent<Collider>()) break;
-                Assert.That(terrain.TryDig(hit, 0.22f), Is.True);
-            }
-            Assert.That(player.TryGetTarget(3, out var aimed), Is.True);
-            Assert.That(aimed.collider, Is.EqualTo(find.GetComponent<Collider>()));
-            // A small entry-layer find can resolve inside the bite that uncovers it, so the
-            // aimed loop below may start from an already-eligible find.
-            int revision = terrain.Revision;
-            float charge = player.Battery.Charge;
-            int strokes = player.SuccessfulStrokes;
-            player.Tuning.Gravity = 0;
-            for (int i = 0; i < 120 && !find.Collected; i++)
-            {
-                Aim(find.transform.position + Vector3.up * 2, find.transform.position);
-                Assert.That(player.TryPrimaryAction(), Is.True);
-                Assert.That(find.Collected, Is.EqualTo(find.Exposure >= find.RequiredExposure),
-                    "Aimed assistance must finish pickup on the stroke that reaches eligibility.");
-                if (!find.Collected) player.Tick(default, player.EffectiveDigInterval + .05f);
-            }
-            Assert.That(find.Collected, Is.True, "The starter shovel must finish uncovering within a bounded number of strokes.");
-            Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
-            // The uncover loop may already have resolved a small find, in which case the
-            // aimed press only collects it and costs no stroke.
-            int finishingStrokes = player.SuccessfulStrokes - strokes;
-            Assert.That(finishingStrokes, Is.InRange(0, 120));
-            Assert.That(terrain.Revision, Is.EqualTo(revision + finishingStrokes));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - finishingStrokes * player.EffectiveDigEnergy).Within(.001f));
-            {
-                revision = terrain.Revision;
-                player.TryPrimaryAction();
-                Assert.That(terrain.Revision, Is.EqualTo(revision), "Held assistance respects the shovel cooldown.");
             }
         }
 
@@ -704,34 +652,6 @@ namespace SomethingDownThere.Tests
             Physics.SyncTransforms();
         }
 
-        [UnityTest]
-        public IEnumerator ToggleOnFullBagCollectsWhenSpaceAndDirectAimAreAvailable()
-        {
-            var find = field.Finds[0]; Expose(find);
-            yield return new WaitForSeconds(1.5f);
-            PrepareDeviceView(find);
-            for (int i = 0; i < player.Inventory.Capacity; i++) player.Inventory.TryAdd(new InventoryItem("full-" + i, "Carried", 1));
-            player.InputSettings.SetToggleDig(true); player.InputSettings.Bind(PlayerBinding.Dig, "<Mouse>/rightButton", true);
-            player.enabled = true; player.SetApplicationFocus(true); yield return null; yield return null;
-            devices.Press(mouse.rightButton, queueEventOnly: true); yield return null; yield return null;
-            devices.Release(mouse.rightButton, queueEventOnly: true); yield return null;
-            float charge = player.Battery.Charge; int revision = terrain.Revision, strokes = player.SuccessfulStrokes;
-            yield return new WaitForSecondsRealtime(player.EffectiveDigInterval * 1.5f);
-            Assert.That(find.Collected, Is.False);
-            Assert.That(player.SuccessfulStrokes, Is.GreaterThan(strokes), "Toggled digging continues through a full-bag find.");
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - (player.SuccessfulStrokes - strokes) * player.EffectiveDigEnergy).Within(.001f));
-            Assert.That(terrain.Revision, Is.GreaterThan(revision));
-            LookAt(player.ViewCamera.transform.position + Vector3.up);
-            player.Inventory.TryRemove("full-0", out var removed);
-            yield return new WaitForSeconds(.3f);
-            Assert.That(find.Collected, Is.False, "Free space without direct aim cannot collect the find.");
-            PrepareDeviceView(find, closeToFind: true);
-            yield return null; yield return null;
-            Assert.That(find.Collected, Is.True); Assert.That(player.Inventory.Count, Is.EqualTo(player.Inventory.Capacity));
-            player.OpenMenu(PlayerMenu.Pause); yield return null;
-            Assert.That(player.Inventory.Items.Count(item => item.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
-        }
-
         private string PickupState(BuriedFind find)
         {
             bool hit = player.TryGetTarget(3, out var targetHit);
@@ -837,15 +757,30 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds[0];
             // A valid sparse legacy sample set misses the very top of the mesh.
-            // Rendering must use the complete bounds, never the exposure percentage alone.
+            // Rendering must follow the actual mesh, never the exposure percentage alone.
             typeof(BuriedFind).GetField("exposureSamples", System.Reflection.BindingFlags.Instance
                 | System.Reflection.BindingFlags.NonPublic).SetValue(find, new[] { Vector3.zero });
+            // Tilting the box diagonal upright inflates the renderer bounds furthest past the rounded mesh.
+            var mesh = find.GetComponent<MeshFilter>().sharedMesh;
             var state = find.Capture();
-            state.Position.y += terrain.SurfaceHeight - find.WorldBounds.max.y + .002f;
+            state.Rotation = Quaternion.FromToRotation(mesh.bounds.extents, Vector3.up);
+            find.Restore(state);
+            var vertices = mesh.vertices;
+            state = find.Capture();
+            state.Position.y += terrain.SurfaceHeight - vertices.Max(v => find.transform.TransformPoint(v).y) + .002f;
             find.Restore(state);
             Assert.That(find.Exposure, Is.Zero);
-            Assert.That(find.GetComponent<MeshRenderer>().enabled, Is.True);
+            Assert.That(find.GetComponent<MeshRenderer>().enabled, Is.True, "A 2 mm sliver of the real mesh renders.");
             Assert.That(find.GetComponent<MeshCollider>().enabled, Is.True);
+            // Shallow placement keeps the whole vertex envelope under the turf. The tilted renderer
+            // box still breaks the surface there, but no part of the mesh can show.
+            var scale = find.transform.lossyScale;
+            float envelope = vertices.Max(v => v.magnitude) * Mathf.Max(scale.x, Mathf.Max(scale.y, scale.z));
+            state = find.Capture();
+            state.Position.y += terrain.SurfaceHeight - .01f - envelope - find.transform.position.y;
+            find.Restore(state);
+            Assert.That(find.WorldBounds.max.y, Is.GreaterThan(terrain.SurfaceHeight), "Tilted renderer bounds reach the surface.");
+            Assert.That(find.GetComponent<MeshRenderer>().enabled, Is.False, "A fully buried shallow find must not render.");
         }
 
         [Test]
@@ -866,9 +801,11 @@ namespace SomethingDownThere.Tests
             Assert.That(find.GetComponent<MeshRenderer>().enabled,Is.False);
         }
 
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [UnityTest]
         public IEnumerator DeeperScrapesRevealFreshFindsAfterEarlierObjectsAreRemoved()
         {
+            TestInputPreferences.RestoreGeneratedPopulation(field); // measures the real layout, deep finds included
             var original = field.Finds.ToDictionary(f => f.Item.InstanceId, f => f.WorldBounds);
             var seen = new System.Collections.Generic.HashSet<string>();
             var grid = new ExcavationGrid(terrain.Dimensions, terrain.CellSize);

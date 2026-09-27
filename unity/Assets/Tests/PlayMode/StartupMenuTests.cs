@@ -347,7 +347,7 @@ namespace SomethingDownThere.Tests
             double deadline = Time.realtimeSinceStartupAsDouble + 30;
             while (!condition())
             {
-                Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(deadline), "Startup operation timed out.");
+                if (Time.realtimeSinceStartupAsDouble >= deadline) Assert.Fail("Startup operation timed out.");
                 yield return null;
             }
         }

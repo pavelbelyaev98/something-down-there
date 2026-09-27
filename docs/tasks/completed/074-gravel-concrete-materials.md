@@ -1,0 +1,66 @@
+# 074 — Gravel & Diggable Concrete Materials
+
+**Status:** complete. Gravel lenses above the clay bands and rare buried concrete slabs extend the saved material IDs. Each has its own tool response and cut shape (grainy indented gravel, square concrete chips), and all tiers dig both, gravel between soil and clay, concrete slowest. Mesh weights `(clay, rock, concrete, 1 − gravel)` blend original generated gravel and concrete textures in the one ground shader.
+
+## Objective
+Complete the five material response groups of concept 03: soil, gravel, clay, rock and diggable concrete. Gravel and concrete use the established pipeline: immutable per-sample material IDs, per-sample tool response, response-shaped cut kernels, and mesh material weights blended by the one ground shader. Every tier can dig both. This unblocks the concrete plug of `010` and the zone palettes of `006`.
+
+## Concept reference
+- `03` §4: five families that differ in behaviour, not just colour. Gravel **trickles**. Concrete **sparks and resists, but the starting tool always makes visible progress**. Resistance belongs to the ground inside the cut, and aiming at a soft neighbour never softens a hard sample. Deposits keep their identity when excavated and saved.
+- `03` §3: recent fill carries loose soil and gravel; deep clay/stone carries occasional concrete. The authored concrete plug and compacted gravel shelf belong to `010`.
+- `04` §3: the tool adapts automatically; every behaviour digs everything; power outpaces tougher ground.
+- `09`: gravel reads as loose stones; concrete reads tough, with sparks and dust. Debris particles and audio stay with `031`/`028`.
+
+## Live code analysis
+- `TerrainMaterialId : byte { Soil, Clay, Rock }` is stored one byte per lattice sample (`TerrainMaterialSnapshot`) and validated as `<= Rock`. Generation is per column: an 8 m band cycle with warp. The top 1.1 m is always soil.
+- `EquipmentProgression.MaterialResponse` returns width/length/penetration/interval per ID; unknown IDs throw. `ExcavationGrid.RemoveBrush` picks per-sample shapes: soil round, clay elliptic, rock hexagonal/boxy with faceted floors. Anything else silently falls back to clay (shave) or soil (scoop).
+- `TerrainChunkMesh` writes clay/rock weights to UV channel 2 as `Vector2`, with soil as the remainder. `GroundTriplanar` blends `SoilSurface` with clay and rock `DepositSurface` layers and shares samplers.
+- Meshes without explicit weights read missing vertex components as `(0,0,0,1)`. That includes the permanent rim collar (Vector2 zeros) and the edit-mode preview cube (none).
+- Approved packs have no usable gravel or concrete surface: Mountains `Gravel2` is grass with pebbles, `Gravel` already serves clay, and Highlands `Sand_rubble`/`Mud_rubble` are sand or mud with sparse stones.
+- Saves store material IDs rather than regenerating them, so existing 3-material fields stay valid with a widened range check.
+- One test treats enum order as hardness order.
+
+## Architecture
+- **IDs:** append `Gravel = 3`, `Concrete = 4`, and add a `Last` bound used by validation. Hardness order is explicit (soil < gravel < clay < rock < concrete) rather than implied by enum order. The save format and version are unchanged (one byte per sample; old fields are valid subsets).
+- **Generation:** deterministic, per column.
+  - **Gravel lenses:** in the upper part of each 8 m cycle (below the 1.1 m cap), a second warped noise forms lens-shaped pockets.
+  - **Concrete slabs:** a coarse seeded grid (one 22 % chance per 6 m cell and 8 m cycle, never the first cycle) places rare flat rectangular slabs (2–4.5 m across, 0.6–1 m thick, tops at 9 m or deeper), like buried foundations.
+  - The surface cap and first-metre soil rules stay.
+- **Response:**
+  - Gravel (1.1, 1.0, 1.0, ×1.08): broad and loose. Its grain indents the cut, leaving it slower than soil and faster than clay at every tier.
+  - Concrete (0.7, 0.7, 0.5, ×1.8): small bites and slow cadence, with steady visible progress at level 1.
+  - Fuel keeps following cadence.
+- **Kernels:**
+  - Gravel uses soil's rounded footprints with a granular, hash-jittered edge and floor, so cut faces read as loose stones. The jitter only indents (never widens or deepens) the cut.
+  - Concrete uses tight square footprints and flat planar floors (clean chips), distinct from rock's hexagonal facets.
+  - No random rotation (rejected in 007).
+- **Weights:** UV channel 2 becomes `Vector4 (clay, rock, concrete, 1 − gravel)`. Missing streams and legacy `Vector2` meshes then decode as no gravel and no concrete, so the rim collar and preview cube stay correct without regeneration. Soil is the remainder.
+- **Shader:** gravel and concrete `DepositSurface` layers with their own albedo/normal/mask/tint/tile/relief, reusing samplers; five-way weights, each layer branch skipped when absent.
+- **Art:**
+  - Both are original procedural texture sets (albedo, normal and occlusion mask, 1024², tileable) generated by editor code `DepositTextures`, with one asset card (`art/deposit-textures`).
+  - Gravel: rounded stones in muted rock families, each resting on whatever lies under its footprint so later stones overlap earlier ones like a pile; dark fines in the gaps; slope-clamped normals give bevelled stone edges. White tint, 2.5 m tile.
+  - Concrete: cement mottling, irregular aggregate and pores. White tint, 2 m tile.
+  - `GroundTextureSetup.ConfigureDeposits` binds both on `ReservoirSediment`.
+- **Out of scope:** debris particles (`031`), per-material audio (`028`), the authored concrete plug and gravel shelf (`010`), zone palettes (`006`).
+
+## Edge cases
+- Chunk seams share halo weights. Mixed seams keep per-sample resistance.
+- The rim, collar and preview meshes carry no weights, which reads as soil.
+- The top 1.1 m stays soil, so first scrapes and the shaving fuel test are unchanged.
+- Concrete never appears in the first metres or inside the tested generated pillar depth.
+- Saved 3-material worlds load unchanged. Winch/blast removal stays geometric. The admin X-ray keeps its material-agnostic look.
+
+## Acceptance criteria
+- Seeded generation contains all five families at their intended depths, deterministically.
+- All tiers cut gravel and concrete; level 1 makes visible progress in concrete, and every upgrade raises output.
+- Gravel and concrete cuts are visibly distinct from soil, clay and rock, with continuous textures across chunk seams.
+- Saves round-trip the new IDs, and unknown IDs are still rejected.
+- Relevant tests pass, the native benchmark shows no ground-shader regression on untouched ground, and a fresh Windows player is built.
+
+## Verification notes
+- In-game check: material stripes painted across the plot and a trench cut through them. All five families read distinctly, with continuous textures across chunk seams.
+- Rejected gravel art: Highlands `Sand_rubble` tinted grey. Its near-white albedo and strong occlusion mask rendered as dark blotches on tan sand. Also rejected: a first generated set where the highest stone surface won per pixel, so neighbouring stones fused into blobs and read as flat terrazzo.
+- Seed 2718 in a 20 × 16 × 20 m domain: gravel ≈ 2.4 % and concrete ≈ 0.1 % of samples.
+- Rejected: symmetric grain jitter (±). A cut keeps whichever carve is deeper, so random extra depth added more volume than random shallowness removed, and gravel out-dug soil at levels 6, 7 and 10. The one-sided grain gives relative shave rates of 0.67–0.95 × soil (clay 0.45–0.58) and scoop rates of ≈ 0.94.
+- Tests: EditMode 301/301, Shaving 7/7, Station 6/6, Terrain 18/18.
+- Native environment benchmark (RX 9060 XT, 2560×1440, device defaults), GPU median vs the 090/091 final run: dig site 6.92 ms (was 6.82), pit 5.15 (5.08), shore 6.57 (6.52), flight 8.17 (8.05). The uniform ~1–1.5 % shift includes views with almost no dig ground, so the ground shader shows no measurable regression.

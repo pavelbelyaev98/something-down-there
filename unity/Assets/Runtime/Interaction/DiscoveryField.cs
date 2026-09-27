@@ -47,10 +47,28 @@ namespace SomethingDownThere
         public BuriedFind Find(string id) => finds.Find(f => f.Item.InstanceId == id);
         public BuriedFind StoredUnique => finds.Find(f => f.State == FindState.Stored);
 
+        private Matrix4x4 capturedTerrainPose;
+
+        // Fresh records the caller may edit.
         public FindSnapshot[] Capture()
         {
             var states = new FindSnapshot[finds.Count];
             for (int i = 0; i < states.Length; i++) states[i] = finds[i].Capture();
+            return states;
+        }
+
+        // Checkpoints reuse unchanged finds' records (BuriedFind.CaptureCheckpoint); never edit them.
+        internal FindSnapshot[] CaptureCheckpoint()
+        {
+            // Reused find records are terrain-relative; a moved terrain invalidates them all.
+            var terrainPose = terrain.transform.localToWorldMatrix;
+            if (terrainPose != capturedTerrainPose)
+            {
+                foreach (var find in finds) find.ForgetCapture();
+                capturedTerrainPose = terrainPose;
+            }
+            var states = new FindSnapshot[finds.Count];
+            for (int i = 0; i < states.Length; i++) states[i] = finds[i].CaptureCheckpoint();
             return states;
         }
 

@@ -15,7 +15,8 @@ namespace SomethingDownThere
         public VisualElement First => controls.Count == 0 ? null : controls[0];
         public ToolkitSettingsRows(VisualElement parent, ScrollView scroll) { this.parent = parent; this.scroll = scroll; }
 
-        public DropdownField Choice(string name, string label, string[] choices, Func<int> value, Action<int> change, Func<bool> enabled = null, string disabledValue = "Unavailable")
+        // A negative value shows `unmatched` (e.g. Custom) while still cycling through the choices.
+        public DropdownField Choice(string name, string label, string[] choices, Func<int> value, Action<int> change, Func<bool> enabled = null, string disabledValue = "Unavailable", string unmatched = null)
         {
             var row = Row(label);
             var options = new List<string>(choices);
@@ -26,7 +27,9 @@ namespace SomethingDownThere
             refresh.Add(() => {
                 bool available = enabled == null || enabled();
                 control.SetEnabled(available); row.EnableInClassList("disabled-row", !available);
-                control.SetValueWithoutNotify(available ? options[Mathf.Clamp(value(), 0, options.Count - 1)] : disabledValue);
+                int current = value();
+                control.SetValueWithoutNotify(!available ? disabledValue
+                    : current < 0 && unmatched != null ? unmatched : options[Mathf.Clamp(current, 0, options.Count - 1)]);
             });
             return control;
         }

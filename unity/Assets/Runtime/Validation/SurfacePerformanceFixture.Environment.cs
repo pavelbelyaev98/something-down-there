@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -23,7 +24,9 @@ namespace SomethingDownThere
             // Focus callbacks still reach disabled MonoBehaviours. Give this fixture
             // its own preferences and URP copy so focus cannot restore the user's cap
             // or overwrite the experimental graphics settings halfway through a sample.
-            var preferences = player.GameSettings.Values.Copy();
+            // Device preferences by default; --environment-defaults measures a fresh install.
+            var preferences = Environment.GetCommandLineArgs().Contains("--environment-defaults")
+                ? new GamePreferenceValues() : player.GameSettings.Values.Copy();
             var pipeline = Instantiate((UniversalRenderPipelineAsset)GraphicsSettings.currentRenderPipeline);
             player.ConfigureGamePreferences(new EnvironmentPreferences(JsonUtility.ToJson(preferences)));
             QualitySettings.renderPipeline = pipeline;
@@ -57,6 +60,14 @@ namespace SomethingDownThere
             if (RenderSettings.sun != sun) throw new InvalidOperationException("Environment review must use MainGame's scene lighting.");
             var sunData = sun.GetUniversalAdditionalLightData();
             var softQuality = sunData.softShadowQuality;
+            // Rebinding preferences disposed the device platform, restoring the authored sun and
+            // renderer. Apply the measured preference tier to this isolated renderer and sun.
+            var authored = (UniversalRenderPipelineAsset)GraphicsSettings.defaultRenderPipeline;
+            var authoredSun = sun.shadows;
+            void ApplyValues(GamePreferenceValues values) => UnityGameSettingsPlatform.ApplyRendering(values, pipeline, cameraData, sun,
+                authoredSun, authored.mainLightShadowmapResolution, authored.shadowCascadeCount, authored.shadowDistance);
+            GamePreferenceValues With(Action<GamePreferenceValues> edit) { var values = preferences.Copy(); edit(values); return values; }
+            ApplyValues(preferences);
             var scenery = EnvironmentScenery.Select(n => environment.Find(n).gameObject).ToArray();
             var rockRenderers = scenery.SelectMany(o => o.GetComponentsInChildren<Renderer>(true)).ToArray();
             var lods = scenery.SelectMany(o => o.GetComponentsInChildren<LODGroup>(true)).ToArray();
@@ -81,6 +92,22 @@ namespace SomethingDownThere
             var sunShadows = sun.shadows;
             bool post = cameraData.renderPostProcessing, heightmap = terrain.drawHeightmap;
             bool occlusion = camera.useOcclusionCulling;
+            float farPlane = camera.farClipPlane;
+            bool hdr = pipeline.supportsHDR, opaqueTexture = cameraData.requiresColorTexture;
+            var rendererData = DefaultRenderer(pipeline);
+            var contact = rendererData.rendererFeatures.OfType<ScreenSpaceAmbientOcclusion>().FirstOrDefault();
+            var contactSettings = contact == null ? null : typeof(ScreenSpaceAmbientOcclusion)
+                .GetField("m_Settings", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(contact);
+            FieldInfo ContactField(string name) => contactSettings.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            bool contactActive = contact != null && contact.isActive;
+            bool contactAfterOpaque = contactSettings != null && (bool)ContactField("AfterOpaque").GetValue(contactSettings);
+            bool contactDownsample = contactSettings != null && (bool)ContactField("Downsample").GetValue(contactSettings);
+            float contactIntensity = contactSettings == null ? 0 : (float)ContactField("Intensity").GetValue(contactSettings);
+            var copyDepth = rendererData.copyDepthMode;
+            Bloom bloom = null;
+            foreach (var volume in FindObjectsByType<Volume>())
+                if (volume.sharedProfile != null && volume.sharedProfile.TryGet(out Bloom found)) bloom = found;
+            bool bloomActive = bloom != null && bloom.active;
             string output = Path.GetFullPath(reportPath);
             string directory = Path.GetDirectoryName(output);
             Directory.CreateDirectory(directory);
@@ -89,8 +116,11 @@ namespace SomethingDownThere
             var controller = player.GetComponent<CharacterController>();
             controller.enabled = false;
             while (!player.Discoveries.Initialized) yield return null;
+            var findRenderers = player.Discoveries.Finds.Select(f => f.GetComponent<MeshRenderer>()).ToArray();
             void Restore()
             {
+                ApplyValues(preferences);
+                foreach (var renderer in findRenderers) renderer.forceMeshLod = -1;
                 environment.gameObject.SetActive(environmentActive);
                 for (int i = 0; i < scenery.Length; i++) scenery[i].SetActive(sceneryActive[i]);
                 water.SetActive(waterActive);
@@ -116,6 +146,32 @@ namespace SomethingDownThere
                 pipeline.shadowDistance = shadowDistance;
                 pipeline.cascadeBorder = cascadeBorder;
                 pipeline.cascade4Split = cascade4Split;
+                camera.farClipPlane = farPlane;
+                pipeline.supportsHDR = hdr;
+                cameraData.requiresColorTexture = opaqueTexture;
+                if (contact != null)
+                {
+                    contact.SetActive(contactActive);
+                    ContactField("AfterOpaque").SetValue(contactSettings, contactAfterOpaque);
+                    ContactField("Downsample").SetValue(contactSettings, contactDownsample);
+                    ContactField("Intensity").SetValue(contactSettings, contactIntensity);
+                }
+                if (rendererData.copyDepthMode != copyDepth) rendererData.copyDepthMode = copyDepth;
+                if (bloom != null) bloom.active = bloomActive;
+            }
+            void ContactAfterOpaque(bool downsample)
+            {
+                ContactField("AfterOpaque").SetValue(contactSettings, true);
+                ContactField("Downsample").SetValue(contactSettings, downsample);
+                // Transparent water samples scene depth; copy it before transparents.
+                rendererData.copyDepthMode = CopyDepthMode.AfterOpaques;
+            }
+            void AuthoredSunShadows()
+            {
+                sun.shadows = LightShadows.Soft;
+                pipeline.mainLightShadowmapResolution = authored.mainLightShadowmapResolution;
+                pipeline.shadowCascadeCount = authored.shadowCascadeCount;
+                pipeline.shadowDistance = authored.shadowDistance;
             }
             void ShadowQuality(bool low)
             {
@@ -180,6 +236,52 @@ namespace SomethingDownThere
                         QualitySettings.lodBias = .5f; terrain.heightmapPixelError = 10;
                         terrain.basemapDistance = 75; terrain.detailObjectDistance = 25;
                         ShadowQuality(true); pipeline.msaaSampleCount = 2; break;
+                    // Frame-structure attribution: the before-opaque contact shading requests
+                    // scene depth early, which forces a complete depth prepass of every renderer.
+                    case "ssao_off": contact.SetActive(false); break;
+                    // The former before-opaque contact shading and its full depth prepass.
+                    case "ssao_previous":
+                        ContactField("AfterOpaque").SetValue(contactSettings, false);
+                        ContactField("Downsample").SetValue(contactSettings, false);
+                        rendererData.copyDepthMode = CopyDepthMode.AfterTransparents; break;
+                    case "ssao_after_opaque": ContactAfterOpaque(false); break;
+                    case "ssao_after_opaque_half": ContactAfterOpaque(true); break;
+                    case "ssao_after_opaque_soft": ContactAfterOpaque(false); ContactField("Intensity").SetValue(contactSettings, contactIntensity * .6f); break;
+                    case "copy_depth_after_opaques": rendererData.copyDepthMode = CopyDepthMode.AfterOpaques; break;
+                    case "bloom_off": bloom.active = false; break;
+                    case "sun_shadows_high": AuthoredSunShadows(); break;
+                    case "sun_shadows_high_ssao_after_opaque": AuthoredSunShadows(); ContactAfterOpaque(false); break;
+                    case "terrain_details_120": terrain.detailObjectDistance = 120; break;
+                    case "terrain_details_90": terrain.detailObjectDistance = 90; break;
+                    case "terrain_details_60": terrain.detailObjectDistance = 60; break;
+                    case "terrain_detail_density_75": terrain.detailObjectDensity = .75f; break;
+                    case "terrain_detail_density_50": terrain.detailObjectDensity = .5f; break;
+                    case "terrain_basemap_75": terrain.basemapDistance = 75; break;
+                    // Distant-detail candidates: full terrain shading everywhere, later scenery LOD switches.
+                    case "terrain_basemap_1000": terrain.basemapDistance = 1000; break;
+                    case "lod_bias_1_5": QualitySettings.lodBias = 1.5f; break;
+                    case "lod_bias_2": QualitySettings.lodBias = 2; break;
+                    case "distant_detail": terrain.basemapDistance = 1000; QualitySettings.lodBias = 2; break;
+                    case "far_1500": camera.farClipPlane = 1500; break;
+                    case "hdr_off_diagnostic": pipeline.supportsHDR = false; break;
+                    case "opaque_texture_off_diagnostic": cameraData.requiresColorTexture = false; break;
+                    // Every find at its full-detail mesh: the cost Mesh LOD saves.
+                    case "finds_full_detail": foreach (var renderer in findRenderers) renderer.forceMeshLod = 0; break;
+                    // Mesh LOD threshold alone (view distance also changes terrain detail).
+                    case "finds_lod_threshold_1_6": QualitySettings.meshLodThreshold = 1.6f; break;
+                    case "finds_lod_threshold_2_5": QualitySettings.meshLodThreshold = 2.5f; break;
+                    case "finds_lod_threshold_4": QualitySettings.meshLodThreshold = 4; break;
+                    // Player-facing settings through the same path the game uses.
+                    case "preset_low": ApplyValues(With(v => GraphicsQuality.Apply(v, GraphicsQuality.Low))); break;
+                    case "preset_medium": ApplyValues(With(v => GraphicsQuality.Apply(v, GraphicsQuality.Medium))); break;
+                    case "preset_high": ApplyValues(With(v => GraphicsQuality.Apply(v, GraphicsQuality.High))); break;
+                    case "preset_ultra": ApplyValues(With(v => GraphicsQuality.Apply(v, GraphicsQuality.Ultra))); break;
+                    case "preset_low_scale_75": ApplyValues(With(v => { GraphicsQuality.Apply(v, GraphicsQuality.Low); v.RenderScale = 75; })); break;
+                    case "view_distance_medium": ApplyValues(With(v => v.ViewDistance = GraphicsQuality.ViewMedium)); break;
+                    case "view_distance_low": ApplyValues(With(v => v.ViewDistance = GraphicsQuality.ViewLow)); break;
+                    case "render_scale_75_fsr": ApplyValues(With(v => v.RenderScale = 75)); break;
+                    case "fxaa": ApplyValues(With(v => v.AntiAliasing = GraphicsQuality.Fxaa)); break;
+                    case "ambient_occlusion_off": ApplyValues(With(v => v.AmbientOcclusion = false)); break;
                 }
             }
             bool candidates = Environment.GetCommandLineArgs().Contains("--environment-candidates");
@@ -193,11 +295,25 @@ namespace SomethingDownThere
             bool finalReview = arguments.Contains("--environment-final");
             if (finalReview) variants = new[] { "previous_quality", "baseline_start", "occlusion_off", "msaa_2", "sun_shadows_medium",
                 "sun_shadows_low", "sun_shadows_off", "baseline_end", "previous_quality_end" };
+            var frameStructure = new[] { "baseline_start", "ssao_previous", "ssao_off", "ssao_after_opaque", "ssao_after_opaque_half",
+                "ssao_after_opaque_soft", "copy_depth_after_opaques", "bloom_off", "post_off", "sun_shadows_high", "sun_shadows_high_ssao_after_opaque",
+                "terrain_details_off", "terrain_details_120", "terrain_details_90", "terrain_details_60",
+                "terrain_detail_density_75", "terrain_detail_density_50", "terrain_basemap_75", "far_1500",
+                "hdr_off_diagnostic", "opaque_texture_off_diagnostic", "scale_75_diagnostic", "finds_full_detail", "finds_lod_threshold_1_6", "finds_lod_threshold_2_5", "finds_lod_threshold_4", "terrain_basemap_1000", "lod_bias_1_5", "lod_bias_2", "distant_detail", "baseline_end" };
+            if (arguments.Contains("--environment-frame")) variants = frameStructure;
+            var presetSet = new[] { "baseline_start", "preset_ultra", "preset_high", "preset_medium", "preset_low", "preset_low_scale_75",
+                "view_distance_medium", "view_distance_low", "render_scale_75_fsr", "fxaa", "ambient_occlusion_off", "baseline_end" };
+            if (arguments.Contains("--environment-presets")) variants = presetSet;
             int selectedVariants = Array.IndexOf(arguments, "--environment-variants");
             if (selectedVariants >= 0 && selectedVariants + 1 < arguments.Length)
             {
                 var requested = arguments[selectedVariants + 1].Split(',');
-                if (requested.Any(v => !variants.Contains(v))) throw new ArgumentException("Unknown environment variant.");
+                var known = new[] { "previous_quality", "previous_quality_end", "environment_off", "occlusion_off", "scenery_off",
+                    "terrain_trees_off", "water_off", "sun_shadows_off", "scenery_shadows_off", "terrain_surface_off", "lod_bias_1",
+                    "lod_bias_half", "scenery_lowest_lod", "terrain_pixel_error_10", "terrain_basemap_150", "terrain_details_30",
+                    "msaa_2", "environment_colliders_off", "sun_shadows_medium", "sun_shadows_low", "geometry_candidate",
+                    "balanced_candidate", "aggressive_candidate" }.Concat(frameStructure).Concat(presetSet);
+                if (requested.Any(v => !known.Contains(v))) throw new ArgumentException("Unknown environment variant.");
                 variants = requested;
             }
             var views = new[] {
@@ -209,6 +325,9 @@ namespace SomethingDownThere
                 (name: "camp_shadows", position: new Vector3(0, .05f, -10), angles: new Vector3(24, 180, 0)),
                 (name: "cliff_boundary", position: new Vector3(28, .05f, -8), angles: new Vector3(-5, 90, 0))
             }).ToArray();
+            // A freshly dug pit, last: it changes the ground every later view would see.
+            if (arguments.Contains("--environment-pit")) views = views.Append(
+                (name: "pit", position: new Vector3(0, .05f, -5.5f), angles: new Vector3(38, 0, 0))).ToArray();
             using var draws = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Draw Calls Count", 1);
             using var batches = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Batches Count", 1);
             using var triangles = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Triangles Count", 1);
@@ -218,6 +337,7 @@ namespace SomethingDownThere
             {
                 foreach (var view in views)
                 {
+                    if (view.name == "pit") yield return DigPit(player.ExcavationTerrain);
                     player.transform.SetPositionAndRotation(view.position, Quaternion.identity);
                     camera.transform.localPosition = new Vector3(0, 1.65f, 0);
                     camera.transform.rotation = Quaternion.Euler(view.angles);
@@ -265,10 +385,12 @@ namespace SomethingDownThere
                             gpu = SystemInfo.graphicsDeviceName, cpu = SystemInfo.processorType,
                             graphicsApi = SystemInfo.graphicsDeviceType.ToString(), developmentBuild = Debug.isDebugBuild,
                             defaults = new { originalBias, detailDistance, density, treeDistance, pixelError, basemapDistance, scale, msaa,
-                                shadowResolution, cascades, shadowDistance }, results
+                                shadowResolution, cascades, shadowDistance, preferences.Shadows, preferences.AntiAliasing }, results
                         }, Newtonsoft.Json.Formatting.Indented));
                         Debug.Log("Environment sample completed: " + view.name + " / " + variant);
-                        if (variant == "baseline_start" || variant == "lod_bias_1" || variant == "terrain_basemap_150" || variant.EndsWith("_candidate") || finalReview)
+                        if (variant == "baseline_start" || variant == "lod_bias_1" || variant == "terrain_basemap_150" || variant.EndsWith("_candidate") || finalReview
+                            || variant.StartsWith("ssao_") || variant.StartsWith("terrain_detail") || variant.StartsWith("sun_shadows_high")
+                            || variant.StartsWith("preset_") || variant.StartsWith("view_distance") || variant.StartsWith("finds_") || variant.StartsWith("terrain_basemap") || variant.StartsWith("lod_bias") || variant == "distant_detail" || variant == "render_scale_75_fsr" || variant == "fxaa")
                         {
                             ScreenCapture.CaptureScreenshot(Path.Combine(directory, view.name + "-" + variant + ".png"));
                             yield return null; yield return null;
@@ -283,6 +405,32 @@ namespace SomethingDownThere
             File.WriteAllText(output, report.ToString(Newtonsoft.Json.Formatting.Indented));
             Application.Quit();
         }
+
+        // Real tool cuts through the shallow rock layer, exposing and releasing finds.
+        private static IEnumerator DigPit(TerrainVolume terrain)
+        {
+            var hits = new RaycastHit[32];
+            for (int layer = 0; layer < 6; layer++)
+            {
+                for (float x = -2; x <= 2.01f; x += .8f)
+                for (float z = -2; z <= 2.01f; z += .8f)
+                {
+                    int count = Physics.RaycastNonAlloc(new Vector3(x, 3, z), Vector3.down, hits, 20);
+                    int nearest = -1;
+                    for (int h = 0; h < count; h++)
+                        if (hits[h].collider.GetComponentInParent<TerrainVolume>() == terrain && (nearest < 0 || hits[h].distance < hits[nearest].distance))
+                            nearest = h;
+                    if (nearest >= 0) terrain.TryDig(hits[nearest], .8095f);
+                }
+                yield return null;
+            }
+            // Released finds settle before the pit is measured.
+            for (int i = 0; i < 180; i++) yield return null;
+        }
+
+        // Spans cannot live in the iterator above.
+        private static UniversalRendererData DefaultRenderer(UniversalRenderPipelineAsset pipeline) =>
+            (UniversalRendererData)pipeline.rendererDataList[0];
 
         private sealed class EnvironmentPreferences : IDevicePreferencesStore
         {

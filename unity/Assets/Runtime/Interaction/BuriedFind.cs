@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    public enum FindSize { Small, Large }
-
     // Authored meshes carry real surface samples. Ellipsoid fallback is legacy fixture support.
     [DisallowMultipleComponent, RequireComponent(typeof(MeshRenderer), typeof(MeshCollider))]
     public sealed class BuriedFind : MonoBehaviour, IInteractionTarget
@@ -18,7 +16,6 @@ namespace SomethingDownThere
         public int SurfaceSampleCount => exposureSamples == null ? 0 : exposureSamples.Length;
         [SerializeField, Min(0)] private int saleValue = 5;
         public int SaleValue => saleValue;
-        [SerializeField] private FindSize size = FindSize.Small;
         [SerializeField, Range(0.1f, 1f)] private float collectionThreshold = 0.6f;
         [SerializeField] private Vector3[] exposureSamples;
         [SerializeField] private DiscoveryKind kind;
@@ -44,7 +41,6 @@ namespace SomethingDownThere
         public InventoryItem Item { get; private set; }
         public float Exposure { get; private set; }
         public bool Collected => State == FindState.Collected || State == FindState.Stored || State == FindState.Displayed;
-        public FindSize Size => size;
         // Visibility/range are checked against the actual collider when collecting.
         public float RequiredExposure => Mathf.Clamp(collectionThreshold, 0.1f, 1f);
         public bool IsHeld => physical != null && physical.Held;
@@ -61,12 +57,44 @@ namespace SomethingDownThere
         internal Collider HitCollider => hitCollider;
         public Bounds WorldBounds => visual.bounds;
 
+        // Renderer bounds box the rotated local box, reaching well past the mesh. Shallow finds
+        // sit only centimetres below pristine soil, so those bounds broke the surface and kept
+        // hundreds of fully buried meshes rendering. The placement envelope (a pivot sphere
+        // through the actual vertices) also encloses the mesh; their intersection stays conservative.
+        internal Bounds SoilVisibilityBounds
+        {
+            get
+            {
+                var box = visual.bounds;
+                if (vertexRadius <= 0) return box;
+                var scale = transform.lossyScale;
+                float radius = vertexRadius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Max(Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+                Vector3 pivot = transform.position, reach = new Vector3(radius, radius, radius);
+                var tight = new Bounds();
+                tight.SetMinMax(Vector3.Max(box.min, pivot - reach), Vector3.Min(box.max, pivot + reach));
+                return tight;
+            }
+        }
+        private float vertexRadius;
+        private static readonly System.Collections.Generic.Dictionary<Mesh, float> VertexRadii = new System.Collections.Generic.Dictionary<Mesh, float>();
+
+        // One vertex pass per shared mesh; unreadable meshes keep the renderer bounds.
+        private static float VertexRadius(Mesh mesh)
+        {
+            if (mesh == null || !mesh.isReadable) return 0;
+            if (VertexRadii.TryGetValue(mesh, out float radius)) return radius;
+            foreach (var vertex in mesh.vertices) radius = Mathf.Max(radius, vertex.magnitude);
+            VertexRadii[mesh] = radius;
+            return radius;
+        }
+
         public void Initialize(TerrainVolume owner, string identity, DiscoveryField population = null)
         {
             terrain = owner;
             field = population;
             hitCollider = GetComponent<MeshCollider>();
             visual = GetComponent<MeshRenderer>();
+            vertexRadius = VertexRadius(GetComponent<MeshFilter>().sharedMesh);
             if (owner.TryGetComponent<ExcavationDaylight>(out var daylight)) daylight.Register(visual);
             physical = GetComponent<FindPhysics>();
             Item = new InventoryItem(identity, displayName, saleValue, kind);
@@ -88,15 +116,42 @@ namespace SomethingDownThere
         }
 
         private bool UsesPhysicalPose => physical != null && !Collected && physical.Released;
-        public FindSnapshot Capture() => new FindSnapshot { ContentId = saveContentId, Item = ItemSnapshot.Capture(Item),
+
+        // Nearly every find lies still between checkpoints, and rebuilding all their records took
+        // most of each autosave's main-thread capture. The checkpoint record is reused until the
+        // pose (Transform.hasChanged, owned here), state or item changes.
+        private FindSnapshot captured;
+        private InventoryItem capturedItem;
+        internal void ForgetCapture() => captured = null;
+
+        // A fresh record the caller may edit and Restore.
+        public FindSnapshot Capture() => Record(physical != null && physical.Released);
+
+        // The checkpoint's record. It is shared with the save worker and later checkpoints, so
+        // nothing may edit it; editing callers use Capture().
+        internal FindSnapshot CaptureCheckpoint()
+        {
+            bool released = physical != null && physical.Released;
+            if (captured != null && !transform.hasChanged && !UsesPhysicalPose && ReferenceEquals(capturedItem, Item)
+                && captured.State == State && captured.PhysicsReleased == released && captured.DepthRecorded == DepthRecorded
+                && captured.DiscoveryDepth == DiscoveryDepth && captured.DisplaySocket == DisplaySocket)
+                return captured;
+            captured = Record(released);
+            capturedItem = Item;
+            transform.hasChanged = false;
+            return captured;
+        }
+
+        private FindSnapshot Record(bool released) => new FindSnapshot { ContentId = saveContentId, Item = ItemSnapshot.Capture(Item),
             // Inactive collected bodies no longer have a live PhysX pose; preserve their transform history.
             Position = terrain.transform.InverseTransformPoint(UsesPhysicalPose ? physical.Body.position : transform.position),
             Rotation = Quaternion.Inverse(terrain.transform.rotation) * (UsesPhysicalPose ? physical.Body.rotation : transform.rotation),
-            Scale = transform.localScale, State = State, PhysicsReleased = physical != null && physical.Released,
+            Scale = transform.localScale, State = State, PhysicsReleased = released,
             DepthRecorded = DepthRecorded, DiscoveryDepth = DiscoveryDepth, DisplaySocket = DisplaySocket };
 
         public void Restore(FindSnapshot state)
         {
+            captured = null;
             Item = state.Item.Restore();
             transform.SetPositionAndRotation(terrain.transform.TransformPoint(state.Position), terrain.transform.rotation * state.Rotation);
             transform.localScale = state.Scale;
@@ -137,7 +192,7 @@ namespace SomethingDownThere
         }
 
         private void RefreshVisibility() => visual.enabled = State != FindState.Collected
-            && (State != FindState.World || xrayVisible || Exposure > 0 || IsHeld || terrain.MayExpose(WorldBounds));
+            && (State != FindState.World || xrayVisible || Exposure > 0 || IsHeld || terrain.MayExpose(SoilVisibilityBounds));
 
         internal bool HasSoilAttachment(float surfaceTolerance = .005f)
         {

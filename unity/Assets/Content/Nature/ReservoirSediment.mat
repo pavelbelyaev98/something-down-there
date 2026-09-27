@@ -60,8 +60,32 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ConcreteAlbedo:
+        m_Texture: {fileID: 2800000, guid: 6d557c8818f5ab84b888285f5da74e68, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ConcreteMask:
+        m_Texture: {fileID: 2800000, guid: a1e2348717e150042aec187930da1437, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ConcreteNormal:
+        m_Texture: {fileID: 2800000, guid: 5cc476e0a7dbb73499419f8a1af9f211, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DigEdge:
         m_Texture: {fileID: 2800000, guid: 44b96b8d1280d514cb44b410efaaca25, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GravelAlbedo:
+        m_Texture: {fileID: 2800000, guid: e4af42a97499a26499b23663dcb92a36, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GravelMask:
+        m_Texture: {fileID: 2800000, guid: ef59739c9536cfc4180b8e3d7920aa3b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GravelNormal:
+        m_Texture: {fileID: 2800000, guid: 5e5aa08fdb311b649b28689091ed378f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RockAlbedo:
@@ -112,7 +136,11 @@ Material:
     - _ComparisonNormalStrength: 0.55
     - _ComparisonStoneNormalStrength: 0.9
     - _ComparisonTileMetres: 2
+    - _ConcreteNormalStrength: 0.45
+    - _ConcreteTileMetres: 2
     - _DstBlend: 0
+    - _GravelNormalStrength: 0.8
+    - _GravelTileMetres: 2
     - _GroundOpacity: 1
     - _MacroVariation: 0.06
     - _MaskLayout: 0
@@ -136,7 +164,9 @@ Material:
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
     - _BandTint: {r: 0.8322835, g: 0.8094681, b: 0.78577685, a: 1}
     - _ClayTint: {r: 0.92, g: 0.46, b: 0.27, a: 1}
+    - _ConcreteTint: {r: 1, g: 1, b: 1, a: 1}
     - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
+    - _GravelTint: {r: 1, g: 1, b: 1, a: 1}
     - _RockTint: {r: 0.4, g: 0.4, b: 0.4, a: 1}
     - _SoilTint: {r: 0.6097116, g: 0.56572837, b: 0.49560964, a: 1}
     - _TurfTint: {r: 0.6799757, g: 0.65762764, b: 0.64216644, a: 1}

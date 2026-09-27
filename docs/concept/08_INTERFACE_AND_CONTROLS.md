@@ -99,15 +99,21 @@ Motion comfort (FOV, bob, comfort preset), controls (rebinding with a one-click 
 audio (ambience/SFX levels, mute), UI (scale where applicable), gameplay toggles (hold/toggle dig; additional assist if useful), and save management. Options persist immediately; every effect that exists has a
 corresponding control.
 
-Rendering stays at 100% of the selected output resolution; there is no render-scale setting.
+Rendering defaults to 100% of the selected output resolution. Render resolution (50–100%, FSR
+upscaling) is the main performance lever for slower graphics cards and never the default on a PC that
+keeps play smooth without it.
 Start in borderless mode at the current monitor's desktop resolution, filling its aspect ratio
 without cinematic bars. Borderless always follows the monitor; manual output-resolution choices
 belong to fullscreen and windowed modes. Their display list includes reported 4K and higher modes,
 even if the desktop is currently set lower. Display changes retain timed Keep/Revert confirmation.
 
-Graphics exposes sun-shadow quality (including Off), anti-aliasing, texture quality and texture filtering,
-with a category reset. Default to High shadows, 4× anti-aliasing, full-resolution textures and High
-texture filtering, keeping the existing frame cap. Lower graphics settings affect presentation only;
+Graphics exposes a quality preset (Low/Medium/High/Ultra; Custom after any individual change), a
+one-click test of this PC, render resolution, view distance (how far grass, ground and object detail reach),
+sun-shadow quality (including Off), anti-aliasing (FXAA or MSAA), ambient occlusion, texture quality
+and texture filtering. On first launch the game measures the PC and picks the best preset that stays
+above 60 FPS, reaching toward the monitor's rate (up to 90) where a lower tier allows it; resolution
+drops only when even Low misses 60. High is the accepted look and strong PCs keep it. The category
+reset returns to this recommendation. Lower graphics settings affect presentation only;
 they never reduce finds, physics accuracy, or the darkness of deep tunnels. Lamp occlusion remains
 active even with sun shadows disabled so light cannot pass through sealed ground. Texture options apply
 to replacement mipmapped assets through the renderer. Grass-specific controls follow the chosen

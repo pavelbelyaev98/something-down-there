@@ -20,8 +20,8 @@ Design rules:
 - No screen shake from digging or C4.
 - No cinematic camera takeovers, no rotating elevator shots on the critical path.
 - Camera motion is smooth at any frame rate.
-- Start with a 144 FPS limit, including loading. Settings may select VSync or another limit;
-  unlimited rendering is an explicit choice.
+- Start limited to the monitor's refresh rate, including loading. Settings may select VSync or another
+  limit; unlimited rendering is an explicit choice. An unfocused (paused) window redraws at most 30 FPS.
 - A player who selects motion comfort in the optional first-launch preview gets the comfort preset
   applied automatically.
 - An optional first-launch camera preview ("look around — does this feel right?") lets the player set

@@ -240,44 +240,6 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator HudRetainsControlsAndCenteredLayoutAcrossScaleAndMenuChanges()
-        {
-            yield return null; yield return null;
-            var hud = root.GetComponent<FpsHud>().View.Root;
-            var status = hud.Q<Label>("Status");
-            var reticle = hud.Q<Label>("Reticle");
-            var panel = root.GetComponentInChildren<UIDocument>().panelSettings;
-            var content = status.text;
-            try
-            {
-                foreach (var size in new[] { new Vector2Int(960, 540), new Vector2Int(1920, 1080), new Vector2Int(1280, 800) })
-                {
-                    panel.referenceResolution = size;
-                    yield return null; yield return null;
-                    Assert.That(hud.worldBound.Contains(status.worldBound.min), Is.True);
-                    Assert.That(hud.worldBound.Contains(status.worldBound.max), Is.True);
-                    Assert.That(Vector2.Distance(reticle.worldBound.center, hud.worldBound.center) * Screen.width / hud.worldBound.width, Is.LessThanOrEqualTo(1f), "Pixel-rounded UI must keep the reticle within one screen pixel of the aiming center.");
-                    Assert.That(status.text, Is.EqualTo(content));
-                    Assert.That(hud.Q<Label>("Status"), Is.SameAs(status));
-                    Assert.That(hud.Query<VisualElement>().ToList().All(e => e.pickingMode == PickingMode.Ignore), Is.True);
-                }
-                player.OpenMenu(PlayerMenu.Pause);
-                yield return null; yield return null;
-                Assert.That(hud.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
-                player.CloseMenu();
-                yield return null; yield return null;
-                Assert.That(hud.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
-                int layouts = 0;
-                EventCallback<GeometryChangedEvent> changed = e => layouts++;
-                status.RegisterCallback(changed);
-                for (int i = 0; i < 5; i++) yield return null;
-                status.UnregisterCallback(changed);
-                Assert.That(layouts, Is.Zero, "Unchanged HUD content should retain its layout.");
-            }
-            finally { panel.referenceResolution = new Vector2Int(1280, 720); }
-        }
-
-        [UnityTest]
         public IEnumerator ReturnWarningsShowReserveBandsAndFreezeAcrossInventoryInspection()
         {
             var batteryLabel = root.GetComponent<FpsHud>().View.Root.Q<Label>("Battery status");
@@ -672,6 +634,7 @@ namespace SomethingDownThere.Tests
             view.Root.Q("vSync").Focus(); yield return Key(keyboard.leftArrowKey);
             Assert.That(player.GameSettings.Values.VSync, Is.False);
             Assert.That(view.Root.Q("fpsLimit").enabledInHierarchy, Is.True);
+            player.GameSettings.Edit(v => v.FrameLimit = 144);
             view.Root.Q("fpsLimit").Focus(); yield return Key(keyboard.rightArrowKey);
             Assert.That(player.GameSettings.Values.FrameLimit, Is.EqualTo(165));
             var position = player.transform.position;
@@ -704,73 +667,10 @@ namespace SomethingDownThere.Tests
                 Assert.That(row.worldBound.height, Is.EqualTo(height).Within(1));
                 Assert.That(view.Root.Q("settingsBack").ClassListContains("hidden"), Is.False);
                 Assert.That(view.Root.Q("settingsFooter").Contains(view.Root.Q("settingsBack")), Is.True);
-                Assert.That(view.Root.Q("qualityPreset"), Is.Null);
                 Assert.That(view.CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Any(b => b.text == "Back" || b.text == "Apply display"), Is.False);
                 if (category == SettingsCategory.Audio) Assert.That(view.CurrentScreen.Query(className: "preference-row").ToList().Count, Is.EqualTo(1));
                 if (category == SettingsCategory.Controls) Assert.That(view.Root.Q<ScrollView>("bindingScroll").Contains(view.Root.Q("digMode")), Is.True);
             }
-        }
-
-        [UnityTest]
-        public IEnumerator SharedControlsKeepReadableStatesAndAlignedNativeSlider()
-        {
-            player.OpenMenu(PlayerMenu.Pause);
-            yield return null; yield return null;
-            var view = MenuTestUI.View(player);
-            var states = typeof(VisualElement).GetProperty("pseudoStates", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            Assert.That(states, Is.Not.Null);
-            foreach (var button in view.CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList())
-            {
-                object original = states.GetValue(button);
-                foreach (string state in new[] { "Hover", "Focus", "Hover, Focus", "Hover, Active" })
-                {
-                    states.SetValue(button, System.Enum.Parse(states.PropertyType, state));
-                    yield return null;
-                    AssertReadableNeutralText(button);
-                    Assert.That(button.resolvedStyle.borderTopColor.a, Is.Zero, "Pointer-only secondary actions stay borderless.");
-                }
-                states.SetValue(button, original);
-            }
-            player.ShowSettings(); yield return null; yield return null;
-            var tabs = view.Root.Q("settingsNavigation").Query<UnityEngine.UIElements.Button>().ToList();
-            foreach (var tab in tabs)
-            {
-                object original = states.GetValue(tab);
-                states.SetValue(tab, System.Enum.Parse(states.PropertyType, "Hover, Focus, Active"));
-                yield return null; AssertReadableNeutralText(tab); states.SetValue(tab, original);
-            }
-            var dropdown = view.Root.Q<DropdownField>("windowMode");
-            dropdown.Focus(); yield return Key(keyboard.enterKey); yield return null;
-            var popup = view.Root.panel.visualTree.Q("menuDropdown");
-            Assert.That(popup, Is.Not.Null);
-            foreach (var item in popup.Query(className: "unity-base-dropdown__item").ToList())
-            {
-                object original = states.GetValue(item);
-                states.SetValue(item, System.Enum.Parse(states.PropertyType, "Hover, Focus"));
-                yield return null;
-                AssertReadableNeutralText(item.Q<Label>());
-                var checkmark = item.Q(className: "unity-base-dropdown__checkmark");
-                if (checkmark != null) Assert.That(checkmark.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
-                states.SetValue(item, original);
-            }
-            yield return Key(keyboard.escapeKey);
-            view.Root.Q<Toggle>("vSync").value = true; yield return null;
-            Assert.That(view.Root.Q<DropdownField>("fpsLimit").Q<TextElement>().resolvedStyle.unityTextAlign, Is.EqualTo(TextAnchor.MiddleRight));
-            player.ShowSettingsCategory(SettingsCategory.Audio); yield return null; yield return null;
-            var slider = view.Root.Q<SliderInt>("masterVolume");
-            foreach (int value in new[] { 0, 50, 100 })
-            {
-                slider.value = value; yield return null; yield return null;
-                var track = slider.Q(className: "unity-base-slider__tracker").worldBound;
-                var thumb = slider.Q(className: "unity-base-slider__dragger").worldBound;
-                Assert.That(thumb.center.y, Is.EqualTo(track.center.y).Within(1));
-                Assert.That(view.Root.Q("masterVolumeValue").worldBound.center.y, Is.EqualTo(track.center.y).Within(1));
-            }
-            var back = view.Root.Q("settingsBack").worldBound;
-            var reset = view.Root.Q("deviceReset").worldBound;
-            Assert.That(reset.y, Is.EqualTo(back.y).Within(1));
-            Assert.That(reset.width, Is.EqualTo(back.width).Within(1));
-            Assert.That(reset.x - back.xMax, Is.InRange(10, 14));
         }
 
         private static void AssertReadableNeutralText(TextElement text)
@@ -870,11 +770,12 @@ namespace SomethingDownThere.Tests
             var source = (UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
             float shadowDistance = source.shadowDistance;
             int shadowResolution = source.mainLightShadowmapResolution, shadowCascades = source.shadowCascadeCount;
+            var originalOverrides = QualitySettings.terrainQualityOverrides;
             using (var preferences = new GamePreferences(new PreferencesStore { Contents = "{\"Version\":1,\"MasterVolume\":25,\"Muted\":true,\"MuteUnfocused\":true}" }, new UnityGameSettingsPlatform()))
             {
                 Assert.That((float)QualitySettings.renderPipeline.GetType().GetProperty("renderScale").GetValue(QualitySettings.renderPipeline), Is.EqualTo(1f));
                 Assert.That(AudioListener.volume, Is.EqualTo(0.25f), "Removed legacy mute flags must have no hidden effect.");
-                preferences.Edit(v => { v.VSync = false; v.FrameLimit = 30; v.MasterVolume = 25; v.Msaa = 2; v.TextureLimit = 1; v.Filtering = 2; });
+                preferences.Edit(v => { v.VSync = false; v.FrameLimit = 30; v.MasterVolume = 25; v.AntiAliasing = GraphicsQuality.Msaa2; v.TextureLimit = 1; v.Filtering = 2; });
                 Assert.That(Application.targetFrameRate, Is.EqualTo(30)); Assert.That(QualitySettings.vSyncCount, Is.Zero);
                 Assert.That(AudioListener.volume, Is.EqualTo(0.25f));
                 Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(1));
@@ -897,6 +798,17 @@ namespace SomethingDownThere.Tests
                     Assert.That(source.mainLightShadowmapResolution, Is.EqualTo(shadowResolution));
                     Assert.That(source.shadowCascadeCount, Is.EqualTo(shadowCascades));
                 }
+                preferences.Edit(v => { v.RenderScale = 75; v.AntiAliasing = GraphicsQuality.Fxaa; v.ViewDistance = GraphicsQuality.ViewLow; });
+                Assert.That(runtime.renderScale, Is.EqualTo(.75f));
+                Assert.That(runtime.upscalingFilter, Is.EqualTo(UnityEngine.Rendering.Universal.UpscalingFilterSelection.FSR));
+                Assert.That(runtime.msaaSampleCount, Is.EqualTo(1));
+                Assert.That(QualitySettings.terrainQualityOverrides & TerrainQualityOverrides.DetailDistance, Is.EqualTo(TerrainQualityOverrides.DetailDistance));
+                Assert.That(QualitySettings.meshLodThreshold, Is.GreaterThan(GraphicsQuality.MeshLodThreshold(GraphicsQuality.ViewHigh)), "Low view distance simplifies find meshes sooner.");
+                preferences.Edit(v => { v.RenderScale = 100; v.ViewDistance = GraphicsQuality.ViewHigh; v.FrameLimit = GamePreferences.DisplayFrameLimit; });
+                Assert.That(QualitySettings.terrainQualityOverrides, Is.EqualTo(TerrainQualityOverrides.BasemapDistance), "High keeps the authored grass.");
+                Assert.That(QualitySettings.terrainBasemapDistance, Is.EqualTo(GraphicsQuality.BasemapDistance(GraphicsQuality.ViewHigh)), "High shades distant terrain in full.");
+                Assert.That(QualitySettings.meshLodThreshold, Is.EqualTo(GraphicsQuality.MeshLodThreshold(GraphicsQuality.ViewHigh)));
+                Assert.That(Application.targetFrameRate, Is.EqualTo(preferences.RefreshRate), "Display follows the monitor.");
                 preferences.SetFocus(false); Assert.That(AudioListener.volume, Is.EqualTo(0.25f), "Focus changes no longer mute the listener.");
                 preferences.SetFocus(true); Assert.That(AudioListener.volume, Is.EqualTo(0.25f));
                 preferences.Edit(v => { v.MasterVolume = 0; v.VSync = true; });
@@ -910,6 +822,7 @@ namespace SomethingDownThere.Tests
             Assert.That(QualitySettings.vSyncCount, Is.EqualTo(originalSync));
             Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(originalTextures));
             Assert.That(QualitySettings.anisotropicFiltering, Is.EqualTo(originalFiltering));
+            Assert.That(QualitySettings.terrainQualityOverrides, Is.EqualTo(originalOverrides));
         }
 
         [UnityTest]

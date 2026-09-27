@@ -128,7 +128,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.BuriedFind
   saveContentId: 51db261769dac514ebb168431cb1f25b
   displayName: Blue marble
+  minor: 1
+  detectorEligible: 0
   saleValue: 5
-  size: 0
   collectionThreshold: 0.4
   exposureSamples: []
+  kind: 0
+  recovery: 0
+  lore: 

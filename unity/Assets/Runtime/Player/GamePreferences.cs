@@ -13,9 +13,14 @@ namespace SomethingDownThere
         public int Version = 1;
         public int Width, Height, WindowMode;
         public bool VSync, ShowFps;
-        public int FrameLimit = GamePreferences.DefaultFrameLimit;
-        public int Msaa = 2, TextureLimit, Filtering = 2;
+        public int FrameLimit = GamePreferences.DisplayFrameLimit;
+        public int AntiAliasing = GraphicsQuality.Msaa2, TextureLimit, Filtering = 2;
         public int Shadows = 3;
+        public int RenderScale = 100, ViewDistance = GraphicsQuality.ViewHigh;
+        public bool AmbientOcclusion = true;
+        // Auto-configure's result for this device; the Graphics reset returns to it.
+        public bool GraphicsTuned;
+        public int RecommendedPreset = GraphicsQuality.High, RecommendedScale = 100;
         public int MasterVolume = 100;
         public int Sensitivity = 100;
         public bool InvertX, InvertY;
@@ -35,14 +40,16 @@ namespace SomethingDownThere
         Vector2Int[] Resolutions { get; }
         DisplaySelection NativeDisplay { get; }
         bool RenderingAvailable { get; }
+        int RefreshRate { get; }
         void Apply(GamePreferenceValues values, bool focused);
         void SetDisplay(DisplaySelection selection);
     }
 
     public sealed class GamePreferences : IDisposable
     {
-        public const int DefaultFrameLimit = 144;
-        public static readonly int[] FrameLimits = { 30, 45, 60, 90, 120, 144, 165, 240, -1 };
+        // Zero follows the window's monitor; -1 is unlimited.
+        public const int DisplayFrameLimit = 0, FallbackFrameLimit = 144;
+        public static readonly int[] FrameLimits = { DisplayFrameLimit, 30, 60, 75, 90, 100, 120, 144, 165, 240, -1 };
         private readonly IDevicePreferencesStore store;
         private readonly IGameSettingsPlatform platform;
         private bool focused = true;
@@ -59,6 +66,8 @@ namespace SomethingDownThere
         public Vector2Int[] Resolutions => platform.Resolutions;
         public DisplaySelection NativeDisplay => platform.NativeDisplay;
         public bool RenderingAvailable => platform.RenderingAvailable;
+        public int RefreshRate => platform.RefreshRate;
+        public bool Focused => focused;
         public event Action Changed;
 
         public GamePreferences(IDevicePreferencesStore store, IGameSettingsPlatform platform)
@@ -99,10 +108,24 @@ namespace SomethingDownThere
                 switch (category)
                 {
                     case SettingsCategory.Display: v.VSync = defaults.VSync; v.FrameLimit = defaults.FrameLimit; v.ShowFps = false; break;
-                    case SettingsCategory.Graphics: v.Msaa = defaults.Msaa; v.TextureLimit = defaults.TextureLimit; v.Filtering = defaults.Filtering; v.Shadows = defaults.Shadows; break;
+                    case SettingsCategory.Graphics: GraphicsQuality.Apply(v, v.RecommendedPreset); v.RenderScale = v.RecommendedScale; break;
                     case SettingsCategory.Audio: v.MasterVolume = 100; break;
                     case SettingsCategory.Controls: v.Sensitivity = 100; v.InvertX = v.InvertY = false; break;
                 }
+            });
+            Dirty = true;
+            Flush();
+        }
+
+        // Auto-configure renders candidates without storing them; ending restores the stored values.
+        public void PreviewGraphics(GamePreferenceValues candidate) { Sanitize(candidate); platform.Apply(candidate, focused); }
+        public void EndGraphicsPreview() => platform.Apply(Values, focused);
+
+        public void ApplyRecommendation(int preset, int renderScale)
+        {
+            Edit(v => {
+                GraphicsQuality.Apply(v, preset); v.RenderScale = renderScale;
+                v.RecommendedPreset = preset; v.RecommendedScale = renderScale; v.GraphicsTuned = true;
             });
             Dirty = true;
             Flush();
@@ -178,10 +201,14 @@ namespace SomethingDownThere
         {
             v.Version = 1; v.WindowMode = Mathf.Clamp(v.WindowMode, 0, 2);
             if (v.Width < 960 || v.Width > 16384 || v.Height < 540 || v.Height > 8640) v.Width = v.Height = 0;
-            if (Array.IndexOf(FrameLimits, v.FrameLimit) < 0) v.FrameLimit = DefaultFrameLimit;
-            if (v.Msaa != 1 && v.Msaa != 2 && v.Msaa != 4 && v.Msaa != 8) v.Msaa = 2;
+            if (Array.IndexOf(FrameLimits, v.FrameLimit) < 0) v.FrameLimit = DisplayFrameLimit;
+            if (v.AntiAliasing < GraphicsQuality.AntiAliasingOff || v.AntiAliasing > GraphicsQuality.Msaa8) v.AntiAliasing = GraphicsQuality.Msaa2;
             v.TextureLimit = Mathf.Clamp(v.TextureLimit, 0, 2); v.Filtering = Mathf.Clamp(v.Filtering, 0, 2);
             v.Shadows = Mathf.Clamp(v.Shadows, 0, 3);
+            v.RenderScale = GraphicsQuality.SnapRenderScale(v.RenderScale);
+            v.ViewDistance = Mathf.Clamp(v.ViewDistance, GraphicsQuality.ViewLow, GraphicsQuality.ViewHigh);
+            v.RecommendedPreset = Mathf.Clamp(v.RecommendedPreset, GraphicsQuality.Low, GraphicsQuality.Ultra);
+            v.RecommendedScale = GraphicsQuality.SnapRenderScale(v.RecommendedScale);
             v.MasterVolume = Mathf.Clamp(v.MasterVolume, 0, 100); v.Sensitivity = Mathf.Clamp(v.Sensitivity, 10, 300);
         }
 

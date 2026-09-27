@@ -103,6 +103,37 @@ namespace SomethingDownThere.Editor
             return sky;
         }
 
+        [MenuItem("Tools/Something Down There/Configure Grass Grade")]
+        public static void ConfigureGrassGrade()
+        {
+            var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(PostPath);
+            if (profile == null) throw new InvalidOperationException("Configure the approved sun first.");
+            ConfigureGrassGrade(profile);
+            AssetDatabase.SaveAssets();
+        }
+
+        // The packs paint their grass lime into terrain and rock textures alike, so one grade
+        // calms every grass: only yellow-green to green hues lose saturation. Soil, sand, clay,
+        // rock, sky and water keep the established grade.
+        private static void ConfigureGrassGrade(VolumeProfile profile)
+        {
+            if (!profile.TryGet(out ColorCurves curves))
+            {
+                curves = profile.Add<ColorCurves>();
+                curves.name = nameof(ColorCurves); curves.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
+                AssetDatabase.AddObjectToAsset(curves, profile);
+            }
+            curves.active = true;
+            // Hue (0 red, 1/6 yellow, 1/3 green) -> saturation scale / 2 (0.5 keeps it).
+            curves.hueVsSat.Override(new TextureCurve(new[]
+            {
+                new Keyframe(.1f, .5f), new Keyframe(.18f, .42f), new Keyframe(.25f, .33f),
+                new Keyframe(.33f, .36f), new Keyframe(.42f, .46f), new Keyframe(.5f, .5f),
+            }, .5f, true, new Vector2(0, 1)));
+            EditorUtility.SetDirty(curves);
+            EditorUtility.SetDirty(profile);
+        }
+
         private static void ConfigurePost(GameObject root, Camera camera)
         {
             EnsureFolder();
@@ -119,6 +150,8 @@ namespace SomethingDownThere.Editor
                     EditorUtility.SetDirty(bloom);
                 }
             }
+
+            ConfigureGrassGrade(profile);
 
             var child = root.transform.Find("Daylight Colors");
             if (child == null)

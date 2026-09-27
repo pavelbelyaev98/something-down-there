@@ -21,15 +21,14 @@ namespace SomethingDownThere.Tests
         public IEnumerator Open()
         {
             devices = new InputTestFixture(); devices.Setup(); InputSystem.AddDevice<Keyboard>(); InputSystem.AddDevice<Mouse>();
-            SceneManager.sceneLoaded += TestInputPreferences.Configure;
+            SceneManager.sceneLoaded += TestInputPreferences.ConfigureWithoutFinds;
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/MainGame.unity", new LoadSceneParameters(LoadSceneMode.Additive));
-            SceneManager.sceneLoaded -= TestInputPreferences.Configure;
+            SceneManager.sceneLoaded -= TestInputPreferences.ConfigureWithoutFinds;
             scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
             player = scene.GetRootGameObjects()[0].GetComponentInChildren<FpsPlayer>();
             tools = player.WorksiteTools; terrain = player.ExcavationTerrain;
             Assert.That(tools, Is.Not.Null); Assert.That(player.Persistence, Is.Null);
             player.Tuning.Gravity = 0; player.SetApplicationFocus(true); player.CloseMenu();
-            foreach (var find in player.Discoveries.Finds) find.gameObject.SetActive(false);
             yield return null; player.SetApplicationFocus(true);
         }
 

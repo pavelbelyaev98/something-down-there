@@ -91,6 +91,9 @@ namespace SomethingDownThere
         public CameraPreferences CameraSettings { get; private set; }
         public InputPreferences InputSettings { get; private set; }
         public GamePreferences GameSettings { get; private set; }
+        public GraphicsAutoTuner GraphicsTuner { get; } = new GraphicsAutoTuner();
+        // A new device measures itself once at the title; interrupted runs retry there.
+        private bool pendingGraphicsTuning;
         public SettingsCategory SettingsCategory { get; private set; }
         public bool IsSettingsOpen => Menu == PlayerMenu.DeviceSettings || Menu == PlayerMenu.CameraComfort || Menu == PlayerMenu.InputSettings;
         public InputBindingCapture BindingCapture { get; private set; }
@@ -195,7 +198,22 @@ namespace SomethingDownThere
             if (GameSettings == null)
                 ConfigureGamePreferences(new DevicePreferencesFile(System.IO.Path.Combine(Application.persistentDataPath,
                     Application.isEditor ? "EditorPreferences" : "Preferences", "game-v1.json")),
-                    new UnityGameSettingsPlatform(!Application.isEditor || gameObject.scene.name == "MainGame"));
+                    new UnityGameSettingsPlatform(!Application.isEditor || gameObject.scene.name == "MainGame", viewCamera));
+            pendingGraphicsTuning = !Application.isEditor && !GameSettings.Values.GraphicsTuned;
+            GraphicsTuner.Changed += () => MenuChanged?.Invoke();
+        }
+
+        // Settings button: measure this PC again from anywhere a menu is open.
+        public void AutoConfigureGraphics()
+        {
+            if (!GraphicsTuner.Running && focused && excavationTerrain != null && GameSettings.RenderingAvailable)
+                StartCoroutine(TuneGraphics(() => focused, false));
+        }
+
+        private System.Collections.IEnumerator TuneGraphics(Func<bool> stillValid, bool firstLaunch)
+        {
+            yield return GraphicsTuner.Run(GameSettings, viewCamera, excavationTerrain, stillValid);
+            if (firstLaunch && !GameSettings.Values.GraphicsTuned) pendingGraphicsTuning = true;
         }
 
         public void ConfigureGamePreferences(IDevicePreferencesStore store, IGameSettingsPlatform platform = null)
@@ -323,6 +341,12 @@ namespace SomethingDownThere
         private void Update()
         {
             if (input == null) return;
+            if (pendingGraphicsTuning && focused && Menu == PlayerMenu.MainMenu && !GraphicsTuner.Running && excavationTerrain != null
+                && excavationTerrain.CanDig && !excavationTerrain.IsRestoring)
+            {
+                pendingGraphicsTuning = false;
+                StartCoroutine(TuneGraphics(() => focused && Menu == PlayerMenu.MainMenu, true));
+            }
             BindingCapture.Tick();
             Tick(input.Read(GameplayActive && !BindingCapture.BlocksInput), Time.deltaTime);
             crouch.UpdateProjection();
@@ -1123,6 +1147,7 @@ namespace SomethingDownThere
 
         private void OnDisable()
         {
+            GraphicsTuner.Stop();
             discoveries?.SetXray(false, null);
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
@@ -1153,6 +1178,7 @@ namespace SomethingDownThere
             pickupPresentation?.Dispose();
             input?.Dispose();
             if (CameraSettings != null) CameraSettings.Changed -= ApplyCameraPreferences;
+            GraphicsTuner.Stop();
             GameSettings?.Dispose();
         }
     }

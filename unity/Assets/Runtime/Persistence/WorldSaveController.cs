@@ -13,7 +13,9 @@ namespace SomethingDownThere
     [DefaultExecutionOrder(500), DisallowMultipleComponent, RequireComponent(typeof(FpsPlayer))]
     public sealed partial class WorldSaveController : MonoBehaviour
     {
-        public const double AutosaveSeconds = 10;
+        public const double DefaultAutosaveSeconds = 10;
+        // Save tests shorten the wait; the game always uses the default.
+        public double AutosaveSeconds { get; set; } = DefaultAutosaveSeconds;
         public WorldSaveState State { get; private set; } = WorldSaveState.Loading;
         public bool BlocksPlay => exitRequested || State != WorldSaveState.Ready && State != WorldSaveState.Saving;
         public string SaveDirectory { get; private set; }
@@ -231,7 +233,7 @@ namespace SomethingDownThere
             }
             var snapshot = new WorldSnapshot { Sequence = sequence, UtcTicks = DateTime.UtcNow.Ticks, Terrain = cachedTerrain,
                 TerrainPosition = terrain.transform.position, TerrainRotation = terrain.transform.rotation,
-                ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = discoveries.Seed, Finds = discoveries.Capture(), Extraction = player.Winch?.Capture() };
+                ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = discoveries.Seed, Finds = discoveries.CaptureCheckpoint(), Extraction = player.Winch?.Capture() };
             player.Capture(snapshot);
             LastCaptureMilliseconds = timer.Elapsed.TotalMilliseconds;
             long allocationDelta = GC.GetAllocatedBytesForCurrentThread() - allocated;

@@ -128,7 +128,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.BuriedFind
   saveContentId: 4dd7320af043ad448a6c734ff4d8ed07
   displayName: Copper token
+  minor: 1
+  detectorEligible: 0
   saleValue: 8
-  size: 0
   collectionThreshold: 0.4
   exposureSamples: []
+  kind: 0
+  recovery: 0
+  lore: 

@@ -25,7 +25,7 @@ narrow core depth band where most of it lives, plus a thin scatter band that spr
 outliers outside it: the odd lump of junk survives deep, the odd valuable turns up shallow. Junk
 belongs to the recent fill, the mid ladder to the sediment, and the deep ground is mostly worth
 carrying home. Price stays fixed per type; the mix is what rewards descending.
-The accepted shallow rock layer stays intact. **The first few metres should feel almost as
+The shallow rock layer stays dense but not crowded. **The first few metres should feel almost as
 full of fresh finds as the first scrape**, with rocks continuing and coal entering as the
 player digs beneath the surface. Measure new objects emerging from intact soil at each dig face;
 loose rocks falling down from earlier layers do not count. Farther down, the mix shifts toward

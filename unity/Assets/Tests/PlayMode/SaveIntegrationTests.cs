@@ -47,6 +47,8 @@ namespace SomethingDownThere.Tests
             discoveries = player.Discoveries;
             save = player.GetComponent<WorldSaveController>();
             Assert.That(save, Is.Not.Null, "MainGame owns its save integration.");
+            // Same autosave logic at a shorter interval: waiting 10 s per check dominated this suite.
+            save.AutosaveSeconds = 1;
             save.BeginSession(directory);
             Assert.That(save.BlocksPlay, Is.True);
             Assert.That(player.GameplayActive, Is.False);
@@ -88,14 +90,14 @@ namespace SomethingDownThere.Tests
             Vector3 lampPosition = lamp.transform.position;
             Assert.That(player.WorksiteTools.PlaceMark(new MarkSnapshot { Kind = WorldMarkKind.Home,
                 Position = new Vector3(-5, terrain.SurfaceHeight, -6), Rotation = Quaternion.LookRotation(Vector3.up, Vector3.forward) }), Is.True);
-            var density = terrain.Capture().Density.ToArray();
+            var density = terrain.Capture().Density;
             var population = discoveries.Capture().Select(f => f.Item.Id).ToArray();
             int owned = player.Shovel.Level; float charge = player.Battery.Charge;
             long sequence = save.CompletedSequence; save.RequestCheckpoint();
             yield return Until(() => save.CompletedSequence > sequence && save.State == WorldSaveState.Ready);
             yield return SceneManager.UnloadSceneAsync(scene); yield return Open();
             Assert.That(player.Shovel.Level, Is.EqualTo(owned)); Assert.That(player.Battery.Charge, Is.EqualTo(charge));
-            Assert.That(terrain.Capture().Density.ToArray(), Is.EqualTo(density));
+            AssertSameDensity(terrain.Capture().Density, density);
             Assert.That(discoveries.Capture().Select(f => f.Item.Id), Is.EqualTo(population));
             Assert.That(player.WorksiteTools.Lamps.Count, Is.EqualTo(1));
             Assert.That(player.WorksiteTools.Lamps[0].transform.position, Is.EqualTo(lampPosition));
@@ -201,7 +203,11 @@ namespace SomethingDownThere.Tests
             // Author a real shaft below that widened area before testing its wall.
             for (int i = 0; i < 16; i++)
             {
-                Assert.That(Physics.Raycast(point + Vector3.up * 4, Vector3.down, out var floor, 12), Is.True);
+                // Finds uncovered in the shaft stay physical; cut the soil around and below them.
+                var floors = Physics.RaycastAll(point + Vector3.up * 4, Vector3.down, 12)
+                    .Where(h => h.collider.GetComponentInParent<TerrainVolume>() == terrain).OrderBy(h => h.distance).ToArray();
+                Assert.That(floors, Is.Not.Empty);
+                var floor = floors[0];
                 if (floor.point.y < point.y - 1.2f) break;
                 Assert.That(terrain.TryDig(floor, .65f), Is.True);
             }
@@ -242,7 +248,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.Battery.Capacity, Is.EqualTo(150));
                 Assert.That(player.Trade.OfferUpgrade(EquipmentKind.Fuel).Cost, Is.EqualTo(EquipmentProgression.Price(2)));
                 Assert.That(player.transform.position, Is.EqualTo(expected.PlayerPosition));
-                Assert.That(terrain.Capture().Density.ToArray(), Is.EqualTo(expected.Terrain.Density.ToArray()));
+                AssertSameDensity(terrain.Capture().Density, expected.Terrain.Density);
                 Assert.That(discoveries.Finds.Single(f => f.Item.InstanceId == collectedId).Collected, Is.True);
                 Assert.That(discoveries.Finds.Count, Is.EqualTo(discoveries.Catalog.TotalCount));
                 Assert.That(discoveries.Finds.Count(f => f.Collected), Is.EqualTo(soldCount));
@@ -285,7 +291,7 @@ namespace SomethingDownThere.Tests
             double started = Time.realtimeSinceStartupAsDouble;
             yield return Until(() => save.CompletedSequence > sequence);
             double elapsed = Time.realtimeSinceStartupAsDouble - started;
-            Assert.That(elapsed, Is.InRange(WorldSaveController.AutosaveSeconds, WorldSaveController.AutosaveSeconds + 1));
+            Assert.That(elapsed, Is.InRange(save.AutosaveSeconds, save.AutosaveSeconds + 1));
             Assert.That(save.CapturedTerrainCopies, Is.EqualTo(copies), "Battery-only checkpoints reuse immutable density.");
             sequence = save.CompletedSequence;
             player.Wallet.TryCredit(10);
@@ -388,6 +394,7 @@ namespace SomethingDownThere.Tests
             finally { typeof(WorldSaveController).GetField("exitRequested", flags).SetValue(save, false); }
         }
 
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [UnityTest]
         public IEnumerator CrouchOnlyChangesAutosaveAndLowRoofStanceSurvivesRelaunch()
         {
@@ -430,7 +437,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.CrouchAmount, Is.EqualTo(1));
             Assert.That(player.transform.position, Is.EqualTo(expected.PlayerPosition));
             Assert.That(player.ViewCamera.transform.localPosition.y, Is.EqualTo(0.95f).Within(0.001f));
-            Assert.That(terrain.Capture().Density.ToArray(), Is.EqualTo(expected.Terrain.Density.ToArray()));
+            AssertSameDensity(terrain.Capture().Density, expected.Terrain.Density);
             player.CloseMenu();
             yield return null;
             player.Tick(default, 1f / 60);
@@ -531,7 +538,7 @@ namespace SomethingDownThere.Tests
         {
             yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
             player.CloseMenu(); yield return null;
-            var find = discoveries.Finds.First(f => f.Size == FindSize.Large);
+            var find = discoveries.Finds.First();
             find.transform.position = terrain.transform.TransformPoint(new Vector3(12, terrain.Dimensions.y * terrain.CellSize + .7f, 12));
             find.GetComponent<FindPhysics>().Restore(false); Physics.SyncTransforms(); find.RefreshExposure();
             player.ViewCamera.transform.position = find.transform.position + new Vector3(0, 1, -1);
@@ -551,6 +558,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Inventory.Items.Any(i => i.InstanceId == expected.Item.Id), Is.False);
         }
 
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [UnityTest]
         public IEnumerator EveryDepthMineralCanBeUncoveredCollectedSoldAndCheckpointed()
         {
@@ -662,9 +670,17 @@ namespace SomethingDownThere.Tests
             double deadline = Time.realtimeSinceStartupAsDouble + 30;
             while (!condition())
             {
-                Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(deadline), "Save operation timed out.");
+                if (Time.realtimeSinceStartupAsDouble >= deadline) Assert.Fail("Save operation timed out.");
                 yield return null;
             }
+        }
+
+        // NUnit's collection equality boxes all ~48M samples; compare the snapshots directly.
+        private static void AssertSameDensity(DensitySnapshot actual, DensitySnapshot expected)
+        {
+            Assert.That(actual.Length, Is.EqualTo(expected.Length));
+            for (int i = 0; i < actual.Length; i++)
+                if (actual[i] != expected[i]) Assert.Fail($"Density differs at sample {i}: {actual[i]} vs {expected[i]}.");
         }
     }
 }

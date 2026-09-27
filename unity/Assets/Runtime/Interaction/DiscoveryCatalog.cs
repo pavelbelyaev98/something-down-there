@@ -100,7 +100,7 @@ namespace SomethingDownThere
                     var appearance = e.Appearance(i);
                     if (appearance == null || string.IsNullOrWhiteSpace(appearance.SaveContentId)
                         || !ids.Add(appearance.SaveContentId) || appearance.DisplayName != e.Prefab.DisplayName
-                        || appearance.SaleValue != e.Prefab.SaleValue || appearance.Size != e.Prefab.Size
+                        || appearance.SaleValue != e.Prefab.SaleValue
                         || appearance.DetectorEligible != e.Prefab.DetectorEligible
                         || appearance.Kind != e.Prefab.Kind || appearance.Recovery != e.Prefab.Recovery
                         || !Mathf.Approximately(appearance.RequiredExposure, e.Prefab.RequiredExposure))

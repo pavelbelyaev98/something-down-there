@@ -65,8 +65,12 @@ namespace SomethingDownThere.Editor
             // runtime excavation ground. Every anti-aliasing setting shares one path.
             Undo.RecordObject(renderer, "Configure Pure Nature depth priming");
             renderer.depthPrimingMode = DepthPrimingMode.Disabled;
+            // Transparent water samples scene depth. Without a depth prepass the copy must land
+            // before transparents; a later copy would leave the water reading stale depth.
+            renderer.copyDepthMode = CopyDepthMode.AfterOpaques;
             EditorUtility.SetDirty(pipeline);
             EditorUtility.SetDirty(renderer);
+            GraphicsQualitySetup.ConfigureRenderers();
         }
     }
 }

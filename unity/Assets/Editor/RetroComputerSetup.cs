@@ -78,6 +78,8 @@ namespace SomethingDownThere.Editor
                 entries.Add(new DiscoveryCatalog.Entry { ItemId=e.content_id, Prefab=prefab, Count=e.instances,
                     AuthoredPlacement=true, AuthoredPosition=authored.position, AuthoredEuler=authored.euler });
             }
+            // After every unique has sampled the shared full-detail mesh.
+            DiscoveryContentSetup.GenerateDetailLevels(centered);
         }
         internal static void EnsureFolder(string path)
         {

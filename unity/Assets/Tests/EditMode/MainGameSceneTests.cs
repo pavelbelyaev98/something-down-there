@@ -327,6 +327,21 @@ namespace SomethingDownThere.Tests
                 var rendererData = AssetDatabase.LoadAssetAtPath<UniversalRendererData>("Assets/Settings/SomethingDownThereUniversalRenderer.asset");
                 Assert.That(rendererData.depthPrimingMode, Is.EqualTo(DepthPrimingMode.Disabled),
                     "Depth priming runs only without MSAA and drops the runtime excavation ground.");
+                Assert.That(rendererData.copyDepthMode, Is.EqualTo(CopyDepthMode.AfterOpaques), "Water needs scene depth before transparents.");
+                var contact = new SerializedObject(rendererData.rendererFeatures.OfType<ScreenSpaceAmbientOcclusion>().Single());
+                Assert.That(contact.FindProperty("m_Settings.AfterOpaque").boolValue, Is.True,
+                    "Before-opaque contact shading forces a full depth prepass of the whole scene.");
+                // Ambient occlusion Off selects renderer 1: renderer 0 without features, otherwise identical.
+                var urp = (UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
+                Assert.That(urp.rendererDataList.Length, Is.EqualTo(UnityGameSettingsPlatform.WithoutContactShadingRenderer + 1));
+                var plain = (UniversalRendererData)urp.rendererDataList[UnityGameSettingsPlatform.WithoutContactShadingRenderer];
+                Assert.That(plain.rendererFeatures, Is.Empty);
+                var main = new SerializedObject(rendererData); var copy = new SerializedObject(plain);
+                for (var property = main.GetIterator(); property.NextVisible(property.propertyPath.Length == 0);)
+                    if (property.name != "m_RendererFeatures" && property.name != "m_RendererFeatureMap" && property.name != "m_Name")
+                        Assert.That(SerializedProperty.DataEquals(property, copy.FindProperty(property.propertyPath)), Is.True,
+                            "Rerun Configure Graphics Quality: renderer variant drifted at " + property.propertyPath);
+                Assert.That(PlayerSettings.enableFrameTimingStats, Is.True, "Auto-configure reads frame timings in players.");
                 // The play area keeps the player on the drained section, below a flight ceiling.
                 var area = LakebedSiteSetup.PlayArea();
                 var playBounds = environment.Find("Play area bounds");

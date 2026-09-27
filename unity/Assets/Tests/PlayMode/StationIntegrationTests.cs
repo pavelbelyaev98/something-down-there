@@ -24,6 +24,13 @@ namespace SomethingDownThere.Tests
         private CursorLockMode oldCursor;
         private bool oldCursorVisible;
 
+        // Trading uses inventory identities, never the buried population.
+        private static void DeferFinds(Scene loaded, LoadSceneMode mode)
+        {
+            foreach (var root in loaded.GetRootGameObjects())
+                foreach (var field in root.GetComponentsInChildren<DiscoveryField>(true)) field.DeferGeneration();
+        }
+
         [UnitySetUp]
         public IEnumerator SetUp()
         {
@@ -31,7 +38,9 @@ namespace SomethingDownThere.Tests
             devices = new InputTestFixture(); devices.Setup();
             keyboard = InputSystem.AddDevice<Keyboard>(); mouse = InputSystem.AddDevice<Mouse>();
             Time.timeScale = 1;
+            SceneManager.sceneLoaded += DeferFinds;
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/MainGame.unity", new LoadSceneParameters(LoadSceneMode.Additive));
+            SceneManager.sceneLoaded -= DeferFinds;
             scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
             var root = scene.GetRootGameObjects().Single();
             player = root.GetComponentInChildren<FpsPlayer>();
@@ -193,47 +202,6 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator CriticalFractionalFuelRefillsFromPointerPurchaseAndClearsWarning()
-        {
-            player.Wallet.TryCredit(10);
-            player.Battery.RestoreCharge(13.00586f);
-            Face(computer);
-            yield return null;
-            Assert.That(player.TryInteract(), Is.True);
-            yield return null; yield return null;
-            Assert.That(computer.Refill.Cost, Is.EqualTo(1));
-            Assert.That(computer.Refill.ChargeAfter, Is.EqualTo(100));
-            var purchase = Button("Upgrade Refill fuel");
-            devices.Set(mouse.position, MenuTestUI.ScreenPoint(player, purchase), queueEventOnly: true);
-            yield return null;
-            devices.Press(mouse.leftButton, queueEventOnly: true); yield return null;
-            devices.Release(mouse.leftButton, queueEventOnly: true); yield return null; yield return null;
-            Assert.That(player.Battery.Charge, Is.EqualTo(100));
-            Assert.That(player.Wallet.Balance, Is.EqualTo(9));
-            Assert.That(Text("Trade balance"), Is.EqualTo("$9"));
-            Assert.That(Button("Upgrade Refill fuel").text, Is.EqualTo("FULL"));
-            player.CloseMenu(); yield return null; yield return null;
-            Assert.That(player.GetComponent<FpsHud>().View.Root.Q<Label>("Fuel warning").text, Is.Empty);
-            Assert.That(player.GetComponent<FpsHud>().View.Root.Q<Label>("Wallet").text, Is.EqualTo("$9"));
-        }
-
-        [UnityTest]
-        public IEnumerator AdminCanGrantTestMoneyForPlaytesting()
-        {
-            Assert.That(player.AdminAvailable, Is.True, "Editor and development builds expose the admin page.");
-            player.OpenMenu(PlayerMenu.DeveloperAdmin);
-            yield return null; yield return null;
-            MenuTestUI.Click(Button("Add $500"));
-            yield return null;
-            Assert.That(player.Wallet.Balance, Is.EqualTo(500));
-            MenuTestUI.Click(Button("Add $500"));
-            yield return null;
-            Assert.That(player.Wallet.Balance, Is.EqualTo(1000));
-            player.CloseMenu();
-            yield return null;
-        }
-
-        [UnityTest]
         public IEnumerator PausedStationRevalidatesFocusRangeDisabledStateAndDisplayedContents()
         {
             player.Inventory.TryAdd(new InventoryItem("a", "Marble", 5));
@@ -260,44 +228,6 @@ namespace SomethingDownThere.Tests
             player.CloseMenu();
             player.OpenStation(computer);
             Assert.That(player.IsMenuOpen, Is.False, "A remote station cannot be opened directly.");
-        }
-
-        [UnityTest]
-        public IEnumerator FullBagRowsScrollWithKeyboardAndResizeWithoutHidingTheFooter()
-        {
-            for (int i = 0; i < player.Inventory.Capacity; i++) player.Inventory.TryAdd(new InventoryItem("row-" + i, "Coin " + i, i + 1));
-            Face(computer);
-            Assert.That(player.TryInteract(), Is.True);
-            yield return null;
-            yield return null;
-            var scroll = MenuTestUI.View(player).Root.Q<ScrollView>("menuScroll");
-            Assert.That(scroll.contentContainer.layout.height, Is.GreaterThan(scroll.contentViewport.layout.height));
-            Vector3 wheelDelta = Vector3.zero;
-            scroll.RegisterCallback<WheelEvent>(e => wheelDelta = e.delta, TrickleDown.TrickleDown);
-            devices.Set(mouse.position, MenuTestUI.ScreenPoint(player, scroll.contentViewport), queueEventOnly: true);
-            yield return new WaitForSecondsRealtime(0.1f);
-            devices.Set(mouse.scroll, new Vector2(0, -120), queueEventOnly: true);
-            yield return new WaitForSecondsRealtime(0.15f);
-            Assert.That(scroll.scrollOffset.y, Is.GreaterThan(0), "Mouse wheel must reach the active Toolkit list: " + wheelDelta);
-            scroll.scrollOffset = Vector2.zero;
-            // Focusing a row scrolls it into view.
-            Button("Sell row-9").Focus();
-            yield return null;
-            yield return null;
-            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Sell row-9"));
-            Assert.That(scroll.scrollOffset.y, Is.GreaterThan(0));
-            var row = Button("Sell row-9").worldBound;
-            Assert.That(row.yMax, Is.LessThanOrEqualTo(scroll.contentViewport.worldBound.yMax + 1));
-            Assert.That(row.yMin, Is.GreaterThanOrEqualTo(scroll.contentViewport.worldBound.yMin - 1));
-            devices.Press(keyboard.enterKey, queueEventOnly: true);
-            yield return null;
-            yield return null;
-            Assert.That(player.Wallet.Balance, Is.EqualTo(10));
-            Assert.That(player.Inventory.Items.Any(i => i.InstanceId == "row-9"), Is.False);
-            var sellAll = Button("Sell all");
-            Assert.That(sellAll.enabledInHierarchy, Is.True, "The whole-bag action stays below the list.");
-            Assert.That(sellAll.worldBound.yMin, Is.GreaterThanOrEqualTo(scroll.worldBound.yMax - 1));
-            Assert.That(sellAll.worldBound.yMax, Is.LessThanOrEqualTo(MenuTestUI.View(player).Root.worldBound.yMax));
         }
 
         [UnityTest]

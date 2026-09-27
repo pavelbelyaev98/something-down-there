@@ -160,7 +160,6 @@ MonoBehaviour:
   minor: 1
   detectorEligible: 0
   saleValue: 20
-  size: 1
   collectionThreshold: 0.6
   exposureSamples:
   - {x: -0.12433395, y: -0.265164, z: -0.046205282}

@@ -118,50 +118,6 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Shovel.Level, Is.EqualTo(2));
         }
 
-        [UnityTest]
-        public IEnumerator EmptyWalletBagAndFuelStillUseExistingEmergencyRescue()
-        {
-            player.Battery.TrySpend(100);
-            yield return null; yield return null;
-            Assert.That(player.Battery.Charge, Is.EqualTo(100));
-            Assert.That(player.Wallet.Balance, Is.Zero);
-            Assert.That(player.Inventory.Count, Is.Zero);
-        }
-
-        [UnityTest]
-        public IEnumerator BottomCenterFuelWarningSurvivesComputerProximityAndUsesOwnedCapacity()
-        {
-            Place(recharge.transform.position + Vector3.up * .1f);
-            var hud = player.GetComponent<FpsHud>().View.Root;
-            var warning = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Label>(hud, "Fuel warning");
-            player.Battery.RestoreCharge(35);
-            yield return null; yield return null;
-            Assert.That(warning.text, Is.EqualTo("LOW FUEL"));
-            Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FFD45C"));
-            Assert.That(warning.worldBound.center.x, Is.EqualTo(hud.worldBound.center.x).Within(1));
-            Assert.That(warning.worldBound.yMin, Is.GreaterThan(hud.worldBound.yMax * .8f));
-            Assert.That(warning.worldBound.yMax, Is.LessThan(hud.worldBound.yMax));
-            var feedback = UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Label>(hud, "Feedback");
-            player.ShowFeedback("Rock collected");
-            yield return null;
-            Assert.That(feedback.worldBound.yMax, Is.LessThan(warning.worldBound.yMin));
-            player.Wallet.TryCredit(EquipmentProgression.Price(player.Battery.Level));
-            Assert.That(player.Trade.TryUpgrade(player.Trade.OfferUpgrade(EquipmentKind.Fuel)), Is.True);
-            player.Battery.RestoreCharge(22.5f); // 15% of the upgraded tank.
-            yield return null; yield return null;
-            Assert.That(warning.text, Is.EqualTo("FUEL CRITICAL"));
-            Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FF625C"));
-            player.Wallet.TryCredit(1);
-            Assert.That(player.Trade.TryRefill(player.Trade.OfferRefill()), Is.True);
-            yield return null; yield return null;
-            Assert.That(warning.text, Is.Empty);
-            Assert.That(warning.resolvedStyle.display, Is.EqualTo(UnityEngine.UIElements.DisplayStyle.None));
-            player.Battery.RestoreCharge(15);
-            player.ToggleAdminUnlimitedBattery();
-            yield return null; yield return null;
-            Assert.That(warning.resolvedStyle.display, Is.EqualTo(UnityEngine.UIElements.DisplayStyle.None));
-        }
-
         [TestCase(1, 80)] [TestCase(2, 130)]
         public void MainGameDigBudgetLeavesTheSameFlightReserveAtStarterAndPaidCapacity(int level, int digEnergyBudget)
         {

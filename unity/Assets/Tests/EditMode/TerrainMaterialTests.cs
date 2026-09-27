@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -10,8 +11,13 @@ namespace SomethingDownThere.Tests
 {
     public sealed class TerrainMaterialTests
     {
-        [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Clay)] [TestCase(TerrainMaterialId.Rock)]
-        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material)
+        // Mesh weights are (clay, rock, concrete, 1 - gravel); soil is the remainder.
+        private static readonly Vector4 SoilWeight = new Vector4(0, 0, 0, 1);
+
+        [TestCase(TerrainMaterialId.Soil, 0, 0, 0, 1)] [TestCase(TerrainMaterialId.Clay, 1, 0, 0, 1)]
+        [TestCase(TerrainMaterialId.Rock, 0, 1, 0, 1)] [TestCase(TerrainMaterialId.Gravel, 0, 0, 0, 0)]
+        [TestCase(TerrainMaterialId.Concrete, 0, 0, 1, 1)]
+        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float clay, float rock, float concrete, float notGravel)
         {
             var grid = new ExcavationGrid(new Vector3Int(16, 16, 16), .2f);
             var saved = grid.Capture(); saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Materials.Length, material);
@@ -21,10 +27,10 @@ namespace SomethingDownThere.Tests
             {
                 TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 16);
                 Assert.That(mesh.vertexCount, Is.GreaterThan(0));
-                Assert.That(mesh.uv3.Length, Is.EqualTo(mesh.vertexCount));
-                var expected = material == TerrainMaterialId.Clay ? Vector2.right
-                    : material == TerrainMaterialId.Rock ? Vector2.up : Vector2.zero;
-                foreach (var weight in mesh.uv3) Assert.That((weight - expected).sqrMagnitude, Is.LessThan(1e-10f));
+                var weights = Weights(mesh);
+                Assert.That(weights.Count, Is.EqualTo(mesh.vertexCount));
+                var expected = new Vector4(clay, rock, concrete, notGravel);
+                foreach (var weight in weights) Assert.That((weight - expected).sqrMagnitude, Is.LessThan(1e-10f));
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
@@ -38,7 +44,8 @@ namespace SomethingDownThere.Tests
             for (int z = 0; z <= grid.Size.z; z++)
             for (int y = 0; y <= grid.Size.y; y++)
             for (int x = 0; x <= grid.Size.x; x++)
-                materials[index++] = (byte)(x < 12 ? TerrainMaterialId.Soil : z < 6 ? TerrainMaterialId.Clay : TerrainMaterialId.Rock);
+                materials[index++] = (byte)(x < 12 ? (z < 6 ? TerrainMaterialId.Soil : TerrainMaterialId.Gravel)
+                    : z < 6 ? TerrainMaterialId.Clay : z < 9 ? TerrainMaterialId.Rock : TerrainMaterialId.Concrete);
             saved.Materials = TerrainMaterialSnapshot.CopyFrom(materials); grid.Restore(saved);
             grid.RemoveSphere(new Vector3(2.4f, 3.7f, 1.3f), .9f, out _);
             var left = new Mesh(); var right = new Mesh(); var restored = new Mesh();
@@ -47,12 +54,12 @@ namespace SomethingDownThere.Tests
                 TerrainChunkMesh.Rebuild(left, grid, new Vector3Int(0, 12, 0), 12);
                 TerrainChunkMesh.Rebuild(right, grid, new Vector3Int(12, 12, 0), 12);
                 int shared = 0, blended = 0;
-                var lv = left.vertices; var rv = right.vertices; var lw = left.uv3; var rw = right.uv3;
+                var lv = left.vertices; var rv = right.vertices; var lw = Weights(left); var rw = Weights(right);
                 foreach (var w in lw.Concat(rw))
                 {
-                    Assert.That(w.x, Is.InRange(0, 1)); Assert.That(w.y, Is.InRange(0, 1));
-                    Assert.That(w.x + w.y, Is.LessThanOrEqualTo(1.00001f));
-                    if ((w.x > .001f && w.x < .999f) || (w.y > .001f && w.y < .999f)) blended++;
+                    for (int c = 0; c < 4; c++) Assert.That(w[c], Is.InRange(0, 1));
+                    Assert.That(w.x + w.y + w.z + 1 - w.w, Is.LessThanOrEqualTo(1.00001f));
+                    for (int c = 0; c < 4; c++) if (w[c] > .001f && w[c] < .999f) { blended++; break; }
                 }
                 for (int a = 0; a < lv.Length; a++)
                 for (int b = 0; b < rv.Length; b++)
@@ -61,7 +68,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(shared, Is.GreaterThan(8)); Assert.That(blended, Is.GreaterThan(0));
                 var clone = new ExcavationGrid(grid.Size, grid.CellSize); clone.Restore(grid.Capture());
                 TerrainChunkMesh.Rebuild(restored, clone, new Vector3Int(0, 12, 0), 12);
-                CollectionAssert.AreEqual(lw, restored.uv3);
+                CollectionAssert.AreEqual(lw, Weights(restored));
             }
             finally
             { UnityEngine.Object.DestroyImmediate(left); UnityEngine.Object.DestroyImmediate(right); UnityEngine.Object.DestroyImmediate(restored); }
@@ -81,11 +88,11 @@ namespace SomethingDownThere.Tests
                 grid.Restore(rock);
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.True);
                 CollectionAssert.AreEqual(vertices, mesh.vertices);
-                Assert.That(mesh.uv3.All(w => w == Vector2.up), Is.True);
+                Assert.That(Weights(mesh).All(w => w == new Vector4(0, 1, 0, 1)), Is.True);
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.False);
                 grid.Restore(original);
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.True);
-                Assert.That(mesh.uv3.All(w => w == Vector2.zero), Is.True);
+                Assert.That(Weights(mesh).All(w => w == SoilWeight), Is.True);
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
@@ -93,13 +100,22 @@ namespace SomethingDownThere.Tests
         [Test]
         public void SeededDepositsAreRepeatableContainAllFamiliesAndDoNotConsumeGlobalRandom()
         {
-            var size = new Vector3Int(48, 96, 48);
+            var size = new Vector3Int(160, 128, 160);
             var random = UnityEngine.Random.state;
             var first = TerrainMaterialSnapshot.Generate(size, .125f, 2718).ToArray();
             Assert.That(UnityEngine.Random.state, Is.EqualTo(random));
             Assert.That(TerrainMaterialSnapshot.Generate(size, .125f, 2718).ToArray(), Is.EqualTo(first));
             Assert.That(TerrainMaterialSnapshot.Generate(size, .125f, 853).ToArray(), Is.Not.EqualTo(first));
-            Assert.That(first.Distinct().OrderBy(v => v), Is.EqualTo(new byte[] { 0, 1, 2 }));
+            Assert.That(first.Distinct().OrderBy(v => v), Is.EqualTo(new byte[] { 0, 1, 2, 3, 4 }));
+            // Concrete is rare and never in the first 8 m layer cycle.
+            int concrete = 0, stride = size.x + 1, column = size.y + 1;
+            for (int i = 0; i < first.Length; i++)
+            {
+                if (first[i] != (byte)TerrainMaterialId.Concrete) continue;
+                concrete++;
+                Assert.That((size.y - i / stride % column) * .125f, Is.GreaterThanOrEqualTo(8f));
+            }
+            Assert.That(concrete, Is.LessThan(first.Length / 20));
         }
 
         [Test]
@@ -123,11 +139,12 @@ namespace SomethingDownThere.Tests
         [TestCase(false)] [TestCase(true)]
         public void AllTiersCutEveryMaterialAndUpgradesImproveFamiliarGround(bool scoop)
         {
-            float[] previous = new float[3];
+            float[] previous = new float[(int)TerrainMaterialSnapshot.Last + 1];
+            CollectionAssert.AreEquivalent(Enum.GetValues(typeof(TerrainMaterialId)), EquipmentProgression.HardnessOrder);
             foreach (var profile in EquipmentProgression.ToolProfiles())
             {
                 float softerRate = float.MaxValue;
-                foreach (TerrainMaterialId material in Enum.GetValues(typeof(TerrainMaterialId)))
+                foreach (TerrainMaterialId material in EquipmentProgression.HardnessOrder)
                 {
                     var grid = Homogeneous(material);
                     Vector3 top = new Vector3(1.5f, grid.Extent.y, 1.5f);
@@ -144,6 +161,7 @@ namespace SomethingDownThere.Tests
         }
 
         [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Clay)] [TestCase(TerrainMaterialId.Rock)]
+        [TestCase(TerrainMaterialId.Gravel)] [TestCase(TerrainMaterialId.Concrete)]
         public void AutomaticMotionImprovesFreshAndSustainedOutputAcrossTheDrillMilestone(TerrainMaterialId material)
         {
             float previousFresh = 0, previousSustained = 0;
@@ -203,7 +221,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void MaterialValidationRejectsUnknownIdsMismatchedCountsAndOversizeDimensions()
         {
-            Assert.Throws<InvalidDataException>(() => TerrainMaterialSnapshot.CopyFrom(new byte[] { 0, 1, 255 }));
+            Assert.Throws<InvalidDataException>(() => TerrainMaterialSnapshot.CopyFrom(new byte[] { 0, 1, (byte)(TerrainMaterialSnapshot.Last + 1) }));
             var grid = Homogeneous(TerrainMaterialId.Soil).Capture();
             grid.Materials = TerrainMaterialSnapshot.Uniform(grid.Density.Length - 1);
             Assert.Throws<InvalidDataException>(() => grid.Validate());
@@ -254,6 +272,11 @@ namespace SomethingDownThere.Tests
             using var sha = SHA256.Create(); writer.Write(sha.ComputeHash(corrupt)); writer.Write(corrupt); writer.Flush();
             rebuilt.Position = 0;
             Assert.Throws<InvalidDataException>(() => WorldSaveCodec.Read(rebuilt));
+        }
+
+        private static List<Vector4> Weights(Mesh mesh)
+        {
+            var weights = new List<Vector4>(); mesh.GetUVs(2, weights); return weights;
         }
 
         private static ExcavationGrid Homogeneous(TerrainMaterialId material)

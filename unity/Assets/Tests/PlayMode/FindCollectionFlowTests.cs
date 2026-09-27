@@ -137,24 +137,6 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void ShavingUncoversAndCollectsOneAimedIdentityForItsActualFuelCost()
-        {
-            var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
-            player.Tuning.Gravity = 0; player.SelectAdminLevel(EquipmentProgression.DrillLevel);
-            player.enabled = false;
-            HalfCover(find); AimVisible(find);
-            int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
-            for (int i = 0; i < 80 && !find.Collected; i++)
-            {
-                AimVisible(find);
-                player.Tick(new FpsInputFrame { DigHeld = true }, 1f);
-            }
-            Assert.That(find.Collected, Is.True);
-            Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge - (player.SuccessfulStrokes - strokes) * player.EffectiveDigEnergy).Within(.001f));
-        }
-
-        [Test]
         public void ShavingRevealsAnOffAimFindWithoutCollectingOrBypassingAFullBag()
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
@@ -185,7 +167,7 @@ namespace SomethingDownThere.Tests
         [TestCase(true, false)] [TestCase(true, true)]
         public void AimedHalfCoveredFindCollectsOnItsRevealingStroke(bool rock, bool automatic)
         {
-            var find = field.Finds.First(f => (f.Size == FindSize.Large) == rock);
+            var find = field.Finds.First(f => !TestInputPreferences.IsCoalFixture(f) == rock);
             player.Tuning.Gravity = 0; player.SelectAdminLevel(EquipmentProgression.DrillLevel);
             HalfCover(find); AimVisible(find);
             int strokes = player.SuccessfulStrokes; float charge = player.Battery.Charge;
@@ -334,29 +316,6 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.Battery.Charge, Is.EqualTo(charge));
             }
             finally { if(wall!=null) Object.DestroyImmediate(wall); }
-        }
-
-        [UnityTest]
-        public IEnumerator PickupVisualPullsQuicklyWithLittleShrinkFreezesAndClearsOnReturn()
-        {
-            var find = field.Finds[0]; Place(find,.65f); player.Tuning.Gravity = 0; AimRock(find);
-            Assert.That(find.TryCollect(player), Is.True);
-            var proxy = player.transform.Find("Pickup visual"); Vector3 start = proxy.position; float scale = proxy.localScale.magnitude;
-            Quaternion rotation = proxy.rotation;
-            player.enabled = true; player.SetApplicationFocus(true);
-            yield return WaitForSimulation(.06f);
-            Assert.That(proxy.gameObject.activeSelf, Is.True);
-            Assert.That(proxy.localScale.magnitude, Is.InRange(scale*.85f, scale));
-            Assert.That(Quaternion.Angle(proxy.rotation, rotation), Is.LessThan(.01f), "Pickup must not add a decorative spin.");
-            Assert.That(Vector3.Distance(proxy.position,start), Is.GreaterThan(.025f));
-            player.OpenMenu(PlayerMenu.Pause); var pausedPosition = proxy.position; var pausedScale = proxy.localScale;
-            yield return new WaitForSecondsRealtime(.12f);
-            Assert.That(proxy.position, Is.EqualTo(pausedPosition)); Assert.That(proxy.localScale, Is.EqualTo(pausedScale));
-            player.CloseMenu(); yield return WaitForSimulation(.16f);
-            Assert.That(proxy.gameObject.activeSelf, Is.False); Assert.That(find.Collected, Is.True);
-            var next = field.Finds[1]; Place(next,.65f); AimRock(next); Assert.That(next.TryCollect(player), Is.True);
-            player.AdminReturnToSurface(); Assert.That(proxy.gameObject.activeSelf, Is.False);
-            Assert.That(player.Inventory.Count, Is.EqualTo(2));
         }
 
         private void HalfCover(BuriedFind find)

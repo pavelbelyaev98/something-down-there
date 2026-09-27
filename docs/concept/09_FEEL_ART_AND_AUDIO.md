@@ -4,12 +4,13 @@
 
 Stylized painted low-poly: strong silhouettes, restrained texture detail, painted gradients,
 cohesive art direction across custom and licensed assets. Bright and readable, never realistic mud, never asset-store clutter.
-Surface daylight reads as solar noon: a nearly overhead sun, short shadows, vivid canyon grass
-(the exposed lakebed's plants stay muted and sun-dried),
+Surface daylight reads as solar noon: a nearly overhead sun, short shadows, natural (never neon lime)
+canyon grass (the exposed lakebed's plants stay muted and sun-dried),
 warm soil and a blue sky with soft clouds. Increase color richness without washing out texture detail
 or lifting the black level in deep tunnels.
 Prefer smooth, softer nearby shadows over sharp pixelated edges. Backdrop shadow and geometry
 detail may be reduced for frame rate; retain contact cues at the worksite and local lamp occlusion.
+At the default quality, distant ground never turns blurry and sharpens as the player approaches.
 Preserve the established vivid color grade across the game. Improve underground readability
 through the excavation daylight and ground response, without flattening surface colors.
 Lanterns light a broad work area with gradual falloff, without bleaching nearby textures or changing the surface grade.
@@ -30,7 +31,7 @@ new generated ground patterns.
 - Pure Nature 2: Mountains supplies the dig-ground textures and lakebed plants; Pure Nature 2:
   Highlands supplies the canyon, lake and lakebed around the dig area, with its demo's sky, haze and
   baked water reflections.
-- Match the Highlands colour grade with restrained bloom. Water is silty and murky rather than
+- Match the Highlands colour grade with restrained bloom, calming only its lime greens. Water is silty and murky rather than
   blue, with subtle shore foam and reflected scenery; shallow refraction preserves the underlying
   ground's lighting instead of bleaching it. Tune project-owned shader/material copies.
 - Custom grass clump, cloud and sun art and the rejected first-person tool experiments are removed.

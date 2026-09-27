@@ -22,7 +22,7 @@ namespace SomethingDownThere
             public NativeArray<float> Corners;
             public NativeList<Vector3> Vertices,Normals;
             public NativeList<Vector2> UVs;
-            public NativeList<Vector2> MaterialWeights;
+            public NativeList<Vector4> MaterialWeights;
             public NativeList<int> Triangles;
 
             public void Execute()
@@ -101,13 +101,15 @@ namespace SomethingDownThere
                 return math.lengthsq(gradient)>1e-12f?-math.normalize(gradient):new float3(0,1,0);
             }
 
-            private Vector2 SurfaceMaterials(float3 point)
+            // Stream layout (clay, rock, concrete, 1 - gravel), soil the remainder. Meshes without
+            // this stream read (0,0,0,1) and two-channel meshes (x,y,0,1): no gravel or concrete.
+            private Vector4 SurfaceMaterials(float3 point)
             {
                 float3 p = point / CellSize;
                 int3 cell = (int3)math.floor(p);
                 float3 t = p - cell;
                 int index = SampleIndex(cell);
-                float2 result = 0;
+                float4 result = 0; // clay, rock, concrete, gravel
                 for (int c = 0; c < 8; c++)
                 {
                     int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
@@ -115,10 +117,12 @@ namespace SomethingDownThere
                     byte material = Materials[index + x + y * SampleStrideY + z * SampleStrideZ];
                     if (material == (byte)TerrainMaterialId.Clay) result.x += weight;
                     else if (material == (byte)TerrainMaterialId.Rock) result.y += weight;
+                    else if (material == (byte)TerrainMaterialId.Concrete) result.z += weight;
+                    else if (material == (byte)TerrainMaterialId.Gravel) result.w += weight;
                 }
                 result = math.saturate(result);
-                result /= math.max(1f, result.x + result.y);
-                return new Vector2(result.x, result.y);
+                result /= math.max(1f, math.csum(result));
+                return new Vector4(result.x, result.y, result.z, 1 - result.w);
             }
 
             private void Triangle(int a,int b,int c)

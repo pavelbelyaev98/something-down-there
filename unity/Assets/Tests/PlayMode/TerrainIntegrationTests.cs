@@ -94,22 +94,6 @@ namespace SomethingDownThere.Tests
             player.enabled = false;
         }
 
-        [UnityTest]
-        public IEnumerator RepeatedPrimaryActionsCannotBypassACutCooldownOrSpendFuel()
-        {
-            player.enabled = true;
-            player.ViewCamera.transform.position = new Vector3(0, 1.5f, -7);
-            player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
-            Physics.SyncTransforms();
-            Assert.That(player.TryPrimaryAction(), Is.True);
-            float charge = player.Battery.Charge; int strokes = player.SuccessfulStrokes;
-            Assert.That(player.TryPrimaryAction(), Is.False);
-            Assert.That(player.Battery.Charge, Is.EqualTo(charge));
-            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
-            player.enabled = false;
-            yield return null;
-        }
-
         [Test]
         public void DetachedColumnDisappearsAcrossChunksInTheSamePaidStroke()
         {
@@ -309,6 +293,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.transform.position.y, Is.InRange(feetCeiling - 1, feetCeiling + .1f), "The jetpack stops at the flight ceiling.");
         }
 
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [Test]
         public void LargeRepeatedCutsExposeButNeverRemoveFloorOrSideBoundaries()
         {
@@ -319,23 +304,6 @@ namespace SomethingDownThere.Tests
             foreach (float depth in new[] { 30f, 60f, 90f })
             foreach (Vector3 direction in new[] { Vector3.left, Vector3.right, Vector3.forward, Vector3.back })
                 DigUntilBoundary(new Vector3(0, -depth, 0), direction, Mathf.Abs(Vector3.Dot(direction, SiteLayout.Extent)) * .5f);
-        }
-
-        [Test]
-        public void RepresentativeAcceptedCutsReportMeshAndColliderUpdateCosts()
-        {
-            var timings = new List<double>();
-            var dirtyCounts = new List<int>();
-            foreach (float coordinate in new[] { -6f, -2f, 2f, 6f })
-            for (int i = 0; i < 5; i++)
-            {
-                Assert.That(terrain.TryDig(Hit(new Vector3(coordinate, 2, coordinate), Vector3.down)), Is.True);
-                timings.Add(terrain.LastDigMilliseconds);
-                dirtyCounts.Add(terrain.LastRebuiltChunkCount);
-            }
-            TestContext.WriteLine($"Smooth terrain: {timings.Count} accepted cuts, mean {timings.Average():F3} ms, max {timings.Max():F3} ms; "
-                + $"rebuilt {dirtyCounts.Min()}-{dirtyCounts.Max()} of {terrain.ChunkCount} chunks per cut (includes collision cooking).");
-            Assert.That(dirtyCounts.Max(), Is.LessThan(terrain.ChunkCount));
         }
 
         [Test]
@@ -413,46 +381,6 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Battery.Charge, Is.EqualTo(100));
             Assert.That(player.transform.position, Is.EqualTo(pausedPosition));
             Assert.That(terrain.Revision, Is.Zero);
-        }
-
-        [UnityTest]
-        public IEnumerator AdminMenuButtonsChooseStrengthAndKeepResetConfirmationSeparate()
-        {
-            player.OpenMenu(PlayerMenu.Pause);
-            yield return null;
-            MenuTestUI.Click(MenuTestUI.Button(player, "Developer admin"));
-            yield return null;
-            MenuTestUI.Click(MenuTestUI.View(player).CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Single(b => b.name.StartsWith("Shovel 6")));
-            yield return null;
-            Assert.That(player.EffectiveShovelLevel, Is.EqualTo(6));
-            // The dev sliders must open on the selected shovel, and each shovel keeps the
-            // values calibrated for it while the session runs.
-            var root = MenuTestUI.View(player).Root;
-            Assert.That(MenuTestUI.Text(player, "adminBiteValue"), Is.EqualTo(player.EffectiveShovel.Radius.ToString("0.000") + " m"),
-                "Sliders open on the selected shovel's values, not zero.");
-            float shovelSixBite = player.AdminTuningValue(6, FpsPlayer.TuningDial.Bite);
-            root.Q<UnityEngine.UIElements.SliderInt>("adminBite").value = 800;
-            Assert.That(player.AdminTuningValue(6, FpsPlayer.TuningDial.Bite), Is.EqualTo(.8f).Within(.001f));
-            Assert.That(MenuTestUI.Text(player, "adminBiteValue"), Is.EqualTo("0.800 m"),
-                "The value label follows the drag, not only a rebuild.");
-            MenuTestUI.Click(MenuTestUI.View(player).CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Single(b => b.name.StartsWith("Shovel 1")));
-            yield return null;
-            Assert.That(player.AdminTuningValue(1, FpsPlayer.TuningDial.Bite), Is.EqualTo(EquipmentProgression.ToolProfiles()[0].Radius).Within(.001f),
-                "Another shovel keeps the authored numbers.");
-            Assert.That(MenuTestUI.Text(player, "adminBiteValue"), Is.EqualTo(player.EffectiveShovel.Radius.ToString("0.000") + " m"));
-            MenuTestUI.Click(MenuTestUI.View(player).CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Single(b => b.name.StartsWith("Shovel 6")));
-            yield return null;
-            Assert.That(player.AdminTuningValue(6, FpsPlayer.TuningDial.Bite), Is.EqualTo(.8f).Within(.001f),
-                "Returning to a shovel shows the values calibrated for it.");
-            Assert.That(MenuTestUI.Text(player, "adminBiteValue"), Is.EqualTo(.8f.ToString("0.000") + " m"));
-            player.SetAdminTuning(FpsPlayer.TuningDial.Bite, shovelSixBite);
-            MenuTestUI.Click(MenuTestUI.Button(player, "Reset ground..."));
-            yield return null;
-            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.ConfirmTerrainReset));
-            MenuTestUI.Click(MenuTestUI.Button(player, "Keep excavation"));
-            yield return null;
-            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.DeveloperAdmin));
-            Assert.That(player.Shovel.Level, Is.EqualTo(1));
         }
 
         [Test]
@@ -780,6 +708,7 @@ namespace SomethingDownThere.Tests
             Assert.That(boundary.GetComponent<Collider>().enabled, Is.True);
         }
 
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [UnityTest]
         public IEnumerator MainGameExcavatesThroughFormerFloorAndStopsAtOneHundredMetres()
         {

@@ -316,9 +316,21 @@ namespace SomethingDownThere
                         float v = Vector3.Dot(delta, bitangent) / response.Length;
                         side = material == TerrainMaterialId.Rock
                             ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f))) - radius
+                            // Concrete breaks into clean square chips with flat floors.
+                            : material == TerrainMaterialId.Concrete ? Mathf.Max(Mathf.Abs(u), Mathf.Abs(v)) - radius
                             : Mathf.Sqrt(u * u + v * v) - radius;
                         // A shallow faceted chip, versus the clay's smooth elliptical shave.
                         if (material == TerrainMaterialId.Rock) floor += Mathf.Abs(u * .3f + v * .2f) * shaveDepth / radius;
+                    }
+                    if (material == TerrainMaterialId.Gravel)
+                    {
+                        // Loose stones: every sample keeps its own grain, so the edge and floor
+                        // stay pebbly under a held cut instead of smoothing into a clean face.
+                        // Grain only indents: symmetric jitter would out-dig soil, because a
+                        // deeper sample always carves while a shallower one keeps the old cut.
+                        float grain = Grain(index);
+                        side += grain * radius * .1f;
+                        floor += grain * shaveDepth * .3f;
                     }
                     float rounding = Mathf.Min(radius * 0.18f, shaveDepth * 0.5f);
                     float join = Mathf.Max(rounding - Mathf.Abs(side - floor), 0) / rounding;
@@ -340,9 +352,11 @@ namespace SomethingDownThere
                     // The superellipse is at least max(a,b). Reject unchanged samples
                     // with that cheap bound before powers/noise, especially in deep pits.
                     if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
-                    float side = material == TerrainMaterialId.Rock ? (Mathf.Max(a, b) - 1) * length
+                    float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete ? (Mathf.Max(a, b) - 1) * length
                         : material == TerrainMaterialId.Clay ? (Mathf.Sqrt(a * a + b * b) - 1) * length
                         : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
+                    // Loose stones indent the scoop edge (never widen it, like the shave).
+                    if (material == TerrainMaterialId.Gravel) side += Grain(index) * length * .1f;
                     side = Mathf.Max(side, (u * 0.72f + v * 0.69f - radius * 0.98f) * 0.9f);
                     side = Mathf.Max(side, (-u * 0.86f - v * 0.51f - radius * 0.94f) * 0.9f);
                     float join = Mathf.Max(bevel - Mathf.Abs(side - floor), 0) / bevel;
@@ -374,6 +388,14 @@ namespace SomethingDownThere
                 changedMax = Vector3Int.Max(changedMax, sample);
             }
             return CompleteRemoval(changedMin, changedMax, out changed);
+        }
+
+        // Stable per-sample grain for loose materials; independent of stroke seeds.
+        private static float Grain(int index)
+        {
+            uint h = unchecked((uint)index * 2654435761u);
+            h ^= h >> 15; h = unchecked(h * 2246822519u); h ^= h >> 13;
+            return (h & 0xffff) / 65536f;
         }
 
         private void ClearSupportSearch()

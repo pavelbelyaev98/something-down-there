@@ -155,6 +155,19 @@ namespace SomethingDownThere.Editor
             material.SetColor("_RockTint", new Color(.4f, .4f, .4f));
             material.SetFloat("_RockTileMetres", 3.2f);
             material.SetFloat("_RockNormalStrength", .6f);
+            // Gravel and concrete: original generated surfaces (the packs have neither).
+            material.SetTexture("_GravelAlbedo", DepositTextures.Gravel("Albedo"));
+            material.SetTexture("_GravelNormal", DepositTextures.Gravel("Normal"));
+            material.SetTexture("_GravelMask", DepositTextures.Gravel("Roughness"));
+            material.SetColor("_GravelTint", Color.white);
+            material.SetFloat("_GravelTileMetres", 2.5f);
+            material.SetFloat("_GravelNormalStrength", .8f);
+            material.SetTexture("_ConcreteAlbedo", DepositTextures.Concrete("Albedo"));
+            material.SetTexture("_ConcreteNormal", DepositTextures.Concrete("Normal"));
+            material.SetTexture("_ConcreteMask", DepositTextures.Concrete("Roughness"));
+            material.SetColor("_ConcreteTint", Color.white);
+            material.SetFloat("_ConcreteTileMetres", 2f);
+            material.SetFloat("_ConcreteNormalStrength", .45f);
             EditorUtility.SetDirty(material);
         }
 
@@ -285,8 +298,12 @@ namespace SomethingDownThere.Editor
                 renderer.rendererFeatures.Add(contact);
             }
             var ao = new SerializedObject(contact);
-            ao.FindProperty("m_Settings.Downsample").boolValue = false;
-            ao.FindProperty("m_Settings.Source").enumValueIndex = 0; // Reconstruct from depth; no expensive ground normal prepass.
+            // Before-opaque AO needs scene depth before the opaque pass, which forces a full depth
+            // prepass of every renderer (~1 ms at 1440p). The 0.18 m contact term is visually
+            // identical applied after opaques at half resolution, using the copied depth.
+            ao.FindProperty("m_Settings.AfterOpaque").boolValue = true;
+            ao.FindProperty("m_Settings.Downsample").boolValue = true;
+            ao.FindProperty("m_Settings.Source").enumValueIndex = 0; // Reconstruct from depth; no normals prepass.
             ao.FindProperty("m_Settings.NormalSamples").enumValueIndex = 2;
             ao.FindProperty("m_Settings.AOMethod").enumValueIndex = 1;
             ao.FindProperty("m_Settings.Intensity").floatValue = 1.25f;
@@ -301,6 +318,7 @@ namespace SomethingDownThere.Editor
             renderer.SetDirty();
             EditorUtility.SetDirty(renderer);
             EditorUtility.SetDirty(contact);
+            GraphicsQualitySetup.ConfigureRenderers();
         }
 
         private static void ConfigureSunBias(Transform root)

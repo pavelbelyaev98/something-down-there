@@ -24,9 +24,9 @@ namespace SomethingDownThere.Tests
             Time.timeScale = 1;
             devices = new InputTestFixture(); devices.Setup();
             InputSystem.AddDevice<Keyboard>(); InputSystem.AddDevice<Mouse>();
-            SceneManager.sceneLoaded += TestInputPreferences.Configure;
+            SceneManager.sceneLoaded += TestInputPreferences.ConfigureCompactFinds;
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/MainGame.unity", new LoadSceneParameters(LoadSceneMode.Additive));
-            SceneManager.sceneLoaded -= TestInputPreferences.Configure;
+            SceneManager.sceneLoaded -= TestInputPreferences.ConfigureCompactFinds;
             scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
             var root = scene.GetRootGameObjects()[0];
             terrain = root.GetComponentInChildren<TerrainVolume>(); field = root.GetComponentInChildren<DiscoveryField>();
@@ -78,7 +78,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator NearlyUncoveredRockReleasesWhileShallowSurfaceContactRemains()
         {
-            var find=field.Finds.First(f=>f.Size==FindSize.Large);
+            var find=field.Finds.First(f=>!TestInputPreferences.IsCoalFixture(f));
             bool ready=false;
             for(float height=.05f;height<1f;height+=.001f)
             {
@@ -161,7 +161,7 @@ namespace SomethingDownThere.Tests
         [TestCase(true)]
         public void HeldAimCollectsEligibleFindDuringShovelCooldown(bool rock)
         {
-            var find = field.Finds.First(f => (f.Size == FindSize.Large) == rock);
+            var find = field.Finds.First(f => !TestInputPreferences.IsCoalFixture(f) == rock);
             player.Tuning.Gravity = 0;
             Place(find, .65f);
             var motor = player.GetComponent<CharacterController>(); motor.enabled = false;
@@ -247,7 +247,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator ActualGrabAndThrowInputsRespectToggleMenusFullBagAndHeldSuppression()
         {
-            var find = field.Finds.First(f => f.Size == FindSize.Small); Place(find, .6f);
+            var find = field.Finds.First(f => TestInputPreferences.IsCoalFixture(f)); Place(find, .6f);
             yield return WaitForSimulation(1);
             player.Tuning.Gravity = 0; AimRock(find);
             while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("full-" + player.Inventory.Count, "Carried", 1));
@@ -277,7 +277,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator HeldAndThrownRockCollideWithWallsAndRescueLeavesItInTheWorld()
         {
-            var find = field.Finds.First(f => f.Size == FindSize.Large); Place(find, .6f);
+            var find = field.Finds.First(f => !TestInputPreferences.IsCoalFixture(f)); Place(find, .6f);
             yield return WaitForSimulation(1);
             player.Tuning.Gravity = 0; AimRock(find);
             Assert.That(player.TryGrabOrDrop(), Is.True);
@@ -319,12 +319,12 @@ namespace SomethingDownThere.Tests
             Assert.That(Time.time, Is.GreaterThanOrEqualTo(until), $"Simulation stopped at wait line {line}: menu={player.Menu}, enabled={player.enabled}, scale={Time.timeScale}");
         }
 
-        private BuriedFind[] Variants() => field.Finds.Where(f => f.Size == FindSize.Small).Take(3).ToArray();
+        private BuriedFind[] Variants() => field.Finds.Where(f => TestInputPreferences.IsCoalFixture(f)).Take(3).ToArray();
 
         [UnityTest]
         public IEnumerator LargeFindVariantsFallSettleAndRestoreTheirExactAppearanceAndPose()
         {
-            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && !TestInputPreferences.IsCoalFixture(f)).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
             Assert.That(rocks.Length, Is.EqualTo(3));
             for (int i = 0; i < rocks.Length; i++)
             {
@@ -364,7 +364,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator LargeFindsRequireSixtyPercentThenHeldAimAndLeaveFullBagOrOffAimFindsInPlace()
         {
-            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && !TestInputPreferences.IsCoalFixture(f)).GroupBy(f => f.SaveContentId).Select(g => g.First()).Take(3).ToArray();
             player.Tuning.Gravity = 0;
             int index = 0;
             foreach (var find in rocks)

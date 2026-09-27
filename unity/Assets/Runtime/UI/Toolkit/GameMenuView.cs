@@ -220,12 +220,14 @@ namespace SomethingDownThere
                 subtitle.text = "";
                 startupActions.Clear();
                 var save = player.Persistence;
-                Button(startupActions, "Continue", save.LoadGame, save.HasSavedGame);
-                Button(startupActions, "New Game", save.RequestNewGame);
-                var settings = Button(startupActions, "Settings", player.ShowSettings);
+                // The first-launch graphics test measures the world behind this screen for a few seconds.
+                bool tuning = player.GraphicsTuner.Running;
+                Button(startupActions, "Continue", save.LoadGame, save.HasSavedGame && !tuning);
+                Button(startupActions, "New Game", save.RequestNewGame, !tuning);
+                var settings = Button(startupActions, "Settings", player.ShowSettings, !tuning);
                 Button(startupActions, "Quit", save.RequestExit, true, "quiet");
-                startupNote.text = save.HasSavedGame ? "" : "No saved game";
-                Show(startupNote, !save.HasSavedGame);
+                startupNote.text = tuning ? "Tuning graphics for this PC…" : save.HasSavedGame ? "" : "No saved game";
+                Show(startupNote, tuning || !save.HasSavedGame);
                 FocusAfterLayout(cameraBack || inputBack || deviceBack ? settings : navigation[0]);
                 return;
             }

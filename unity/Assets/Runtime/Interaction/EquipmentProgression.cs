@@ -27,13 +27,22 @@ namespace SomethingDownThere
         private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);
         private static readonly MaterialToolResponse Clay = new MaterialToolResponse(1f, .76f, .85f, 1.15f);
         private static readonly MaterialToolResponse Rock = new MaterialToolResponse(.84f, .84f, .65f, 1.4f);
+        // Loose stones: a broad bite whose grainy edge and floor (ExcavationGrid) leave it a little slower than soil.
+        private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.1f, 1f, 1f, 1.08f);
+        // Tough but never a wall: small, shallow chips at a slow cadence still make visible progress.
+        private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.7f, .7f, .5f, 1.8f);
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
             TerrainMaterialId.Clay => Clay,
             TerrainMaterialId.Rock => Rock,
+            TerrainMaterialId.Gravel => Gravel,
+            TerrainMaterialId.Concrete => Concrete,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
+        // Softest to hardest; each family keeps its resistance at every tier.
+        public static readonly TerrainMaterialId[] HardnessOrder =
+            { TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.Clay, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40 };

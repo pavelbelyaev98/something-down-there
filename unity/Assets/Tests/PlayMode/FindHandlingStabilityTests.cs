@@ -10,12 +10,13 @@ namespace SomethingDownThere.Tests
 {
     public sealed partial class FindPhysicsIntegrationTests
     {
+        [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [UnityTest]
         public IEnumerator DroppedRocksSettleAfterRepeatedExtremePitchChanges()
         {
             // Stable ids and a fixed band keep every case's drop spot independent of
             // the layout order, on the flat yard the sibling settle test uses.
-            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).GroupBy(f => f.SaveContentId)
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && !TestInputPreferences.IsCoalFixture(f)).GroupBy(f => f.SaveContentId)
                 .Select(g => g.First()).OrderBy(f => f.SaveContentId, System.StringComparer.Ordinal).ToArray();
             for (int i = 0; i < rocks.Length; i++)
             {
@@ -34,31 +35,40 @@ namespace SomethingDownThere.Tests
                 }
                 Assert.That(player.TryGrabOrDrop(), Is.True);
                 Assert.That(player.HeldFind, Is.Null);
-                // A hard drop on voxel ground can keep creeping for a while before
-                // PhysX sleeps it; the drift window measures a settled body.
-                yield return WaitForSimulation(10);
-                var body = find.GetComponent<Rigidbody>();
-                Vector3 rest = body.position; Quaternion orientation = body.rotation;
-                float drift = 0, wobble = 0;
-                for (int sample = 0; sample < 20; sample++)
-                {
-                    yield return WaitForSimulation(.1f);
-                    drift = Mathf.Max(drift, Vector3.Distance(rest, body.position));
-                    wobble = Mathf.Max(wobble, Quaternion.Angle(orientation, body.rotation));
-                }
-                Assert.That(drift, Is.LessThan(.003f), $"{find.SaveContentId}: resting drift={drift}, wobble={wobble}, speed={body.linearVelocity.magnitude}, spin={body.angularVelocity.magnitude}");
-                Assert.That(wobble, Is.LessThan(.25f), find.SaveContentId + " must stop visibly jiggling.");
-                Assert.That(body.IsSleeping(), Is.True, find.SaveContentId + " should settle into physical sleep.");
-                Assert.That(body.isKinematic, Is.False, "Resting keeps real physics, not an anchored workaround.");
-                Assert.That(find.Collected, Is.False); Assert.That(player.Inventory.Count, Is.Zero);
                 player.enabled = false;
             }
+            // A hard drop on voxel ground can keep creeping for a while before PhysX sleeps
+            // it. Every rock rests three metres from the others, so they settle together and
+            // one drift window measures them all.
+            yield return WaitForSimulation(10);
+            var bodies = rocks.Select(f => f.GetComponent<Rigidbody>()).ToArray();
+            var rest = bodies.Select(b => b.position).ToArray(); var orientation = bodies.Select(b => b.rotation).ToArray();
+            var drift = new float[rocks.Length]; var wobble = new float[rocks.Length];
+            for (int sample = 0; sample < 20; sample++)
+            {
+                yield return WaitForSimulation(.1f);
+                for (int i = 0; i < rocks.Length; i++)
+                {
+                    drift[i] = Mathf.Max(drift[i], Vector3.Distance(rest[i], bodies[i].position));
+                    wobble[i] = Mathf.Max(wobble[i], Quaternion.Angle(orientation[i], bodies[i].rotation));
+                }
+            }
+            for (int i = 0; i < rocks.Length; i++)
+            {
+                var body = bodies[i]; string id = rocks[i].SaveContentId;
+                Assert.That(drift[i], Is.LessThan(.003f), $"{id}: resting drift={drift[i]}, wobble={wobble[i]}, speed={body.linearVelocity.magnitude}, spin={body.angularVelocity.magnitude}");
+                Assert.That(wobble[i], Is.LessThan(.25f), id + " must stop visibly jiggling.");
+                Assert.That(body.IsSleeping(), Is.True, id + " should settle into physical sleep.");
+                Assert.That(body.isKinematic, Is.False, "Resting keeps real physics, not an anchored workaround.");
+                Assert.That(rocks[i].Collected, Is.False);
+            }
+            Assert.That(player.Inventory.Count, Is.Zero);
         }
 
         [UnityTest]
         public IEnumerator SeededRockDropsRestWithoutDriftAndWakeWhenSupportIsDug()
         {
-            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.Size == FindSize.Large).Take(12).ToArray();
+            var rocks = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && !TestInputPreferences.IsCoalFixture(f)).Take(12).ToArray();
             foreach (var find in rocks)
             {
                 int i = System.Array.IndexOf(rocks, find);
@@ -105,7 +115,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator MaximumJetpackAscentKeepsRockInHandThroughLookChanges()
         {
-            var find = field.Finds.First(f => f.Size == FindSize.Large);
+            var find = field.Finds.First(f => !TestInputPreferences.IsCoalFixture(f));
             // This measures hand stability over a long climb, not the play area's flight ceiling.
             player.transform.root.Find("Environment/Play area bounds").gameObject.SetActive(false);
             PrepareNaturalHold(find, 0);

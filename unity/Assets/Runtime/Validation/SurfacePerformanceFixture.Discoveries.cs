@@ -69,7 +69,7 @@ namespace SomethingDownThere
             }
             yield return MeasureDigging(player, results);
             // Check the normal runtime limiter too; the A/B samples above deliberately disable it.
-            Application.targetFrameRate = GamePreferences.DefaultFrameLimit;
+            Application.targetFrameRate = UnityGameSettingsPlatform.DisplayRefreshRate();
             for (int i = 0; i < 80; i++) yield return null;
             var capped = new List<double>();
             for (int i = 0; i < 240; i++) { yield return null; capped.Add(Time.unscaledDeltaTime * 1000); }
@@ -78,7 +78,7 @@ namespace SomethingDownThere
                 startupLimit, appliedLimit, appliedVSync, capped = Summary(capped),
                 width = Screen.width, height = Screen.height, gpu = SystemInfo.graphicsDeviceName,
                 cpu = SystemInfo.processorType, population = field.Finds.Count,
-                renderScale = (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)?.renderScale, msaa = player.GameSettings.Values.Msaa,
+                renderScale = (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)?.renderScale, antiAliasing = player.GameSettings.Values.AntiAliasing,
                 results
             }, Newtonsoft.Json.Formatting.Indented));
             Application.Quit();

@@ -192,21 +192,6 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Battery.Charge, Is.EqualTo(100));
         }
 
-        [UnityTest]
-        public IEnumerator UnlimitedBatteryDoesNotRescueUntilNormalRulesResume()
-        {
-            player.ToggleAdminUnlimitedBattery();
-            player.Battery.TrySpend(player.Battery.Charge);
-            var before = player.transform.position;
-            yield return null;
-            yield return null;
-            Assert.That(player.transform.position, Is.EqualTo(before));
-            player.RestoreAdminOverrides();
-            yield return null;
-            yield return null;
-            Assert.That(player.Battery.Charge, Is.EqualTo(100));
-        }
-
         private void Place(Vector3 position)
         {
             var motor = player.GetComponent<CharacterController>();

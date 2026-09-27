@@ -81,7 +81,19 @@ namespace SomethingDownThere.Editor
             var collision = CentreModel(collisionPath, entry, "_collision", folder, scale);
             if (collision.triangles.Length / 3 > 220 || collision.vertices.Distinct().Count() > 112)
                 throw new InvalidDataException("Discovery hull exceeds its 112-point/220-triangle budget.");
-            return UpdatePrefab(entry, visual, collision, material, folder, large, mass, scale);
+            var find = UpdatePrefab(entry, visual, collision, material, folder, large, mass, scale);
+            GenerateDetailLevels(visual);
+            return find;
+        }
+
+        // Index-only Mesh LOD levels share the vertex buffer; each renderer picks one from screen
+        // size and QualitySettings.meshLodThreshold (the view-distance setting), so every find
+        // follows the graphics settings without per-asset tuning. Call after UpdatePrefab:
+        // generation reorders the full-detail triangles that the exposure samples are drawn from.
+        internal static void GenerateDetailLevels(Mesh visual)
+        {
+            MeshLodUtility.GenerateMeshLods(visual, -1);
+            EditorUtility.SetDirty(visual);
         }
 
         // Missing model_scale keeps the authored size; the envelope check scales with it.
@@ -238,7 +250,7 @@ namespace SomethingDownThere.Editor
                 handling.ApplyModifiedPropertiesWithoutUndo();
                 var data = new SerializedObject(find);
                 data.FindProperty("saveContentId").stringValue = entry.content_id; data.FindProperty("displayName").stringValue = entry.display_name;
-                data.FindProperty("saleValue").intValue = entry.sale_value; data.FindProperty("size").enumValueIndex = (int)(large ? FindSize.Large : FindSize.Small);
+                data.FindProperty("saleValue").intValue = entry.sale_value;
                 data.FindProperty("minor").boolValue = entry.tier == "common";
                 data.FindProperty("detectorEligible").boolValue = entry.detector_eligible;
                 data.FindProperty("kind").enumValueIndex = (int)(entry.tier == "unique" ? DiscoveryKind.Unique : DiscoveryKind.Common);
