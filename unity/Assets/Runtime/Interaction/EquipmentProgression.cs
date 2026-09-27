@@ -31,6 +31,8 @@ namespace SomethingDownThere
         private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.1f, 1f, 1f, 1.08f);
         // Tough but never a wall: small, shallow chips at a slow cadence still make visible progress.
         private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.7f, .7f, .5f, 1.8f);
+        // Clay basins' old pond clay: clean, smooth shavings that bite clearly easier than clay (the tell).
+        private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(1f, .88f, .92f, 1.15f);
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
@@ -38,20 +40,24 @@ namespace SomethingDownThere
             TerrainMaterialId.Rock => Rock,
             TerrainMaterialId.Gravel => Gravel,
             TerrainMaterialId.Concrete => Concrete,
+            TerrainMaterialId.PondClay => PondClay,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
         // Softest to hardest; each family keeps its resistance at every tier.
         public static readonly TerrainMaterialId[] HardnessOrder =
-            { TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.Clay, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
+            { TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.Clay, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40 };
         private static readonly float[] Fuel = { 50, 50, 100, 100, 150, 200, 250, 300, 400 };
+        // Zone rule (concept 03): each level outpaces the next zone's main ground one level
+        // down (clay at L >= soil at L-1, rock at L >= clay at L-1), so arriving in a zone after
+        // one purchase never feels like a restart. Shovel levels therefore grow evenly (~1.84x).
         public static ShovelProfile[] ToolProfiles() => new[]
         {
-            new ShovelProfile(.230000f, 1.60f, 0f), new ShovelProfile(.264000f, 1.50f, .2f),
-            new ShovelProfile(.302000f, 1.40f, .4f), new ShovelProfile(.345807f, 1.30f, .6f),
-            new ShovelProfile(.440000f, 1.20f, .8f), new ShovelProfile(.560000f, 1.10f, 1f),
+            new ShovelProfile(.230000f, 1.60f, 0f), new ShovelProfile(.275600f, 1.50f, .2f),
+            new ShovelProfile(.330000f, 1.40f, .4f), new ShovelProfile(.392000f, 1.30f, .6f),
+            new ShovelProfile(.469000f, 1.20f, .8f), new ShovelProfile(.560000f, 1.10f, 1f),
             new ShovelProfile(.680000f, 1.00f, 1.2f), new ShovelProfile(.800000f, .90f, 1.4f),
             new ShovelProfile(.940000f, .80f, 1.6f), new ShovelProfile(1.100000f, .70f, 1.8f)
         };

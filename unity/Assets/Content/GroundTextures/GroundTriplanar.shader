@@ -30,6 +30,14 @@ Shader "Something Down There/Ground Triplanar"
         _ConcreteTint("Concrete tint", Color) = (1,1,1,1)
         _ConcreteTileMetres("Concrete tile metres", Float) = 2
         _ConcreteNormalStrength("Concrete relief", Range(0, 2)) = 0.35
+        _PondClayTint("Pond clay tint (clay textures)", Color) = (0.6,0.66,0.72,1)
+        _PondClayTileMetres("Pond clay tile metres", Float) = 3.5
+        _PondClayNormalStrength("Pond clay relief", Range(0, 2)) = 0.12
+        _ClayDeepTint("Clay tint below the rock-zone border", Color) = (1,1,1,1)
+        _RockColdTint("Rock tint below the ancient-zone border", Color) = (1,1,1,1)
+        _ZoneDepths("Zone borders (rock, ancient) and blend half-width in metres", Vector) = (75,112.5,3,0)
+        _StrataStrength("Colour band strength", Range(0, 0.3)) = 0
+        _StrataCool("Grey-blue share of clay bands", Range(0, 1)) = 0
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
@@ -87,6 +95,8 @@ Shader "Something Down There/Ground Triplanar"
             float _ClayNormalStrength, _RockNormalStrength;
             float4 _GravelTint, _ConcreteTint;
             float _GravelTileMetres, _ConcreteTileMetres, _GravelNormalStrength, _ConcreteNormalStrength;
+            float4 _PondClayTint, _ClayDeepTint, _RockColdTint, _ZoneDepths;
+            float _PondClayTileMetres, _PondClayNormalStrength, _StrataStrength, _StrataCool;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -110,6 +120,7 @@ Shader "Something Down There/Ground Triplanar"
             float4 positionOS : POSITION;
             float3 normalOS : NORMAL;
             float4 materials : TEXCOORD2;
+            float4 materials2 : TEXCOORD3;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct GroundVaryings
@@ -119,6 +130,7 @@ Shader "Something Down There/Ground Triplanar"
             half3 normalWS : TEXCOORD1;
             half fogFactor : TEXCOORD2;
             half4 materials : TEXCOORD3;
+            half4 materials2 : TEXCOORD4;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -133,6 +145,7 @@ Shader "Something Down There/Ground Triplanar"
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             output.fogFactor = ComputeFogFactor(output.positionCS.z);
             output.materials = input.materials;
+            output.materials2 = input.materials2;
             return output;
         }
 
@@ -329,15 +342,21 @@ Shader "Something Down There/Ground Triplanar"
             normal = ProjectGroundNormal(n, weights, signs, nx, ny, nz);
         }
 
-        // Mesh weights (clay, rock, concrete, 1 - gravel); soil is the remainder. A missing
-        // stream reads (0,0,0,1), so meshes without weights render as plain soil.
-        void GroundSurface(float3 position, half3 geometricNormal, half4 materials,
+        // Mesh weights (clay, rock, concrete, 1 - gravel) and (pond clay, ...); soil is the
+        // remainder. A missing stream reads (0,0,0,1), so meshes without weights render as soil.
+        void GroundSurface(float3 position, half3 geometricNormal, half4 materials, half4 materials2,
             out half3 colour, out half3 normal, out half roughness, out half occlusion)
         {
             half4 deposits = saturate(half4(materials.xyz, 1 - materials.w)); // clay, rock, concrete, gravel
-            half3 weights = half3(saturate(1 - dot(deposits, 1.0)), deposits.xy);
-            half total = max(dot(weights, 1.0) + deposits.z + deposits.w, 0.0001);
-            weights /= total; deposits.zw /= total;
+            half pond = saturate(materials2.x);
+            half3 weights = half3(saturate(1 - dot(deposits, 1.0) - pond), deposits.xy);
+            half total = max(dot(weights, 1.0) + deposits.z + deposits.w + pond, 0.0001);
+            weights /= total; deposits.zw /= total; pond /= total;
+            // Zone palettes follow depth: clay turns rust-red in the deep stone, rock cools in the
+            // ancient zone. The generated borders undulate; a soft blend covers them.
+            float depth = _SurfaceHeight - position.y;
+            half deepClay = smoothstep(_ZoneDepths.x - _ZoneDepths.z, _ZoneDepths.x + _ZoneDepths.z, depth);
+            half coldRock = smoothstep(_ZoneDepths.y - _ZoneDepths.z, _ZoneDepths.y + _ZoneDepths.z, depth);
             half3 n = normalize(geometricNormal);
             // Calculate gradients before the layer branches so boundary pixels keep stable mip levels.
             float3 dx = ddx(position), dy = ddy(position);
@@ -353,7 +372,7 @@ Shader "Something Down There/Ground Triplanar"
             {
                 DepositSurface(TEXTURE2D_ARGS(_ClayAlbedo, sampler_SoilAlbedo),
                     TEXTURE2D_ARGS(_ClayNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ClayMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _ClayTileMetres, _ClayTint.rgb, _ClayNormalStrength,
+                    position, dx, dy, n, _ClayTileMetres, _ClayTint.rgb * lerp((half3)1, _ClayDeepTint.rgb, deepClay), _ClayNormalStrength,
                     layerColour, layerNormal, layerOcclusion);
                 colour += layerColour * weights.y; normal += layerNormal * weights.y;
                 roughness += weights.y; occlusion += layerOcclusion * weights.y;
@@ -362,7 +381,7 @@ Shader "Something Down There/Ground Triplanar"
             {
                 DepositSurface(TEXTURE2D_ARGS(_RockAlbedo, sampler_SoilAlbedo),
                     TEXTURE2D_ARGS(_RockNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_RockMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _RockTileMetres, _RockTint.rgb, _RockNormalStrength,
+                    position, dx, dy, n, _RockTileMetres, _RockTint.rgb * lerp((half3)1, _RockColdTint.rgb, coldRock), _RockNormalStrength,
                     layerColour, layerNormal, layerOcclusion);
                 colour += layerColour * weights.z; normal += layerNormal * weights.z;
                 roughness += weights.z; occlusion += layerOcclusion * weights.z;
@@ -385,7 +404,26 @@ Shader "Something Down There/Ground Triplanar"
                 colour += layerColour * deposits.w; normal += layerNormal * deposits.w;
                 roughness += deposits.w; occlusion += layerOcclusion * deposits.w;
             }
+            [branch] if (pond > 0.0001)
+            {
+                // Old pond clay: the clay textures, smoother and grey-blue.
+                DepositSurface(TEXTURE2D_ARGS(_ClayAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_ClayNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ClayMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _PondClayTileMetres, _PondClayTint.rgb, _PondClayNormalStrength,
+                    layerColour, layerNormal, layerOcclusion);
+                colour += layerColour * pond; normal += layerNormal * pond;
+                roughness += pond; occlusion += layerOcclusion * pond;
+            }
             normal = normalize(normal);
+            // Colour bands: gentle strata on a slightly undulating depth, so one main ground never
+            // reads as one repeated wall. Smooth sums of sines, never a sawtooth; the cap keeps its look.
+            float undulation = sin(position.x * 0.21 + position.z * 0.13) * 0.6 + sin(position.z * 0.17 - position.x * 0.07) * 0.4;
+            float strataDepth = depth + undulation;
+            half strata = sin(strataDepth * 2.3) * 0.5 + sin(strataDepth * 0.83 + 1.7) * 0.35 + sin(strataDepth * 5.9 + 0.4) * 0.15;
+            half below = saturate((depth - _TurfDepth) * 4);
+            // Old sediment is layered: the clay's darker bands turn grey-blue between orange ones.
+            colour = lerp(colour, colour * half3(0.72, 0.86, 1.05), saturate(-strata) * _StrataCool * weights.y * below);
+            colour *= 1 + strata * _StrataStrength * below;
         }
         ENDHLSL
 
@@ -414,7 +452,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, input.materials2, albedo, normal, roughness, occlusion);
                 InputData lighting = (InputData)0;
                 lighting.positionWS = input.positionWS;
                 lighting.positionCS = input.positionCS;
@@ -488,7 +526,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, input.materials2, albedo, normal, roughness, occlusion);
                 #if defined(_GBUFFER_NORMALS_OCT)
                     float2 oct = PackNormalOctQuadEncode(normal);
                     return half4(PackFloat2To888(saturate(oct * 0.5 + 0.5)), 0);

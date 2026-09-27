@@ -371,7 +371,7 @@ namespace SomethingDownThere
                     // with that cheap bound before powers/noise, especially in deep pits.
                     if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
                     float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete ? (Mathf.Max(a, b) - 1) * length
-                        : material == TerrainMaterialId.Clay ? (Mathf.Sqrt(a * a + b * b) - 1) * length
+                        : material == TerrainMaterialId.Clay || material == TerrainMaterialId.PondClay ? (Mathf.Sqrt(a * a + b * b) - 1) * length
                         : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
                     // Loose stones indent the scoop edge (never widen it, like the shave).
                     if (material == TerrainMaterialId.Gravel) side += Grain(index) * length * .1f;

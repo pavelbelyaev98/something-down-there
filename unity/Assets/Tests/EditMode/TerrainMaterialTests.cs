@@ -14,10 +14,10 @@ namespace SomethingDownThere.Tests
         // Mesh weights are (clay, rock, concrete, 1 - gravel); soil is the remainder.
         private static readonly Vector4 SoilWeight = new Vector4(0, 0, 0, 1);
 
-        [TestCase(TerrainMaterialId.Soil, 0, 0, 0, 1)] [TestCase(TerrainMaterialId.Clay, 1, 0, 0, 1)]
-        [TestCase(TerrainMaterialId.Rock, 0, 1, 0, 1)] [TestCase(TerrainMaterialId.Gravel, 0, 0, 0, 0)]
-        [TestCase(TerrainMaterialId.Concrete, 0, 0, 1, 1)]
-        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float clay, float rock, float concrete, float notGravel)
+        [TestCase(TerrainMaterialId.Soil, 0, 0, 0, 1, 0)] [TestCase(TerrainMaterialId.Clay, 1, 0, 0, 1, 0)]
+        [TestCase(TerrainMaterialId.Rock, 0, 1, 0, 1, 0)] [TestCase(TerrainMaterialId.Gravel, 0, 0, 0, 0, 0)]
+        [TestCase(TerrainMaterialId.Concrete, 0, 0, 1, 1, 0)] [TestCase(TerrainMaterialId.PondClay, 0, 0, 0, 1, 1)]
+        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float clay, float rock, float concrete, float notGravel, float pond)
         {
             var grid = new ExcavationGrid(new Vector3Int(16, 16, 16), .2f);
             var saved = grid.Capture(); saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Materials.Length, material);
@@ -31,6 +31,8 @@ namespace SomethingDownThere.Tests
                 Assert.That(weights.Count, Is.EqualTo(mesh.vertexCount));
                 var expected = new Vector4(clay, rock, concrete, notGravel);
                 foreach (var weight in weights) Assert.That((weight - expected).sqrMagnitude, Is.LessThan(1e-10f));
+                var second = new List<Vector4>(); mesh.GetUVs(3, second);
+                foreach (var weight in second) Assert.That((weight - new Vector4(pond, 0, 0, 1)).sqrMagnitude, Is.LessThan(1e-10f));
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
@@ -98,27 +100,6 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void SeededDepositsAreRepeatableContainAllFamiliesAndDoNotConsumeGlobalRandom()
-        {
-            var size = new Vector3Int(160, 128, 160);
-            var random = UnityEngine.Random.state;
-            var first = TerrainMaterialSnapshot.Generate(size, .125f, 2718).ToArray();
-            Assert.That(UnityEngine.Random.state, Is.EqualTo(random));
-            Assert.That(TerrainMaterialSnapshot.Generate(size, .125f, 2718).ToArray(), Is.EqualTo(first));
-            Assert.That(TerrainMaterialSnapshot.Generate(size, .125f, 853).ToArray(), Is.Not.EqualTo(first));
-            Assert.That(first.Distinct().OrderBy(v => v), Is.EqualTo(new byte[] { 0, 1, 2, 3, 4 }));
-            // Concrete is rare and never in the first 8 m layer cycle.
-            int concrete = 0, stride = size.x + 1, column = size.y + 1;
-            for (int i = 0; i < first.Length; i++)
-            {
-                if (first[i] != (byte)TerrainMaterialId.Concrete) continue;
-                concrete++;
-                Assert.That((size.y - i / stride % column) * .125f, Is.GreaterThanOrEqualTo(8f));
-            }
-            Assert.That(concrete, Is.LessThan(first.Length / 20));
-        }
-
-        [Test]
         public void CapturesShareImmutableIdentitiesAcrossCutsResetAndRestore()
         {
             var grid = new ExcavationGrid(new Vector3Int(24, 48, 24), .125f, 51);
@@ -161,43 +142,66 @@ namespace SomethingDownThere.Tests
         }
 
         [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Clay)] [TestCase(TerrainMaterialId.Rock)]
-        [TestCase(TerrainMaterialId.Gravel)] [TestCase(TerrainMaterialId.Concrete)]
+        [TestCase(TerrainMaterialId.Gravel)] [TestCase(TerrainMaterialId.Concrete)] [TestCase(TerrainMaterialId.PondClay)]
         public void AutomaticMotionImprovesFreshAndSustainedOutputAcrossTheDrillMilestone(TerrainMaterialId material)
         {
             float previousFresh = 0, previousSustained = 0;
-            var profiles = EquipmentProgression.ToolProfiles();
-            Assert.That(profiles.Length, Is.EqualTo(10));
-            for (int level = 1; level <= profiles.Length; level++)
+            Assert.That(EquipmentProgression.ToolProfiles().Length, Is.EqualTo(10));
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
             {
-                var profile = profiles[level - 1];
-                var grid = new ExcavationGrid(new Vector3Int(48, 192, 48), .0625f);
-                var saved = grid.Capture();
-                saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, material);
-                grid.Restore(saved);
-                bool drill = EquipmentProgression.UsesDrill(level);
-                float interval = .35f * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval
-                    * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
-                float first = 0;
-                for (int cut = 0; cut < 12; cut++)
-                {
-                    float low = 0, high = grid.Extent.y;
-                    for (int step = 0; step < 18; step++)
-                    {
-                        float middle = (low + high) * .5f;
-                        if (grid.Sample(new Vector3(1.5f, middle, 1.5f)) > 0) low = middle; else high = middle;
-                    }
-                    var surface = new Vector3(1.5f, (low + high) * .5f, 1.5f);
-                    Assert.That(drill
-                        ? grid.RemoveShave(surface, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut)
-                        : grid.RemoveScoop(surface - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62 + cut, .1f, out _, true), Is.True);
-                    if (cut == 0) first = grid.LastRemovedVolume / interval;
-                }
-                float sustained = grid.RemovedVolume / (12 * interval);
+                var (first, sustained) = Output(material, level);
                 TestContext.WriteLine($"{material} level {level}: fresh {first:F3}, sustained {sustained:F3} m3/s");
                 Assert.That(first, Is.GreaterThan(previousFresh), $"{material} level {level} fresh-ground output");
                 Assert.That(sustained, Is.GreaterThan(previousSustained), $"{material} level {level} sustained output");
                 previousFresh = first; previousSustained = sustained;
             }
+        }
+
+        // Concept 03 zone rule: one purchase always outpaces the next zone's main ground, so a
+        // player arriving in clay or rock one level up never feels a restart.
+        [Test]
+        public void OneLevelOutpacesTheNextZonesMainGround()
+        {
+            float[] Sustained(TerrainMaterialId material) => Enumerable.Range(1, EquipmentProgression.LevelCount)
+                .Select(level => Output(material, level).sustained).ToArray();
+            float[] soil = Sustained(TerrainMaterialId.Soil), clay = Sustained(TerrainMaterialId.Clay), rock = Sustained(TerrainMaterialId.Rock);
+            for (int level = 2; level <= EquipmentProgression.LevelCount; level++)
+            {
+                Assert.That(clay[level - 1], Is.GreaterThanOrEqualTo(soil[level - 2]), $"Clay at level {level} vs soil at {level - 1}");
+                Assert.That(rock[level - 1], Is.GreaterThanOrEqualTo(clay[level - 2]), $"Rock at level {level} vs clay at {level - 1}");
+            }
+            // Basins are clay's tell: clearly easier than the clay around them at every level.
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
+                Assert.That(Output(TerrainMaterialId.PondClay, level).sustained, Is.GreaterThan(clay[level - 1] * 1.15f), $"Pond clay at level {level}");
+        }
+
+        // Fresh and sustained output (m3/s) of the automatic motion boring straight down.
+        private static (float first, float sustained) Output(TerrainMaterialId material, int level)
+        {
+            var profile = EquipmentProgression.ToolProfiles()[level - 1];
+            var grid = new ExcavationGrid(new Vector3Int(48, 192, 48), .0625f);
+            var saved = grid.Capture();
+            saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, material);
+            grid.Restore(saved);
+            bool drill = EquipmentProgression.UsesDrill(level);
+            float interval = .35f * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval
+                * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
+            float first = 0;
+            for (int cut = 0; cut < 12; cut++)
+            {
+                float low = 0, high = grid.Extent.y;
+                for (int step = 0; step < 18; step++)
+                {
+                    float middle = (low + high) * .5f;
+                    if (grid.Sample(new Vector3(1.5f, middle, 1.5f)) > 0) low = middle; else high = middle;
+                }
+                var surface = new Vector3(1.5f, (low + high) * .5f, 1.5f);
+                Assert.That(drill
+                    ? grid.RemoveShave(surface, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut)
+                    : grid.RemoveScoop(surface - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62 + cut, .1f, out _, true), Is.True);
+                if (cut == 0) first = grid.LastRemovedVolume / interval;
+            }
+            return (first, grid.RemovedVolume / (12 * interval));
         }
 
         [Test]

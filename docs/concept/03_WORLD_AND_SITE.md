@@ -249,7 +249,7 @@ list: a concrete structure or a rock mass *is* the hard pocket, now with a reaso
 | ------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Rock mass          | Mostly zone 3 | A block several metres across, criss-crossed by cracks and veins: read the cracks, pick a branch, or blast it        |
 | Concrete structure | Zones 2–3   | A buried foundation, cellar or waterworks section: concrete walls and floor, soil inside, cracks marking the weak spots; sometimes a sealed room |
-| Clay basin         | Zone 2      | A thick bowl of old pond clay: clean, calm digging around bones and organic finds                                      |
+| Clay basin         | Zone 2      | A thick bowl of old pond clay: clean, calm digging around bones and organic finds; softer and greyer than the clay around it, so it is clay's tell |
 | Gravel channel     | Zones 1–2   | See §4                                                                                                                 |
 
 Rules:

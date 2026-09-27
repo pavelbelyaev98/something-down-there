@@ -146,6 +146,8 @@ Material:
     - _MaskLayout: 1
     - _MaxSmoothness: 0.15
     - _NormalStrength: 1.5
+    - _PondClayNormalStrength: 0.12
+    - _PondClayTileMetres: 3.6
     - _RockNormalStrength: 0.6
     - _RockTileMetres: 3.2
     - _SoilComparison: 0
@@ -153,6 +155,8 @@ Material:
     - _SoilTileMetres: 4
     - _SrcBlend: 1
     - _StoneNormalStrength: 1.5
+    - _StrataCool: 0.6
+    - _StrataStrength: 0.13
     - _SurfaceHeight: 0
     - _TileMetres: 20
     - _TurfDepth: 0.045
@@ -163,12 +167,16 @@ Material:
     - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
     - _BandTint: {r: 0.8322835, g: 0.8094681, b: 0.78577685, a: 1}
-    - _ClayTint: {r: 0.92, g: 0.46, b: 0.27, a: 1}
-    - _ConcreteTint: {r: 1, g: 1, b: 1, a: 1}
+    - _ClayDeepTint: {r: 0.86, g: 0.6, b: 0.5, a: 1}
+    - _ClayTint: {r: 1.1, g: 0.66, b: 0.4, a: 1}
+    - _ConcreteTint: {r: 0.8, g: 0.79, b: 0.76, a: 1}
     - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
     - _GravelTint: {r: 1, g: 1, b: 1, a: 1}
+    - _PondClayTint: {r: 0.68, g: 0.74, b: 0.8, a: 1}
+    - _RockColdTint: {r: 0.9, g: 0.95, b: 1.02, a: 1}
     - _RockTint: {r: 0.4, g: 0.4, b: 0.4, a: 1}
     - _SoilTint: {r: 0.8094681, g: 0.9911565, b: 1.1067512, a: 1}
     - _TurfTint: {r: 0.6799757, g: 0.65762764, b: 0.64216644, a: 1}
+    - _ZoneDepths: {r: 75, g: 112.5, b: 3, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -104,7 +104,7 @@ namespace SomethingDownThere.Editor
             material.SetTexture("_ClayAlbedo", PackTexture("Gravel", "Albedo"));
             material.SetTexture("_ClayNormal", PackTexture("Gravel", "Normal"));
             material.SetTexture("_ClayMask", PackTexture("Gravel", "Roughness"));
-            material.SetColor("_ClayTint", new Color(.92f, .46f, .27f));
+            material.SetColor("_ClayTint", new Color(1.1f, .66f, .4f));
             material.SetFloat("_ClayTileMetres", 2.8f);
             material.SetFloat("_ClayNormalStrength", .22f);
             material.SetTexture("_RockAlbedo", RockDetail("Albedo"));
@@ -123,9 +123,20 @@ namespace SomethingDownThere.Editor
             material.SetTexture("_ConcreteAlbedo", DepositTextures.Concrete("Albedo"));
             material.SetTexture("_ConcreteNormal", DepositTextures.Concrete("Normal"));
             material.SetTexture("_ConcreteMask", DepositTextures.Concrete("Roughness"));
-            material.SetColor("_ConcreteTint", Color.white);
+            // Pale but never glaring under a lamp, and never the boundary's bedrock look.
+            material.SetColor("_ConcreteTint", new Color(.8f, .79f, .76f));
             material.SetFloat("_ConcreteTileMetres", 2f);
             material.SetFloat("_ConcreteNormalStrength", .45f);
+            // Clay basins' old pond clay: the clay textures, grey-blue, larger and smoother.
+            material.SetColor("_PondClayTint", new Color(.68f, .74f, .8f));
+            material.SetFloat("_PondClayTileMetres", 3.6f);
+            material.SetFloat("_PondClayNormalStrength", .12f);
+            // Zone palettes (concept 09 §2): rust-red clay veins in the deep stone, cold ancient rock.
+            material.SetColor("_ClayDeepTint", new Color(.86f, .6f, .5f));
+            material.SetColor("_RockColdTint", new Color(.9f, .95f, 1.02f));
+            material.SetVector("_ZoneDepths", new Vector4(TerrainGround.ZoneBorders[1], TerrainGround.ZoneBorders[2], 3, 0));
+            material.SetFloat("_StrataStrength", .13f);
+            material.SetFloat("_StrataCool", .6f);
             EditorUtility.SetDirty(material);
         }
 

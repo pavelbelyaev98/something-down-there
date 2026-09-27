@@ -22,12 +22,12 @@ namespace SomethingDownThere
             public NativeArray<float> Corners;
             public NativeList<Vector3> Vertices,Normals;
             public NativeList<Vector2> UVs;
-            public NativeList<Vector4> MaterialWeights;
+            public NativeList<Vector4> MaterialWeights,MaterialWeights2;
             public NativeList<int> Triangles;
 
             public void Execute()
             {
-                Vertices.Clear();Normals.Clear();UVs.Clear();Triangles.Clear();MaterialWeights.Clear();
+                Vertices.Clear();Normals.Clear();UVs.Clear();Triangles.Clear();MaterialWeights.Clear();MaterialWeights2.Clear();
                 int cells=Span.x*Span.y*Span.z;
                 for(int i=0;i<cells;i++)Indices[i]=-1;
                 for(int z=Low.z;z<=End.z;z++)
@@ -54,7 +54,8 @@ namespace SomethingDownThere
                     float3 vertex=math.clamp((new float3(x,y,z)+sum/crossings)*CellSize,0,(float3)Size*CellSize);
                     Indices[Index(new int3(x,y,z))]=Vertices.Length;
                     Vertices.Add(vertex);Normals.Add(SurfaceNormal(vertex));UVs.Add(new Vector2(vertex.x,vertex.z));
-                    MaterialWeights.Add(SurfaceMaterials(vertex));
+                    SurfaceMaterials(vertex,out var weights,out var weights2);
+                    MaterialWeights.Add(weights);MaterialWeights2.Add(weights2);
                 }
                 for(int z=Start.z;z<=End.z;z++)
                 for(int y=Start.y;y<=End.y;y++)
@@ -101,15 +102,17 @@ namespace SomethingDownThere
                 return math.lengthsq(gradient)>1e-12f?-math.normalize(gradient):new float3(0,1,0);
             }
 
-            // Stream layout (clay, rock, concrete, 1 - gravel), soil the remainder. Meshes without
-            // this stream read (0,0,0,1) and two-channel meshes (x,y,0,1): no gravel or concrete.
-            private Vector4 SurfaceMaterials(float3 point)
+            // Streams (clay, rock, concrete, 1 - gravel) and (pond clay, fractured, crack, 1 - backfill),
+            // soil the remainder; the second stream's later families arrive with their tasks.
+            // Meshes without them read (0,0,0,1) and two-channel meshes (x,y,0,1): plain soil.
+            private void SurfaceMaterials(float3 point, out Vector4 weights, out Vector4 weights2)
             {
                 float3 p = point / CellSize;
                 int3 cell = (int3)math.floor(p);
                 float3 t = p - cell;
                 int index = SampleIndex(cell);
                 float4 result = 0; // clay, rock, concrete, gravel
+                float pond = 0;
                 for (int c = 0; c < 8; c++)
                 {
                     int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
@@ -119,10 +122,13 @@ namespace SomethingDownThere
                     else if (material == (byte)TerrainMaterialId.Rock) result.y += weight;
                     else if (material == (byte)TerrainMaterialId.Concrete) result.z += weight;
                     else if (material == (byte)TerrainMaterialId.Gravel) result.w += weight;
+                    else if (material == (byte)TerrainMaterialId.PondClay) pond += weight;
                 }
-                result = math.saturate(result);
-                result /= math.max(1f, math.csum(result));
-                return new Vector4(result.x, result.y, result.z, 1 - result.w);
+                result = math.saturate(result); pond = math.saturate(pond);
+                float total = math.max(1f, math.csum(result) + pond);
+                result /= total; pond /= total;
+                weights = new Vector4(result.x, result.y, result.z, 1 - result.w);
+                weights2 = new Vector4(pond, 0, 0, 1);
             }
 
             private void Triangle(int a,int b,int c)
