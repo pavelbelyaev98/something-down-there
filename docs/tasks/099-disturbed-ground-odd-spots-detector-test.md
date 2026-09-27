@@ -76,8 +76,9 @@ everything the playtest needs; the playtest and its outcome belong to the user.
 6. Tests pass; build refreshed. The playtest itself: user.
 
 ## Detector-off playtest (for the user)
-Run a fresh save with the detector off (`SomethingDownThere.exe -noDetector`, or Developer admin →
-Detector: OFF before New Game). Pass: every unique found without help and at least one tell
+Run a fresh save with the detector off: `SomethingDownThere.exe -noDetector` (preferred; covers the
+whole run), or Ctrl+Shift+F10 → Detector: OFF right after New Game spawns you (the admin panel
+cannot open over the startup menu; Restore normal rules turns it back on). Pass: every unique found without help and at least one tell
 (backfill pit, gravel channel, crack) followed unprompted → remove the detector (HUD panel, runtime
 code, tests and concept references) and update `032`, `041`, `080`. Fail: keep it frozen and record
 why in this spec.
