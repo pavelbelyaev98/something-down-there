@@ -74,9 +74,16 @@
 - **Dig boundary:** survey stakes with red-and-white tape on the collar outline the plot (collider-free,
   open where the winch cable enters).
 - **Presentation:** the Highlands sky, grade and haze with a noon sun (`SunPresentationSetup`); a hue curve calms the packs' lime greens.
-  Lighting and water refresh without regenerating the site, keeping Inspector tuning. No
-  first-person rig; the scoop/shave motion follows the tool level. `WindowsBuild` always targets
-  MainGame.
+  Lighting and water refresh without regenerating the site, keeping Inspector tuning. `WindowsBuild`
+  always targets MainGame.
+- **Tool rig:** the one machine shows lower right, no hands: an original Blender kit
+  (`art/tool-rig`) whose parts are named by the tool levels they appear at, from a plain shovel to a
+  drill (level 7) and a nozzle cannon (level 10); a purchase or admin level swaps parts instantly.
+  It sits small inside the player's capsule (never clips walls), keeps its screen place at any FOV,
+  casts no shadow and is lit only like the world. Only the tool moves: a scoop, bite or hard-head
+  stroke per material family up to level 6, a spinning bit and chatter from the drill on; it lowers
+  away for menus, held finds, placement previews and recovery marking. Re-run **Configure Tool Rig**
+  after re-exporting the model.
 - **Underground lighting:** `ExcavationDaylight` derives daylight from connected excavated air, keeping shallow and middle-depth ground and short branches readable before gradually fading along deeper or longer routes. Soil and adapted URP Lit finds/boundaries attenuate sun, sky fill and reflections together; sealed rooms admit no daylight and there is no ambient brightness floor.
 - **Work lights:** compact neutral lanterns illuminate a broad area in every direction with local soft shadows, gradual distant falloff and bounded close-range brightness, preserving soil texture beside the light. The point-light shadow atlas fits the entire kit; distant route lamps stop submitting lights while retaining their visible diffuser. No personal light, fuel drain or expiry. Marks conform to collision surfaces and remain readable by their shape when lit.
 

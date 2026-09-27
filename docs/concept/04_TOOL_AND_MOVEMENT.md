@@ -30,8 +30,8 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
 - No mashing, no QTEs, no rhythm inputs, anywhere in the game.
 
 Holding repeats ordinary shovel scoops at the early levels. From tool level seven onward it
-steadily shaves shallow layers as the aim moves across the ground. There is no visible tool rig
-yet; the rig task must communicate this shovel-to-drill transition. Developer admin retains a
+steadily shaves shallow layers as the aim moves across the ground. The visible rig communicates
+this shovel-to-drill transition: scoops per stroke, then a spinning drill head. Developer admin retains a
 session-only motion comparison; normal play follows the owned level automatically.
 
 ## 3. Automatic material adaptation (the mode model)
