@@ -1,6 +1,6 @@
 # Unity developer guide
 
-Unity is pinned to `6000.6.0f1` with URP `17.6.0`. Runtime work belongs in `Assets/`; generated evidence stays under ignored `Logs/`.
+Unity is pinned to `6000.6.0f1` with URP `17.6.0`. Runtime work belongs in `Assets/`; generated evidence stays under ignored `Logs/` (repository root or `unity/Logs`); every `tools/test-changed.ps1` run deletes entries there older than 14 days.
 
 The runtime assembly references the Editor's bundled Burst, Collections and Mathematics assemblies for surface-net generation and local exposure sampling. Keep Burst enabled in players. Jobs complete before collision/render publication; `TerrainVolume` owns their reusable native buffers, while managed paged density retains save ownership.
 

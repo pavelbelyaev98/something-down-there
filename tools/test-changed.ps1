@@ -22,6 +22,8 @@
     Requires a connected Editor (same as the Unity CLI); without one the same scope runs in
     batchmode through tools/test-fps.ps1.
 
+    Every run except -List also deletes Logs/ and unity/Logs entries older than 14 days.
+
 .EXAMPLE
     ./tools/test-changed.ps1
     ./tools/test-changed.ps1 unity/Assets/Runtime/Player/ShovelState.cs
@@ -41,6 +43,18 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $projectPath = (Resolve-Path (Join-Path $root 'unity')).Path
 $statePath = Join-Path $projectPath 'Library/SomethingDownThere/test-changed-state.json'
+
+# Generated evidence (screenshots, validation and review runs) is disposable: both Logs folders
+# keep two weeks. Files Unity holds open are skipped.
+if (-not $List) {
+    $cutoff = (Get-Date).AddDays(-14)
+    foreach ($logs in @((Join-Path $root 'Logs'), (Join-Path $projectPath 'Logs'))) {
+        if (-not (Test-Path -LiteralPath $logs)) { continue }
+        foreach ($item in @(Get-ChildItem -LiteralPath $logs -Force | Where-Object { $_.LastWriteTime -lt $cutoff })) {
+            try { Remove-Item -LiteralPath $item.FullName -Recurse -Force -ErrorAction Stop } catch { }
+        }
+    }
+}
 
 # path pattern -> checks; the FIRST matching rule wins, so specific owners come before broad
 # folders. Every selected path also runs the EditMode assembly (MainGameSceneTests covers
