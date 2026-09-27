@@ -281,6 +281,9 @@ namespace SomethingDownThere.Tests
             Assert.That(rescued.Terrain.RemovedVolume, Is.GreaterThanOrEqualTo(expected.Terrain.RemovedVolume));
         }
 
+        // Editor worst case for one full-depth checkpoint (the player measures ~1.4 s).
+        private const double CheckpointBudget = 3000;
+
         [UnityTest]
         public IEnumerator DirtyAutosaveAndOverlappingTransactionRequestsKeepLatestStateWithoutIdleGridCopies()
         {
@@ -291,7 +294,8 @@ namespace SomethingDownThere.Tests
             double started = Time.realtimeSinceStartupAsDouble;
             yield return Until(() => save.CompletedSequence > sequence);
             double elapsed = Time.realtimeSinceStartupAsDouble - started;
-            Assert.That(elapsed, Is.InRange(save.AutosaveSeconds, save.AutosaveSeconds + 1));
+            // Completion includes the background encode of the full-depth density (CheckpointBudget).
+            Assert.That(elapsed, Is.InRange(save.AutosaveSeconds, save.AutosaveSeconds + CheckpointBudget / 1000));
             Assert.That(save.CapturedTerrainCopies, Is.EqualTo(copies), "Battery-only checkpoints reuse immutable density.");
             sequence = save.CompletedSequence;
             player.Wallet.TryCredit(10);
@@ -307,10 +311,10 @@ namespace SomethingDownThere.Tests
             Assert.That(latest.ShovelLevel, Is.EqualTo(2));
             Assert.That(latest.BatteryCharge, Is.EqualTo(96));
             Assert.That(save.CapturedTerrainCopies, Is.EqualTo(copies));
-            // The 100 m site is 3.1x the old density, so the background encode (validate +
-            // gzip + atomic replace) grows with it. Frame impact is the save-performance
-            // fixture's job; this only guards against runaway checkpoint work.
-            Assert.That(save.LastCheckpointLatencyMilliseconds, Is.LessThanOrEqualTo(2000));
+            // The background encode (validate + gzip + atomic replace) grows with the 150 m
+            // density. Frame impact is the save-performance fixture's job; this only guards
+            // against runaway checkpoint work.
+            Assert.That(save.LastCheckpointLatencyMilliseconds, Is.LessThanOrEqualTo(CheckpointBudget));
             UnityEngine.Debug.Log($"Save timing: dirty={elapsed:F3}s capture={save.LastCaptureMilliseconds:F3}ms write={save.LastWriteMilliseconds:F3}ms checkpoint={save.LastCheckpointLatencyMilliseconds:F3}ms");
         }
 
@@ -675,8 +679,8 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        // NUnit's collection equality boxes all ~48M samples; compare the snapshots directly.
-        private static void AssertSameDensity(DensitySnapshot actual, DensitySnapshot expected)
+        // NUnit's collection equality boxes all ~72M samples; compare the snapshots directly.
+        internal static void AssertSameDensity(DensitySnapshot actual, DensitySnapshot expected)
         {
             Assert.That(actual.Length, Is.EqualTo(expected.Length));
             for (int i = 0; i < actual.Length; i++)

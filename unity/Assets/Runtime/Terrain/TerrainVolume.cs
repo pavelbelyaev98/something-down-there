@@ -130,8 +130,8 @@ namespace SomethingDownThere
             chunkRoot = new GameObject("Chunks").transform;
             chunkRoot.SetParent(transform, false);
             // Only the top layer owns geometry in untouched ground: the ground plane.
-            // Interior chunks are created when a cut reaches them, so a 100 m volume
-            // costs the same as a 32 m one.
+            // Interior chunks are created when a cut reaches them, so a deep volume
+            // costs the same as a shallow one.
             int surfaceLayer = (dimensions.y - 1) / chunkSize;
             for (int z = 0; z < dimensions.z; z += chunkSize)
             for (int x = 0; x < dimensions.x; x += chunkSize)
@@ -192,7 +192,7 @@ namespace SomethingDownThere
                 {
                     var key = new Vector3Int(x / chunkSize, y / chunkSize, z / chunkSize);
                     // The ground plane always exists; everything else only where a hole
-                    // reached it. Rebuilding every key would mesh 7,200 empty chunks.
+                    // reached it. Rebuilding every key would mesh thousands of empty chunks.
                     if (chunks.ContainsKey(key) || key.y == surfaceLayer || grid.AnyModified(key * chunkSize, chunkSize))
                     {
                         var chunk = Materialize(key);
@@ -307,7 +307,7 @@ namespace SomethingDownThere
                 var key = new Vector3Int(x, y, z);
                 // Already-materialized neighbors always rebuild so shared seams and normal
                 // halos stay consistent; untouched ground is only created where a cut
-                // actually reached it, which keeps an empty 100 m volume cheap.
+                // actually reached it, which keeps an empty deep volume cheap.
                 if ((chunks.ContainsKey(key) || grid.AnyModified(key * chunkSize, chunkSize))
                     && Refresh(key)) LastRebuiltChunkCount++;
             }
@@ -371,7 +371,7 @@ namespace SomethingDownThere
             return changed;
         }
 
-        // Chunk objects are created on demand: a 100 m volume keeps 7,200 keys but only
+        // Chunk objects are created on demand: the full-depth volume keeps thousands of keys but only
         // materializes the ground plane and whatever a cut has reached.
         private Chunk Materialize(Vector3Int key)
         {

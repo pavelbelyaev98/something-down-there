@@ -30,11 +30,6 @@ namespace SomethingDownThere.Editor
                     || e.sale_value <= 0 || e.slots != 1 || e.detector_eligible || e.tier != "common"
                     || e.required_exposure != .6f || !float.IsFinite(e.minimum_depth_m) || !float.IsFinite(e.maximum_depth_m)
                     || e.minimum_depth_m < .6f || e.maximum_depth_m <= e.minimum_depth_m || e.maximum_depth_m > SiteLayout.Extent.y - .8f
-                    || e.deep_instances < 0 || e.deep_instances > e.instances - e.shallow_instances
-                    || !float.IsFinite(e.deep_minimum_depth_m) || !float.IsFinite(e.deep_maximum_depth_m)
-                    || e.deep_minimum_depth_m < 0 || e.deep_maximum_depth_m < 0
-                    || (e.deep_instances > 0 && (e.deep_minimum_depth_m < e.maximum_depth_m
-                        || e.deep_maximum_depth_m <= e.deep_minimum_depth_m || e.deep_maximum_depth_m > SiteLayout.Extent.y - .8f))
                     || !float.IsFinite(e.core_minimum_depth_m) || !float.IsFinite(e.core_maximum_depth_m)
                     || !float.IsFinite(e.core_share) || e.core_share <= 0 || e.core_share > 1
                     || e.core_minimum_depth_m < e.minimum_depth_m || e.core_maximum_depth_m > e.maximum_depth_m
@@ -48,7 +43,6 @@ namespace SomethingDownThere.Editor
                 entries.Add(new DiscoveryCatalog.Entry { ItemId = e.content_id, Prefab = prefab, Count = e.instances,
                     ShallowCount = e.shallow_instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m,
                     CoreMinDepth = e.core_minimum_depth_m, CoreMaxDepth = e.core_maximum_depth_m, CoreShare = e.core_share,
-                    DeepCount = e.deep_instances, DeepMinDepth = e.deep_minimum_depth_m, DeepMaxDepth = e.deep_maximum_depth_m,
                     RandomOrientation = true });
             }
         }

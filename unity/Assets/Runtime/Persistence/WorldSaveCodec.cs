@@ -15,9 +15,10 @@ namespace SomethingDownThere
     {
         public const int Version = 11;
         // Bound combined density + material storage, reserving room for the other
-        // checkpoint records. Deeper future sites must explicitly revisit this budget.
+        // checkpoint records. Sized for the 150 m site with room for a 200 m one
+        // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
         public const int MaximumPackedBytes = 64 * 1024 * 1024;
-        public const int MaximumUnpackedBytes = 256 * 1024 * 1024;
+        public const int MaximumUnpackedBytes = 512 * 1024 * 1024;
         public const int MaximumSamples = (MaximumUnpackedBytes - 16 * 1024 * 1024) / (sizeof(float) + sizeof(byte));
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("SDTSAVE\0");
 
@@ -102,7 +103,7 @@ namespace SomethingDownThere
             using var packed = new MemoryStream(payload, false);
             using var zip = new GZipStream(packed, CompressionMode.Decompress);
             // Parse the decompressed stream directly: materializing it first would double
-            // the load's peak memory for a 100 m density. Every field below is bounded by
+            // the load's peak memory for a full-depth density. Every field below is bounded by
             // its own count, and MaximumSamples caps the one large allocation.
             using var r = new BinaryReader(zip, Encoding.UTF8, true);
             var s = new WorldSnapshot { Sequence = r.ReadInt64(), UtcTicks = r.ReadInt64(), SiteId = ReadString(r) };

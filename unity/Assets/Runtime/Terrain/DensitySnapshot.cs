@@ -49,7 +49,7 @@ namespace SomethingDownThere
 
         internal void Validate(float band)
         {
-            // Hot path for a 100 m site: 29.8M samples. Keep the loop call-free and only
+            // Hot path for the 150 m site: 72.5M samples. Keep the loop call-free and only
             // build the failure message when a sample is actually invalid.
             foreach (var page in pages)
                 for (int i = 0; i < page.Length; i++)

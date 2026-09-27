@@ -36,7 +36,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,458,436,438,1038,1270,1142,1002}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -252,7 +252,15 @@ namespace SomethingDownThere.Tests
                 Assert.That(DepthShare(layout, catalog, 2, 6, cheap), Is.GreaterThanOrEqualTo(.45f), $"Seed {seed}: the top layers must stay junk-heavy.");
                 Assert.That(DepthShare(layout, catalog, 20, 31, cheap), Is.LessThanOrEqualTo(.05f), $"Seed {seed}: junk must not dominate deep ground.");
                 Assert.That(DepthShare(layout, catalog, 2, 8, rich), Is.LessThanOrEqualTo(.15f), $"Seed {seed}: rich finds must stay rare near the surface.");
-                Assert.That(DepthShare(layout, catalog, 20, 31, rich), Is.GreaterThanOrEqualTo(.8f), $"Seed {seed}: deep ground must be worth digging.");
+                Assert.That(DepthShare(layout, catalog, 75, 149, rich), Is.GreaterThanOrEqualTo(.8f), $"Seed {seed}: deep ground must be worth digging.");
+                // Value rises zone by zone (roughly even quarters of the site): the mix, never the price.
+                float previous = 0;
+                for (int zone = 0; zone < 4; zone++)
+                {
+                    float value = MeanValue(layout, catalog, Mathf.Max(6, zone * SiteLayout.Extent.y / 4), (zone + 1) * SiteLayout.Extent.y / 4);
+                    Assert.That(value, Is.GreaterThan(previous * 1.4f), $"Seed {seed}: zone {zone + 1} must be clearly richer than the one above.");
+                    previous = value;
+                }
                 // Scatter goes both ways: the odd lump of junk deep, the odd valuable high.
                 int deepCheap = 0, highRich = 0;
                 foreach (var placement in layout)
@@ -271,6 +279,13 @@ namespace SomethingDownThere.Tests
             Assert.That(deepCheapTotal, Is.GreaterThanOrEqualTo(40), "Every seed set needs junk well below its band.");
             Assert.That(highRichTotal, Is.GreaterThanOrEqualTo(20), "Every seed set needs valuables high up.");
             Assert.That(outlierSeeds, Is.GreaterThanOrEqualTo(4), "The set carries outliers in both directions.");
+        }
+
+        private static float MeanValue(DiscoveryPlacement[] layout, DiscoveryCatalog catalog, float from, float to)
+        {
+            var values = layout.Where(p => SiteLayout.Extent.y - p.Position.y >= from && SiteLayout.Extent.y - p.Position.y < to)
+                .Select(p => catalog.Entries[p.PrefabIndex].Prefab.SaleValue).ToArray();
+            return values.Length == 0 ? 0 : (float)values.Average();
         }
 
         private static float DepthShare(DiscoveryPlacement[] layout, DiscoveryCatalog catalog, float from, float to, System.Collections.Generic.HashSet<string> ids)
@@ -300,10 +315,7 @@ namespace SomethingDownThere.Tests
                 {
                     int index = Array.IndexOf(catalog.Entries, entry);
                     var placements = layout.Where(p => p.PrefabIndex == index).ToArray();
-                    var deep = placements.Where(p => entry.DeepCount > 0 && SiteLayout.Extent.y - p.Position.y >= entry.DeepMinDepth).ToArray();
-                    Assert.That(deep.Length, Is.EqualTo(entry.DeepCount), entry.ItemId + ": deep quota");
-                    Assert.That(deep.All(p => SiteLayout.Extent.y - p.Position.y <= entry.DeepMaxDepth + .0001f), Is.True);
-                    var banded = placements.Except(deep).ToArray();
+                    var banded = placements;
                     Assert.That(banded.All(p => SiteLayout.Extent.y - p.Position.y >= entry.MinDepth - .0001f && SiteLayout.Extent.y - p.Position.y <= entry.MaxDepth + .0001f), Is.True, entry.ItemId);
                     // Most of a type still sits in its core: the wide band only scatters outliers.
                     int core = banded.Count(p => SiteLayout.Extent.y - p.Position.y >= entry.CoreMinDepth - .0001f && SiteLayout.Extent.y - p.Position.y <= entry.CoreMaxDepth + .0001f);
@@ -333,59 +345,36 @@ namespace SomethingDownThere.Tests
                 foreach (var entry in catalog.Entries)
                 {
                     if (entry.AuthoredPlacement) continue;
-                    entry.Count = entry.ShallowCount + (entry.Count - entry.ShallowCount - entry.DeepCount) / 2;
-                    entry.DeepCount = 0;
+                    entry.Count = entry.ShallowCount + (entry.Count - entry.ShallowCount) / 2;
                 }
                 CollectionAssert.AreEqual(accepted, catalog.Generate(SiteLayout.Extent, 90127).Take(catalog.ShallowCount));
             }
             finally { UnityEngine.Object.DestroyImmediate(catalog); }
         }
 
+        // Constant rate, rising value: below the dense entry layer every metre to the floor
+        // keeps meeting finds, so the extra depth is never empty ground.
         [TestCase(false)] [TestCase(true, Explicit = true, Reason = PopulationSweep)]
-        public void LowerReservoirHasFindsInEveryMetreAcrossSeeds(bool sweep)
+        public void EveryMetreHasFindsDownToTheFloorAcrossSeeds(bool sweep)
         {
+            const int top = 6;
+            int bottom = Mathf.FloorToInt(SiteLayout.Extent.y - .8f);
             foreach (int seed in Seeds(sweep))
             {
-                var slices = new int[67];
+                var slices = new int[bottom - top];
                 foreach (var placement in Layout(seed))
                 {
-                    int index = Mathf.FloorToInt(SiteLayout.Extent.y - placement.Position.y) - 32;
+                    int index = Mathf.FloorToInt(SiteLayout.Extent.y - placement.Position.y) - top;
                     if (index >= 0 && index < slices.Length) slices[index]++;
                 }
-                Assert.That(slices.Min(), Is.GreaterThanOrEqualTo(20), $"Seed {seed}: sparse lower reservoir");
+                Assert.That(slices.Min(), Is.GreaterThanOrEqualTo(30), $"Seed {seed}: sparse metre at {top + Array.IndexOf(slices, slices.Min())} m");
                 for (int i = 0; i + 4 < slices.Length; i++)
-                    Assert.That(slices.Skip(i).Take(5).Sum(), Is.GreaterThanOrEqualTo(180),
-                        $"Seed {seed}: dry stretch below layer {i}");
+                    Assert.That(slices.Skip(i).Take(5).Sum(), Is.GreaterThanOrEqualTo(220),
+                        $"Seed {seed}: dry stretch below {top + i} m");
+                // Roughly constant: the deepest quarter holds nearly as many finds per metre as the mid-depths.
+                float mid = (float)slices.Skip(10).Take(40).Average(), deep = (float)slices.Skip(slices.Length - 37).Average();
+                Assert.That(deep, Is.GreaterThanOrEqualTo(mid * .7f), $"Seed {seed}: the bottom thins out.");
             }
-        }
-
-        [Test]
-        public void DeepAllocationRejectsInvalidCountsAndBands()
-        {
-            var catalog = UnityEngine.Object.Instantiate(Catalog);
-            try
-            {
-                var entry = catalog.Entries.Single(e => e.ItemId == "mineral_gold");
-                int count = entry.DeepCount;
-                float min = entry.DeepMinDepth, max = entry.DeepMaxDepth;
-                foreach (int invalid in new[] { -1, entry.Count + 1 })
-                {
-                    entry.DeepCount = invalid;
-                    Assert.Throws<InvalidDataException>(() => catalog.Validate());
-                }
-                entry.DeepCount = count;
-                entry.DeepMinDepth = entry.MaxDepth - 1;
-                Assert.Throws<InvalidDataException>(() => catalog.Validate());
-                entry.DeepMinDepth = min;
-                foreach (float invalid in new[] { float.NaN, float.PositiveInfinity, min })
-                {
-                    entry.DeepMaxDepth = invalid;
-                    Assert.Throws<InvalidDataException>(() => catalog.Validate());
-                }
-                entry.DeepMaxDepth = max;
-                catalog.Validate();
-            }
-            finally { UnityEngine.Object.DestroyImmediate(catalog); }
         }
 
         [Test]

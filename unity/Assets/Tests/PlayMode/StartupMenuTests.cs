@@ -177,7 +177,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Menu, Is.EqualTo(PlayerMenu.None));
             Assert.That(player.Wallet.Balance, Is.EqualTo(expected.Credits));
             Assert.That(player.Shovel.Level, Is.EqualTo(expected.ShovelLevel));
-            Assert.That(player.ExcavationTerrain.Capture().Density.ToArray(), Is.EqualTo(expected.Terrain.Density.ToArray()));
+            SaveIntegrationTests.AssertSameDensity(player.ExcavationTerrain.Capture().Density, expected.Terrain.Density);
             Assert.That(player.Discoveries.Capture().Select(f => f.Item.Id), Is.EqualTo(expected.Finds.Select(f => f.Item.Id)));
             Assert.That(File.ReadAllBytes(Path.Combine(directory, "world.sav")), Is.EqualTo(bytes), "Loading alone is read-only.");
         }
@@ -312,7 +312,7 @@ namespace SomethingDownThere.Tests
             yield return Until(() => save.State == WorldSaveState.Ready);
             Assert.That(save.ProfileInUse, Is.False);
             Assert.That(player.Wallet.Balance, Is.EqualTo(expected.Credits));
-            Assert.That(player.ExcavationTerrain.Capture().Density.ToArray(), Is.EqualTo(expected.Terrain.Density.ToArray()));
+            SaveIntegrationTests.AssertSameDensity(player.ExcavationTerrain.Capture().Density, expected.Terrain.Density);
             Assert.That(File.ReadAllBytes(Path.Combine(directory, "world.sav")), Is.EqualTo(original));
         }
 

@@ -32,7 +32,11 @@ namespace SomethingDownThere
             public string scenario, utc, hardware, graphics, os;
             public string frameClock = "Stopwatch between consecutive rendered-loop iterations";
             public int width, height, sampleSeconds, warmupSeconds, cuts, chunks, unfocusedFrames, menuFrames;
-            public float removedVolume;
+            public float removedVolume, workingDepth;
+            // Reopening the scenario's own checkpoint: disk read to Ready, the longest frame
+            // while loading, and the first cut afterwards (the first-dig hitch).
+            public double loadMilliseconds = -1, loadLongestFrameMilliseconds = -1, firstCutMilliseconds = -1, firstCutFrameMilliseconds = -1;
+            public long loadPeakPrivateBytes = -1;
             public long peakPrivateBytes, peakUnityBytes, maxCaptureAllocatedBytes = -1, maxCutAllocatedBytes = -1, copiedDensityBytes, encodedBytes;
             public long maxFrameAllocatedBytes, maxCaptureFrameAllocatedBytes, maxCutFrameAllocatedBytes;
             public bool frameAllocationCounterValid;
@@ -47,6 +51,13 @@ namespace SomethingDownThere
         private WorldSaveController save;
         private string evidence;
         private int sampleSeconds = 600, warmupSeconds = 60, cutIndex;
+        // -saveProfileUnfocused measures without waiting for focus, e.g. while someone else uses
+        // the desktop. The unfocused frame cap then bounds the frame distribution.
+        private bool requireFocus = true;
+        // Metres below the ground plane where the scenario's cuts hit the floor.
+        private float workingDepth = 18;
+        private double loadMilliseconds = -1, loadLongestFrame = -1, firstCut = -1, firstCutFrame = -1;
+        private long loadPeakPrivate = -1;
         private ProfilerRecorder frameAllocations;
 
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
@@ -82,11 +93,16 @@ namespace SomethingDownThere
             for (int i = 0; i + 1 < args.Length; i++)
                 if (args[i] == "-saveProfileSeconds" && int.TryParse(args[i + 1], out int seconds))
                 { sampleSeconds = Mathf.Clamp(seconds, 5, 3600); warmupSeconds = sampleSeconds >= 600 ? 60 : 2; }
+            requireFocus = Array.IndexOf(args, "-saveProfileUnfocused") < 0;
+            // Fresh ground: cuts deepen the untouched plot from the ground plane.
+            workingDepth = 0;
             yield return Open("fresh");
             yield return Measure("fresh", 0.41f);
             yield return SceneManager.UnloadSceneAsync(player.gameObject.scene);
+            workingDepth = 16;
             yield return Open("late");
-            var grid = new ExcavationGrid(terrain.Dimensions, terrain.CellSize);
+            // Seeded materials, as in play, so the checkpoint compresses like a real one.
+            var grid = new ExcavationGrid(terrain.Dimensions, terrain.CellSize, terrain.ExcavationSeed);
             // Many adjoining cavities through three depths, plus an open working layer.
             // Depths are measured from the ground plane so the scenario follows the site
             // when the reservoir gets deeper.
@@ -94,17 +110,65 @@ namespace SomethingDownThere
             for (int x = 0; x < 9; x++)
             for (int y = 0; y < 4; y++)
                 grid.RemoveSphere(new Vector3(2 + x * 2.5f, SurfaceMetres - (2 + y * 3.1f), 2 + z * 2.5f), 1.1f, out _);
+            CarveWorkingRoom(grid);
             yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
             save.RequestCheckpoint();
             while (save.State == WorldSaveState.Saving) yield return null;
             yield return Measure("late", 0.96f);
             save.RequestCheckpoint(); yield return null;
             while (save.State == WorldSaveState.Saving) yield return null;
+            yield return SceneManager.UnloadSceneAsync(player.gameObject.scene);
+            yield return MeasureDeep();
             File.WriteAllText(Path.Combine(evidence, "completed.txt"), DateTime.UtcNow.ToString("u"));
             save.RequestExit();
         }
 
-        private IEnumerator Open(string name)
+        // Heavily dug at full depth: a wide shaft to the floor and chambers at four depths
+        // down to the bottom. The checkpoint is reopened from disk, then digging resumes in a
+        // working room near the floor.
+        private IEnumerator MeasureDeep()
+        {
+            string directory = Path.Combine(evidence, "deep-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
+            workingDepth = 1000;
+            yield return Open("deep", directory);
+            float bottom = SurfaceMetres;
+            workingDepth = bottom - 4;
+            var grid = new ExcavationGrid(terrain.Dimensions, terrain.CellSize, terrain.ExcavationSeed);
+            for (float depth = .5f; depth < bottom - 1.5f; depth += 1.2f)
+                grid.RemoveSphere(new Vector3(12, SurfaceMetres - depth, 8), 1.4f, out _);
+            foreach (float level in new[] { .25f, .5f, .75f })
+                for (int z = 0; z < 7; z++)
+                for (int x = 0; x < 9; x++)
+                for (int y = 0; y < 2; y++)
+                    grid.RemoveSphere(new Vector3(3 + x * 3.3f, SurfaceMetres - level * bottom + y * 2.2f, 3 + z * 3.2f), 1.2f, out _);
+            CarveWorkingRoom(grid);
+            yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
+            save.RequestCheckpoint(); yield return null;
+            while (save.State == WorldSaveState.Saving) yield return null;
+            yield return SceneManager.UnloadSceneAsync(player.gameObject.scene);
+            GC.Collect();
+            yield return Open("deep-reload", directory, true);
+            // First dig after loading, in the bottom working room. The new view renders first,
+            // so its own first frames are not counted as the cut's hitch.
+            for (int i = 0; i < 60; i++) yield return null;
+            long before = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (Cut(.96f)) firstCut = terrain.LastDigMilliseconds;
+            yield return null;
+            firstCutFrame = (System.Diagnostics.Stopwatch.GetTimestamp() - before) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            yield return Measure("deep", 0.96f);
+            save.RequestCheckpoint(); yield return null;
+            while (save.State == WorldSaveState.Saving) yield return null;
+        }
+
+        // An open room whose floor lies at the working depth, under every cut position.
+        private void CarveWorkingRoom(ExcavationGrid grid)
+        {
+            for (float z = 1.5f; z <= 23; z += 1.6f)
+            for (float x = 1.5f; x <= 23; x += 1.6f)
+                grid.RemoveSphere(new Vector3(x, SurfaceMetres - workingDepth + 1.1f, z), 1.2f, out _);
+        }
+
+        private IEnumerator Open(string name, string directory = null, bool timed = false)
         {
             SceneManager.sceneLoaded += Configure;
             yield return SceneManager.LoadSceneAsync("MainGame", LoadSceneMode.Additive);
@@ -114,11 +178,28 @@ namespace SomethingDownThere
             player.enabled = false; player.SetApplicationFocus(true);
             terrain = player.ExcavationTerrain;
             save = player.GetComponent<WorldSaveController>();
-            save.BeginSession(Path.Combine(evidence, name + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")));
-            while (save.State == WorldSaveState.Loading || save.State == WorldSaveState.Saving || save.CompletedSequence == 0) yield return null;
+            long started = System.Diagnostics.Stopwatch.GetTimestamp(), previous = started;
+            double longest = 0; long peak = PrivateBytes();
+            save.BeginSession(directory ?? Path.Combine(evidence, name + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")));
+            while (save.State == WorldSaveState.Loading || save.State == WorldSaveState.Saving || save.CompletedSequence == 0)
+            {
+                if (save.State == WorldSaveState.LoadFailed) throw new IOException(save.ErrorDetail);
+                yield return null;
+                long now = System.Diagnostics.Stopwatch.GetTimestamp();
+                longest = Math.Max(longest, (now - previous) * 1000.0 / System.Diagnostics.Stopwatch.Frequency);
+                previous = now;
+                peak = Math.Max(peak, PrivateBytes());
+            }
+            if (timed)
+            {
+                loadMilliseconds = (System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                loadLongestFrame = longest; loadPeakPrivate = peak;
+            }
             player.CloseMenu();
-            player.ViewCamera.transform.position = terrain.transform.TransformPoint(new Vector3(12, SurfaceMetres - 17, 5));
-            player.ViewCamera.transform.LookAt(terrain.transform.TransformPoint(new Vector3(12, SurfaceMetres - 22, 12)));
+            // Inside the working room (or just above fresh ground), looking across its floor.
+            float view = Mathf.Min(workingDepth, SurfaceMetres - 6);
+            player.ViewCamera.transform.position = terrain.transform.TransformPoint(new Vector3(12, SurfaceMetres - view + 1.5f, 3));
+            player.ViewCamera.transform.LookAt(terrain.transform.TransformPoint(new Vector3(12, SurfaceMetres - view, 14)));
             cutIndex = 0;
         }
 
@@ -133,7 +214,7 @@ namespace SomethingDownThere
         {
             // A hidden/occluded DX12 window can skip rendering and run thousands of
             // empty frames per second. Begin only after the review window is active.
-            while (!Application.isFocused) yield return null;
+            while (requireFocus && !Application.isFocused) yield return null;
             player.SetApplicationFocus(true);
             player.CloseMenu();
             var frames = new List<double>(160000); var captures = new List<double>(); var captureFrames = new List<double>();
@@ -142,7 +223,9 @@ namespace SomethingDownThere
             var flushes = new List<double>(); var replacements = new List<double>(); var checkpoints = new List<double>(); var durability = new List<double>();
             var report = new Report { scenario = name, utc = DateTime.UtcNow.ToString("u"), hardware = SystemInfo.processorType,
                 graphics = SystemInfo.graphicsDeviceName, os = SystemInfo.operatingSystem, width = Screen.width, height = Screen.height,
-                sampleSeconds = sampleSeconds, warmupSeconds = warmupSeconds };
+                sampleSeconds = sampleSeconds, warmupSeconds = warmupSeconds, workingDepth = workingDepth,
+                loadMilliseconds = loadMilliseconds, loadLongestFrameMilliseconds = loadLongestFrame, loadPeakPrivateBytes = loadPeakPrivate,
+                firstCutMilliseconds = firstCut, firstCutFrameMilliseconds = firstCutFrame };
             double started = Time.realtimeSinceStartupAsDouble, nextCut = started, nextTransaction = started + 4, nextMemory = started;
             long captureCount = save.CaptureCount, sequence = save.CompletedSequence, copied = terrain.SnapshotCopiedBytes;
             bool previousCut = false;
@@ -220,7 +303,7 @@ namespace SomethingDownThere
         private bool Cut(float radius)
         {
             int index = cutIndex++ % 256;
-            Vector3 origin = terrain.transform.TransformPoint(new Vector3(2 + index % 16 * 1.3f, SurfaceMetres - 18, 2 + index / 16 * 1.3f));
+            Vector3 origin = terrain.transform.TransformPoint(new Vector3(2 + index % 16 * 1.3f, SurfaceMetres - workingDepth + 1.2f, 2 + index / 16 * 1.3f));
             int count = Physics.RaycastNonAlloc(origin, Vector3.down, hits, 20);
             for (int i = 0; i < count; i++)
                 if (hits[i].collider.GetComponentInParent<TerrainVolume>() == terrain)

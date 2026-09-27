@@ -27,9 +27,6 @@ namespace SomethingDownThere
             // core band, the rest scatter through MinDepth..MaxDepth for variety. Zero share
             // keeps the legacy single-band rule.
             public float CoreMinDepth, CoreMaxDepth, CoreShare;
-            // Additional lower-reservoir finds, separate from the early progression bands.
-            public int DeepCount;
-            public float DeepMinDepth, DeepMaxDepth;
             public bool LayOnSide, RandomOrientation;
             public int AppearanceCount => 1 + (AppearanceVariants?.Length ?? 0);
             public BuriedFind Appearance(int index) => index == 0 ? Prefab : AppearanceVariants[index - 1];
@@ -79,11 +76,6 @@ namespace SomethingDownThere
                     || (e.CoreShare > 0 && (e.CoreMinDepth < e.MinDepth || e.CoreMaxDepth > e.MaxDepth
                         || e.CoreMaxDepth <= e.CoreMinDepth)))
                     throw new InvalidDataException("Invalid discovery core band.");
-                if (e.DeepCount < 0 || e.DeepCount > e.Count - e.ShallowCount
-                    || !ExcavationGrid.Finite(e.DeepMinDepth) || !ExcavationGrid.Finite(e.DeepMaxDepth)
-                    || e.DeepMinDepth < 0 || e.DeepMaxDepth < 0
-                    || (e.DeepCount > 0 && (e.DeepMinDepth < e.MaxDepth || e.DeepMaxDepth <= e.DeepMinDepth)))
-                    throw new InvalidDataException("Invalid discovery deep allocation.");
                 if (e.Prefab.Kind == DiscoveryKind.Unique && (!e.AuthoredPlacement || e.Count != 1 || e.ShallowCount != 0
                     || e.Prefab.Recovery != RecoveryMethod.Rope || e.Prefab.SaleValue != 0 || !e.Prefab.DetectorEligible || !e.Prefab.HasLore))
                     throw new InvalidDataException("Invalid unique discovery policy.");
@@ -138,22 +130,13 @@ namespace SomethingDownThere
             // The dense core holds the identity of a type's depth; the wider band scatters
             // the few outliers that keep every layer from reading as a recipe.
             var coreLeft = new int[Entries.Length];
-            var deepLeft = new int[Entries.Length];
             for (int i = 0; i < coreLeft.Length; i++)
-            {
-                deepLeft[i] = Entries[i].DeepCount;
-                coreLeft[i] = Mathf.RoundToInt((Entries[i].Count - Entries[i].ShallowCount - deepLeft[i]) * Entries[i].CoreShare);
-            }
+                coreLeft[i] = Mathf.RoundToInt((Entries[i].Count - Entries[i].ShallowCount) * Entries[i].CoreShare);
             for (int i = 0; i < bands.Length; i++)
             {
                 var entry = Entries[shallow[i]];
                 covers[i] = new Vector2(entry.ShallowMinCover, entry.ShallowMaxCover);
-                if (i >= ShallowCount && deepLeft[shallow[i]] > 0)
-                {
-                    bands[i] = new Vector2(entry.DeepMinDepth, entry.DeepMaxDepth);
-                    deepLeft[shallow[i]]--;
-                }
-                else if (i >= ShallowCount && coreLeft[shallow[i]] > 0)
+                if (i >= ShallowCount && coreLeft[shallow[i]] > 0)
                 {
                     bands[i] = new Vector2(entry.CoreMinDepth, entry.CoreMaxDepth);
                     coreLeft[shallow[i]]--;

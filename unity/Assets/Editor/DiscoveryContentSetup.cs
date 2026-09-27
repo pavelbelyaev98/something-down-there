@@ -29,8 +29,6 @@ namespace SomethingDownThere.Editor
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
-            public int deep_instances;
-            public float deep_minimum_depth_m, deep_maximum_depth_m;
             // Authored shrink applied to the prefab: smaller finds read as ordinary junk and
             // their soil envelope shrinks with them, so the entry layer holds more of them.
             public float model_scale;

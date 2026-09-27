@@ -30,9 +30,6 @@ MonoBehaviour:
     CoreMinDepth: 0.72
     CoreMaxDepth: 4.5
     CoreShare: 0.92
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_coal
@@ -50,9 +47,6 @@ MonoBehaviour:
     CoreMinDepth: 1
     CoreMaxDepth: 5.5
     CoreShare: 0.9
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_copper
@@ -61,18 +55,15 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 4582630098943393868, guid: 639e718224a86954693289508c116355, type: 3}
     AppearanceVariants: []
-    Count: 458
+    Count: 1280
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
     MinDepth: 1.1
-    MaxDepth: 24
-    CoreMinDepth: 1.1
-    CoreMaxDepth: 14
-    CoreShare: 0.9
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
+    MaxDepth: 60
+    CoreMinDepth: 5
+    CoreMaxDepth: 27
+    CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_iron
@@ -81,18 +72,15 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 2564259689525694727, guid: 5da72b4cede10d64897000d7646f75de, type: 3}
     AppearanceVariants: []
-    Count: 436
+    Count: 1280
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
-    MinDepth: 1.1
-    MaxDepth: 27
-    CoreMinDepth: 6
-    CoreMaxDepth: 18
-    CoreShare: 0.88
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
+    MinDepth: 3
+    MaxDepth: 80
+    CoreMinDepth: 25
+    CoreMaxDepth: 47
+    CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_silver
@@ -101,18 +89,15 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1723953362618204297, guid: 9f59f9736d541ed4f8f663f9891e3d39, type: 3}
     AppearanceVariants: []
-    Count: 438
+    Count: 1400
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
-    MinDepth: 1.1
-    MaxDepth: 28
-    CoreMinDepth: 10
-    CoreMaxDepth: 22
-    CoreShare: 0.88
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
+    MinDepth: 3
+    MaxDepth: 100
+    CoreMinDepth: 45
+    CoreMaxDepth: 69
+    CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_gold
@@ -121,18 +106,15 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 5887150894810649546, guid: 9a260e874716482448f1cedad8255236, type: 3}
     AppearanceVariants: []
-    Count: 1038
+    Count: 1510
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
-    MinDepth: 1.1
-    MaxDepth: 31.2
-    CoreMinDepth: 14
-    CoreMaxDepth: 26
-    CoreShare: 0.88
-    DeepCount: 600
-    DeepMinDepth: 31.2
-    DeepMaxDepth: 99.2
+    MinDepth: 4
+    MaxDepth: 125
+    CoreMinDepth: 67
+    CoreMaxDepth: 93
+    CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_emerald
@@ -141,18 +123,15 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 6329973060314555801, guid: eb556f9a02aa83940a9607a270da09d2, type: 3}
     AppearanceVariants: []
-    Count: 1270
+    Count: 1400
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
-    MinDepth: 1.1
-    MaxDepth: 31.2
-    CoreMinDepth: 18
-    CoreMaxDepth: 31.2
-    CoreShare: 0.9
-    DeepCount: 800
-    DeepMinDepth: 31.2
-    DeepMaxDepth: 99.2
+    MinDepth: 6
+    MaxDepth: 149.2
+    CoreMinDepth: 91
+    CoreMaxDepth: 115
+    CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_ruby
@@ -161,18 +140,15 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 8312464020256252658, guid: 715919f0cdfaaae458c2b25297e021cd, type: 3}
     AppearanceVariants: []
-    Count: 1142
+    Count: 1160
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
-    MinDepth: 1.1
-    MaxDepth: 31.2
-    CoreMinDepth: 22
-    CoreMaxDepth: 31.2
+    MinDepth: 8
+    MaxDepth: 149.2
+    CoreMinDepth: 113
+    CoreMaxDepth: 133
     CoreShare: 0.86
-    DeepCount: 800
-    DeepMinDepth: 31.2
-    DeepMaxDepth: 99.2
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: mineral_diamond
@@ -181,23 +157,20 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 8911235515186892685, guid: 1527e65ddc4f4224eb30348e8930992d, type: 3}
     AppearanceVariants: []
-    Count: 1002
+    Count: 1060
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
-    MinDepth: 1.1
-    MaxDepth: 31.2
-    CoreMinDepth: 26
-    CoreMaxDepth: 31.2
-    CoreShare: 0.82
-    DeepCount: 800
-    DeepMinDepth: 31.2
-    DeepMaxDepth: 99.2
+    MinDepth: 10
+    MaxDepth: 149.2
+    CoreMinDepth: 131
+    CoreMaxDepth: 149.2
+    CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
   - ItemId: unique_reservoir_computer
     AuthoredPlacement: 1
-    AuthoredPosition: {x: 19.5, y: 92, z: 4.7}
+    AuthoredPosition: {x: 19.5, y: 142, z: 4.7}
     AuthoredEuler: {x: 0, y: 202, z: 0}
     Prefab: {fileID: 4858402737689321270, guid: 52f21077ee0957a4bab37a54275e22b1, type: 3}
     AppearanceVariants: []
@@ -210,14 +183,11 @@ MonoBehaviour:
     CoreMinDepth: 0
     CoreMaxDepth: 0
     CoreShare: 0
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
     LayOnSide: 0
     RandomOrientation: 0
   - ItemId: unique_survey_computer
     AuthoredPlacement: 1
-    AuthoredPosition: {x: 13, y: 86.5, z: 11}
+    AuthoredPosition: {x: 13, y: 136.5, z: 11}
     AuthoredEuler: {x: 0, y: 115, z: 0}
     Prefab: {fileID: 97574190163249461, guid: c097a0c3b3ebd114789c2bc36f3db39d, type: 3}
     AppearanceVariants: []
@@ -230,14 +200,11 @@ MonoBehaviour:
     CoreMinDepth: 0
     CoreMaxDepth: 0
     CoreShare: 0
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
     LayOnSide: 0
     RandomOrientation: 0
   - ItemId: unique_pump_computer
     AuthoredPlacement: 1
-    AuthoredPosition: {x: 24, y: 79, z: 18}
+    AuthoredPosition: {x: 24, y: 129, z: 18}
     AuthoredEuler: {x: 0, y: -25, z: 0}
     Prefab: {fileID: 702247101548400612, guid: eae2cfa669b13534f83b4157be510223, type: 3}
     AppearanceVariants: []
@@ -250,8 +217,5 @@ MonoBehaviour:
     CoreMinDepth: 0
     CoreMaxDepth: 0
     CoreShare: 0
-    DeepCount: 0
-    DeepMinDepth: 0
-    DeepMaxDepth: 0
     LayOnSide: 0
     RandomOrientation: 0

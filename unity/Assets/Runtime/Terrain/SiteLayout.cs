@@ -9,7 +9,7 @@ namespace SomethingDownThere
     public static class SiteLayout
     {
         public const float CellSize = 0.125f;
-        public const int DepthCells = 800;
+        public const int DepthCells = 1200;
         // East-west is wider than north-south; the grid stays inside the save sample budget.
         public const int WidthCells = 288;
         public const int LengthCells = 208;
