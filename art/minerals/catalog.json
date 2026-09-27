@@ -31,7 +31,13 @@
         "BaseColor": "coal/BaseColor.png",
         "Normal": "coal/Normal.png",
         "Masks": "coal/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_copper",
@@ -63,7 +69,13 @@
         "BaseColor": "copper/BaseColor.png",
         "Normal": "copper/Normal.png",
         "Masks": "copper/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_iron",
@@ -95,7 +107,13 @@
         "BaseColor": "iron/BaseColor.png",
         "Normal": "iron/Normal.png",
         "Masks": "iron/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_silver",
@@ -127,7 +145,13 @@
         "BaseColor": "silver/BaseColor.png",
         "Normal": "silver/Normal.png",
         "Masks": "silver/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_gold",
@@ -159,7 +183,13 @@
         "BaseColor": "gold/BaseColor.png",
         "Normal": "gold/Normal.png",
         "Masks": "gold/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_emerald",
@@ -191,7 +221,13 @@
         "BaseColor": "emerald/BaseColor.png",
         "Normal": "emerald/Normal.png",
         "Masks": "emerald/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_ruby",
@@ -223,7 +259,13 @@
         "BaseColor": "ruby/BaseColor.png",
         "Normal": "ruby/Normal.png",
         "Masks": "ruby/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     },
     {
       "content_id": "mineral_diamond",
@@ -255,7 +297,13 @@
         "BaseColor": "diamond/BaseColor.png",
         "Normal": "diamond/Normal.png",
         "Masks": "diamond/Masks.png"
-      }
+      },
+      "host_grounds": [
+        "rock"
+      ],
+      "host_weights": [
+        3
+      ]
     }
   ]
 }

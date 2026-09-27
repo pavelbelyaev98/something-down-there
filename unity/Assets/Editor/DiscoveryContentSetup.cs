@@ -29,11 +29,30 @@ namespace SomethingDownThere.Editor
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
+            // Host ground: family names (soil, clay, rock, gravel, concrete, pond_clay, ...) and a
+            // density weight for each (unlisted ground is 1).
+            public string[] host_grounds;
+            public float[] host_weights;
             // Authored shrink applied to the prefab: smaller finds read as ordinary junk and
             // their soil envelope shrinks with them, so the entry layer holds more of them.
             public float model_scale;
             public Maps textures;
         }
+
+        // Concept 03 §4 host ground. Every roster names it: rubbish and plain rocks soil; coins,
+        // tokens, beads and marbles gravel; bones and organics clay (and pond clay); ore rock;
+        // waterworks and village items concrete. No names means an unbiased type.
+        internal static TerrainMaterialId[] HostGrounds(string[] names, float[] weights)
+        {
+            if (names == null || names.Length == 0) return Array.Empty<TerrainMaterialId>();
+            if (weights == null || weights.Length != names.Length || weights.Any(w => !float.IsFinite(w) || w < 1))
+                throw new InvalidDataException("Each host ground needs a weight of at least 1.");
+            return names.Select(name => Enum.TryParse<TerrainMaterialId>(name.Replace("_", ""), true, out var id) && id <= TerrainMaterialSnapshot.Last
+                ? id : throw new InvalidDataException("Unknown host ground: " + name)).ToArray();
+        }
+
+        internal static float[] HostWeights(string[] names, float[] weights)
+            => names == null || names.Length == 0 ? Array.Empty<float>() : (float[])weights.Clone();
 
         [MenuItem("Tools/Something Down There/Sync Discovery Models")]
         public static void Sync()

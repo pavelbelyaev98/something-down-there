@@ -141,6 +141,7 @@ namespace SomethingDownThere
         public bool IsSolid(Vector3 worldPoint) => grid != null && grid.IsSolid(transform.InverseTransformPoint(worldPoint));
         public float SignedDensity(Vector3 worldPoint) => grid != null ? grid.Sample(transform.InverseTransformPoint(worldPoint)) : 0;
         public TerrainMaterialId MaterialAt(Vector3 worldPoint) => grid.MaterialAt(transform.InverseTransformPoint(worldPoint));
+        internal TerrainMaterialId MaterialAtLocal(Vector3 point) => grid.MaterialAt(point);
         public TerrainMaterialId ToolMaterialAt(RaycastHit hit)
         {
             Vector3 surface = transform.InverseTransformPoint(hit.point);

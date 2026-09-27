@@ -17,6 +17,12 @@
   "required_exposure": 0.6,
   "mass_kg": 12,
   "throw_speed": 4,
+  "host_grounds": [
+    "soil"
+  ],
+  "host_weights": [
+    3
+  ],
   "appearances": [
     {
       "content_id": "common_rock_a",

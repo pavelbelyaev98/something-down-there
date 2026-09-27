@@ -20,7 +20,8 @@
   entering beneath them; below it one ore ladder spans the whole depth at a roughly constant find
   rate, each type's core band following the zones (copper and iron in the recent fill, silver and
   gold in the sediment, emerald and ruby in the deep stone, diamond at the bottom) with thin scatter
-  both ways.
+  both ways. Host ground (source-catalog weights per ground family) makes a type denser in its host
+  than in other ground at the same depth: ore in rock and rock masses, plain rocks in soil.
   Placement uses enclosing spheres around actual visual/collision vertices with shallow soil
   cover; banded placement picks a target depth before searching nearby lateral positions, so
   each band stays populated from its top. On the shipped site, find centres lie beneath the dig

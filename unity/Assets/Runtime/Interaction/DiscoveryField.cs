@@ -164,7 +164,7 @@ namespace SomethingDownThere
                 return;
             }
             var extent = (Vector3)terrain.Dimensions * terrain.CellSize;
-            var placements = catalog != null ? catalog.Generate(extent, seed) : Generate(extent, count, seed);
+            var placements = catalog != null ? catalog.Generate(extent, seed, terrain.MaterialAtLocal) : Generate(extent, count, seed);
             for (int i = 0; i < placements.Length; i++)
             {
                 var placement = placements[i];
@@ -219,6 +219,8 @@ namespace SomethingDownThere
         // Safety bound for saves, snapshot validation and the serialized count range.
         // The authored site population lives in the discovery catalog.
         public const int MaximumPopulation = 16384;
+        // Distinct host weights one find's candidates can fall into (unlisted ground plus hosts).
+        private const int MaximumHostLevels = 6;
         public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed)
             => Generate(extent, total, placementSeed, Math.Min(total, 24));
 
@@ -234,7 +236,11 @@ namespace SomethingDownThere
             => Generate(extent, total, placementSeed, shallowCount, radii, depthBands, null);
 
         // A footprint (grid-local XZ) limits candidates to where the player can dig; see SiteLayout.
-        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null)
+        // Host weight (placement index, grid-local position) groups each find's lateral candidates
+        // (DiscoveryCatalog host ground). A group is chosen in proportion to weight x candidates
+        // seen, so density follows the weight at the same depth; spread ranking then picks
+        // inside the group. Depths never move.
+        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null, Func<int, Vector3, float> hostWeight = null)
         {
             if (!ExcavationGrid.Finite(extent.x) || !ExcavationGrid.Finite(extent.y) || !ExcavationGrid.Finite(extent.z)
                 || extent.x < 8 || extent.y < 4 || extent.z < 8 || total < 1 || total > MaximumPopulation
@@ -253,6 +259,8 @@ namespace SomethingDownThere
             var random = new System.Random(placementSeed);
             var result = new DiscoveryPlacement[total];
             var targetDepths = DepthTargets(depthBands, shallowCount, extent.y, placementSeed);
+            var levelWeight = new float[MaximumHostLevels]; var levelSeen = new int[MaximumHostLevels];
+            var levelBest = new Vector3[MaximumHostLevels]; var levelSpread = new float[MaximumHostLevels];
             // Neighbourhood index: clearance is answered from the immediate cells, the
             // best-candidate spread metric from the closest occupied shell around them.
             var grid = new PlacementGrid(extent, MinimumSpacing + .001f, total + (reserved?.Length ?? 0));
@@ -279,7 +287,7 @@ namespace SomethingDownThere
                 // A packed entry carpet accepts the best of a few clear candidates; wide
                 // banded types keep the 64-candidate spread so no band reads as a recipe.
                 int refinement = shallow ? 8 : 64;
-                int outside = 0;
+                int outside = 0, levels = 0;
                 for (int attempt = 0; attempt < maxAttempts && (!placed || ((shallow || banded) && attempt < refinement)); attempt++)
                 {
                     // The first finds lie a few metres in from the camp side, measured from the site centre.
@@ -307,11 +315,32 @@ namespace SomethingDownThere
                         : i < shallowCount + 36 ? Range(1.2f, Mathf.Min(3.5f, extent.y - 0.8f))
                         : Range(2.5f, extent.y - 0.8f);
                     var position = new Vector3(x, extent.y - depth, z);
+                    int level = 0;
+                    if (hostWeight != null)
+                    {
+                        float weight = hostWeight(i, position);
+                        while (level < levels && levelWeight[level] != weight) level++;
+                        if (level == levels && levels < MaximumHostLevels) { levelWeight[level] = weight; levelSeen[level] = 0; levelSpread[level] = -1; levels++; }
+                        level = Math.Min(level, levels - 1);
+                        levelSeen[level]++;
+                    }
                     grid.Evaluate(position, radii == null ? -1f : radii[i], banded, out bool clear, out float nearest);
-                    if (!clear || nearest <= bestDistance) continue;
+                    if (!clear) continue;
+                    if (hostWeight != null && nearest > levelSpread[level]) { levelSpread[level] = nearest; levelBest[level] = position; }
+                    if (nearest <= bestDistance) continue;
                     placed = true;
                     bestDistance = nearest;
                     best = position;
+                }
+                // Mixed ground only: all-host layouts draw nothing, keeping their stream.
+                if (placed && levels > 1)
+                {
+                    double sum = 0;
+                    for (int l = 0; l < levels; l++) sum += levelWeight[l] * levelSeen[l];
+                    double pick = random.NextDouble() * sum;
+                    int chosen = 0;
+                    while (chosen < levels - 1 && (pick -= levelWeight[chosen] * levelSeen[chosen]) >= 0) chosen++;
+                    if (levelSpread[chosen] >= 0) best = levelBest[chosen];
                 }
                 if (!placed) throw new InvalidOperationException($"The discovery density is too high for this site (placement {i + 1}/{total}, seed {placementSeed}, depth {bandDepth:F2}).");
                 grid.Add(i, best, radii == null ? MaximumFindRadius : radii[i]);

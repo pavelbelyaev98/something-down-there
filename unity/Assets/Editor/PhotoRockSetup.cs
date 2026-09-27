@@ -18,6 +18,8 @@ namespace SomethingDownThere.Editor
             public string item_id, display_name;
             public float required_exposure, mass_kg, throw_speed, minimum_depth_m, maximum_depth_m;
             public float core_minimum_depth_m, core_maximum_depth_m, core_share;
+            public string[] host_grounds;
+            public float[] host_weights;
             public float model_scale;
             public float shallow_minimum_cover_m, shallow_maximum_cover_m;
             public DiscoveryContentSetup.SourceEntry[] appearances;
@@ -66,6 +68,7 @@ namespace SomethingDownThere.Editor
                 ShallowMinCover = source.shallow_minimum_cover_m, ShallowMaxCover = source.shallow_maximum_cover_m,
                 MaxDepth = source.maximum_depth_m, CoreMinDepth = source.core_minimum_depth_m,
                 CoreMaxDepth = source.core_maximum_depth_m, CoreShare = source.core_share,
+                HostGrounds = DiscoveryContentSetup.HostGrounds(source.host_grounds, source.host_weights), HostWeights = DiscoveryContentSetup.HostWeights(source.host_grounds, source.host_weights),
                 RandomOrientation = true });
         }
     }

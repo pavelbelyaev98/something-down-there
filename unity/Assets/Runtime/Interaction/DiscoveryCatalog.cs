@@ -28,6 +28,11 @@ namespace SomethingDownThere
             // keeps the legacy single-band rule.
             public float CoreMinDepth, CoreMaxDepth, CoreShare;
             public bool LayOnSide, RandomOrientation;
+            // Host ground (concept 03 §4): at the same depth, ground listed here carries its weight
+            // times the find density of unlisted ground (weight 1). Soft bias with scatter; the
+            // depth bands and prices never change.
+            public TerrainMaterialId[] HostGrounds = Array.Empty<TerrainMaterialId>();
+            public float[] HostWeights = Array.Empty<float>();
             public int AppearanceCount => 1 + (AppearanceVariants?.Length ?? 0);
             public BuriedFind Appearance(int index) => index == 0 ? Prefab : AppearanceVariants[index - 1];
             public float PlacementRadius
@@ -81,6 +86,10 @@ namespace SomethingDownThere
                     throw new InvalidDataException("Invalid unique discovery policy.");
                 if (e.AuthoredPlacement && (e.Count != 1 || e.ShallowCount != 0 || !WorldSnapshot.Valid(e.AuthoredPosition) || !WorldSnapshot.Valid(e.AuthoredEuler)))
                     throw new InvalidDataException("Invalid authored discovery placement.");
+                if ((e.HostGrounds?.Length ?? 0) != (e.HostWeights?.Length ?? 0)
+                    || (e.HostGrounds != null && Array.Exists(e.HostGrounds, g => g > TerrainMaterialSnapshot.Last))
+                    || (e.HostWeights != null && Array.Exists(e.HostWeights, w => !ExcavationGrid.Finite(w) || w < 1)))
+                    throw new InvalidDataException("Invalid discovery host ground.");
                 shallow += e.ShallowCount;
                 if (!ExcavationGrid.Finite(e.ShallowMinCover) || !ExcavationGrid.Finite(e.ShallowMaxCover)
                     || e.ShallowMinCover < 0 || e.ShallowMaxCover < 0
@@ -111,7 +120,8 @@ namespace SomethingDownThere
             throw new InvalidDataException("This save needs discovery content missing from this game version.");
         }
 
-        public DiscoveryPlacement[] Generate(Vector3 extent, int seed)
+        // ground: grid-local material sampler (the excavation's immutable field); null ignores host ground.
+        public DiscoveryPlacement[] Generate(Vector3 extent, int seed, Func<Vector3, TerrainMaterialId> ground = null)
         {
             Validate();
             var shallow = new List<int>(); var remaining = new List<int>();
@@ -156,8 +166,16 @@ namespace SomethingDownThere
                 reserved.Add(new DiscoveryReservation(p,entryRadii[i]));
                 authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
             }
+            Func<int, Vector3, float> weight = null;
+            if (ground != null)
+                weight = (i, position) =>
+                {
+                    var entry = Entries[shallow[i]];
+                    return entry.HostGrounds == null || entry.HostGrounds.Length == 0 ? 1
+                        : HostWeight(entry.HostGrounds, entry.HostWeights, ground, position, radii[i]);
+                };
             var layout = DiscoveryField.Generate(extent, shallow.Count, seed, ShallowCount, radii, bands, covers, reserved.ToArray(),
-                SiteLayout.FindFootprint(extent));
+                SiteLayout.FindFootprint(extent), weight);
             for (int i = 0; i < layout.Length; i++)
             {
                 int index = shallow[i];
@@ -177,6 +195,25 @@ namespace SomethingDownThere
             }
             var result = new List<DiscoveryPlacement>(layout); result.AddRange(authored); return result.ToArray();
         }
+
+        // The ground at the find's centre decides, except that concrete also counts right beside
+        // its walls (axis probes just past the find's reach): "in and around concrete", since a
+        // find cannot sit inside a thin wall. Rock must not: veins beside rock would read as rock.
+        private static float HostWeight(TerrainMaterialId[] hosts, float[] weights, Func<Vector3, TerrainMaterialId> ground, Vector3 centre, float radius)
+        {
+            int host = Array.IndexOf(hosts, ground(centre));
+            float best = host >= 0 ? weights[host] : 1, reach = radius + .3f;
+            int concrete = Array.IndexOf(hosts, TerrainMaterialId.Concrete);
+            if (concrete >= 0 && weights[concrete] > best)
+                for (int probe = 1; probe < 7; probe++)
+                {
+                    Vector3 offset = (probe & 1) == 0 ? -Axis(probe) * reach : Axis(probe) * reach;
+                    if (ground(centre + offset) == TerrainMaterialId.Concrete) return weights[concrete];
+                }
+            return best;
+        }
+
+        private static Vector3 Axis(int probe) => probe <= 2 ? Vector3.right : probe <= 4 ? Vector3.up : Vector3.forward;
 
         private static void Shuffle(List<int> values, System.Random random)
         {

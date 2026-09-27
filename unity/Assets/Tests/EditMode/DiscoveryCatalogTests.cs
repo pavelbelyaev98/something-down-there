@@ -25,8 +25,18 @@ namespace SomethingDownThere.Tests
         {
             var catalog = Catalog;
             var key = (seed, JsonUtility.ToJson(catalog).GetHashCode());
-            if (!Layouts.TryGetValue(key, out var layout)) Layouts[key] = layout = catalog.Generate(SiteLayout.Extent, seed);
+            if (!Layouts.TryGetValue(key, out var layout)) Layouts[key] = layout = catalog.Generate(SiteLayout.Extent, seed, Ground);
             return layout;
+        }
+
+        // The shipped ground (MainGame's excavation seed), shared by every layout.
+        private const int ExcavationSeed = 2718;
+        private static TerrainMaterialSnapshot site;
+        private static TerrainMaterialSnapshot Site => site ??= TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed);
+        private static TerrainMaterialId Ground(Vector3 local)
+        {
+            var sample = Vector3Int.Min(Vector3Int.Max(Vector3Int.RoundToInt(local / SiteLayout.CellSize), Vector3Int.zero), SiteLayout.Size);
+            return Site[sample.x + (SiteLayout.Size.x + 1) * (sample.y + (SiteLayout.Size.y + 1) * sample.z)];
         }
 
         [TestCase(90127)] [TestCase(12)] [TestCase(991)]
@@ -34,7 +44,7 @@ namespace SomethingDownThere.Tests
         {
             var catalog = Catalog; catalog.Validate();
             var extent = SiteLayout.Extent; var layout = Layout(seed);
-            CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed));
+            CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
             CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
@@ -328,6 +338,48 @@ namespace SomethingDownThere.Tests
             }
         }
 
+        // Concept 03 §4 host ground: where both exist at a depth, host ground holds clearly more of
+        // a type than other ground; every type still turns up outside it (scatter).
+        [TestCase(90127)] [TestCase(12)]
+        public void HostGroundHoldsMoreOfItsTypesWithoutEmptyingOtherGround(int seed)
+        {
+            var catalog = Catalog;
+            var layout = Layout(seed);
+            var ores = catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).Select(e => Array.IndexOf(catalog.Entries, e)).ToArray();
+            int rockIndex = Array.FindIndex(catalog.Entries, e => e.ItemId == "common_rock");
+            Assert.That(catalog.Entries[ores[0]].HostGrounds, Is.EqualTo(new[] { TerrainMaterialId.Rock }));
+            Assert.That(catalog.Entries[rockIndex].HostGrounds, Is.EqualTo(new[] { TerrainMaterialId.Soil }));
+            // Density in and out of the host per depth window: finds per sampled ground volume.
+            float Ratio(int[] types, TerrainMaterialId host, float from, float to, out int outside)
+            {
+                int inHostFinds = 0, otherFinds = 0; long hostSamples = 0, otherSamples = 0;
+                foreach (var p in layout)
+                {
+                    float depth = SiteLayout.Extent.y - p.Position.y;
+                    if (depth < from || depth >= to || Array.IndexOf(types, p.PrefabIndex) < 0) continue;
+                    if (Ground(p.Position) == host) inHostFinds++; else otherFinds++;
+                }
+                for (float z = .5f; z < SiteLayout.Extent.z; z += 1)
+                for (float x = .5f; x < SiteLayout.Extent.x; x += 1)
+                {
+                    if (SiteLayout.BeyondFootprint(new Vector2(SiteLayout.Origin.x + x, SiteLayout.Origin.z + z)) >= 0) continue;
+                    for (float y = SiteLayout.Extent.y - to; y < SiteLayout.Extent.y - from; y += .5f)
+                        if (Ground(new Vector3(x, y, z)) == host) hostSamples++; else otherSamples++;
+                }
+                outside = otherFinds;
+                Assert.That(hostSamples, Is.GreaterThan(0));
+                return (inHostFinds / (float)hostSamples) / Mathf.Max(1e-6f, otherFinds / (float)otherSamples);
+            }
+            float zone2 = Ratio(ores, TerrainMaterialId.Rock, 40, 73, out int clayOres);
+            float deep = Ratio(ores, TerrainMaterialId.Rock, 78, 149, out int veinOres);
+            float plain = Ratio(new[] { rockIndex }, TerrainMaterialId.Soil, 2.5f, 14, out int gravelRocks);
+            Debug.Log($"Seed {seed}: ore in zone-2 rock masses x{zone2:F1}, ore in deep rock x{deep:F1}, plain rocks in soil x{plain:F1}");
+            Assert.That(zone2, Is.GreaterThan(2), "Rock masses in the clay hold more ore.");
+            Assert.That(deep, Is.GreaterThan(2), "Deep ore favours rock over the clay veins.");
+            Assert.That(plain, Is.GreaterThan(1.5f), "Plain rocks favour soil over gravel lenses.");
+            Assert.That(clayOres, Is.GreaterThan(0)); Assert.That(veinOres, Is.GreaterThan(0)); Assert.That(gravelRocks, Is.GreaterThan(0));
+        }
+
         [Test]
         public void ImpossibleShallowDensityFailsWithinABoundedSearch()
         {
@@ -341,13 +393,13 @@ namespace SomethingDownThere.Tests
             var catalog = UnityEngine.Object.Instantiate(Catalog);
             try
             {
-                var accepted = catalog.Generate(SiteLayout.Extent, 90127).Take(catalog.ShallowCount).ToArray();
+                var accepted = catalog.Generate(SiteLayout.Extent, 90127, Ground).Take(catalog.ShallowCount).ToArray();
                 foreach (var entry in catalog.Entries)
                 {
                     if (entry.AuthoredPlacement) continue;
                     entry.Count = entry.ShallowCount + (entry.Count - entry.ShallowCount) / 2;
                 }
-                CollectionAssert.AreEqual(accepted, catalog.Generate(SiteLayout.Extent, 90127).Take(catalog.ShallowCount));
+                CollectionAssert.AreEqual(accepted, catalog.Generate(SiteLayout.Extent, 90127, Ground).Take(catalog.ShallowCount));
             }
             finally { UnityEngine.Object.DestroyImmediate(catalog); }
         }
@@ -382,9 +434,9 @@ namespace SomethingDownThere.Tests
         {
             var catalog = Catalog;
             var extent = SiteLayout.Extent;
-            catalog.Generate(extent, 90127); // warm meshes, JIT and the placement grid
+            catalog.Generate(extent, 90127, Ground); // warm meshes, JIT, the placement grid and the ground
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            var layout = catalog.Generate(extent, 12);
+            var layout = catalog.Generate(extent, 12, Ground);
             watch.Stop();
             Debug.Log($"Full population placement: {watch.Elapsed.TotalMilliseconds:F0} ms for {layout.Length} finds.");
             Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount));
