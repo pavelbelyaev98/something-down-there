@@ -2,7 +2,7 @@
 
 Next: **026 — Sticky C4 Charges & Material Reactions** (after the Ground Lab playtest settles the grounds); `099` waits on its [playtest](playtests/099-disturbed-ground-odd-spots-detector-test.md). Playtests you still owe: [docs/playtests/](playtests/). Queue order is priority; completed decisions live in [completed specs](tasks/completed/). Follow [AGENTS.md](../AGENTS.md) for task specs and completion. Each entry states the goal, the intended feel and the constraints; the reasoning lives in the linked concept sections, and the full spec is written when the task starts.
 
-Standing decisions: the HUD detector is **frozen** (kept as built, no new features, nothing new may depend on it) until `099` decides its fate. Seam cleaving (`009`) and the bladder release (`076`) were dropped, and hard pockets (`010`) became ground places inside `006`; reasons are in [Closed ideas](concept/13_OPEN_QUESTIONS.md#closed-ideas). Research evidence behind the rules: [`.research/`](../.research/README.md).
+Standing decisions: **no new 3D models for now** (user, 2026-09-28): tasks that need new models wait, model-free work goes first, and existing art is reused where a task needs visuals. The HUD detector is **frozen** (kept as built, no new features, nothing new may depend on it) until `099` decides its fate. Seam cleaving (`009`) and the bladder release (`076`) were dropped, and hard pockets (`010`) became ground places inside `006`; reasons are in [Closed ideas](concept/13_OPEN_QUESTIONS.md#closed-ideas). Research evidence behind the rules: [`.research/`](../.research/README.md).
 
 ## Phase 1 — Ground that matters
 
