@@ -1,6 +1,7 @@
 # Playtest 097 — Gravel Channels & the Pour
 
 **Build & start:** current build, New Game.
+Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
 ## Try
 - Near the plot centre, a few metres down, find the first gravel channel and follow it sideways.

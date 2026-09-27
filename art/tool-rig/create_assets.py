@@ -134,9 +134,10 @@ box('L01_GripSideL__Wood', (-.05, 0, .045), (.018, .022, .09))
 box('L01_GripSideR__Wood', (.05, 0, .045), (.018, .022, .09))
 cylinder('L01_Socket__Steel', (0, 0, .8), (0, 0, .9), .021, .03)
 blade('L01-02_Blade__Steel', .88, 1.16, .22, .035)
-# Level 2: taped grip, reinforced edge.
-for i, z in enumerate((.18, .66)):
-    cylinder('L02_Tape' + str(i) + '__Rubber', (0, 0, z), (0, 0, z + .06), .0205)
+# Everything bolts on near the head, the part of the tool the first-person view shows.
+# Level 2: taped shaft, reinforced edge.
+for i, z in enumerate((.2, .74)):
+    cylinder('L02_Tape' + str(i) + '__Rubber', (0, 0, z), (0, 0, z + .05), .0205)
 box('L02-02_Edge__Steel', (0, .006, 1.125), (.12, .01, .014), .002)
 # Level 3: wider blade with bolted side plates.
 blade('L03-06_BladeWide__Steel', .88, 1.17, .29, .045)
@@ -144,43 +145,43 @@ for side in (-1, 1):
     box('L03_SidePlate' + ('L' if side < 0 else 'R') + '__Paint', (side * .148, .035, .99), (.008, .04, .16))
     for z in (.94, 1.04):
         cylinder('L03_Bolt__Steel', (side * .153, .035, z), (side * .158, .035, z), .006, None, 8)
-# Level 4: a small motor and belt on the shaft.
-cylinder('L04_Motor__Paint', (0, -.045, .44), (0, -.045, .56), .031)
-for z in (.46, .49, .52):
+# Level 4: a small motor and belt under the shaft, just behind the head.
+cylinder('L04_Motor__Paint', (0, -.045, .64), (0, -.045, .77), .031)
+for z in (.66, .69, .72):
     cylinder('L04_Fin__Steel', (0, -.045, z), (0, -.045, z + .008), .035)
-tube('L04_Belt__Rubber', [(0, -.035, .56), (0, -.03, .7), (0, -.02, .84)], .005)
+tube('L04_Belt__Rubber', [(0, -.035, .77), (0, -.03, .81), (0, -.02, .86)], .005)
 # Level 5: a strapped-on battery pack and its cable.
-box('L05_Battery__Battery', (0, .045, .32), (.07, .05, .14))
-for z in (.28, .36):
+box('L05_Battery__Battery', (0, .045, .66), (.07, .05, .13))
+for z in (.62, .7):
     box('L05_Strap__Rubber', (0, .03, z), (.078, .085, .014), .002)
-tube('L05_Cable__Cable', [(0, .05, .39), (.035, .03, .42), (.035, -.03, .44), (0, -.045, .445)], .0045)
+tube('L05_Cable__Cable', [(0, .05, .725), (.035, .03, .74), (.035, -.03, .72), (0, -.045, .70)], .0045)
 # Level 6: second battery, pipe frame, head guard.
-box('L06_Battery2__Battery', (.062, .03, .31), (.045, .05, .12))
+box('L06_Battery2__Battery', (.062, .03, .66), (.045, .05, .12))
 for side in (-1, 1):
-    cylinder('L06_Pipe__Steel', (side * .045, .005, .14), (side * .06, .005, .86), .0065)
-box('L06_PipeBrace__Steel', (0, .005, .6), (.13, .01, .012), .002)
+    cylinder('L06_Pipe__Steel', (side * .045, .005, .5), (side * .06, .005, .86), .0065)
+box('L06_PipeBrace__Steel', (0, .005, .8), (.13, .01, .012), .002)
 box('L06_HeadGuard__Paint', (0, .045, .885), (.3, .05, .02))
 # Level 7: the drill. A gearbox at the socket, a shorter scoop head and a spinning bit.
 box('L07_Gearbox__Paint', (0, .005, .84), (.08, .08, .08), .008)
 blade('L07_HeadScoop__Steel', .88, 1.05, .3, .05)
 spin_bit('L07-08_SpinBit__Steel', (0, .03, .96), .26, .03)
 # Level 8: twin motors and welded plates.
-cylinder('L08_Motor2__Paint', (.05, -.04, .42), (.05, -.04, .56), .03)
+cylinder('L08_Motor2__Paint', (.05, -.04, .63), (.05, -.04, .77), .03)
 for side in (-1, 1):
-    box('L08_WeldPlate__DarkSteel', (side * .032, 0, .7), (.008, .05, .22), .002)
-    for z in (.61, .65, .69, .73, .77):
+    box('L08_WeldPlate__DarkSteel', (side * .032, 0, .78), (.008, .05, .12), .002)
+    for z in (.73, .76, .79, .82):
         cylinder('L08_Weld__DarkSteel', (side * .036, .026, z), (side * .036, .026, z + .012), .004, None, 6)
 # Level 9: a bigger bit, a third battery and a cable bundle.
 spin_bit('L09_SpinBitBig__Steel', (0, .035, .95), .34, .045)
-box('L09_Battery3__Battery', (-.062, .03, .31), (.045, .05, .12))
+box('L09_Battery3__Battery', (-.062, .03, .66), (.045, .05, .12))
 for k, x in enumerate((-.012, 0, .012)):
-    tube('L09_Cables' + str(k) + '__Cable', [(x, .075, .26), (x, .06, .5), (x, .05, .75), (x, .045, .82)], .004)
+    tube('L09_Cables' + str(k) + '__Cable', [(x, .075, .6), (x, .06, .7), (x, .05, .78), (x, .045, .83)], .004)
 # Level 10: the nozzle. The shovel has become a cannon.
-cylinder('L10_Nozzle__Paint', (0, .085, .36), (0, .085, 1.0), .036)
+cylinder('L10_Nozzle__Paint', (0, .085, .55), (0, .085, 1.0), .036)
 cylinder('L10_Muzzle__Steel', (0, .085, 1.0), (0, .085, 1.08), .036, .052)
-for z in (.5, .75):
+for z in (.65, .8):
     box('L10_Clamp__DarkSteel', (0, .06, z), (.05, .07, .02), .002)
-tube('L10_Hose__Rubber', [(-.04, .06, .3), (-.06, .09, .33), (-.03, .11, .36), (0, .09, .37)], .009)
+tube('L10_Hose__Rubber', [(-.04, .06, .58), (-.06, .09, .56), (-.03, .11, .54), (0, .09, .55)], .009)
 
 bpy.ops.object.select_all(action='DESELECT')
 for obj in parts: obj.select_set(True)

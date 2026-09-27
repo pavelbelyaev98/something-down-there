@@ -40,27 +40,6 @@ namespace SomethingDownThere
         private Material xrayMaterial;
         public bool XrayEnabled { get; private set; }
 
-        public void SetXray(bool enabled)
-        {
-            if (XrayEnabled == enabled) return;
-            XrayEnabled = enabled;
-            if (enabled && xrayMaterial == null && soilMaterial != null)
-            {
-                xrayMaterial = new Material(soilMaterial) { name = "Transparent excavation ground", hideFlags = HideFlags.DontSave };
-                xrayMaterial.SetFloat("_GroundOpacity", .12f);
-                xrayMaterial.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                xrayMaterial.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                xrayMaterial.SetFloat("_ZWrite", 0);
-                xrayMaterial.SetOverrideTag("RenderType", "Transparent");
-                xrayMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-                xrayMaterial.SetShaderPassEnabled("ShadowCaster", false);
-                xrayMaterial.SetShaderPassEnabled("DepthOnly", false);
-                xrayMaterial.SetShaderPassEnabled("DepthNormalsOnly", false);
-            }
-            foreach (var chunk in chunks.Values) chunk.Renderer.sharedMaterial = CurrentSoilMaterial;
-            if (TryGetComponent<ExcavationDaylight>(out var daylight)) daylight.RefreshShaderState();
-        }
-
         private Material CurrentSoilMaterial => XrayEnabled && xrayMaterial != null ? xrayMaterial : soilMaterial;
         public Vector3Int Dimensions => dimensions;
         public float CellSize => cellSize;

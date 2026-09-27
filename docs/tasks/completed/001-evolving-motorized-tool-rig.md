@@ -1,6 +1,6 @@
 # 001 — Evolving Motorized Tool Rig
 
-**Status:** complete. The tool is an original Blender kit whose parts are named by level range; `ToolRigPresenter` shows it lower right inside the player's capsule (shovel, bolt-on machine, drill at level 7, nozzle cannon at 10), moves only the tool per material family and lowers it away for menus, held finds, placements and recovery marking.
+**Status:** complete. The tool is an original Blender kit whose parts are named by level range; `ToolRigPresenter` shows it rising from the bottom-right corner (head and the bolt-ons clustered behind it: shovel, bolt-on machine, drill at level 7, nozzle cannon at 10), turns only the tool about its socket per material family and lowers it away for menus, held finds, placements and recovery marking.
 
 ## Objective
 
@@ -127,3 +127,13 @@ pickup, aiming or the view, and a purchase changes it instantly.
   compared in `Logs/001-poses.png`; the flatter ones read as a lance with the blade edge-on).
 - Strokes move along the tool axis (toward the ground, never into a wall ahead). Drill spin is
   capped at 70° per frame so the two-flute bit never appears to turn backwards.
+
+## Iteration (playtest 2026-09-27)
+
+- The user found the first pose wrong: the shaft entered from the right edge and its right part sat
+  too high. Like A Game About Digging a Hole, the tool now rises from the bottom-right corner and
+  takes little space: only the head shows. The bolt-ons (motor, batteries, pipes, welds, cables,
+  nozzle) moved up the shaft next to the head so each stage still reads (`Logs/001-poseE.png`).
+- Strokes now turn the tool about its socket (a lever from the far grip swung the head too far).
+- Rejected: the diagonal lance pose across the lower half (`Logs/001-stages.png`), and a roll that
+  turned the blade edge-on (`Logs/001-poseD2.png`).

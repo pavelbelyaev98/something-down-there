@@ -13,7 +13,8 @@ to preview every level.
 - One machine growing ridiculous: shovel, bolted-on motor and batteries, a drill, finally a cannon.
 - Strokes feel different per ground (wide scoop in soil, short bites in clay, hard jabs in rock); the
   drill spins and chatters while cutting; the camera itself never moves.
-- It never covers the crosshair or what you are digging, and never sticks through a wall.
+- It rises from the bottom-right corner and takes little space, like A Game About Digging a Hole;
+  it never covers the crosshair or what you are digging, and never sticks through a wall.
 
 ## Tell the agent
 - Any stage that reads poorly, whether size and placement feel right, whether the motion is too much

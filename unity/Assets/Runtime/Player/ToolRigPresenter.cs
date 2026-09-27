@@ -20,10 +20,12 @@ namespace SomethingDownThere
 
         [SerializeField] private FpsPlayer player;
         [SerializeField] private Transform model;
-        // Lower right, pointing down into the ground with the blade face turned to the view; the tip
-        // stays about 0.3 m from the eye, inside the capsule.
-        private static readonly Vector3 RestPosition = new Vector3(.13f, 0f, .03f), RestEuler = new Vector3(32f, -20f, 35f);
-        private const float ModelScale = .22f;
+        // Rising from the bottom-right corner with the blade face turned to the view; only the head
+        // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
+        private static readonly Vector3 RestPosition = new Vector3(.28f, -.25f, -.05f), RestEuler = new Vector3(-35f, -22f, 6f);
+        private const float ModelScale = .34f;
+        // Strokes turn the tool about its socket, so the head dips instead of the whole shaft swinging.
+        private static readonly Vector3 Pivot = new Vector3(0f, 0f, .9f);
 
         private readonly List<(GameObject part, int from, int to)> parts = new List<(GameObject, int, int)>();
         private readonly List<(Transform part, Quaternion rest)> spinners = new List<(Transform, Quaternion)>();
@@ -91,9 +93,7 @@ namespace SomethingDownThere
             spinAngle = Mathf.Repeat(spinAngle + Mathf.Min(spinSpeed * dt, MaxSpinStep), 360f);
             foreach (var (part, rest) in spinners) part.localRotation = rest * Quaternion.AngleAxis(spinAngle, Vector3.forward);
 
-            Vector3 position = RestPosition, euler = RestEuler;
-            // Strokes travel along the tool itself (down into the ground), never toward a wall ahead.
-            Vector3 along = Quaternion.Euler(RestEuler) * Vector3.forward;
+            Vector3 offset = Vector3.zero, turn = Vector3.zero;
             float power = 1f + .05f * (level - 1);
             if (stroke < 1f)
             {
@@ -103,31 +103,34 @@ namespace SomethingDownThere
                 switch (family)
                 {
                     case MotionFamily.Scoop:
-                        position += along * (.03f * reach * jab) + Vector3.down * (sink ? .008f * jab : 0f);
-                        euler += new Vector3(8f * scoop, 0f, -6f * jab);
+                        offset = new Vector3(-.004f, -.022f * (sink ? 1.4f : 1f), .012f) * (jab * reach);
+                        turn = new Vector3(14f * jab + 6f * scoop, 0f, -6f * jab);
                         break;
                     case MotionFamily.Bite:
-                        position += along * (.024f * reach * jab);
-                        euler += new Vector3(5f * jab, 0f, 0f);
+                        offset = new Vector3(0f, -.012f, .012f) * (jab * reach);
+                        turn = new Vector3(8f * jab, 0f, 0f);
                         break;
                     default:
                         float shudder = Mathf.Sin(stroke * 38f) * (1f - stroke);
-                        position += along * (.016f * reach * jab) + new Vector3(.002f, .002f, 0f) * shudder;
-                        euler += new Vector3(4f * jab + 1.5f * shudder, 0f, 0f);
+                        offset = new Vector3(0f, -.01f, .008f) * (jab * reach) + new Vector3(.002f, .002f, 0f) * shudder;
+                        turn = new Vector3(6f * jab + 1.5f * shudder, 0f, 0f);
                         break;
                 }
             }
             if (player.ShavingEnabled && cutting)
             {
                 float t = Time.time * 31f, chatter = (family == MotionFamily.Hard ? .0024f : .0012f) * power;
-                position += new Vector3((Mathf.PerlinNoise(t, 0f) - .5f) * chatter, (Mathf.PerlinNoise(0f, t) - .5f) * chatter, 0f) + along * .006f;
+                offset += new Vector3((Mathf.PerlinNoise(t, 0f) - .5f) * chatter, (Mathf.PerlinNoise(0f, t) - .5f) * chatter - .004f, .004f);
             }
             float away = lowered * lowered * (3f - 2f * lowered);
-            position += new Vector3(.02f, -.12f, -.03f) * away;
-            euler.x += 25f * away;
+            offset += new Vector3(.03f, -.2f, -.02f) * away;
+            turn.x += 20f * away;
 
-            model.localPosition = position;
-            model.localRotation = Quaternion.Euler(euler);
+            var restPose = Quaternion.Euler(RestEuler);
+            var pose = Quaternion.Euler(RestEuler + turn);
+            var pivot = Pivot * ModelScale;
+            model.localPosition = RestPosition + restPose * pivot - pose * pivot + offset;
+            model.localRotation = pose;
             model.localScale = Vector3.one * ModelScale;
             var view = player.ViewCamera;
             float k = view == null ? 1f : Mathf.Tan(view.fieldOfView * .5f * Mathf.Deg2Rad) / Mathf.Tan(ReferenceFov * .5f * Mathf.Deg2Rad);

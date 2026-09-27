@@ -81,7 +81,8 @@ namespace SomethingDownThere
                 : "DEVELOPER ADMIN"
                     + (player.HasAdminOverrides ? "  |  Overrides active" : "")
                     + (player.UnlimitedBattery ? "  |  Unlimited battery" : "")
-                    + (player.AdminXray ? "  |  X-ray: transparent ground" : "");
+                    + (player.AdminXray ? "  |  X-ray: transparent ground" : "")
+                    + (player.AdminGroundXray ? "\nGround X-ray: " + TerrainVolume.XrayLegend : "");
             float pulse = player.CameraSettings.SteadyCrosshair ? 0 : player.DigPulse;
             reticle.style.scale = new Scale(Vector3.one * (1 + pulse * 0.3f));
             reticle.style.color = Color.Lerp(Color.white, new Color(1, 0.82f, 0.35f), pulse);

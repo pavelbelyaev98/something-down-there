@@ -2,6 +2,7 @@
 
 **Build & start:** current build, New Game; developer shortcuts are fine for reaching depth. Bring
 lamps.
+Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
 ## Try
 - Find the first concrete structure in the clay zone (37.5–75 m) and in the rock zone (75–112.5 m):

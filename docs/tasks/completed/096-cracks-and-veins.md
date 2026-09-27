@@ -93,3 +93,10 @@ itself, which `026` (C4 along cracks) reads.
   lines; the core widened slightly (noise distance .012 → .017) and the line now shows from weight
   0.12, giving continuous, winding lines that branch and end. Evidence `Logs/096-sheet2.png`.
 - `026` reads cracks from the material field: `Crack` and `Fractured*` samples, connected.
+
+## Iteration (playtest 2026-09-27)
+
+- The user could not find cracked ground to test. Developer admin gained **Ground X-ray**: transparent
+  ground with coloured markers for cracks (red), gravel, backfill, pond clay and concrete within 20 m.
+  Clay veins and rock masses were left out after a first version drowned the cracks in 115k vein
+  markers (`Logs/gx-rock.png` shows the final view in the rock zone).

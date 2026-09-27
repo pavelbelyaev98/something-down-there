@@ -83,6 +83,7 @@ namespace SomethingDownThere
         // Detector-off playtest (099): session admin switch, or -noDetector for the whole run.
         private bool adminDetectorOff;
         private bool adminHoverOnRelease;
+        private bool adminGroundXray;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -135,7 +136,7 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminShavingOverride.HasValue || adminHoverOnRelease);
+            || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
@@ -145,6 +146,7 @@ namespace SomethingDownThere
             + (ShavingEnabled ? "drill" : "shovel");
         public DiscoveryField Discoveries => discoveries;
         public bool AdminXray => AdminAvailable && adminXray && discoveries != null && discoveries.isActiveAndEnabled;
+        public bool AdminGroundXray => AdminAvailable && adminGroundXray && excavationTerrain.GroundXrayEnabled;
         public bool UnlimitedBattery => AdminAvailable && unlimitedBattery;
         public int EffectiveShovelLevel => AdminAvailable && adminLevel > 0 ? adminLevel : Shovel.Level;
         // Developer calibration: a session-only ladder copy the dev menu edits live.
@@ -305,8 +307,9 @@ namespace SomethingDownThere
             Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = false;
+            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = false;
             adminShavingOverride = null;
+            excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             motor.enabled = false;
             transform.SetPositionAndRotation(snapshot.PlayerPosition, snapshot.PlayerRotation);
@@ -753,6 +756,8 @@ namespace SomethingDownThere
             adminXray = false;
             adminDetectorOff = false;
             adminHoverOnRelease = false;
+            adminGroundXray = false;
+            excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
             ResetDigComparisonInput();
@@ -809,6 +814,17 @@ namespace SomethingDownThere
                 || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
             adminXray = !adminXray;
             discoveries.SetXray(AdminXray, viewCamera);
+            MenuChanged?.Invoke();
+        }
+
+        // Finds ground tells on purpose: transparent ground with coloured markers for every ground
+        // that is not its zone's main ground (cracks, gravel, backfill, pond clay, concrete, ...).
+        public void ToggleAdminGroundXray()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminGroundXray = !adminGroundXray;
+            excavationTerrain.SetGroundXray(adminGroundXray, viewCamera);
+            ShowFeedback(adminGroundXray ? "Ground X-ray: " + TerrainVolume.XrayLegend : "Ground X-ray off");
             MenuChanged?.Invoke();
         }
 

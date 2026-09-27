@@ -586,6 +586,7 @@ namespace SomethingDownThere
             Button(grid, "Reset ground...", player.RequestTerrainReset);
             Button(grid, "Unlimited battery: " + (player.UnlimitedBattery ? "ON" : "OFF"), player.ToggleAdminUnlimitedBattery);
             Button(grid, "X-ray: " + (player.AdminXray ? "ON" : "OFF"), player.ToggleAdminXray, player.Discoveries != null);
+            Button(grid, "Ground X-ray: " + (player.AdminGroundXray ? "ON" : "OFF"), player.ToggleAdminGroundXray);
             Button(grid, "Detector: " + (player.DetectorShown ? "ON" : "OFF"), player.ToggleAdminDetector);
             Button(grid, "Add $500", player.GrantAdminMoney);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);

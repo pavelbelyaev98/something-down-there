@@ -58,6 +58,7 @@ namespace SomethingDownThere.Editor
             var settings = new SerializedObject(terrain);
             settings.FindProperty("soilMaterial").objectReferenceValue = sediment;
             ConfigurePourFeedback(settings);
+            ConfigureXrayMarker(settings);
             var preview = settings.FindProperty("untouchedPreview").objectReferenceValue as GameObject;
             if (preview == null) throw new InvalidOperationException("Keep the existing edit-mode preview.");
             settings.ApplyModifiedProperties();
@@ -74,6 +75,21 @@ namespace SomethingDownThere.Editor
         {
             terrain.FindProperty("pourChipsMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Salvage/SoilCrumbs.mat");
             terrain.FindProperty("pourDustMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Salvage/SoilDust.mat");
+        }
+
+        // Developer ground X-ray markers: one instanced unlit material, coloured per ground at draw time.
+        public static void ConfigureXrayMarker(SerializedObject terrain)
+        {
+            const string path = "Assets/Content/GroundTextures/GroundXrayMarker.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.enableInstancing = true;
+            EditorUtility.SetDirty(material);
+            terrain.FindProperty("groundXrayMarker").objectReferenceValue = material;
         }
 
         // The lakebed's packed sediment terrain layer.

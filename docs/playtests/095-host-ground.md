@@ -1,6 +1,7 @@
 # Playtest 095 — Host Ground
 
 **Build & start:** current build, New Game; developer shortcuts are fine for reaching rock.
+Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
 ## Try
 - Dig through rock masses, plain rock, cracks, clay, gravel and soil, noting where ore and plain

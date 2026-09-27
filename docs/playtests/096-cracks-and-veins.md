@@ -2,6 +2,7 @@
 
 **Build & start:** current build, New Game; developer shortcuts are fine for reaching the rock zone
 (below about 75 m) or a concrete structure. Bring lamps for the dark.
+Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
 ## Try
 - Find a crack: a thin near-black line inside a band of broken-looking rock or concrete.

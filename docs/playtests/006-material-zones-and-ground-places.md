@@ -2,6 +2,7 @@
 
 **Build & start:** current build, New Game. Best played with normal purchases for at least the first
 two zones; developer shortcuts are fine for going deeper.
+Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
 ## Try
 - Dig down through all four zones: soil with gravel lenses, orange clay with grey-blue bands from
