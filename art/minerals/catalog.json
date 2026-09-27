@@ -77,12 +77,14 @@
       "host_grounds": [
         "rock",
         "fractured_rock",
-        "crack"
+        "crack",
+        "gravel"
       ],
       "host_weights": [
         3,
         9,
-        9
+        9,
+        4
       ]
     },
     {
@@ -161,12 +163,14 @@
       "host_grounds": [
         "rock",
         "fractured_rock",
-        "crack"
+        "crack",
+        "gravel"
       ],
       "host_weights": [
         3,
         9,
-        9
+        9,
+        4
       ]
     },
     {
@@ -203,12 +207,14 @@
       "host_grounds": [
         "rock",
         "fractured_rock",
-        "crack"
+        "crack",
+        "gravel"
       ],
       "host_weights": [
         3,
         9,
-        9
+        9,
+        4
       ]
     },
     {

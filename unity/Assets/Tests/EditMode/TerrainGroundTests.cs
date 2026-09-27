@@ -134,6 +134,46 @@ namespace SomethingDownThere.Tests
                 Assert.That(ids[Index(x, y, z)], Is.Not.EqualTo((byte)TerrainMaterialId.Crack).And.Not.EqualTo((byte)TerrainMaterialId.FracturedRock));
         }
 
+        // Old riverbeds (concept 03 §4): winding gravel through the soil and clay zones, sideways
+        // more than down, under the plot; the first one meets the first shaft near the centre.
+        [TestCase(2718)] [TestCase(12)] [TestCase(991)]
+        public void GravelChannelsWindSidewaysThroughSoilAndClay(int seed)
+        {
+            var segments = TerrainGround.Channels(SiteLayout.Size, SiteLayout.CellSize, seed);
+            Assert.That(segments, Is.EqualTo(TerrainGround.Channels(SiteLayout.Size, SiteLayout.CellSize, seed)), "Deterministic.");
+            var extent = SiteLayout.Extent;
+            foreach (var zone in new[] { 0, 1 })
+            {
+                var channels = segments.Where(s => s.Zone == zone).GroupBy(s => s.Channel).ToArray();
+                Assert.That(channels.Length, Is.GreaterThanOrEqualTo(2), $"Seed {seed}: zone {zone + 1} riverbeds");
+                foreach (var channel in channels)
+                {
+                    float run = 0, drop = 0;
+                    foreach (var s in channel)
+                    {
+                        run += Vector2.Distance(new Vector2(s.A.x, s.A.z), new Vector2(s.B.x, s.B.z));
+                        drop += Mathf.Abs(s.B.y - s.A.y);
+                        foreach (var point in new[] { s.A, s.B })
+                        {
+                            Assert.That(SiteLayout.BeyondFootprint(new Vector2(SiteLayout.Origin.x + point.x, SiteLayout.Origin.z + point.z)), Is.LessThan(0));
+                            Assert.That(TerrainGround.ZoneAt(extent.y - point.y), Is.EqualTo(zone));
+                        }
+                    }
+                    Assert.That(run, Is.GreaterThan(8), $"Seed {seed}: channel {channel.Key} is a winding band, not a pocket.");
+                    Assert.That(drop, Is.LessThan(run), $"Seed {seed}: channel {channel.Key} runs sideways more than down.");
+                }
+            }
+            var first = segments[0];
+            Assert.That(first.Zone, Is.Zero);
+            Assert.That(Vector2.Distance(new Vector2(first.A.x, first.A.z), new Vector2(extent.x, extent.z) * .5f), Is.LessThan(6));
+            Assert.That(extent.y - first.A.y, Is.InRange(4, 8));
+            // The generated ground carries them as gravel.
+            var ids = Site(seed);
+            var middle = segments[segments.Length / 4];
+            var sample = Vector3Int.RoundToInt((Vector3)((middle.A + middle.B) * .5f) / SiteLayout.CellSize);
+            Assert.That(ids[Index(sample.x, sample.y, sample.z)], Is.EqualTo((byte)TerrainMaterialId.Gravel));
+        }
+
         [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]
         public void PlacesSitUnderThePlotInTheirZonesWithoutOverlapping(int seed)
         {

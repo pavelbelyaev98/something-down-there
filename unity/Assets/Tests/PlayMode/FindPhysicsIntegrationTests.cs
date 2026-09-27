@@ -425,6 +425,46 @@ namespace SomethingDownThere.Tests
                 / player.Tuning.LookSensitivity }, .001f);
         }
 
+        // Concept 03 §4: undercut gravel pours; its finds drop and are never deleted, and the
+        // ground around the section stays.
+        [UnityTest]
+        public IEnumerator PouredGravelDropsItsFindsWithoutLosingThem()
+        {
+            var grid = (ExcavationGrid)typeof(TerrainVolume).GetField("grid",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(terrain);
+            var saved = grid.Capture();
+            var ids = saved.Materials.ToArray();
+            float cell = terrain.CellSize, top = terrain.Dimensions.y * cell;
+            int stride = terrain.Dimensions.x + 1, plane = stride * (terrain.Dimensions.y + 1);
+            // A gravel pocket 2.4-4 m under local (12, 12), above a sealed room.
+            for (int z = Mathf.RoundToInt(10.6f / cell); z <= Mathf.RoundToInt(13.4f / cell); z++)
+            for (int y = Mathf.RoundToInt((top - 4f) / cell); y <= Mathf.RoundToInt((top - 2.4f) / cell); y++)
+            for (int x = Mathf.RoundToInt(10.6f / cell); x <= Mathf.RoundToInt(13.4f / cell); x++)
+                ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.Gravel;
+            saved.Materials = TerrainMaterialSnapshot.CopyFrom(ids);
+            grid.Restore(saved);
+            grid.RemoveSphere(new Vector3(12, top - 5.4f, 12), 1.5f, out _);
+            yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
+            var find = field.Finds.First(f => !TestInputPreferences.IsCoalFixture(f));
+            Place(find, -3.1f);
+            var physical = find.GetComponent<FindPhysics>();
+            string identity = find.Item.InstanceId;
+            yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+            Assert.That(physical.Released, Is.False, "Buried in the gravel, the find is anchored.");
+            float buried = physical.Body.position.y;
+            Physics.SyncTransforms();
+            Assert.That(Physics.Raycast(terrain.transform.TransformPoint(new Vector3(12, top - 5.4f, 12)), Vector3.up, out var ceiling, 3), Is.True);
+            Assert.That(terrain.TryToolCut(ceiling, .35f, false), Is.True);
+            Assert.That(terrain.LastPourVolume, Is.GreaterThan(1), "Cutting into the gravel ceiling pours the pocket.");
+            yield return WaitForSimulation(2f);
+            Assert.That(find != null && find.gameObject.activeInHierarchy, Is.True, "A pour never deletes a find.");
+            Assert.That(find.Item.InstanceId, Is.EqualTo(identity));
+            Assert.That(physical.Released, Is.True);
+            Assert.That(physical.Body.position.y, Is.LessThan(buried - .5f), "The find tumbled down into the room.");
+            Assert.That(find.Collected, Is.False);
+            Assert.That(terrain.IsSolid(terrain.transform.TransformPoint(new Vector3(14.2f, top - 3.2f, 12))), Is.True, "Soil beside the pocket stays.");
+        }
+
         private void Place(BuriedFind find, float aboveSurface, float offset = 0, float zOffset = 0)
         {
             var local = new Vector3(12 + offset, terrain.Dimensions.y * terrain.CellSize + aboveSurface, 12 + zOffset);

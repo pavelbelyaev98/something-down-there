@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SomethingDownThere
 {
     [DisallowMultipleComponent]
-    public sealed class TerrainVolume : MonoBehaviour, IDigTarget
+    public sealed partial class TerrainVolume : MonoBehaviour, IDigTarget
     {
         [SerializeField] private Vector3Int dimensions = new Vector3Int(192, 96, 192);
         [SerializeField, Min(0.1f)] private float cellSize = 0.125f;
@@ -279,7 +279,11 @@ namespace SomethingDownThere
             timer.Stop();
             LastDigMilliseconds = timer.Elapsed.TotalMilliseconds;
             LastDiscoveryMilliseconds = LastDigMilliseconds - LastGridMilliseconds - LastMeshMilliseconds;
-            if (adaptMaterials) ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
+            if (adaptMaterials)
+            {
+                ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
+                PourUndercutGravel(changed);
+            }
             return true;
         }
 

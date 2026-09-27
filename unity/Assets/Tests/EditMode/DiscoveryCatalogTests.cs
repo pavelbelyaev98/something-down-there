@@ -376,15 +376,18 @@ namespace SomethingDownThere.Tests
                 Assert.That(hostSamples, Is.GreaterThan(0));
                 return (inHostFinds / (float)hostSamples) / Mathf.Max(1e-6f, otherFinds / (float)otherSamples);
             }
-            float zone2 = Ratio(ores, TerrainMaterialId.Rock, 40, 73, out int clayOres, TerrainMaterialId.FracturedRock);
-            float deep = Ratio(ores, TerrainMaterialId.Rock, 78, 149, out int veinOres, TerrainMaterialId.FracturedRock);
+            float zone2 = Ratio(ores, TerrainMaterialId.Rock, 40, 73, out int clayOres, TerrainMaterialId.FracturedRock, TerrainMaterialId.Clay);
+            // Metal settles in the old riverbeds: gravel channels through the clay are richer too.
+            float riverbeds = Ratio(ores, TerrainMaterialId.Gravel, 40, 73, out _, null, TerrainMaterialId.Clay);
+            float deep = Ratio(ores, TerrainMaterialId.Rock, 78, 149, out int veinOres, TerrainMaterialId.FracturedRock, TerrainMaterialId.Clay);
             // Cracks are richer than the rock they break: some open into ore (never all of them).
             float cracks = Ratio(ores, TerrainMaterialId.FracturedRock, 78, 149, out int plainRockOres, TerrainMaterialId.Crack, TerrainMaterialId.Rock);
             float plain = Ratio(new[] { rockIndex }, TerrainMaterialId.Soil, 2.5f, 14, out int gravelRocks);
-            Debug.Log($"Seed {seed}: ore in zone-2 rock masses x{zone2:F1}, ore in deep rock x{deep:F1}, ore in cracks x{cracks:F1}, plain rocks in soil x{plain:F1}");
+            Debug.Log($"Seed {seed}: ore in zone-2 rock masses x{zone2:F1}, ore in deep rock x{deep:F1}, ore in cracks x{cracks:F1}, ore in riverbeds x{riverbeds:F1}, plain rocks in soil x{plain:F1}");
             Assert.That(zone2, Is.GreaterThan(2), "Rock masses in the clay hold more ore.");
             Assert.That(deep, Is.GreaterThan(2), "Deep ore favours rock over the clay veins.");
             Assert.That(cracks, Is.GreaterThan(2), "Cracks hold more ore than plain rock.");
+            Assert.That(riverbeds, Is.GreaterThan(1.5f), "Gravel channels in the clay hold more metal.");
             Assert.That(plainRockOres, Is.GreaterThan(0));
             Assert.That(plain, Is.GreaterThan(1.5f), "Plain rocks favour soil over gravel lenses.");
             Assert.That(clayOres, Is.GreaterThan(0)); Assert.That(veinOres, Is.GreaterThan(0)); Assert.That(gravelRocks, Is.GreaterThan(0));

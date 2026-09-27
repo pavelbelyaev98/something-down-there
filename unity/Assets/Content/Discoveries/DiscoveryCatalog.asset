@@ -74,11 +74,12 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
+    HostGrounds: 02060803y
     HostWeights:
     - 3
     - 9
     - 9
+    - 4
   - ItemId: mineral_iron
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -118,11 +119,12 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
+    HostGrounds: 02060803y
     HostWeights:
     - 3
     - 9
     - 9
+    - 4
   - ItemId: mineral_gold
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -140,11 +142,12 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
+    HostGrounds: 02060803y
     HostWeights:
     - 3
     - 9
     - 9
+    - 4
   - ItemId: mineral_emerald
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}

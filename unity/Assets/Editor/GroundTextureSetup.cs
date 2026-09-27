@@ -57,6 +57,7 @@ namespace SomethingDownThere.Editor
             EditorUtility.SetDirty(camp);
             var settings = new SerializedObject(terrain);
             settings.FindProperty("soilMaterial").objectReferenceValue = sediment;
+            ConfigurePourFeedback(settings);
             var preview = settings.FindProperty("untouchedPreview").objectReferenceValue as GameObject;
             if (preview == null) throw new InvalidOperationException("Keep the existing edit-mode preview.");
             settings.ApplyModifiedProperties();
@@ -66,6 +67,13 @@ namespace SomethingDownThere.Editor
             Assign(root.Find("Surface/South rim")?.GetComponent<Renderer>(), sediment);
             ConfigureSunBias(root);
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
+        }
+
+        // Gravel pours (097) reuse the recovery crumb and dust particle materials.
+        public static void ConfigurePourFeedback(SerializedObject terrain)
+        {
+            terrain.FindProperty("pourChipsMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Salvage/SoilCrumbs.mat");
+            terrain.FindProperty("pourDustMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Salvage/SoilDust.mat");
         }
 
         // The lakebed's packed sediment terrain layer.
