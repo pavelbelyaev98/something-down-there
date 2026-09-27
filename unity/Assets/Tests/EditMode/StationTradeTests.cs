@@ -140,6 +140,34 @@ namespace SomethingDownThere.Tests
             Assert.That(kind == EquipmentKind.Inventory ? fuel.Level : bag.Level, Is.EqualTo(1));
         }
 
+        [Test]
+        public void JetpackTrackClimbsFasterAndCheaperEveryLevelAtTheSharedPrices()
+        {
+            var jetpack = new JetpackState();
+            trade = new StationTrade(bag, wallet, shovel, new Battery(100), jetpack);
+            var starter = jetpack.Current;
+            Assert.That((starter.MaxAscentSpeed, starter.Acceleration, starter.EnergyPerSecond, starter.HoverHold),
+                Is.EqualTo((8f, 30f, 8f, false)), "Level 1 is the starter jetpack.");
+            wallet.TryCredit(Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Sum(EquipmentProgression.Price));
+            for (int level = 2; level <= EquipmentProgression.LevelCount; level++)
+            {
+                var previous = jetpack.Current;
+                var offer = trade.OfferUpgrade(EquipmentKind.Jetpack);
+                Assert.That(offer.Cost, Is.EqualTo(EquipmentProgression.Price(level - 1)));
+                Assert.That(trade.TryUpgrade(offer), Is.True);
+                Assert.That(trade.TryUpgrade(offer), Is.False);
+                var next = jetpack.Current;
+                Assert.That(next.MaxAscentSpeed, Is.GreaterThan(previous.MaxAscentSpeed));
+                Assert.That(next.Acceleration, Is.GreaterThan(previous.Acceleration));
+                Assert.That(next.EnergyPerMetre, Is.LessThan(previous.EnergyPerMetre));
+                Assert.That(next.HoverHold, Is.True);
+            }
+            Assert.That(jetpack.Current.EnergyPerMetre, Is.EqualTo(.5f).Within(.001f));
+            Assert.That(trade.Check(trade.OfferUpgrade(EquipmentKind.Jetpack)), Is.EqualTo(TradeResult.Complete));
+            Assert.That(shovel.Level, Is.EqualTo(1));
+            Assert.That(wallet.Balance, Is.Zero);
+        }
+
         [TestCase(100, 10, 100, 1)]
         [TestCase(.125f, 10, .125f, 1)]
         [TestCase(25, 10, 25, 1)]

@@ -456,6 +456,9 @@ namespace SomethingDownThere
                     EquipmentProgression.ToolName(offer.Complete ? offer.OwnedLevel : offer.NextLevel), offer.Complete);
                 return motion + "  |  " + Compared($"{current.Radius * 2:F2} m", $"{next.Radius * 2:F2} m", offer.Complete);
             }
+            if (offer.Kind == EquipmentKind.Jetpack)
+                return Compared($"{player.Jetpack.Current.MaxAscentSpeed:0} m/s",
+                    $"{EquipmentProgression.Jetpack(offer.Complete ? offer.OwnedLevel : offer.NextLevel).MaxAscentSpeed:0} m/s", offer.Complete);
             if (offer.Kind == EquipmentKind.Inventory)
                 return Compared($"{player.Inventory.Capacity}",
                     $"{player.Inventory.Capacity + (offer.Complete ? 0 : EquipmentProgression.InventoryIncrease(offer.OwnedLevel))}", offer.Complete);
@@ -475,6 +478,12 @@ namespace SomethingDownThere
                 detail += offer.OwnedLevel < EquipmentProgression.DrillLevel
                     ? $"  |  Drill motion at level {EquipmentProgression.DrillLevel}" : "  |  Continuous drill cutting";
                 return player.HasAdminOverrides ? detail + "  |  DEVELOPER OVERRIDES ACTIVE" : detail;
+            }
+            if (offer.Kind == EquipmentKind.Jetpack)
+            {
+                var next = EquipmentProgression.Jetpack(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
+                return "Fuel per metre climbed " + Compared($"{player.Jetpack.Current.EnergyPerMetre:0.00}", $"{next.EnergyPerMetre:0.00}", offer.Complete)
+                    + (next.HoverHold ? "  |  Hover hold in the air" : "");
             }
             return offer.Kind == EquipmentKind.Fuel ? "Refill sold separately" : "";
         }
@@ -537,6 +546,7 @@ namespace SomethingDownThere
                 + DensityLine(), "body");
             var grid = Element(scroll, "admin-actions");
             Button(grid, "Motion: " + player.AdminMotionLabel, player.ToggleAdminShaving);
+            Button(grid, "Hover: " + player.AdminHoverLabel, player.ToggleAdminHover);
             for (int i = 1; i <= player.Shovel.LevelCount; i++)
             {
                 int level = i;

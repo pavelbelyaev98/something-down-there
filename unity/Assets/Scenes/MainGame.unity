@@ -245591,10 +245591,7 @@ MonoBehaviour:
     Gravity: -20
     JumpHeight: 1.15
     JetpackHoldDelay: 0.22
-    JetpackAcceleration: 30
-    MaxAscentSpeed: 8
     BatteryCapacity: 100
-    JetpackEnergyPerSecond: 8
     DigEnergy: 1
     DigInterval: 0.35
     DigReach: 3

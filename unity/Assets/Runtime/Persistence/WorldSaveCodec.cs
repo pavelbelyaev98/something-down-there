@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 11;
+        public const int Version = 12;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
@@ -52,7 +52,7 @@ namespace SomethingDownThere
                 g.Materials.Write(w);
                 w.Write(s.CrouchAmount);
                 foreach (var find in s.Finds) w.Write(find.PhysicsReleased);
-                w.Write(s.InventoryLevel); w.Write(s.FuelLevel);
+                w.Write(s.InventoryLevel); w.Write(s.FuelLevel); w.Write(s.JetpackLevel);
                 w.Write(s.Extraction!=null);
                 if(s.Extraction!=null)
                 {
@@ -128,7 +128,7 @@ namespace SomethingDownThere
             s.Terrain.Materials = TerrainMaterialSnapshot.Read(r, materialSamples);
             s.CrouchAmount = r.ReadSingle();
             foreach (var find in s.Finds) find.PhysicsReleased = r.ReadBoolean();
-            s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32();
+            s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32(); s.JetpackLevel = r.ReadInt32();
             if(r.ReadBoolean())
             {
                 var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r), Outward=ReadVector(r),

@@ -43,7 +43,7 @@ namespace SomethingDownThere.Tests
         public void HighEquipmentLevelsRoundTripWithoutClamping(int level)
         {
             var saved = Snapshot(1);
-            saved.ShovelLevel = saved.InventoryLevel = saved.FuelLevel = level;
+            saved.ShovelLevel = saved.InventoryLevel = saved.FuelLevel = saved.JetpackLevel = level;
             saved.InventoryCapacity = 10 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.InventoryIncrease);
             saved.BatteryCapacity = 100 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.FuelIncrease);
             using var memory = new MemoryStream();
@@ -59,6 +59,8 @@ namespace SomethingDownThere.Tests
             saved.ShovelLevel = 1; saved.InventoryLevel = level;
             Assert.Throws<InvalidDataException>(saved.Validate);
             saved.InventoryLevel = 1; saved.FuelLevel = level;
+            Assert.Throws<InvalidDataException>(saved.Validate);
+            saved.FuelLevel = 1; saved.JetpackLevel = level;
             Assert.Throws<InvalidDataException>(saved.Validate);
         }
 
@@ -350,6 +352,7 @@ namespace SomethingDownThere.Tests
             Assert.That(actual.InventoryLevel, Is.EqualTo(expected.InventoryLevel));
             Assert.That(actual.InventoryCapacity, Is.EqualTo(expected.InventoryCapacity));
             Assert.That(actual.FuelLevel, Is.EqualTo(expected.FuelLevel));
+            Assert.That(actual.JetpackLevel, Is.EqualTo(expected.JetpackLevel));
             Assert.That(actual.BatteryCapacity, Is.EqualTo(expected.BatteryCapacity));
             Assert.That(actual.PlayerPosition, Is.EqualTo(expected.PlayerPosition));
             Assert.That(actual.PlayerRotation, Is.EqualTo(expected.PlayerRotation));

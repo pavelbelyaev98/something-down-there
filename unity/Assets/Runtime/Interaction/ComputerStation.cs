@@ -4,10 +4,10 @@ namespace SomethingDownThere
 {
     public sealed class ComputerStation : StationTarget
     {
-        private readonly StationTrade.UpgradeOffer[] offers = new StationTrade.UpgradeOffer[3];
+        private readonly StationTrade.UpgradeOffer[] offers = new StationTrade.UpgradeOffer[4];
         private StationTrade.SaleOffer[] sales = System.Array.Empty<StationTrade.SaleOffer>();
-        public const int RefillCommand = 3;
-        public const int SellAllCommand = 4;
+        public const int RefillCommand = 4;
+        public const int SellAllCommand = 5;
         public bool Selling => Items.Count > 0;
         public IReadOnlyList<InventoryItem> Items => sales.Length == 0 ? System.Array.Empty<InventoryItem>() : sales[0].Items;
         public long TotalValue => sales.Length == 0 ? 0 : sales[0].Value;

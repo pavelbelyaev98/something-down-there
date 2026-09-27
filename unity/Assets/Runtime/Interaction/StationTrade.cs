@@ -91,24 +91,29 @@ namespace SomethingDownThere
         private readonly SessionWallet wallet;
         private readonly ShovelState shovel;
         private readonly Battery battery;
-        public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, Battery battery = null)
+        private readonly JetpackState jetpack;
+        public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, Battery battery = null, JetpackState jetpack = null)
         {
             this.inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
             this.wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             this.shovel = shovel ?? throw new ArgumentNullException(nameof(shovel));
             this.battery = battery;
+            this.jetpack = jetpack;
         }
 
         public SaleOffer OfferSale(string instanceId = null) => new SaleOffer(this, instanceId);
         public UpgradeOffer OfferUpgrade(EquipmentKind kind = EquipmentKind.Shovel)
         {
-            if (kind < EquipmentKind.Shovel || kind > EquipmentKind.Fuel) throw new ArgumentOutOfRangeException(nameof(kind));
+            if (kind < EquipmentKind.Shovel || kind > EquipmentKind.Jetpack) throw new ArgumentOutOfRangeException(nameof(kind));
             if (kind == EquipmentKind.Fuel && battery == null) throw new InvalidOperationException("Fuel upgrades require the session battery.");
+            if (kind == EquipmentKind.Jetpack && jetpack == null) throw new InvalidOperationException("Jetpack upgrades require the session jetpack.");
             return new UpgradeOffer(this, kind);
         }
         public RefillOffer OfferRefill() => battery == null ? throw new InvalidOperationException("Refills require the session battery.") : new RefillOffer(this);
-        private int Level(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Level : kind == EquipmentKind.Fuel ? battery.Level : shovel.Level;
-        private long EquipmentRevision(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Revision : kind == EquipmentKind.Fuel ? battery.Revision : shovel.Level;
+        private int Level(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Level : kind == EquipmentKind.Fuel ? battery.Level
+            : kind == EquipmentKind.Jetpack ? jetpack.Level : shovel.Level;
+        private long EquipmentRevision(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Revision : kind == EquipmentKind.Fuel ? battery.Revision
+            : kind == EquipmentKind.Jetpack ? jetpack.Level : shovel.Level;
 
         public TradeResult Check(SaleOffer offer)
         {
@@ -142,6 +147,7 @@ namespace SomethingDownThere
             wallet.TrySpend(offer.Cost);
             if (offer.Kind == EquipmentKind.Inventory) inventory.TryUpgradeTo(offer.NextLevel);
             else if (offer.Kind == EquipmentKind.Fuel) battery.TryUpgradeTo(offer.NextLevel);
+            else if (offer.Kind == EquipmentKind.Jetpack) jetpack.TryUpgradeTo(offer.NextLevel);
             else shovel.TryUpgradeTo(offer.NextLevel);
             return true;
         }

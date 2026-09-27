@@ -17,10 +17,7 @@ namespace SomethingDownThere
         public float Gravity = -20f;
         [Min(0f)] public float JumpHeight = 1.15f;
         [Min(0f)] public float JetpackHoldDelay = 0.22f;
-        [Min(0f)] public float JetpackAcceleration = 30f;
-        [Min(0f)] public float MaxAscentSpeed = 8f;
         [Min(0.01f)] public float BatteryCapacity = 100f;
-        [Min(0f)] public float JetpackEnergyPerSecond = 8f;
         [Min(0f)] public float DigEnergy = 1f;
         [Min(0.01f)] public float DigInterval = 0.35f;
         [Min(0.01f)] public float DigReach = 3f;
@@ -85,6 +82,7 @@ namespace SomethingDownThere
         private bool adminXray;
         // Detector-off playtest (099): session admin switch, or -noDetector for the whole run.
         private bool adminDetectorOff;
+        private bool adminHoverOnRelease;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -127,13 +125,20 @@ namespace SomethingDownThere
         public float CrouchAmount => crouch?.Amount ?? 0f;
         public bool StandBlocked => crouch != null && crouch.StandBlocked;
         public bool IsJetpackActive { get; private set; }
+        // Hover hold (jetpack level 2+): powered, but holding height rather than climbing.
+        public bool IsHovering { get; private set; }
         public ShovelState Shovel { get; private set; }
+        public JetpackState Jetpack { get; private set; }
         // Unity 6.6 uses managed code variants; DEVELOPMENT_BUILD is deprecated.
         // This engine-owned build flag is true in the Editor/development players.
         public static bool AdminBuild => Debug.isDebugBuild;
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
-        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff || adminShavingOverride.HasValue);
+        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
+            || adminShavingOverride.HasValue || adminHoverOnRelease);
+        // Hover A/B (022): hold height while digging (default) or whenever Space is released.
+        public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
+        public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
         public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
             ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
         public string AdminMotionLabel => (adminShavingOverride.HasValue ? "Override: " : "Automatic: ")
@@ -183,7 +188,8 @@ namespace SomethingDownThere
             Wallet = new SessionWallet();
             Rescue = new RescueController(Inventory, Wallet, Mathf.Max(0, maximumRescueFee));
             Shovel = new ShovelState(shovelLevels);
-            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery);
+            Jetpack = new JetpackState();
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack);
             pitch = Mathf.DeltaAngle(0f, viewCamera.transform.localEulerAngles.x);
             if (InputSettings == null)
                 ConfigureInputPreferences(new DevicePreferencesFile(System.IO.Path.Combine(Application.persistentDataPath,
@@ -254,6 +260,7 @@ namespace SomethingDownThere
             snapshot.InventoryCapacity = Inventory.Capacity;
             snapshot.InventoryLevel = Inventory.Level;
             snapshot.FuelLevel = Battery.Level;
+            snapshot.JetpackLevel = Jetpack.Level;
             snapshot.Inventory = new ItemSnapshot[Inventory.Count];
             for (int i = 0; i < Inventory.Count; i++) snapshot.Inventory[i] = ItemSnapshot.Capture(Inventory.Items[i]);
             snapshot.Credits = Wallet.WholeCredits;
@@ -285,16 +292,20 @@ namespace SomethingDownThere
             var shovel = new ShovelState(shovelLevels);
             for (int level = 2; level <= snapshot.ShovelLevel; level++)
                 if (!shovel.TryUpgradeTo(level)) throw new System.IO.InvalidDataException("The owned shovel could not be restored.");
+            var jetpack = new JetpackState();
+            for (int level = 2; level <= snapshot.JetpackLevel; level++)
+                if (!jetpack.TryUpgradeTo(level)) throw new System.IO.InvalidDataException("The owned jetpack could not be restored.");
             var battery = new Battery(snapshot.BatteryCapacity, snapshot.FuelLevel);
             battery.RestoreCharge(snapshot.BatteryCharge);
             Inventory = inventory;
             Wallet = new SessionWallet(snapshot.Credits);
             Shovel = shovel;
             Battery = battery;
-            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery);
+            Jetpack = jetpack;
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = jetpackReadyInAir = false;
+            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = false;
             adminShavingOverride = null;
             discoveries?.SetXray(false, null);
             motor.enabled = false;
@@ -426,7 +437,7 @@ namespace SomethingDownThere
 
             ApplyLook(frame.Look);
             Vector3 previousFeet = FeetPosition;
-            Move(frame.Move, frame.JumpPressed, frame.JetpackHeld, frame.CrouchHeld, frame.SprintHeld, deltaTime);
+            Move(frame.Move, frame.JumpPressed, frame.JetpackHeld, frame.CrouchHeld, frame.SprintHeld, frame.DigHeld, deltaTime);
             if (TryAutomaticRescue()) return;
             // Preserve the fractional frame remainder while holding, but never bank
             // more than one cut or run a burst of terrain rebuilds after a hitch.
@@ -482,7 +493,7 @@ namespace SomethingDownThere
             return true;
         }
 
-        private void Move(Vector2 direction, bool jumpPressed, bool spaceHeld, bool crouchHeld, bool sprintHeld, float deltaTime)
+        private void Move(Vector2 direction, bool jumpPressed, bool spaceHeld, bool crouchHeld, bool sprintHeld, bool digHeld, float deltaTime)
         {
             direction = Vector2.ClampMagnitude(direction, 1f);
             // Resizing a CharacterController refreshes its native shape. Retain
@@ -493,7 +504,9 @@ namespace SomethingDownThere
             if (grounded && verticalSpeed < 0f) verticalSpeed = -2f;
             if (jumpPressed && grounded)
                 verticalSpeed = Mathf.Sqrt(2f * Mathf.Max(0f, tuning.JumpHeight) * Mathf.Max(0f, -tuning.Gravity));
+            float unpoweredSpeed = verticalSpeed;
             verticalSpeed += tuning.Gravity * deltaTime;
+            var jet = Jetpack.Current;
 
             // Charge only for the part of this frame after the hold threshold. A tap
             // is a free jump, including when the battery is exhausted.
@@ -502,7 +515,7 @@ namespace SomethingDownThere
             float delay = jetpackReadyInAir ? 0f : Mathf.Max(0f, tuning.JetpackHoldDelay);
             float thrustTime = spaceHeld ? Mathf.Max(0f, deltaTime - Mathf.Max(0f, delay - jetpackHoldTime)) : 0f;
             jetpackHoldTime = spaceHeld ? Mathf.Min(delay, jetpackHoldTime + deltaTime) : 0f;
-            float energyRate = Mathf.Max(0f, tuning.JetpackEnergyPerSecond);
+            float energyRate = jet.EnergyPerSecond;
             float cost = energyRate * thrustTime;
             if (!UnlimitedBattery && energyRate > 0f && cost > Battery.Charge)
             {
@@ -512,11 +525,21 @@ namespace SomethingDownThere
                 thrustTime = cost / energyRate;
             }
             IsJetpackActive = thrustTime > 0f && SpendEnergy(cost);
+            IsHovering = false;
             if (IsJetpackActive)
             {
                 jetpackReadyInAir = true;
-                verticalSpeed = Mathf.Min(tuning.MaxAscentSpeed, Mathf.Max(0f, verticalSpeed)
-                    + tuning.JetpackAcceleration * thrustTime);
+                verticalSpeed = Mathf.Min(jet.MaxAscentSpeed, Mathf.Max(0f, verticalSpeed)
+                    + jet.Acceleration * thrustTime);
+            }
+            else if (jet.HoverHold && jetpackReadyInAir && !grounded && !spaceHeld
+                && (HoverOnRelease ? !crouchHeld : digHeld) && (UnlimitedBattery || Battery.Charge > 0f) && !NearGroundBelow()
+                && SpendEnergy(Mathf.Min(UnlimitedBattery ? float.MaxValue : Battery.Charge,
+                    jet.EnergyPerSecond * EquipmentProgression.HoverEnergyScale * deltaTime)))
+            {
+                // Brake to a standstill and hold; never within a stride of the floor, so arriving lands.
+                IsHovering = true;
+                verticalSpeed = Mathf.MoveTowards(unpoweredSpeed, 0f, EquipmentProgression.HoverBrake * deltaTime);
             }
             float speedMultiplier = crouch.IsPrecision ? crouch.SpeedMultiplier
                 : sprintHeld ? Mathf.Clamp(tuning.SprintSpeedMultiplier, 1f, 1.5f) : 1f;
@@ -524,6 +547,13 @@ namespace SomethingDownThere
             var collisions = motor.Move((planar + Vector3.up * verticalSpeed) * deltaTime);
             if ((collisions & CollisionFlags.Above) != 0 && verticalSpeed > 0f) verticalSpeed = 0f;
             if ((collisions & CollisionFlags.Below) != 0 && verticalSpeed < 0f) verticalSpeed = -2f;
+        }
+
+        private bool NearGroundBelow()
+        {
+            float radius = motor.radius * .9f;
+            return Physics.SphereCast(FeetPosition + Vector3.up * (radius + .05f), radius, Vector3.down, out _,
+                EquipmentProgression.HoverGroundClearance + .05f, worldMask, QueryTriggerInteraction.Ignore);
         }
 
         public bool TryGetTarget(float reach, out RaycastHit hit)
@@ -722,6 +752,7 @@ namespace SomethingDownThere
             unlimitedBattery = false;
             adminXray = false;
             adminDetectorOff = false;
+            adminHoverOnRelease = false;
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
             ResetDigComparisonInput();
@@ -753,6 +784,14 @@ namespace SomethingDownThere
             blockedPickup = null;
             input?.SuppressDig();
             extractionInteraction?.Reset();
+        }
+
+        public void ToggleAdminHover()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminHoverOnRelease = !adminHoverOnRelease;
+            ShowFeedback("Hover " + AdminHoverLabel + (HoverOnRelease ? "; hold crouch to drop" : ""));
+            MenuChanged?.Invoke();
         }
 
         public void ToggleAdminDetector()
@@ -1156,7 +1195,7 @@ namespace SomethingDownThere
         private void ResetJetpackHold()
         {
             jetpackHoldTime = 0f;
-            IsJetpackActive = false;
+            IsJetpackActive = IsHovering = false;
         }
 
         private void OnDisable()

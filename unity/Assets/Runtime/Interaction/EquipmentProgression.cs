@@ -1,12 +1,21 @@
 namespace SomethingDownThere
 {
-    public enum EquipmentKind { Shovel, Inventory, Fuel }
+    public enum EquipmentKind { Shovel, Inventory, Fuel, Jetpack }
 
     public readonly struct MaterialToolResponse
     {
         public readonly float Width, Length, Penetration, Interval;
         public MaterialToolResponse(float width, float length, float penetration, float interval)
         { Width = width; Length = length; Penetration = penetration; Interval = interval; }
+    }
+
+    public readonly struct JetpackProfile
+    {
+        public readonly float MaxAscentSpeed, Acceleration, EnergyPerSecond;
+        public readonly bool HoverHold;
+        public JetpackProfile(float maxAscentSpeed, float acceleration, float energyPerSecond, bool hoverHold)
+        { MaxAscentSpeed = maxAscentSpeed; Acceleration = acceleration; EnergyPerSecond = energyPerSecond; HoverHold = hoverHold; }
+        public float EnergyPerMetre => EnergyPerSecond / MaxAscentSpeed;
     }
 
     public static class EquipmentProgression
@@ -72,6 +81,15 @@ namespace SomethingDownThere
             new ShovelProfile(.680000f, 1.00f, 1.2f), new ShovelProfile(.800000f, .90f, 1.4f),
             new ShovelProfile(.940000f, .80f, 1.6f), new ShovelProfile(1.100000f, .70f, 1.8f)
         };
+        // Jetpack (concept 04 section 5): every level climbs faster and cheaper per metre (1.00 -> 0.50
+        // energy/m); level 1 is the starter pack. Hover hold arrives with the first purchase.
+        public const int HoverLevel = 2;
+        public const float HoverEnergyScale = .5f, HoverBrake = 45f, HoverGroundClearance = .5f;
+        private static readonly float[] AscentSpeeds = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
+        private static readonly float[] AscentEnergy = { 8, 8.1f, 8.2f, 8.25f, 8.3f, 8.3f, 8.4f, 8.4f, 8.5f, 8.5f };
+        public static JetpackProfile Jetpack(int level) => level >= 1 && level <= LevelCount
+            ? new JetpackProfile(AscentSpeeds[level - 1], 30f + 2f * (level - 1), AscentEnergy[level - 1], level >= HoverLevel)
+            : throw new System.ArgumentOutOfRangeException(nameof(level));
         public static bool UsesDrill(int level) => level >= DrillLevel;
         public static string ToolName(int level) => UsesDrill(level) ? "Drill" : "Shovel";
         public static int Price(int ownedLevel) => TierPrices[UpgradeIndex(ownedLevel)];
@@ -80,6 +98,6 @@ namespace SomethingDownThere
         private static int UpgradeIndex(int ownedLevel) => ownedLevel >= 1 && ownedLevel < LevelCount
             ? ownedLevel - 1 : throw new System.ArgumentOutOfRangeException(nameof(ownedLevel));
         public static string Name(EquipmentKind kind) => kind == EquipmentKind.Inventory ? "Backpack"
-            : kind == EquipmentKind.Fuel ? "Fuel tank" : "Tool";
+            : kind == EquipmentKind.Fuel ? "Fuel tank" : kind == EquipmentKind.Jetpack ? "Jetpack" : "Tool";
     }
 }

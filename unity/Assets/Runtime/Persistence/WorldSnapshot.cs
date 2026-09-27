@@ -20,7 +20,7 @@ namespace SomethingDownThere
         public WorksiteSnapshot Worksite = new WorksiteSnapshot();
         public ItemSnapshot[] Inventory;
         public int InventoryCapacity, Credits, ShovelLevel, SuccessfulStrokes;
-        public int InventoryLevel = 1, FuelLevel = 1;
+        public int InventoryLevel = 1, FuelLevel = 1, JetpackLevel = 1;
         public float BatteryCapacity, BatteryCharge, Pitch, VerticalSpeed;
         public float CrouchAmount;
         public Vector3 PlayerPosition;
@@ -47,7 +47,8 @@ namespace SomethingDownThere
             Require(InventoryCapacity > 0 && InventoryCapacity <= 256 && Credits >= 0 && ShovelLevel >= 1
                 && ShovelLevel <= EquipmentProgression.LevelCount && SuccessfulStrokes >= 0, "Invalid progression.");
             Require(InventoryLevel >= 1 && InventoryLevel <= EquipmentProgression.LevelCount
-                && FuelLevel >= 1 && FuelLevel <= EquipmentProgression.LevelCount, "Invalid capacity upgrades.");
+                && FuelLevel >= 1 && FuelLevel <= EquipmentProgression.LevelCount
+                && JetpackLevel >= 1 && JetpackLevel <= EquipmentProgression.LevelCount, "Invalid capacity upgrades.");
             Require(Finite(BatteryCapacity) && BatteryCapacity > 0 && Finite(BatteryCharge)
                 && BatteryCharge >= 0 && BatteryCharge <= BatteryCapacity, "Invalid battery.");
             Require(Finds != null && Finds.Length <= DiscoveryField.MaximumPopulation && Inventory != null && Inventory.Length <= InventoryCapacity, "Invalid discovery population.");

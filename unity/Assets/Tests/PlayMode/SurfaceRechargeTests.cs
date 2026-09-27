@@ -142,7 +142,7 @@ namespace SomethingDownThere.Tests
             }
             Assert.That(accepted, Is.EqualTo(expectedStrokes));
             Assert.That(player.Battery.Charge, Is.EqualTo(20).Within(.01f));
-            Assert.That(player.Battery.Charge / player.Tuning.JetpackEnergyPerSecond, Is.EqualTo(2.5f).Within(.002f));
+            Assert.That(player.Battery.Charge / player.Jetpack.Current.EnergyPerSecond, Is.EqualTo(2.5f).Within(.002f));
             Assert.That(recharge.Terrain.RemovedVolume, Is.GreaterThan(0));
         }
 
