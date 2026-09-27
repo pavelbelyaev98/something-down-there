@@ -1,6 +1,6 @@
 # Roadmap & Tasks
 
-Next: **024 — Depth-Aware Return Warning**; `099` waits on its [playtest](playtests/099-disturbed-ground-odd-spots-detector-test.md). Playtests you still owe: [docs/playtests/](playtests/). Queue order is priority; completed decisions live in [completed specs](tasks/completed/). Follow [AGENTS.md](../AGENTS.md) for task specs and completion. Each entry states the goal, the intended feel and the constraints; the reasoning lives in the linked concept sections, and the full spec is written when the task starts.
+Next: **026 — Sticky C4 Charges & Material Reactions** (after the Ground Lab playtest settles the grounds); `099` waits on its [playtest](playtests/099-disturbed-ground-odd-spots-detector-test.md). Playtests you still owe: [docs/playtests/](playtests/). Queue order is priority; completed decisions live in [completed specs](tasks/completed/). Follow [AGENTS.md](../AGENTS.md) for task specs and completion. Each entry states the goal, the intended feel and the constraints; the reasoning lives in the linked concept sections, and the full spec is written when the task starts.
 
 Standing decisions: the HUD detector is **frozen** (kept as built, no new features, nothing new may depend on it) until `099` decides its fate. Seam cleaving (`009`) and the bladder release (`076`) were dropped, and hard pockets (`010`) became ground places inside `006`; reasons are in [Closed ideas](concept/13_OPEN_QUESTIONS.md#closed-ideas). Research evidence behind the rules: [`.research/`](../.research/README.md).
 
@@ -12,9 +12,7 @@ Materials only differed in dig speed and the ground repeated the same thin stack
 
 ## Phase 2 — Tool and power
 
-- [ ] **`024` — Depth-Aware Return Warning** (`02`, `06`): replace charge fractions with a safe/risky/critical estimate from depth, usable ascent route and the live jetpack tier after `022`. Validate against actual return fuel; keep additions small for later HUD consolidation in `032`.
 - [ ] **`026` — Sticky C4 Charges & Material Reactions** (`04` §8): valid/invalid preview, sticky landing, remote detonation and a predictable blast volume using the existing dig/cleanup pipeline. Material reactions: a big blast in every ground (never weak in clay or anywhere common), breaking along cracks from `096`, breaking the slab between cracks in concrete, triggering the gravel pour from `097`. Finds, uniques and lamps survive; invalid placement consumes nothing; charges cost money, not battery. Research: Keep Digging's dynamite was "beyond useless", Meltopia's dirt nerf made its shovel hated, and A Game About Digging a Hole's dynamite bounced and clipped. Price against `087`, repeat slice-object recognition tests and measure time saved in `088` and `077`.
-- [ ] **`023` — Crouch Footprint Narrowing** (`04` §6): narrower bite footprint while crouched for delicate carving around silhouettes, including half-sunk finds in sealed-room silt.
 
 ## Phase 3 — Slice content
 
@@ -81,4 +79,6 @@ Decide the mystery payoff ([Open Questions](concept/13_OPEN_QUESTIONS.md#content
 
 ## Parked
 
+- [ ] **`024` — Depth-Aware Return Warning** (`02`, `06`): *Parked 2026-09-28: the user is wary of adding more hints; revisit after the slice playtest.* replace charge fractions with a safe/risky/critical estimate from depth, usable ascent route and the live jetpack tier after `022`. Validate against actual return fuel; keep additions small for later HUD consolidation in `032`.
+- [ ] **`023` — Crouch Footprint Narrowing** (`04` §6): *Parked 2026-09-28: not important yet.* narrower bite footprint while crouched for delicate carving around silhouettes, including half-sunk finds in sealed-room silt.
 - [ ] **`016` — Hover Price Tag on Exposed Finds** (`05`, `08`, `13`): subtle fixed sale price when the reticle hovers a collectible sellable find. Decided from the `088` playtest.
