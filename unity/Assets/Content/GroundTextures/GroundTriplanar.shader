@@ -41,6 +41,8 @@ Shader "Something Down There/Ground Triplanar"
         _FractureTileMetres("Fractured grain tile metres", Float) = 0.9
         _FractureDarkening("Fractured band darkening", Range(0, 1)) = 0.3
         _CrackDarkness("Crack line darkness", Range(0, 1)) = 0.9
+        _BackfillTint("Backfill loose fill tint (gravel textures)", Color) = (0.62,0.5,0.4,1)
+        _BackfillChunkMetres("Backfill chunk size", Float) = 0.4
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
@@ -101,6 +103,8 @@ Shader "Something Down There/Ground Triplanar"
             float4 _PondClayTint, _ClayDeepTint, _RockColdTint, _ZoneDepths;
             float _PondClayTileMetres, _PondClayNormalStrength, _StrataStrength, _StrataCool;
             float _FractureTileMetres, _FractureDarkening, _CrackDarkness;
+            float4 _BackfillTint;
+            float _BackfillChunkMetres;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -430,6 +434,30 @@ Shader "Something Down There/Ground Triplanar"
             colour *= 1 + strata * _StrataStrength * below;
             // Cracks read by line and grain, not colour alone: the band beside a crack gets a fine,
             // high-relief broken grain and darkens; the crack itself is a thin near-black line.
+            // Backfill reads by grain: blocky chunks of clay among dark loose stones break the banding.
+            half backfill = saturate(1 - materials2.w);
+            [branch] if (backfill > 0.001)
+            {
+                half3 stones, stonesNormal, lumps, lumpsNormal; half stonesOcclusion, lumpsOcclusion;
+                DepositSurface(TEXTURE2D_ARGS(_GravelAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_GravelNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_GravelMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _GravelTileMetres * 1.6, _BackfillTint.rgb, _GravelNormalStrength,
+                    stones, stonesNormal, stonesOcclusion);
+                DepositSurface(TEXTURE2D_ARGS(_ClayAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_ClayNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ClayMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _ClayTileMetres * .7, _ClayTint.rgb * 0.85, _ClayNormalStrength * 3,
+                    lumps, lumpsNormal, lumpsOcclusion);
+                // Warped cells give irregular lumps: clay chunks, dark loose fill and stones.
+                float3 q = position / max(_BackfillChunkMetres, 0.05);
+                q += sin(q.yzx * 1.7 + q.zxy * 0.9) * 0.35;
+                float h = frac(sin(dot(floor(q), float3(12.9898, 78.233, 37.719))) * 43758.5453);
+                half chunk = step(0.62, h), dark = step(h, 0.28);
+                half3 fill = lerp(lerp(stones, stones * 0.55, dark), lumps, chunk);
+                colour = lerp(colour, fill, backfill);
+                normal = normalize(lerp(normal, lerp(stonesNormal, lumpsNormal, chunk), backfill));
+                occlusion = lerp(occlusion, lerp(stonesOcclusion, lumpsOcclusion, chunk) * (1 - dark * 0.3), backfill);
+                roughness = lerp(roughness, 1, backfill);
+            }
             half fracture = saturate(materials2.y), crack = saturate(materials2.z);
             [branch] if (fracture > 0.001)
             {

@@ -149,6 +149,9 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_FractureTileMetres", .9f);
             material.SetFloat("_FractureDarkening", .3f);
             material.SetFloat("_CrackDarkness", .9f);
+            // Backfill (099): dark loose stones with blocky clay chunks.
+            material.SetColor("_BackfillTint", new Color(.62f, .5f, .4f));
+            material.SetFloat("_BackfillChunkMetres", .4f);
             EditorUtility.SetDirty(material);
         }
 

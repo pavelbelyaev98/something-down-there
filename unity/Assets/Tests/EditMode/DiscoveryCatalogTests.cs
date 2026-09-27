@@ -25,15 +25,15 @@ namespace SomethingDownThere.Tests
         {
             var catalog = Catalog;
             var key = (seed, JsonUtility.ToJson(catalog).GetHashCode());
-            if (!Layouts.TryGetValue(key, out var layout)) Layouts[key] = layout = catalog.Generate(SiteLayout.Extent, seed, Ground, Rooms);
+            if (!Layouts.TryGetValue(key, out var layout)) Layouts[key] = layout = catalog.Generate(SiteLayout.Extent, seed, Ground, GroundLayout);
             return layout;
         }
 
         // The shipped ground (MainGame's excavation seed), shared by every layout.
         private const int ExcavationSeed = 2718;
         private static TerrainMaterialSnapshot site;
-        private static TerrainMaterialSnapshot Site => site ??= TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed);
-        private static TerrainGround.Room[] Rooms => TerrainGround.Rooms(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed);
+        private static TerrainMaterialSnapshot Site => site ??= TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
+        private static TerrainGround.GroundLayout GroundLayout => TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
         private static TerrainMaterialId Ground(Vector3 local)
         {
             var sample = Vector3Int.Min(Vector3Int.Max(Vector3Int.RoundToInt(local / SiteLayout.CellSize), Vector3Int.zero), SiteLayout.Size);
@@ -45,7 +45,7 @@ namespace SomethingDownThere.Tests
         {
             var catalog = Catalog; catalog.Validate();
             var extent = SiteLayout.Extent; var layout = Layout(seed);
-            CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,Rooms));
+            CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
             CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
@@ -405,10 +405,11 @@ namespace SomethingDownThere.Tests
             // A find sits right under every seat, sunk a third of its own radius into the silt.
             bool Seated(DiscoveryPlacement p, Vector3 seat) => new Vector2(p.Position.x - seat.x, p.Position.z - seat.z).sqrMagnitude < 1e-6f
                 && Mathf.Abs(seat.y - p.Position.y - radii[p.PrefabIndex] * TerrainGround.SeatSink) < 1e-4f;
-            foreach (var room in Rooms)
+            // Every seat holds a find: room silt, and the bottom of every backfill pit.
+            foreach (var (seat, _) in GroundLayout.Seats())
+                Assert.That(layout.Count(p => Seated(p, seat)), Is.EqualTo(1), $"Seed {seed}: a find waits at every seat.");
+            foreach (var room in GroundLayout.Rooms)
             {
-                foreach (var seat in TerrainGround.Seats(room))
-                    Assert.That(layout.Count(p => Seated(p, seat)), Is.EqualTo(1), $"Seed {seed}: a find settles at every seat.");
                 foreach (var p in layout)
                 {
                     if (TerrainGround.Seats(room).Any(seat => Seated(p, seat))) continue;
@@ -417,6 +418,35 @@ namespace SomethingDownThere.Tests
                     float distance = Unity.Mathematics.math.length(Unity.Mathematics.math.max(gap, 0));
                     Assert.That(distance, Is.GreaterThan(radii[p.PrefabIndex]), $"Seed {seed}: an ordinary find reaches into a sealed structure.");
                 }
+            }
+        }
+
+        // Concept 03 §4 odd spots: every unique sits in ground unlike its zone, shaped around its
+        // envelope, and no ordinary find sits inside that lens.
+        [Test]
+        public void EveryUniqueSitsInAnOddSpotUnlikeItsZone()
+        {
+            var catalog = Catalog;
+            var layout = Layout(90127);
+            var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
+            var uniques = catalog.Entries.Where(e => e.AuthoredPlacement).ToArray();
+            Assert.That(GroundLayout.OddSpots.Length, Is.EqualTo(uniques.Length));
+            foreach (var entry in uniques)
+            {
+                var centre = entry.AuthoredPosition;
+                float depth = SiteLayout.Extent.y - centre.y, reach = entry.PlacementRadius + DiscoveryField.SoilClearance + .35f;
+                var main = TerrainGround.ZoneAt(depth) switch { 0 => TerrainMaterialId.Soil, 1 => TerrainMaterialId.Clay, _ => TerrainMaterialId.Rock };
+                foreach (var side in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back })
+                {
+                    var ground = Ground(centre + side * reach);
+                    Assert.That(ground, Is.Not.EqualTo(main), $"{entry.ItemId}: the ground around it is its zone's own.");
+                    Assert.That(ground, Is.EqualTo(Ground(centre + Vector3.right * reach)), $"{entry.ItemId}: one lens around the unique.");
+                }
+                int index = Array.IndexOf(catalog.Entries, entry);
+                foreach (var p in layout)
+                    if (p.PrefabIndex != index)
+                        Assert.That(Vector3.Distance(p.Position, centre) - radii[p.PrefabIndex], Is.GreaterThan(entry.PlacementRadius + TerrainGround.OddSpotReach * .9f),
+                            $"{entry.ItemId}: an ordinary find sits in its odd spot.");
             }
         }
 
@@ -433,13 +463,13 @@ namespace SomethingDownThere.Tests
             var catalog = UnityEngine.Object.Instantiate(Catalog);
             try
             {
-                var accepted = catalog.Generate(SiteLayout.Extent, 90127, Ground, Rooms).Take(catalog.ShallowCount).ToArray();
+                var accepted = catalog.Generate(SiteLayout.Extent, 90127, Ground, GroundLayout).Take(catalog.ShallowCount).ToArray();
                 foreach (var entry in catalog.Entries)
                 {
                     if (entry.AuthoredPlacement) continue;
                     entry.Count = entry.ShallowCount + (entry.Count - entry.ShallowCount) / 2;
                 }
-                CollectionAssert.AreEqual(accepted, catalog.Generate(SiteLayout.Extent, 90127, Ground, Rooms).Take(catalog.ShallowCount));
+                CollectionAssert.AreEqual(accepted, catalog.Generate(SiteLayout.Extent, 90127, Ground, GroundLayout).Take(catalog.ShallowCount));
             }
             finally { UnityEngine.Object.DestroyImmediate(catalog); }
         }
@@ -474,9 +504,9 @@ namespace SomethingDownThere.Tests
         {
             var catalog = Catalog;
             var extent = SiteLayout.Extent;
-            catalog.Generate(extent, 90127, Ground, Rooms); // warm meshes, JIT, the placement grid and the ground
+            catalog.Generate(extent, 90127, Ground, GroundLayout); // warm meshes, JIT, the placement grid and the ground
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            var layout = catalog.Generate(extent, 12, Ground, Rooms);
+            var layout = catalog.Generate(extent, 12, Ground, GroundLayout);
             watch.Stop();
             Debug.Log($"Full population placement: {watch.Elapsed.TotalMilliseconds:F0} ms for {layout.Length} finds.");
             Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount));

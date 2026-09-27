@@ -80,6 +80,130 @@ namespace SomethingDownThere
         // A seated find sinks SeatSink of its own radius below the seat: about a third shows, short
         // of collection, so the reveal-by-silhouette survives (concept 03 §5).
         public const float SeatSpacing = 1.2f, SeatSink = .35f, RoomHeadroom = 1.9f;
+
+        // Disturbed ground (099): a column of backfill someone dug and refilled, from Top down to a
+        // buried find at Bottom. Mostly steep, some leaning sideways.
+        public struct Pit
+        {
+            public int Zone;
+            public float3 Top, Bottom, Min, Max;
+            public float Radius;
+        }
+        private static readonly int[] PitsPerZone = { 6, 4, 3 };
+
+        // Odd spots (099): ground unlike its zone shaped around a unique's reserved envelope. The
+        // lens reaches OddSpotReach past the envelope sideways and OddSpotRise up and down.
+        public const float OddSpotReach = .9f, OddSpotRise = .6f;
+        public struct OddSpot
+        {
+            public float3 Centre, Half, Min, Max;
+            public TerrainMaterialId Ground;
+        }
+
+        public static OddSpot[] OddSpots(Vector3Int size, float cellSize, int seed, Vector4[] spots)
+        {
+            if (spots == null) return Array.Empty<OddSpot>();
+            var extent = (Vector3)size * cellSize;
+            var result = new List<OddSpot>();
+            for (int i = 0; i < spots.Length; i++)
+            {
+                var centre = new float3(spots[i].x, spots[i].y, spots[i].z);
+                float depth = extent.y - centre.y;
+                uint h = unchecked((uint)seed * 2246822519u ^ (uint)i * 3266489917u);
+                bool alternate = (TerrainMaterialSnapshot.NextUnit(ref h)) < .5f;
+                // The odd one out: soil gets clay or pond clay, clay gets gravel, rock gets clay.
+                var ground = ZoneAt(depth) switch
+                {
+                    0 => alternate ? TerrainMaterialId.PondClay : TerrainMaterialId.Clay,
+                    1 => TerrainMaterialId.Gravel,
+                    _ => TerrainMaterialId.Clay
+                };
+                var half = new float3(spots[i].w + OddSpotReach, spots[i].w + OddSpotRise, spots[i].w + OddSpotReach);
+                result.Add(new OddSpot { Centre = centre, Half = half, Ground = ground, Min = centre - half * 1.2f, Max = centre + half * 1.2f });
+            }
+            return result.ToArray();
+        }
+
+        public static Pit[] Pits(Vector3Int size, float cellSize, int seed, OddSpot[] spots = null)
+        {
+            var extent = (Vector3)size * cellSize;
+            var footprint = SiteLayout.FindFootprint(extent);
+            var places = Places(size, cellSize, seed);
+            uint state = unchecked((uint)seed * 3432918353u ^ 0x2545f491u);
+            float Next() => TerrainMaterialSnapshot.NextUnit(ref state);
+            float Range(float a, float b) => a + (b - a) * Next();
+            var pits = new List<Pit>();
+            for (int zone = 0; zone < PitsPerZone.Length; zone++)
+            {
+                float top = zone == 0 ? PlaceTop : ZoneBorders[zone - 1] + EdgeBand, bottom = Mathf.Min(ZoneBorders[zone] - EdgeBand, extent.y - 1);
+                if (bottom - top < 4) break;
+                for (int n = 0; n < PitsPerZone[zone]; n++)
+                    for (int attempt = 0; attempt < 120; attempt++)
+                    {
+                        float radius = Range(.7f, 1.1f), length = Range(2.5f, 6f);
+                        var low = new float3(Range(2, extent.x - 2), extent.y - Range(top + 1, bottom), Range(2, extent.z - 2));
+                        // Most pits were dug straight down; some lean well over to the side.
+                        float lean = Next() < .7f ? Range(0, .45f) : Range(.7f, 1.2f), heading = Range(0, 2 * math.PI);
+                        var up = new float3(math.sin(lean) * math.sin(heading), math.cos(lean), math.sin(lean) * math.cos(heading));
+                        var high = low + up * length;
+                        if (extent.y - high.y < SurfaceSoil + .6f) high = low + up * ((extent.y - SurfaceSoil - .6f - low.y) / math.max(up.y, .2f));
+                        if (math.distance(high, low) < 2) continue;
+                        if (footprint != null && (!Inside(footprint, low, radius + .5f) || !Inside(footprint, high, radius + .5f))) continue;
+                        var pit = new Pit { Zone = zone, Top = high, Bottom = low, Radius = radius,
+                            Min = math.min(low, high) - radius - .2f, Max = math.max(low, high) + radius + .2f };
+                        bool clear = true;
+                        foreach (var place in places) clear &= math.any(pit.Min > place.Max + 1) || math.any(place.Min > pit.Max + 1);
+                        foreach (var other in pits) clear &= math.any(pit.Min > other.Max + 1) || math.any(other.Min > pit.Max + 1);
+                        if (spots != null) foreach (var spot in spots) clear &= math.any(pit.Min > spot.Max + 1) || math.any(spot.Min > pit.Max + 1);
+                        if (!clear) continue;
+                        pits.Add(pit);
+                        break;
+                    }
+            }
+            return pits.ToArray();
+        }
+
+        // Something waits at the bottom of every pit: one seat there, a second partway up long ones.
+        public static Vector3[] PitSeats(Pit pit)
+        {
+            float3 up = math.normalize(pit.Top - pit.Bottom);
+            float length = math.distance(pit.Top, pit.Bottom);
+            var bottom = pit.Bottom + up * math.min(pit.Radius * .5f, length * .2f);
+            return length > 4.5f ? new[] { (Vector3)bottom, (Vector3)(bottom + up * 2.2f) } : new[] { (Vector3)bottom };
+        }
+
+        // What find placement needs from the seeded ground: seats where a find must lie (room silt,
+        // pit bottoms, each with the largest find radius it takes) and bodies ordinary finds keep out
+        // of (sealed structures).
+        public sealed class GroundLayout
+        {
+            public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Room>(), Array.Empty<Pit>(), Array.Empty<OddSpot>());
+            public readonly Room[] Rooms; public readonly Pit[] Pits; public readonly OddSpot[] OddSpots;
+            public GroundLayout(Room[] rooms, Pit[] pits, OddSpot[] spots) { Rooms = rooms; Pits = pits; OddSpots = spots; }
+
+            public (Vector3 position, float fits)[] Seats()
+            {
+                var seats = new List<(Vector3, float)>();
+                foreach (var room in Rooms)
+                    foreach (var seat in TerrainGround.Seats(room)) seats.Add((seat, (room.SiltTop - (-room.OuterHalf.y + room.Wall)) / (1 + SeatSink)));
+                foreach (var pit in Pits)
+                    foreach (var seat in PitSeats(pit)) seats.Add((seat, pit.Radius));
+                return seats.ToArray();
+            }
+
+            public DiscoveryReservation[] KeepOut()
+            {
+                var keep = new DiscoveryReservation[Rooms.Length];
+                for (int i = 0; i < Rooms.Length; i++) keep[i] = new DiscoveryReservation((Vector3)Rooms[i].Centre, math.length(Rooms[i].OuterHalf) + .2f);
+                return keep;
+            }
+        }
+
+        public static GroundLayout Layout(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null)
+        {
+            var spots = OddSpots(size, cellSize, seed, oddSpots);
+            return new GroundLayout(Rooms(size, cellSize, seed), Pits(size, cellSize, seed, spots), spots);
+        }
         public static Vector3[] Seats(Room room)
         {
             var seats = new List<Vector3>();
@@ -251,21 +375,25 @@ namespace SomethingDownThere
             return footprint(new Vector2(centre.x, centre.z));
         }
 
-        internal static byte[] Generate(Vector3Int size, float cellSize, int seed)
+        internal static byte[] Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null)
         {
             int stride = size.x + 1, plane = stride * (size.y + 1);
             var places = Places(size, cellSize, seed);
             var channels = Channels(size, cellSize, seed);
+            var spots = OddSpots(size, cellSize, seed, oddSpots);
+            var pits = Pits(size, cellSize, seed, spots);
             uint hash = unchecked((uint)seed * 747796405u + 2891336453u);
             var offsets = new float4(hash & 1023, (hash >> 10) & 1023, (hash >> 20) & 1023, (hash >> 5) & 1023) * .37f;
             using var output = new NativeArray<byte>(plane * (size.z + 1), Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             using var nativePlaces = new NativeArray<Place>(places, Allocator.TempJob);
             using var borders = new NativeArray<float>(ZoneBorders, Allocator.TempJob);
             using var nativeChannels = new NativeArray<ChannelSegment>(channels, Allocator.TempJob);
+            using var nativePits = new NativeArray<Pit>(pits, Allocator.TempJob);
+            using var nativeSpots = new NativeArray<OddSpot>(spots, Allocator.TempJob);
             new GroundJob
             {
                 Size = new int3(size.x, size.y, size.z), CellSize = cellSize, Offsets = offsets,
-                Places = nativePlaces, Borders = borders, Channels = nativeChannels, Output = output
+                Places = nativePlaces, Borders = borders, Channels = nativeChannels, Pits = nativePits, OddSpots = nativeSpots, Output = output
             }.Schedule(size.z + 1, 1).Complete();
             return output.ToArray();
         }
@@ -279,6 +407,8 @@ namespace SomethingDownThere
             [ReadOnly] public NativeArray<Place> Places;
             [ReadOnly] public NativeArray<float> Borders;
             [ReadOnly] public NativeArray<ChannelSegment> Channels;
+            [ReadOnly] public NativeArray<Pit> Pits;
+            [ReadOnly] public NativeArray<OddSpot> OddSpots;
             [NativeDisableParallelForRestriction, WriteOnly] public NativeArray<byte> Output;
 
             public void Execute(int z)
@@ -292,6 +422,9 @@ namespace SomethingDownThere
                 var riverbeds = new FixedList512Bytes<int>();
                 for (int i = 0; i < Channels.Length && riverbeds.Length < riverbeds.Capacity; i++)
                     if (pz >= Channels[i].Min.z && pz <= Channels[i].Max.z) riverbeds.Add(i);
+                var dug = new FixedList128Bytes<int>();
+                for (int i = 0; i < Pits.Length && dug.Length < dug.Capacity; i++)
+                    if (pz >= Pits[i].Min.z && pz <= Pits[i].Max.z) dug.Add(i);
                 var warps = new float3(0);
                 for (int x = 0; x <= Size.x; x++)
                 {
@@ -303,14 +436,22 @@ namespace SomethingDownThere
                     {
                         float depth = (Size.y - y) * CellSize;
                         var p = new float3(px, y * CellSize, pz);
-                        Output[x + y * stride + z * plane] = (byte)Material(p, depth, warps, slice, riverbeds);
+                        Output[x + y * stride + z * plane] = (byte)Material(p, depth, warps, slice, riverbeds, dug);
                     }
                 }
             }
 
-            private TerrainMaterialId Material(float3 p, float depth, float3 warps, FixedList128Bytes<int> slice, FixedList512Bytes<int> riverbeds)
+            private TerrainMaterialId Material(float3 p, float depth, float3 warps, FixedList128Bytes<int> slice, FixedList512Bytes<int> riverbeds, FixedList128Bytes<int> dug)
             {
                 if (depth < SurfaceSoil) return TerrainMaterialId.Soil;
+                // A unique's odd spot: a flattened lens of ground unlike its zone, around its envelope.
+                for (int i = 0; i < OddSpots.Length; i++)
+                {
+                    var spot = OddSpots[i];
+                    if (math.any(p < spot.Min) || math.any(p > spot.Max)) continue;
+                    float wobble = 1 + .15f * noise.snoise(p * .9f + Offsets.zwy + i * 11.3f);
+                    if (math.lengthsq((p - spot.Centre) / spot.Half) < wobble * wobble) return spot.Ground;
+                }
                 for (int i = 0; i < slice.Length; i++)
                 {
                     var place = Places[slice[i]];
@@ -320,6 +461,8 @@ namespace SomethingDownThere
                         return !shell ? material : material == TerrainMaterialId.Rock ? Cracked(p, material, MassCracks)
                             : material == TerrainMaterialId.Concrete ? Cracked(p, material, place.Sealed != 0 ? SealedCracks : ConcreteCracks) : material;
                 }
+                for (int i = 0; i < dug.Length; i++)
+                    if (InPit(Pits[dug[i]], p)) return TerrainMaterialId.Backfill;
                 int zone = 0;
                 for (int b = 0; b < Borders.Length; b++)
                 {
@@ -353,6 +496,16 @@ namespace SomethingDownThere
                 if (distance < CrackCore) return TerrainMaterialId.Crack;
                 if (distance < CrackBand) return ground == TerrainMaterialId.Concrete ? TerrainMaterialId.FracturedConcrete : TerrainMaterialId.FracturedRock;
                 return ground;
+            }
+
+            // Inside a refilled pit: a capsule from top to bottom with a ragged, lumpy edge.
+            private bool InPit(Pit pit, float3 p)
+            {
+                if (math.any(p < pit.Min) || math.any(p > pit.Max)) return false;
+                float3 axis = pit.Top - pit.Bottom;
+                float t = math.saturate(math.dot(p - pit.Bottom, axis) / math.max(1e-6f, math.dot(axis, axis)));
+                float edge = pit.Radius * (1 + .18f * noise.snoise(p * 1.4f + Offsets.xzw + 19.7f));
+                return math.lengthsq(p - (pit.Bottom + axis * t)) < edge * edge;
             }
 
             // Inside a riverbed's flattened tube, with a slightly wandering bank.

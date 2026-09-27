@@ -1,6 +1,6 @@
 # Roadmap & Tasks
 
-Next: **099 — Disturbed Ground, Odd Spots & Detector-Off Test**. Queue order is priority; completed decisions live in [completed specs](tasks/completed/). Follow [AGENTS.md](../AGENTS.md) for task specs and completion. Each entry states the goal, the intended feel and the constraints; the reasoning lives in the linked concept sections, and the full spec is written when the task starts.
+Next: **099 — Detector-off playtest** (the ground work is built; see its [spec](tasks/099-disturbed-ground-odd-spots-detector-test.md)). Queue order is priority; completed decisions live in [completed specs](tasks/completed/). Follow [AGENTS.md](../AGENTS.md) for task specs and completion. Each entry states the goal, the intended feel and the constraints; the reasoning lives in the linked concept sections, and the full spec is written when the task starts.
 
 Standing decisions: the HUD detector is **frozen** (kept as built, no new features, nothing new may depend on it) until `099` decides its fate. Seam cleaving (`009`) and the bladder release (`076`) were dropped, and hard pockets (`010`) became ground places inside `006`; reasons are in [Closed ideas](concept/13_OPEN_QUESTIONS.md#closed-ideas). Research evidence behind the rules: [`.research/`](../.research/README.md).
 
@@ -8,7 +8,7 @@ Standing decisions: the HUD detector is **frozen** (kept as built, no new featur
 
 Materials only differed in dig speed and the ground repeated the same thin stack every 8 m. This phase makes each zone its own place and turns dig-speed changes into the clue system ([concept 03 §3–5](concept/03_WORLD_AND_SITE.md#3-the-four-zones)).
 
-- [ ] **`099` — Disturbed Ground, Odd Spots & Detector-Off Test** (`03` §4, `05` §2): add a loose, mixed backfill ground (digs fast, reads as a chunky messy patch across the natural banding) in pits and columns above selected finds; every pit holds something. Place each unique in an odd spot, ground unlike its zone, shaped around its reserved envelope. Then playtest a fresh save with the detector disabled. Pass: testers find every unique without help and follow at least one tell unprompted, so remove the detector (HUD panel, runtime code, tests and concept references) and update `032`, `041` and `080`. Fail: keep it frozen and record why in the spec. Feel: "why did it just get easy? Someone dug here before me."
+- [ ] **`099` — Disturbed Ground, Odd Spots & Detector-Off Test** (`03` §4, `05` §2): backfill pits above selected finds and a unique in every odd spot are built ([spec](tasks/099-disturbed-ground-odd-spots-detector-test.md)). Remaining: playtest a fresh save with the detector disabled (`-noDetector` or Developer admin → Detector: OFF). Pass: testers find every unique without help and follow at least one tell unprompted, so remove the detector (HUD panel, runtime code, tests and concept references) and update `032`, `041` and `080`. Fail: keep it frozen and record why in the spec. Feel: "why did it just get easy? Someone dug here before me."
 
 ## Phase 2 — Tool and power
 

@@ -32,6 +32,7 @@ namespace SomethingDownThere
         public void Tick()
         {
             if (!player.GameplayActive) return;
+            if (!player.DetectorShown) { Reset(); return; }
             var currentField = player.Discoveries;
             if (currentField == null || !currentField.isActiveAndEnabled || !currentField.Initialized)
             { Reset(); return; }

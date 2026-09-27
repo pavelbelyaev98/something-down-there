@@ -246,6 +246,32 @@ namespace SomethingDownThere.Tests
             Assert.That(grid.IsSolid(grid.Rooms[0].ToGrid(new Unity.Mathematics.float3(grid.Rooms[0].AirHalf.x + grid.Rooms[0].Wall * .5f, grid.Rooms[0].AirCentre.y, 0))), Is.True);
         }
 
+        // Concept 03 §4 disturbed ground: pits and columns of backfill cutting across the layers,
+        // most in the recent fill, clear of places and rooms, each with its seats at the bottom.
+        [TestCase(2718)] [TestCase(12)] [TestCase(991)]
+        public void BackfillPitsCutAcrossTheLayersAboveTheirFinds(int seed)
+        {
+            var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, seed);
+            var pits = layout.Pits;
+            Assert.That(pits.Count(p => p.Zone == 0), Is.GreaterThanOrEqualTo(4), $"Seed {seed}: rubbish pits in the recent fill.");
+            Assert.That(pits.Count(p => p.Zone == 1), Is.GreaterThanOrEqualTo(2));
+            Assert.That(pits.Count(p => p.Zone == 2), Is.GreaterThanOrEqualTo(1));
+            Assert.That(pits.Count(p => p.Zone == 0), Is.GreaterThanOrEqualTo(pits.Count(p => p.Zone == 2)));
+            var places = TerrainGround.Places(SiteLayout.Size, SiteLayout.CellSize, seed);
+            var ids = Site(seed);
+            foreach (var pit in pits)
+            {
+                Assert.That(SiteLayout.Extent.y - pit.Top.y, Is.GreaterThanOrEqualTo(TerrainGround.SurfaceSoil), "Below the first scrapes.");
+                Assert.That(pit.Top.y, Is.GreaterThan(pit.Bottom.y), "Dug from above.");
+                foreach (var place in places)
+                    Assert.That(Unity.Mathematics.math.any(pit.Min > place.Max) || Unity.Mathematics.math.any(place.Min > pit.Max), Is.True, "Never in a place.");
+                var seats = TerrainGround.PitSeats(pit);
+                Assert.That(seats.Length, Is.InRange(1, 2));
+                var middle = Vector3Int.RoundToInt((Vector3)((pit.Top + pit.Bottom) * .5f) / SiteLayout.CellSize);
+                Assert.That(ids[Index(middle.x, middle.y, middle.z)], Is.EqualTo((byte)TerrainMaterialId.Backfill), "The pit is backfill.");
+            }
+        }
+
         [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]
         public void PlacesSitUnderThePlotInTheirZonesWithoutOverlapping(int seed)
         {

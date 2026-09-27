@@ -121,8 +121,9 @@ namespace SomethingDownThere
         }
 
         // ground: grid-local material sampler (the excavation's immutable field); null ignores host ground.
-        // rooms: the excavation's sealed rooms; ordinary finds keep out, and a few settle in their silt.
-        public DiscoveryPlacement[] Generate(Vector3 extent, int seed, Func<Vector3, TerrainMaterialId> ground = null, TerrainGround.Room[] rooms = null)
+        // groundLayout: the excavation's rooms and pits; ordinary finds keep out of sealed structures, and a
+        // find settles at every seat (room silt, pit bottoms).
+        public DiscoveryPlacement[] Generate(Vector3 extent, int seed, Func<Vector3, TerrainMaterialId> ground = null, TerrainGround.GroundLayout groundLayout = null)
         {
             Validate();
             var shallow = new List<int>(); var remaining = new List<int>();
@@ -159,33 +160,31 @@ namespace SomethingDownThere
             for (int i = 0; i < Entries.Length; i++)
             {
                 var entry = Entries[i]; if (!entry.AuthoredPlacement) continue;
+                // Ordinary finds also keep out of the unique's odd spot (TerrainGround.OddSpotReach).
                 Vector3 p = entry.AuthoredPosition; float r = entryRadii[i] + DiscoveryField.SoilClearance;
                 if (p.x < r || p.y < r || p.z < r || p.x > extent.x-r || p.y > extent.y-r || p.z > extent.z-r)
                     throw new InvalidDataException("Authored unique does not fit inside untouched soil.");
                 foreach (var other in reserved) if (Vector3.Distance(p,other.Position) < r+other.Radius)
                     throw new InvalidDataException("Authored discoveries overlap.");
-                reserved.Add(new DiscoveryReservation(p,entryRadii[i]));
+                reserved.Add(new DiscoveryReservation(p,entryRadii[i] + TerrainGround.OddSpotReach));
                 authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
             }
-            // Each seat in a room's silt takes the next find whose depth band covers it and that fits,
-            // sunk a third of its size under the surface: counts and bands are unchanged (03 §5).
+            // Each seat takes the next find whose depth band covers it and that fits, sunk a third of
+            // its size below the seat: counts and bands are unchanged. Room seats lie on the silt
+            // (concept 03 §5); pit seats wait at the bottom of disturbed ground (03 §4: every pit
+            // holds something).
             Vector3[] seats = null;
-            if (rooms != null && rooms.Length > 0)
+            if (groundLayout != null)
             {
                 seats = new Vector3[radii.Length];
                 for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
-                foreach (var room in rooms)
+                reserved.AddRange(groundLayout.KeepOut());
+                foreach (var (seat, fits) in groundLayout.Seats())
                 {
-                    reserved.Add(new DiscoveryReservation((Vector3)room.Centre, Unity.Mathematics.math.length(room.OuterHalf) + .2f));
-                    float silt = room.SiltTop - (-room.OuterHalf.y + room.Wall);
-                    foreach (var seat in TerrainGround.Seats(room))
-                    {
-                        float depth = extent.y - seat.y;
-                        for (int i = ShallowCount; i < seats.Length; i++)
-                            if (float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y
-                                && radii[i] * (1 + TerrainGround.SeatSink) <= silt)
-                            { seats[i] = seat + Vector3.down * radii[i] * TerrainGround.SeatSink; break; }
-                    }
+                    float depth = extent.y - seat.y;
+                    for (int i = ShallowCount; i < seats.Length; i++)
+                        if (float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y && radii[i] <= fits)
+                        { seats[i] = seat + Vector3.down * radii[i] * TerrainGround.SeatSink; break; }
                 }
             }
             Func<int, Vector3, float> weight = null;
@@ -236,6 +235,18 @@ namespace SomethingDownThere
         }
 
         private static Vector3 Axis(int probe) => probe <= 2 ? Vector3.right : probe <= 4 ? Vector3.up : Vector3.forward;
+
+        // Unique odd spots for the terrain (grid-local centre, envelope radius): the discovery sync
+        // copies them onto TerrainVolume so the ground shapes unlike-zone lenses around them.
+        public Vector4[] OddSpots()
+        {
+            var spots = new List<Vector4>();
+            foreach (var entry in Entries)
+                if (entry.AuthoredPlacement)
+                    spots.Add(new Vector4(entry.AuthoredPosition.x, entry.AuthoredPosition.y, entry.AuthoredPosition.z,
+                        entry.PlacementRadius + DiscoveryField.SoilClearance));
+            return spots.ToArray();
+        }
 
         private static void Shuffle(List<int> values, System.Random random)
         {

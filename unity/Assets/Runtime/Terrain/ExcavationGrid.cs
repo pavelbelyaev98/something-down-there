@@ -33,9 +33,9 @@ namespace SomethingDownThere
         // ground into a thin roof. Lateral digging under the site starts below it.
         private float[] bankBeyond;
         private float bankDepth;
-        // Sealed rooms (TerrainGround) of a seeded grid: their air is part of untouched ground.
-        private readonly TerrainGround.Room[] rooms = Array.Empty<TerrainGround.Room>();
-        public TerrainGround.Room[] Rooms => rooms;
+        // The seeded ground's rooms, pits and odd spots; sealed rooms' air is part of untouched ground.
+        public TerrainGround.GroundLayout Layout { get; } = TerrainGround.GroundLayout.Empty;
+        public TerrainGround.Room[] Rooms => Layout.Rooms;
         public Vector3Int Size { get; }
         public float CellSize { get; }
         public Vector3 Extent => (Vector3)Size * CellSize;
@@ -72,7 +72,7 @@ namespace SomethingDownThere
                 throw new ArgumentOutOfRangeException(nameof(size), "Terrain exceeds the supported sample budget.");
         }
 
-        public ExcavationGrid(Vector3Int size, float cellSize, int? materialSeed = null)
+        public ExcavationGrid(Vector3Int size, float cellSize, int? materialSeed = null, Vector4[] oddSpots = null)
         {
             ValidateDimensions(size, cellSize);
             Size = size;
@@ -81,9 +81,9 @@ namespace SomethingDownThere
             strideY = size.x + 1;
             strideZ = strideY * (size.y + 1);
             density = new PagedDensity(strideZ * (size.z + 1));
-            materials = materialSeed.HasValue ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value)
+            materials = materialSeed.HasValue ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value, oddSpots)
                 : TerrainMaterialSnapshot.Uniform(density.Length);
-            if (materialSeed.HasValue) rooms = TerrainGround.Rooms(size, cellSize, materialSeed.Value);
+            if (materialSeed.HasValue) Layout = TerrainGround.Layout(size, cellSize, materialSeed.Value, oddSpots);
             // Reserve the support-search workspace during loading, not on the
             // first live cut (the full-depth site's buffer is tens of megabytes).
             supportState = new byte[density.Length];
@@ -113,7 +113,7 @@ namespace SomethingDownThere
             for (int y = 0; y <= Size.y; y++)
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
-            foreach (var room in rooms) CarveRoom(room);
+            foreach (var room in Layout.Rooms) CarveRoom(room);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
             LastDetachedSamples = LastSupportVisitedSamples = 0;
@@ -352,7 +352,8 @@ namespace SomethingDownThere
                     float radial = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
                     float side = radial - radius;
                     float floor = -height - shaveDepth * response.Penetration;
-                    if (material != TerrainMaterialId.Soil)
+                    // Backfill cuts with soil's rounded footprint, only larger.
+                    if (material != TerrainMaterialId.Soil && material != TerrainMaterialId.Backfill)
                     {
                         float u = Vector3.Dot(delta, tangent) / response.Width;
                         float v = Vector3.Dot(delta, bitangent) / response.Length;

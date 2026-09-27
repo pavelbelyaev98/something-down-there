@@ -141,6 +141,11 @@ namespace SomethingDownThere.Editor
             data.FindProperty("count").intValue = catalog.TotalCount;
             data.FindProperty("developmentContent").boolValue = false;
             data.ApplyModifiedPropertiesWithoutUndo();
+            // Unique odd spots follow the catalog's authored positions (099).
+            var ground = new SerializedObject(terrain);
+            var spots = catalog.OddSpots(); var list = ground.FindProperty("oddSpots"); list.arraySize = spots.Length;
+            for (int i = 0; i < spots.Length; i++) list.GetArrayElementAtIndex(i).vector4Value = spots[i];
+            ground.ApplyModifiedPropertiesWithoutUndo();
             var settings = new SerializedObject(player);settings.FindProperty("discoveries").objectReferenceValue = field;
             settings.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(scene);
         }

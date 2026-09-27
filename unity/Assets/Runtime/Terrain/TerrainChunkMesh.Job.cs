@@ -112,7 +112,7 @@ namespace SomethingDownThere
                 float3 t = p - cell;
                 int index = SampleIndex(cell);
                 float4 result = 0; // clay, rock, concrete, gravel
-                float pond = 0, fractured = 0, crack = 0;
+                float pond = 0, fractured = 0, crack = 0, backfill = 0;
                 for (int c = 0; c < 8; c++)
                 {
                     int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
@@ -124,6 +124,7 @@ namespace SomethingDownThere
                     else if (material == (byte)TerrainMaterialId.FracturedRock) { result.y += weight; fractured += weight; }
                     else if (material == (byte)TerrainMaterialId.FracturedConcrete) { result.z += weight; fractured += weight; }
                     else if (material == (byte)TerrainMaterialId.Crack) { result.y += weight; fractured += weight; crack += weight; }
+                    else if (material == (byte)TerrainMaterialId.Backfill) backfill += weight; // soil base, backfill overlay
                     else if (material == (byte)TerrainMaterialId.Gravel) result.w += weight;
                     else if (material == (byte)TerrainMaterialId.PondClay) pond += weight;
                 }
@@ -131,7 +132,7 @@ namespace SomethingDownThere
                 float total = math.max(1f, math.csum(result) + pond);
                 result /= total; pond /= total;
                 weights = new Vector4(result.x, result.y, result.z, 1 - result.w);
-                weights2 = new Vector4(pond, math.saturate(fractured), math.saturate(crack), 1);
+                weights2 = new Vector4(pond, math.saturate(fractured), math.saturate(crack), 1 - math.saturate(backfill));
             }
 
             private void Triangle(int a,int b,int c)

@@ -164,7 +164,7 @@ namespace SomethingDownThere
                 return;
             }
             var extent = (Vector3)terrain.Dimensions * terrain.CellSize;
-            var placements = catalog != null ? catalog.Generate(extent, seed, terrain.MaterialAtLocal, terrain.Rooms) : Generate(extent, count, seed);
+            var placements = catalog != null ? catalog.Generate(extent, seed, terrain.MaterialAtLocal, terrain.GroundLayout) : Generate(extent, count, seed);
             for (int i = 0; i < placements.Length; i++)
             {
                 var placement = placements[i];

@@ -65924,6 +65924,10 @@ MonoBehaviour:
   scoopVariation: 0.12
   scoopDepthVariation: 0.05
   excavationSeed: 2718
+  oddSpots:
+  - {x: 19.5, y: 142, z: 4.7, w: 0.89879173}
+  - {x: 13, y: 136.5, z: 11, w: 0.89879173}
+  - {x: 24, y: 129, z: 18, w: 0.89879173}
   soilMaterial: {fileID: 2100000, guid: 685a4a2f8a621554ba94a0445b00b296, type: 2}
   untouchedPreview: {fileID: 1062989434}
 --- !u!114 &486403994

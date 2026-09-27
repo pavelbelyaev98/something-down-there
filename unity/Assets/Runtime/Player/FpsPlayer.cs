@@ -83,6 +83,10 @@ namespace SomethingDownThere
         private ShovelProfile[] adminTuning;
         private bool unlimitedBattery;
         private bool adminXray;
+        // Detector-off playtest (099): session admin switch, or -noDetector for the whole run.
+        private bool adminDetectorOff;
+        private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
+        public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
         private bool jetpackReadyInAir;
 
@@ -129,7 +133,7 @@ namespace SomethingDownThere
         public static bool AdminBuild => Debug.isDebugBuild;
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
-        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminShavingOverride.HasValue);
+        public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff || adminShavingOverride.HasValue);
         public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
             ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
         public string AdminMotionLabel => (adminShavingOverride.HasValue ? "Override: " : "Automatic: ")
@@ -717,6 +721,7 @@ namespace SomethingDownThere
             adminLevel = 0;
             unlimitedBattery = false;
             adminXray = false;
+            adminDetectorOff = false;
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
             ResetDigComparisonInput();
@@ -748,6 +753,15 @@ namespace SomethingDownThere
             blockedPickup = null;
             input?.SuppressDig();
             extractionInteraction?.Reset();
+        }
+
+        public void ToggleAdminDetector()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminDetectorOff = !adminDetectorOff;
+            Detector?.Reset();
+            ShowFeedback(DetectorShown ? "Detector shown" : "Detector off for this session");
+            MenuChanged?.Invoke();
         }
 
         public void ToggleAdminXray()

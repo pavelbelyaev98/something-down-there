@@ -37,6 +37,8 @@ namespace SomethingDownThere
         // the crack line itself cuts exactly like it. Broken concrete ~3.5x concrete.
         private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(1f, .88f, .88f, 1.25f);
         private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.85f, .85f, .7f, 1.45f);
+        // Backfill: loose, mixed refill; the tool suddenly sinks in (the disturbed-ground tell).
+        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.1f, 1.05f, 1.25f, .85f);
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
@@ -47,12 +49,13 @@ namespace SomethingDownThere
             TerrainMaterialId.PondClay => PondClay,
             TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack => FracturedRock,
             TerrainMaterialId.FracturedConcrete => FracturedConcrete,
+            TerrainMaterialId.Backfill => Backfill,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
         // Softest to hardest; each family keeps its resistance at every tier. Families sharing one
         // response (fractured rock and its crack line) are one hardness class.
         public static readonly TerrainMaterialId[] HardnessOrder =
-            { TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack,
+            { TerrainMaterialId.Backfill, TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack,
               TerrainMaterialId.Clay, TerrainMaterialId.FracturedConcrete, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100 };

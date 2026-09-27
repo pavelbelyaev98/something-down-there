@@ -17,6 +17,9 @@ namespace SomethingDownThere
         [SerializeField, Range(0f, 0.15f)] private float scoopVariation = 0.12f;
         [SerializeField, Range(0f, 0.08f)] private float scoopDepthVariation = 0.05f;
         [SerializeField] private int excavationSeed = 2718;
+        // Unique odd spots (099): grid-local centre and envelope radius, copied from the discovery
+        // catalog by the discovery sync; the seeded ground shapes unlike-zone lenses around them.
+        [SerializeField] private Vector4[] oddSpots = Array.Empty<Vector4>();
         [SerializeField] private Material soilMaterial;
         [SerializeField] private GameObject untouchedPreview;
 
@@ -124,7 +127,7 @@ namespace SomethingDownThere
             if (grid != null) return;
             if ((transform.lossyScale - Vector3.one).sqrMagnitude > 0.0001f)
                 throw new InvalidOperationException("TerrainVolume requires unit scale; configure its dimensions instead.");
-            grid = new ExcavationGrid(dimensions, cellSize, excavationSeed);
+            grid = new ExcavationGrid(dimensions, cellSize, excavationSeed, oddSpots);
             grid.SetBank(SiteLayout.BankColumns(dimensions, cellSize), SiteLayout.BankDepth);
             if (untouchedPreview != null) untouchedPreview.SetActive(false);
             chunkRoot = new GameObject("Chunks").transform;

@@ -11,6 +11,7 @@ namespace SomethingDownThere
         // Room index and world point where a tool cut first opened it (audio 028, particles 031).
         public event Action<int, Vector3> BrokeIntoRoom;
         public TerrainGround.Room[] Rooms => grid?.Rooms ?? Array.Empty<TerrainGround.Room>();
+        public TerrainGround.GroundLayout GroundLayout => grid?.Layout ?? TerrainGround.GroundLayout.Empty;
         private bool[] roomsOpened;
 
         private void MaterializeRooms()

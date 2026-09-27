@@ -8,13 +8,14 @@ namespace SomethingDownThere
     // EquipmentProgression.HardnessOrder, not the declaration order.
     // PondClay is the clay basins' soft old pond clay (and sealed rooms' settled silt).
     // FracturedRock/FracturedConcrete are the bands beside a crack; Crack is the crack line.
-    public enum TerrainMaterialId : byte { Soil, Clay, Rock, Gravel, Concrete, PondClay, FracturedRock, FracturedConcrete, Crack }
+    // Backfill is the loose mixed ground of an old dug-and-refilled pit.
+    public enum TerrainMaterialId : byte { Soil, Clay, Rock, Gravel, Concrete, PondClay, FracturedRock, FracturedConcrete, Crack, Backfill }
 
     // Immutable identities share the density lattice, including samples excavated into air.
     // Captures can share this object with the save worker without copying the world.
     public sealed class TerrainMaterialSnapshot
     {
-        public const TerrainMaterialId Last = TerrainMaterialId.Crack;
+        public const TerrainMaterialId Last = TerrainMaterialId.Backfill;
         private readonly byte[] samples;
         public int Length => samples.Length;
         public TerrainMaterialId this[int index] => (TerrainMaterialId)samples[index];
@@ -57,10 +58,11 @@ namespace SomethingDownThere
         }
 
         // Zones, edge bands, veins and places: see TerrainGround.
-        public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed)
+        // Odd spots: grid-local unique centres (xyz) and envelope radii (w) the ground shapes around.
+        public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null)
         {
             ExcavationGrid.ValidateDimensions(size, cellSize);
-            return new TerrainMaterialSnapshot(TerrainGround.Generate(size, cellSize, seed));
+            return new TerrainMaterialSnapshot(TerrainGround.Generate(size, cellSize, seed, oddSpots));
         }
 
         // Seeded unit float from a hash state; never touches UnityEngine.Random.
