@@ -22,7 +22,7 @@ namespace SomethingDownThere
         [SerializeField] private Transform model;
         // Rising from the bottom edge right of centre with the blade face turned to the view; only the head
         // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
-        private static readonly Vector3 RestPosition = new Vector3(.21f, -.25f, -.05f), RestEuler = new Vector3(-35f, -18f, 6f);
+        private static readonly Vector3 RestPosition = new Vector3(.14f, -.26f, -.05f), RestEuler = new Vector3(-36f, -11f, 4f);
         private const float ModelScale = .3f;
         // Strokes turn the tool about its socket, so the head dips instead of the whole shaft swinging.
         private static readonly Vector3 Pivot = new Vector3(0f, 0f, .9f);
@@ -34,6 +34,8 @@ namespace SomethingDownThere
         private float stroke = 1f, strokeSeconds = .3f, lowered = 1f, spinSpeed, spinAngle, sinceCut = 10f;
         private MotionFamily family;
         private bool crisp, sink;
+        // Each stroke differs a little in depth, side and roll so held digging never looks mechanical.
+        private float strokeDepth = 1f, strokeSide, strokeRoll;
 
         public int ShownLevel => shownLevel;
         public bool Hidden => lowered >= 1f;
@@ -98,13 +100,15 @@ namespace SomethingDownThere
             if (stroke < 1f)
             {
                 stroke = Mathf.Min(1f, stroke + dt / strokeSeconds);
-                float jab = Mathf.Sin(stroke * Mathf.PI);
+                // A quick push (first 30%) and an eased return, not a symmetric swing.
+                float jab = stroke < .3f ? 1f - (1f - stroke / .3f) * (1f - stroke / .3f) : 1f - Mathf.SmoothStep(0f, 1f, (stroke - .3f) / .7f);
                 float reach = (sink ? 1.5f : 1f) * (crisp ? 1.1f : 1f) * power;
                 // A small thrust along the tool, never a swing: soft ground takes a longer push, hard
                 // ground a short jab with a little shudder.
                 Vector3 along = Quaternion.Euler(RestEuler) * Vector3.forward;
                 float thrust = family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f;
-                offset = along * (thrust * reach * jab);
+                offset = along * (thrust * reach * strokeDepth * jab) + new Vector3(.003f * strokeSide, 0f, 0f) * jab;
+                turn = new Vector3(1.2f * strokeSide, 0f, 2.5f * strokeRoll) * jab;
                 if (family == MotionFamily.Hard)
                 {
                     float shudder = Mathf.Sin(stroke * 38f) * (1f - stroke);
@@ -140,8 +144,9 @@ namespace SomethingDownThere
             sink = material == TerrainMaterialId.Backfill;
             if (player.ShavingEnabled) return;
             stroke = 0f;
-            strokeSeconds = Mathf.Clamp(player.LastDigInterval * .85f, .12f, .45f)
-                * (crisp ? .75f : 1f) * (family == MotionFamily.Bite ? .8f : 1f);
+            strokeSeconds = Mathf.Clamp(player.LastDigInterval * .35f, .12f, .26f)
+                * (crisp ? .8f : 1f) * (family == MotionFamily.Bite ? .9f : 1f);
+            strokeDepth = Random.Range(.8f, 1.2f); strokeSide = Random.Range(-1f, 1f); strokeRoll = Random.Range(-1f, 1f);
         }
 
         private void ShowLevel(int level)

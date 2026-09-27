@@ -144,3 +144,7 @@ pickup, aiming or the view, and a purchase changes it instantly.
   dig swing.
 - Fourth playtest: moved a few centimetres toward the centre so it rises from the bottom edge, not
   the corner (`Logs/rig-x.png`, bottom left).
+- Fifth playtest: still too far right, and the stroke too long and too uniform. Moved further in
+  (it rises from the bottom edge at about two thirds of the width, `Logs/rig-x2.png` bottom left);
+  each stroke is a quick push (30%) and an eased return within 0.12-0.26 s, varying a little in depth,
+  side and roll.
