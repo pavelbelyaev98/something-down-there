@@ -11,7 +11,7 @@
 - **Fully transparent shop:** current → next effect, cost, and practical benefit always shown;
  locked items visible with their requirement.
 - **The final meaningful purchase lands near the end** of the run so its power is used
- (target ~75–85% of first completion; prototype-tuned).
+ (target about 75% of first completion; prototype-tuned).
 
 ## 2. Upgrade tracks (five)
 
@@ -28,9 +28,9 @@ improve the next outing — no "invisible +5%" upgrades or cosmetic bolts standi
 Purchases apply immediately, without a blocking animation. The tool uses shovel scoops through
 level six and gains continuous drill motion at level seven; subsequent levels strengthen it.
 
-The silent detector is fixed starter equipment, not a paid track. Its eligible slice content is
-the authored computer uniques; retain the existing aim-based hunch without selling speculative
-range or direction upgrades. Jetpack and C4 tracks enter the shop with their mechanics, not as
+The silent detector is fixed starter equipment, not a paid track, and it is frozen: it may be
+removed in favour of the ground tells ([Discoveries](05_DISCOVERIES.md#2-the-detector)). Never sell
+detector range or direction upgrades. Jetpack and C4 tracks enter the shop with their mechanics, not as
 placeholder purchases.
 
 ### Complete player upgrade freedom
@@ -39,7 +39,8 @@ Players have total freedom to invest in whichever tracks fit their personal play
 - If a player prioritizes an enormous battery for deep endurance runs, or maxing bag slots first, the game fully supports it.
 - No forced synchronization or locked track dependencies; all five tracks are independent, sequential, and additive.
 - **Power outpaces resistance:** Returning to earlier layers visibly demonstrates overwhelming cutting power, while deeper ground introduces distinct material behavior without ever resetting the player's speed back to square one.
-- **Final major tool timing:** The final major machine upgrade arrives around the last third of the campaign (~70–75%), leaving substantial deep excavation to enjoy its full power.
+- **Final major tool timing:** The final major machine upgrade arrives around the last quarter of the campaign (about 75%), leaving substantial deep excavation to enjoy its full power.
+- **Tuned against the zones:** each zone's main ground is balanced with the tool level a player typically owns on arrival, so no zone feels like a restart; the drill milestone lands around the rock zone ([zone rules](03_WORLD_AND_SITE.md#zone-rules)).
 
 ## 3. Money in
 
@@ -66,7 +67,7 @@ Late-game sinks support remaining discoveries and optional decoration after the 
 - reusable lamps (buy individually; useful for lighting and photography);
 - display decoration (basic shelf/stand capacity never requires a frame purchase);
 - cosmetic tool skins and yard items;
-- small conveniences (fuel top-ups, spare charges).
+- spare C4 charges.
 
 The site is finite. Once its discoveries and upgrades are complete, money may stop mattering. No
 extra upkeep or repeated chores are added just to sustain spending.
@@ -75,11 +76,17 @@ extra upkeep or repeated chores are added just to sustain spending.
 
 - One battery powers **digging and jetpack**.
 - Drain occurs only during powered actions; reading, standing, thinking and inspecting never drain.
-- **Surface recharging:** Refills are purchased at the surface (full or partial); bigger tanks keep current fuel.
-  Whether surface charging stays paid or becomes free is an [open question](13_OPEN_QUESTIONS.md).
+- **Surface recharging is free and automatic:** back at camp the battery refills by itself at a
+  visible charging point: no button, no price, no menu. Bigger tanks fill completely.
+  - *Why:* a paid refill is a tax with no decision in it; the player always pays. It also punishes
+    battery upgrades, because a bigger battery costs more to refill; Keep Digging reviewers said they
+    felt "punished for increasing your battery". Meltopia's free refuelling drew no complaints. The
+    battery's job is to limit how long one trip lasts and create the "go home or one more thing?"
+    decision; money has its own sinks (upgrades, C4, cosmetics).
 - **Return-power warning:** an adaptive indicator with safe / risky / critical states — never exact
  required-energy math. It serves as an estimate, accounting for depth and ascent cost.
-- **Recovery as a supported service:** At zero fuel underground (or called intentionally from pause), auto-recovery returns the player to the surface with full fuel, **all finds kept**, and a depth-scaled fee. If broke, interest-free debt is applied, ensuring guaranteed access to baseline fuel for the next outing.
+- **Recovery as a supported service:** At zero fuel underground (or called intentionally from pause as an "I'm stuck" option), recovery returns the player to the surface with full fuel, **all finds kept**, and a depth-scaled fee. If broke, interest-free debt is applied; the next outing is never blocked. With free recharging, this fee is the only money cost tied to the battery, so pushing your luck still carries a price.
+- **Winch self-rescue (to test):** instead of moving the player up automatically, the rim winch lowers its rope down the player's own hole, hooks them and hauls them up the dug route, just as it hauls uniques; the player can look around and watch their hole go by, and the fee is paid on arrival. Keep whichever of the two feels better in play. Digging your own way out with a dead machine is rejected: at 150 m it would be long, punishing survival friction.
 - Recovery never blocks progress, never deletes items, and never permanently ruins a save.
 
 ## 6. Capacity (the bag)
@@ -116,6 +123,7 @@ extra upkeep or repeated chores are added just to sustain spending.
 - No dead end where everything is purchased halfway through the run.
 - No loot deletion as a failure consequence.
 - No item durability; tools never break.
+- No paid battery refills; recharging at camp is free (recovery keeps its fee).
 - No object whose sale value increases by combining, stacking or re-merging — value is fixed per
   type (value-stacking exploits cannot exist by construction).
 - No paid power, no premium currency, no microtransactions.

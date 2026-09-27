@@ -4,7 +4,7 @@ Purpose: prove the loop before content exists. Numerical targets are starting po
 
 ## 1. The core hypothesis to test
 
-> A player will repeatedly choose "one more thing" over going home, because the detector hint, the
+> A player will repeatedly choose "one more thing" over going home, because a ground hint, the
 > partial silhouette, and the next affordable upgrade all pull harder than the battery warning.
 
 A calm, voluntary return followed by eagerness to dig again is equally valid. Also test whether
@@ -18,21 +18,21 @@ build curiosity about what they add up to.
 | Site | One diggable area, full voxel, boundaries visible (concrete + bedrock) |
 | Tool | One machine, 2–3 meaningful upgrade levels with visible bolt-on changes, hold/toggle digging, automatic material adaptation stub |
 | Jetpack | Stable and usable from the start; ordinary falls are harmless |
-| Materials | 3 distinct families with different feel (e.g., soil, clay, rock) |
-| Detector | Separate HUD instrument with three aim-alignment signal levels; off outside close range, when looking away and after partial reveal; include one silent optional distinctive |
+| Materials | The zone-1 and zone-2 main grounds (soil, clay) with gravel channels, backfill pits and one rock mass with cracks, each with its tell and host finds |
+| Detector | Frozen as built. The slice is also played with the detector off to test whether ground tells replace it |
 | Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and rope recovery |
 | Rope recovery | Hold Interact on the exposed computer; rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks and preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
-| Hard pockets | One concrete plug diggable by the current tool; upgrades or C4 are much faster |
+| Ground places | One concrete structure with cracks and a sealed cellar, diggable by the current tool; cracks, upgrades or C4 are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
 | Economy | Shared sell/upgrade computer, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
 | Display | Compatible shelf/stand spaces; individual special placement and rereading, no undiscovered silhouettes or inventory screen |
-| Surface | Compact yard: shaft, machine, bench, fuel, display |
+| Surface | Compact yard: shaft, computer, winch pad, free charging point, display with optional cleaning |
 | Interface | Minimal HUD, world inspection, pause, full rebinding, controller support |
 | Saving | Autosave + restore exact hole, position, charge, finds and display |
 | Story | One anachronistic junk object for the mystery trail |
 
-Mechanics can be tested first with independent unique computer identities sharing the approved model. The detector initially uses the HUD; its physical attachment follows with the tool rig. New slice objects and the connected scene remain required before the playable-slice acceptance gate.
+Mechanics can be tested first with independent unique computer identities sharing the approved model. The detector stays HUD-only and frozen; no physical attachment is built unless it survives the detector-off test. New slice objects and the connected scene remain required before the playable-slice acceptance gate.
 
 Explicitly out of the slice: zones 2–4, the full roster, the ending, achievements, photo mode, late
 sinks and finished large-object content. First test the accepted winch on a larger load through
@@ -45,16 +45,22 @@ and long-session validation before release.
 ## 3. Experiments (numbers to discover)
 
 - Voxel size vs. dig satisfaction and recognition readability.
-- Seam cleaving: verify that broad cuts along visible seams trigger the crack → shift → break feedback
-  cleanly without disrupting neighboring geometry, creating duplicate loot, or auto-collecting finds unseen.
+- Ground tells: do players notice and follow cracks, gravel channels and backfill unprompted? Is the
+  dig-speed change felt in the dark? Does a pour ever feel like a hazard?
+- Detector-off run: on a fresh save with the detector disabled, do testers find every unique without
+  help? This decides the detector ([Discoveries §2](05_DISCOVERIES.md#2-the-detector)).
+- Zone arrival: at the expected tool level, does any zone's main ground feel like a restart?
+- Return at depth: jetpack return time from typical working depths across the 150 m site.
+- Winch self-rescue vs automatic recovery at zero battery: which feels fairer and better?
+- Optional unique cleaning: do players enjoy it, and does anyone feel forced to do it?
+- Sealed rooms: does breaking in land as a moment, and do the half-sunk finds keep the reveal?
 - Starting shovel speed vs. frustration; ten meaningful upgrade levels, the shovel-to-drill milestone and output on familiar ground.
 - Battery drain per powered action vs. outing length; recovery frequency and empty-wallet restart.
 - Bag capacity vs. trip length; where the hard stop actually lands.
-- Detector range, aim bands and reveal cutoff; how often players follow cues.
 - Recognition: exposure percentage at which players identify each of the five objects; test late
  wide cuts and C4 too. Full-bag overflow and interesting finds must survive.
 - Cluster spacing: how far players search after finding one related object.
-- Hard pocket: visible starting-tool progress vs. returning later for a much faster excavation.
+- Ground places: visible starting-tool progress vs. following cracks, using C4, or returning later for a much faster excavation.
 - Rare find value: how many expeditions a "big find" should equal.
 - Station time: seconds spent in the yard per trip; nonblocking selling/upgrades and individual
  special placement without underground carrying.
@@ -75,6 +81,9 @@ and long-session validation before release.
 | First noteworthy discovery | within the first 10 minutes, every seed |
 | First-session full loop (onboarding) | an unguided tester finds, sells and buys in one session; nobody needs a wiki or video to complete one loop |
 | Voluntary lateral digging | the majority of testers dig sideways at least once per session unprompted |
+| Ground tells | the majority of testers follow at least one tell unprompted per session |
+| Uniques without the detector | every tester finds every slice unique with the detector off, or the detector stays |
+| Zone arrival | no tester describes a new zone as slower than the last or as a restart |
 | Recognition quality | ≥ 80% of testers correctly name slice objects from partial exposure |
 | Voluntary full uncovering | ≥ 70% choose to keep revealing an interesting object rather than skip it |
 | Purchase cadence | per [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) §9 |
@@ -92,7 +101,7 @@ and long-session validation before release.
 
 ## 5. The core test script (observe, don't explain)
 
-1. New player, no tutorial, unguided 20–30 minutes in a focused slice (two material types, common/distinctive finds, one connected lateral clue, one oversized salvage set piece, one major tool upgrade, complete loop).
+1. New player, no tutorial, unguided 20–30 minutes in a focused slice (two main grounds with their tells, common/distinctive finds, one connected lateral clue, one sealed room, one oversized salvage set piece, one major tool upgrade, complete loop). Run it once with the detector on and once with it off.
 2. Observe key behavioral questions:
    - *Does digging feel good without an imminent reward?* (Digging must be inherently satisfying even during empty stretches).
    - *Do they voluntarily follow a lateral clue?* (Observe if the exposed cable/chain naturally pulls them sideways without a prompt).
@@ -106,12 +115,13 @@ and long-session validation before release.
 ## 6. Build order
 
 1. **Feel prototype:** dig, materials, cleanup, jetpack, battery, recovery. No economy, no art.
-2. **Loop prototype:** sell, upgrade, display, detector, first object recognition.
-3. **Slice:** all vertical-slice elements above with approved existing assets or original placeholder art.
-4. **Pacing pass:** multiple seeds, measure the metrics, tune generation rules.
-5. **Content production:** zones 2–4, coherent places, connected major finds, full rosters and ending.
+2. **Loop prototype:** sell, upgrade, display, first object recognition (the detector was built here and is now frozen).
+3. **Ground that matters:** 150 m site, one main ground per zone, host ground, cracks, gravel pour, sealed rooms, disturbed ground and the detector-off test.
+4. **Slice:** all vertical-slice elements above with approved existing assets or original placeholder art.
+5. **Pacing pass:** multiple seeds, measure the metrics, tune generation rules.
+6. **Content production:** zones 2–4, coherent places, connected major finds, full rosters and ending.
  Validate part relationships and the final object before committing the full content set.
-6. **Polish and release prep:** comfort settings, achievements, verification passes.
+7. **Polish and release prep:** comfort settings, achievements, verification passes.
 
 ## 7. Release gates (design-side)
 

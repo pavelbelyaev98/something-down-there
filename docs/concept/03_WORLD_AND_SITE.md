@@ -30,8 +30,14 @@ The lakebed excavation is a single contained worksite.
 - **Play area:** the player stays on the drained section: invisible walls follow its edge at the
   water line and a flight ceiling stops the jetpack about 16 m above the ground. Scenery that can
   never be seen from inside this volume is left out.
-- **Dimensions:** `SiteLayout` owns the opening, rim and subsurface allocation. Depth remains
-  at least 100 m; the footprint leaves useful lateral room for branches. Finds keep their
+- **Dimensions:** `SiteLayout` owns the opening, rim and subsurface allocation. The site is
+  **150 m deep**, giving each of the four zones enough depth for its main ground to be learned
+  (§3); 200 m is the next step only if playtests say the shaft still feels short. The footprint
+  keeps its current width: it fits a few ground places per zone and keeps sideways routes short
+  enough that nobody gets lost. The research names two risks of depth: a longer trip home (Keep
+  Digging 2.0's 5,000 m map was called a slog) and visible save stutter (Meltopia's save freezes
+  cost it trust). Jetpack progression and background saving must keep both invisible at full
+  depth, and the extra depth must be filled with finds, never "big but empty" (One Man's Trash). Finds keep their
   accepted density beneath the plot, wholly inside its edge; ground further out is plain soil.
 - **Boundary:** the rim and lakebed ground cannot be dug from above. Under them, the top 1.2 m is
   a permanent soil bank, so a pit edge is a solid soil wall, never a thin roof over a hollow. The
@@ -53,15 +59,20 @@ The lakebed excavation is a single contained worksite.
   shore foam and rippled canyon reflections. Neither refraction nor reflected light may turn
   the shore into a glowing white band; the lake remains scenery outside the play area.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
-- **No pre-existing caves or tunnels:** every opening in the ground is one the player made.
-
+- **No caves or tunnel networks:** every passage is one the player dug. The only pre-existing
+  air is a few small [sealed rooms](#sealed-rooms) inside buried structures, and the player always
+  breaks into them.
 - **Buried structures:** authored walls, machinery and filled interiors are allowed. The
-  player digs every opening; no pre-dug rooms or passage network.
+  player digs every opening; no pre-dug passage network.
 - **Buried history & physical connections ("Follow the thing"):** Workshop, household and waterworks
   finds belong together. To give lateral digging an immediate visible reason, objects can physically continue
   through the ground: a heavy cable trailing from a broken generator, a rusted chain disappearing under a slab,
   or exposed pipes heading toward unseen machinery.
-  - _The core rule:_ The detector suggests that something exists; the exposed world suggests what to do next.
+  - _The core rule:_ The ground hints that something is near (§4 tells); the exposed world suggests what to do next.
+  - Trails pay along the way: small finds sit along a cable or pipe, so following it is never a blind gamble.
+  - Each zone has its own kind of trail: chains and cables in recent fill, pipes and scattered
+    machine parts in old sediment, cracks and mineral veins in deep stone, matching grooves and
+    fittings in ancient ground.
   - No wiring puzzles, inventories, or repair chores; following a connection means digging.
   - Authored buried arrangements preserve internal relationships and randomize as coherent units.
 - **Major connected parts:** Connected finds suggest a buried history. In the current direction,
@@ -81,86 +92,191 @@ Permanent boundaries must look categorically different from any diggable materia
 Rule: never use the same material look for "tough but diggable" and "eternal wall". Players must
 know at a glance what will eventually yield. If the buried-structure direction is used, it is never
 a boundary: its built surfaces stay clearly different from bedrock and concrete walls, and routes
-around it stay open.
+around it stay open. The same applies to rock-zone ground and buried concrete structures (§3, §5):
+they must never read as the bedrock shelf or the retaining walls.
 
 ## 3. The four zones
 
-Each zone changes ground, palette, typical finds and mood. Transitions are gradual; there are no
-loading screens or separate levels.
+Each zone has **one main ground** that fills most of it, plus its own places, tells, finds and mood.
+Transitions are gradual; there are no loading screens or separate levels. Depth splits are roughly
+even quarters of the site (the ancient zone may be shorter) and are tuned in generation code. Zone
+names are placeholders; final naming is content work.
 
-| #   | Zone                    | Ground                                          | Finds typical                                         | Mood                             |
-| --- | ----------------------- | ----------------------------------------------- | ----------------------------------------------------- | -------------------------------- |
-| 1   | **Recent fill**         | Loose soil, gravel, roots, modern rubbish       | Bottles, scrap, household junk, common ore            | Bright, familiar, hopeful        |
-| 2   | **Old sediment**        | Compacted river sediment, clay lenses           | Old tools, machinery parts, first fossils, better ore | Nostalgic, slightly odd          |
-| 3   | **Deep clay / stone**   | Hard clay, rock, occasional concrete            | Larger machines, rare ore, deliberate objects         | Heavy, dim, purposeful           |
-| 4   | **Ancient constructed** | Unknown compacted material, ancient fabrication | Impossibilities, final components, the final object   | Cold, quiet, wrong in a good way |
+| #   | Zone                    | Main ground                          | Places and purposeful mixed spots                                                                                              | Typical finds                                        | Mood                             |
+| --- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------------- |
+| 1   | **Recent fill**         | Soil, with gravel lenses             | Rubbish pits (disturbed ground), the first gravel channels, stray concrete rubble                                              | Bottles, scrap, household junk, coins, coal, copper  | Bright, familiar, hopeful        |
+| 2   | **Old sediment**        | Clay                                 | Clay basins, winding gravel channels (old riverbeds), drowned-village concrete structures, the first sealed cellars            | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
+| 3   | **Deep clay / stone**   | Rock, veined with clay               | Rock masses with crack networks and ore veins, soft clay/gravel paths through the rock, waterworks concrete, deep sealed rooms | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
+| 4   | **Ancient constructed** | Its own ancient material (defined with the zone-4 work) | Constructed architecture, an ancient sealed chamber                                                         | Impossibilities, final components, the final object  | Cold, quiet, wrong in a good way |
 
-Zone names are placeholders; final naming is content work.
+### Why one main ground per zone
 
-## 4. Materials
+The first generator repeated one thin 8 m stack (soil, a gravel band, clay, rock) all the way down.
+No material lasted long enough to learn, so materials felt like nothing more than "slower here,
+faster there". A zone that is mostly one ground lets the player learn how it digs, what it hides
+and what its tell looks like, and it makes arriving in the next zone an event: "it's rock from here
+on; time to read the cracks and bring C4". Keep Digging reviewers single out layers that "each
+have their own surprises"; this is the same pull.
 
-Working set (exact list TBD): prototype five response groups — loose earth, clay/sediment,
-gravel, rock and diggable concrete. Soil, sand and harder variants can look different within these
-groups. Each family differs in **behavior**, not just color:
+### Zone rules
 
-- sand pours and spills quickly;
-- clay sticks and clumps;
-- gravel trickles;
-- compact sediment resists evenly;
-- rock chips and cracks;
-- concrete sparks and resists, but the starting tool always makes visible progress.
+- **No zone feels like a restart.** At the tool level a player typically owns on arrival, a zone's
+  main ground digs no slower than the previous zone felt near its end. The drill milestone (tool
+  level seven) is timed to arrive around the rock zone, and cracks give a fast way through it. This
+  guards against Meltopia's #1 complaint: a new material ("blue snow") that suddenly made digging
+  slow and made players feel their upgrades were wasted.
+- **Never a wall.** Every hard zone and hard place has soft paths (clay or gravel veins winding
+  through the rock), so the player can follow a soft path, grind straight through, or use C4. Depth
+  is never gated by tool level; One Man's Trash's tier walls read as walls and forced grinding.
+- **Variety inside a zone.** One main ground must not become one repeated wall. Colour bands,
+  cracks, places and tells act as landmarks. No glaring pale surfaces: a white rock layer strained
+  Keep Digging players' eyes, and Meltopia's identical tunnels got players lost.
+- **Edge bands.** Where two zones meet, a short mixed band tells the player they are entering new
+  ground.
+- **Mixed spots only with a job.** Mixing exists where it does something: a gravel channel to
+  follow, a soft path through rock, an odd spot around a unique (§4), an edge band. Random mixing
+  elsewhere is noise and is not generated.
 
-The first playable material pass uses broad rounded soil cuts, narrower smooth clay shavings,
-and smaller faceted rock chips. Resistance belongs to the ground inside the cut, including mixed
-seams; aiming at a soft patch does not turn its hard neighbor into soft soil. Deposits keep their
-identity when excavated and saved. Distinct soil grain, compacted clay and fractured rock textures
-follow these deposits across cut faces, with narrow blended boundaries. Debris reinforces the response as it is added.
+## 4. Materials and their tells
 
-The tool adapts automatically to the material (see [Tool and Movement](04_TOOL_AND_MOVEMENT.md)); materials reward the
-right behavior but never lock it out. These are cutting responses and visual debris, not a global
-collapse hazard. Power growth outpaces tougher ground over the campaign.
+Six ground types, each different in **how it digs, what it hides and how it points somewhere**:
 
-**Dig along the seam (Signature Action)**: some ground has visible cracks or material boundaries.
-Cutting broadly along one frees a larger local section with less work than digging through its center.
-For example, follow a clay seam around a rock section and break that section away. The ground offers
-a small spatial choice: "where would a cut do the most?"
+| Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
+| -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
+| Soil     | Fast, broad rounded cuts                       | Disturbed ground                       | Rubbish, junk, plain rocks                          |
+| Gravel   | Loose grainy cuts; trickles; pours when undercut | Channels: winding old riverbeds      | Heavy things: coins, tokens, metal, nuggets         |
+| Clay     | Steady, narrow smooth shavings                 | Disturbed ground; basins               | Bones, wood, leather, fossils, organic things       |
+| Rock     | Slow faceted chips                             | Cracks and veins                       | Ore                                                 |
+| Concrete | Slowest; small square chips and sparks, but the starting tool always makes visible progress | Cracks from old damage | Waterworks and village items; rooms behind it |
+| Backfill | Loose and mixed; digs fast                     | It *is* the tell                       | Whatever someone buried                             |
 
-- Use the same tool and normal digging input; broad, readable cuts along a seam reward the player
-  without requiring a pixel-perfect or fully traced perimeter.
-- **Physical payoff:** cutting along a seam triggers distinct feedback — a sharp stress crack, a subtle
-  physical shift of the worked slab, and a heavy fracturing break as the section gives way,
-  frequently exposing multiple buried objects at once.
-- **Bounded fracture regions:** fractures operate within bounded, predictable local zones rather than a
-  general structural collapse simulation. Seams never crush the player, bury collected objects, or close
-  return routes.
-- Digging straight through always works. Seams offer an optional efficiency gain from the start;
-  stronger upgrades make the resulting cuts larger and more satisfying.
-- **Normal cleanup rules apply:** plain dirt crumbs vanish, embedded valuables remain in place without
-  bonus duplicates, and interesting finds survive intact for deliberate partial exposure and recognition.
-  Breaking a slab never creates extra loot or bypasses recognition.
+The ancient zone adds its own material with its contact signature
+([Ending and Mystery](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)).
+
+Resistance belongs to the ground inside the cut, including mixed seams; aiming at a soft patch does
+not turn its hard neighbor into soft soil. Deposits keep their identity when excavated and saved.
+Distinct soil grain, compacted clay, loose gravel, fractured rock and pale concrete textures follow
+these deposits across cut faces, with narrow blended boundaries. Debris reinforces the response as
+it is added. The tool adapts automatically to the material (see
+[Tool and Movement](04_TOOL_AND_MOVEMENT.md)); materials reward the right behavior but never lock
+it out. Power growth outpaces tougher ground over the campaign.
+
+### The one rule: easier ground means you are on to something
+
+Every ground type has a tell, and every tell works the same way: **the ground suddenly gets easier
+to dig, and following it leads somewhere.** This turns the old weakness ("materials are just
+different dig speeds") into the clue system. The tells are also the intended replacement for the HUD
+detector, which is frozen until a playtest decides ([Discoveries](05_DISCOVERIES.md#2-the-detector)).
+
+Shared rules for all tells:
+
+- **World data, not reactions.** Tells are generated from the save's seed with the rest of the
+  ground and stay hidden inside solid ground until a cut exposes them, so to the player they seem to
+  appear as they dig. They are identical after reload and need no save data beyond the material IDs.
+- **Presence, never value.** A tell says "something is this way", never what or how much. Some
+  cracks and channels fade out with nothing at the end; a tell that always paid would be a treasure
+  radar. Backfill is the exception: every pit holds something, even if only rubbish.
+- **Straight digging always works.** Following a tell is the smarter, faster way, never the only way.
+- **Felt as well as seen.** The dig-speed change is felt in the dark and by colour-blind players;
+  the visual tell needs a lamp. Tells never rely on colour alone: lines, chunks and grain differ too.
+- **Sideways as often as down.** Tells run in every direction, which is how they pull players off
+  the main shaft. Keep Digging's biggest design flaw was that digging straight down beat the game.
+
+#### Cracks and veins (rock, concrete)
+
+- A crack shows as a thin dark line where a cut crosses it. The rock beside a crack is fractured and
+  digs noticeably faster; cutting across it is ordinary rock speed.
+- Cracks branch. Some open into an ore vein or end at a find; some thin out. Minerals really do
+  collect in rock cracks, so veins and cracks are one feature.
+- In concrete, cracks run from old damage toward weak spots and into the rooms behind walls.
+- C4 on a crack breaks along it ([Tool and Movement](04_TOOL_AND_MOVEMENT.md#8-c4)).
+- *Feel:* hit the rock once, read the line, choose a branch, and feel the tool bite faster.
+
+#### Gravel channels and the pour
+
+- A channel is an old riverbed: a winding band of gravel through clay or soil, running sideways as
+  often as down. Heavy finds settled in it, as they do in real rivers.
+- It is not a tunnel or a path. It is solid ground the player digs, and they can follow or ignore it,
+  like a cable in "follow the thing".
+- **The pour:** dig underneath a gravel section and it lets go in one rush. Its loose gravel
+  disappears as debris and its finds tumble down to the player. The pour stays inside the undercut
+  section (a few metres), never buries the player, never closes a route home, never leaves floating
+  specks and never deletes a find. C4 under gravel triggers it too.
+- *Feel:* a rushing slide and rattle, then quiet and a small pile of finds: a harvest earned by
+  digging in the right place.
+
+#### Disturbed ground (backfill)
+
+- When something was buried, a hole was dug and filled again. Above and around selected buried
+  things, the generator leaves a pit or column of loose, mixed backfill that cuts across the natural
+  layers.
+- It reads in the wall as a messy, chunky patch breaking the clean banding, and the tool suddenly
+  sinks in faster. Follow it down or sideways and something waits at the bottom.
+- Only some finds get one, so ordinary digging keeps its own surprises. Every pit holds something,
+  even if only a rubbish pit of bottles; it is never an empty decoy.
+- *Feel:* "why did it just get easy? Someone dug here before me."
+
+#### Odd spots for special finds
+
+Each unique sits in ground that does not match its zone: a gravel pocket in the rock, a small
+concrete room in the clay, a clay lens in the rock. **The odd one out is the clue**, seen with the
+player's own eyes instead of on a HUD. The generator shapes this ground around the space it already
+reserves for each unique before placing ordinary finds.
+
+### Host ground: each ground holds its own kind of find
+
+Find placement prefers the ground a find belongs in (table above). It is a soft bias with scatter:
+the odd coin in clay still happens. Prices stay fixed per type; host ground changes where things
+are, never what they are worth, just as depth already changes the mix. The player builds a mental
+map ("a gravel channel off to the left, worth a look"); that is knowledge, not a value radar.
+
+### Local cleanup rules
+
+- These are cutting responses, visual debris and the bounded gravel pour, never a global collapse
+  hazard.
 - Paper-thin soil fins and ribbons crumble as they are carved, even when long or attached at both
   ends. Remove their collision with their visible geometry; thicker useful ledges remain stable.
-- Removal stays local to the worked section. Unrelated ledges, tunnels, and overhangs remain stable;
-  this does not add a collapse hazard.
+- Removal stays local to the worked section. Unrelated ledges, tunnels and overhangs remain stable.
+- Plain dirt crumbs vanish, embedded valuables remain in place without bonus duplicates, and
+  interesting finds survive intact for deliberate partial exposure and recognition.
 
-## 5. Tough ground: hard pockets
+## 5. Ground places
 
-A small number of memorable, optional obstacles (5–8 target) — never walls across the main descent:
+Big bodies of one ground inside a zone, a few per zone. They replace the earlier "hard pockets"
+list: a concrete structure or a rock mass *is* the hard pocket, now with a reason to exist.
 
-| Example                | Feel                                       | Behind it                            |
-| ---------------------- | ------------------------------------------ | ------------------------------------ |
-| Concrete plug          | Slow but visible progress with early tools | A waterworks alcove with a rare part |
-| River-rock lens        | Dense boulder cluster                      | A complete fossil                    |
-| Compacted gravel shelf | Slows digging for a while                  | An older, richer pocket of finds     |
+| Place              | Where       | What it is for                                                                                                         |
+| ------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Rock mass          | Mostly zone 3 | A block several metres across, criss-crossed by cracks and veins: read the cracks, pick a branch, or blast it        |
+| Concrete structure | Zones 2–3   | A buried foundation, cellar or waterworks section: concrete walls and floor, soil inside, cracks marking the weak spots; sometimes a sealed room |
+| Clay basin         | Zone 2      | A thick bowl of old pond clay: clean, calm digging around bones and organic finds                                      |
+| Gravel channel     | Zones 1–2   | See §4                                                                                                                 |
 
-Every pocket has **multiple solutions**: the current tool, C4, or routing. Upgrades make excavation
-much faster. Discovering one early and demolishing it later is a designed moment of power.
+Rules:
 
-Solutions must be **legible before commitment**: the player can see that a pocket has an answer before
-sinking time into it — distinct seams, cracks or fittings that read as C4-friendly, a material
-clearly unlike the eternal boundaries, and a tool that visibly chips even the tough ground. "Come back
-with more power" is an optional shortcut, never the only answer. An undiscoverable solution is the same
-as no solution.
+- **Several solutions:** the current tool always makes visible progress; cracks and soft paths make
+  it faster; C4 makes it fast; coming back after upgrades is an optional shortcut, never the only
+  answer. Discovering a tough place early and demolishing it later is a designed power moment.
+- **Legible before commitment:** cracks, fittings and a material clearly unlike the eternal
+  boundaries show that a place will yield before the player sinks time into it. An undiscoverable
+  solution is the same as no solution.
+- **Never across the main descent as a wall.**
+
+### Sealed rooms
+
+The thrill of a cave is the break-through: dig, the wall gives, and there is darkness behind it.
+Sealed rooms keep that moment without cave networks.
+
+- Small and rare: start with one or two per zone. Examples: a drowned-village cellar, a section of
+  old waterworks tunnel, and in the ancient zone a constructed chamber.
+- Always sealed: the player always breaks in. Inside it is dark until the player's opening or a lamp
+  lights it.
+- The floor is settled silt with finds half-sunk in it, so the reveal-by-silhouette loop survives:
+  nothing lies fully exposed on the floor.
+- Rooms never connect into passages and never form a maze.
+- *Why:* One Man's Trash's pocket areas "broke up the digging"; Keep Digging players loved its large
+  hand-built caves. Meltopia's network of identical tunnels got players lost, so there are no
+  networks, and cave zones were rejected ([Open Questions](13_OPEN_QUESTIONS.md#closed-ideas)).
 
 ## 6. Terrain technology and cleanup
 
@@ -174,6 +290,9 @@ as no solution.
 - **Substantial structures survive**: ledges, tunnels and overhangs the player built are preserved;
   only unsupported crumbs are cleaned.
 - **Progress never resets**: the terrain edit history is saved; loading restores exactly the hole.
+- **Tells come from the seed**: zones, places, cracks, channels, backfill and sealed rooms are
+  generated with the ground and stored as the same material/density data; they add no separate
+  save records.
 
 ## 7. Lighting, marking and navigation
 
@@ -199,8 +318,13 @@ as no solution.
 - **The shaft reads from below:** its light column and drifting dust are landmarks where the shaft
   is visible. Light does not pass through overhangs; the jetpack and reusable lamps support returns.
 - **True darkness.** Below the reach of sky light, covered tunnels are near-black: material color,
-  seams and find silhouettes stay unreadable until light reaches them. Digging, movement and the
-  detector still work in the dark — light withholds information, not ability.
+  seams, visual tells and find silhouettes stay unreadable until light reaches them. Digging,
+  movement and the felt tells (the ground suddenly digging easier) still work in the dark — light
+  withholds information, not ability.
+- **Sealed rooms are dark** until the player's own opening or a lamp lights them; no daylight
+  reaches them through solid ground.
+- **More sideways reasons, same short routes.** Tells and places pull players sideways, so the
+  modest site width, lamps and marks keep every branch short and the way home readable.
 - **Placeable lamps are the light.** They are the only light underground: place them to work, reveal
   finds and hold the route home. Owned lamps are reusable, repositionable and do not expire or drain
   charge; lost support leaves them recoverable nearby. Digging and C4 cannot destroy them.
@@ -214,10 +338,14 @@ as no solution.
 
 ## 8. Randomization rules
 
-- Authored: zone layout, depth ranges, boundary placement, general difficulty curve and relationships
-  between buried places and the connected major finds.
-- Randomized per save: find positions, depths within bands, rotations, cluster layouts, some
-  surrounding junk. Variation preserves how related objects and major parts fit together.
+- Authored: zone layout and main grounds, depth ranges, boundary placement, general difficulty
+  curve, which places and tells each zone uses, and relationships between buried places and the
+  connected major finds.
+- Randomized per save: find positions, depths within bands, rotations, cluster layouts, the exact
+  shape and position of places, cracks, channels, backfill and sealed rooms, some surrounding junk.
+  Variation preserves how related objects and major parts fit together.
+- Validation also checks the ground: every unique sits in an odd spot, every rock body has a soft
+  path, and every sealed room is closed until the player breaks in.
 - The generator produces a candidate layout and validates [discovery pacing](02_CORE_LOOP.md#4-pacing-rules-generation-enforces-these)
   before accepting it.
 - Every seed contains all special exhibits, ending parts and achievement-relevant finds, reachable
@@ -228,4 +356,10 @@ as no solution.
 
 No lava, gas, oxygen, hunger, earthquakes, temperature damage, or monsters. The only pressure
 is the shared battery, the bag's capacity, and the player's own greed — all soft, all fair, all
-recoverable (see [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md)).
+recoverable (see [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md)). The gravel pour is a
+reward, not a hazard: it never harms, buries or traps the player.
+
+*Why:* in the research, survival friction is the steadiest complaint: A Game About Digging a
+Hole's fall damage and exploding battery, One Man's Trash's worms, Keep Digging 2.0 "patched in
+stress". Some Keep Digging reviewers asked for cave-ins and danger, but the players this game is
+for came for calm digging.

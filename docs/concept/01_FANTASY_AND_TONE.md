@@ -66,7 +66,8 @@ signposted by UI text. Earlier discoveries gain meaning as the larger form becom
 ## 6. Boundaries (what this game is not)
 
 No archaeology sim, no survival, no crafting, no puzzles, no inventory management, no museum
-management, no realistic geology, no infinite procedural world, no walking sim, no tool-swapping
+management, no geology simulation (real geology only inspires what each ground holds and how it
+hints, kept simple and readable), no infinite procedural world, no walking sim, no tool-swapping
 chore, no automation of the digging, no lava/gas/oxygen/hunger/earthquakes, no health bar, no
 horror, no combat, no jump scares, no timed pressure in normal play.
 

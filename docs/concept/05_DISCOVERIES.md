@@ -2,7 +2,7 @@
 
 ## 1. Find categories and tiers
 
-| Tier | Count target | Detector | Destination | Money | Bag Slots |
+| Tier | Count target | Detector (frozen, §2) | Destination | Money | Bag Slots |
 |---|---|---|---|---|---|
 | **Common** | 20–30 types | Always silent | Sell only | Reliable income, worthwhile at any depth | 1 slot |
 | **Distinctive** | 30–50 types | Noteworthy ones signal; some stay silent by design | Sell only; no first-copy/duplicate routing | Good money | 1–2 slots |
@@ -18,6 +18,19 @@ Uniques and ending parts consume **zero bag slots**, so players never have to sa
 
 Each type has one purpose: ordinary and repeatable finds sell; a few special exhibits and keys are
 unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get their own display moment.
+
+### Where finds sit
+
+- **Host ground:** each find type prefers the ground it belongs in: heavy coins, tokens and metal in
+  gravel, bones and organic things in clay, ore in rock veins, waterworks and village items in and
+  around concrete, rubbish in soil. It is a soft bias with scatter, and prices stay fixed per type
+  ([host ground](03_WORLD_AND_SITE.md#host-ground-each-ground-holds-its-own-kind-of-find)).
+- **Tells point toward finds:** cracks, gravel channels and backfill pits lead somewhere, though not
+  every crack or channel pays ([ground tells](03_WORLD_AND_SITE.md#the-one-rule-easier-ground-means-you-are-on-to-something)).
+- **Uniques sit in odd spots:** ground that does not match their zone, so the player can spot them
+  with their own eyes ([odd spots](03_WORLD_AND_SITE.md#odd-spots-for-special-finds)).
+- **Sealed rooms** hold finds half-sunk in their silt floor, never lying fully exposed
+  ([sealed rooms](03_WORLD_AND_SITE.md#sealed-rooms)).
 
 **Constant rate, rising value.** A metre of descent keeps meeting finds at a roughly constant rate
 to the bottom — depth changes *what* you meet, never whether digging pays. Each find type has a
@@ -52,6 +65,19 @@ force finds deeper or farther apart than necessary.
 
 ## 2. The detector
 
+> **Status: frozen.** The detector stays exactly as built: no new features, no new dependencies,
+> no content that needs it. The ground tells ([03 §4](03_WORLD_AND_SITE.md#4-materials-and-their-tells))
+> are the intended replacement. A detector-off playtest decides: if testers find **every unique
+> without help** and follow at least one tell unprompted, the detector is removed; otherwise it stays
+> frozen and the reason is recorded.
+>
+> *Why:* the developer found a HUD panel to watch a messy way to build a hunch, and it pulls the eye
+> away from the world the game wants players to read. One Man's Trash's scanner, an X-ray that
+> revealed common items, was one of the worst parts of that game. The pass rule exists because the
+> research also shows the opposite failure: Keep Digging 2.0 players finished "without finding a
+> single fossil", and One Man's Trash completionists were locked out of 100% by collectibles they
+> could not find.
+
 The detector is passive equipment: the player never equips it. They simply dig.
 
 - **Silent and visual by default.** A separate HUD detector shows three signal levels as the player sweeps their aim: weak near the edge of a buried find's detection cone, medium when closer to its bearing, strongest when looking directly toward it. Bars communicate alignment, not distance. No direction arrows, turn instructions, height labels or target markers; the aiming reticle stays independent. Optional accessibility audio and high-contrast cues remain planned.
@@ -65,8 +91,8 @@ The detector is passive equipment: the player never equips it. They simply dig.
  distinctive finds deliberately do not signal, so that digging itself keeps rewarding the player
  outside signal-chasing.
 - Signals can always be ignored; required parts matter when the player chooses to finish the story.
-- Required finds have trails of related objects and the existing broad detector cues. Revealed and
- collected finds stop signaling. No required detector upgrade.
+- Required finds have trails of related objects and ground tells and never depend on the detector.
+ Revealed and collected finds stop signaling. No required detector upgrade.
 
 ## 3. The reveal and recognition loop
 
@@ -78,7 +104,7 @@ The detector is passive equipment: the player never equips it. They simply dig.
 5. **Uniques tell a story:** one deadpan sentence, with first delivery decided in play. The
  current leaning is before placement; before pickup versus immediately before placement remains open.
  Placed objects always support inspection and rereading. No inventory reading or inspection of commons.
-6. No archaeology: no brushing minigame, no 100% cleaning requirement, no identification timers, no
+6. No archaeology: no brushing minigame, no required cleaning (the yard cleaning of uniques is optional and quick), no identification timers, no
    mailing objects for appraisal. The game decides when enough is revealed; the player
    decides what is worth revealing.
 
@@ -101,7 +127,12 @@ burial keeps them anchored. Their real colliders and gravity determine the resul
 **Buried connections: "Follow the thing"**:
 Extensions of the cluster system where discoveries physically connect through the ground:
 - A heavy cable leads away from a broken generator; a rusted chain disappears beneath a concrete slab; matching floor tiles outline a drowned workshop; an industrial pipe bends toward machinery not yet visible.
-- **The rule:** *The detector suggests that something exists. The exposed world suggests what to do next.*
+- **The rule:** *The ground hints that something is near. The exposed world suggests what to do next.*
+- **Trails pay along the way:** small finds sit along a cable, pipe or vein, so following it rewards
+  each step instead of asking for blind trust.
+- **Each zone has its own trail type:** chains and cables in recent fill, pipes and scattered machine
+  parts in old sediment, cracks and mineral veins in deep stone, matching grooves and fittings in
+  ancient ground.
 - This gives lateral exploration an immediate visual reason rather than asking players to trust random sideways digging blindly.
 - **Keep it simple:** No wiring puzzles, cable inventory, or repair chores. Following the connection means doing more of what is fun: digging.
 - Built from authored, fully buried arrangements with preserved relationships, seeded and oriented as units.
@@ -162,9 +193,10 @@ Clusters should read as parts of a coherent buried place — a household, worksh
 
 A few per run (target 3–5): a car, a large appliance pile, a machinery section. The player
 excavates most of it first; a short local extraction gives the physical payoff, then the whole object
-is transferred to its surface destination. For suitable heavy finds (like a vehicle or boiler), this
-local release can feature bladder-assisted unsticking: attaching salvage bladders that inflate with a
-hiss, heave the find with a satisfying mud-release pop, and unstick it from the ground.
+is transferred to its surface destination. The existing winch is the default release. Whether some
+heavy finds (a vehicle, a boiler) need a special local release, such as salvage bladders that
+inflate with a hiss and unstick the find with a mud-release pop, is decided from the first oversized
+salvage playtest, only if the winch cannot deliver the load.
 
 Once released, the whole object transfers to the surface automatically. No crawler sled, widened routes,
 car-wide shaft to the sky or cinematic camera takeovers; the player stays in control. Test the transfer
@@ -204,6 +236,9 @@ a gold bar never receives a depth bonus. “Rare” describes a payout, not anot
 - The display records name + depth found. No prices, no condition, no rarity labels.
 - Placed objects support story inspection and rereading. Completion follows the exhibit collection,
  not an assigned arrangement. Basic display capacity never requires a frame purchase.
+- **Optional cleaning:** a unique arrives caked in mud; the player may spray it clean with the tool
+  before placing it. The story line appears when it is cleaned or placed, whichever comes first
+  ([display wall](07_SURFACE_HUB_AND_DISPLAY.md#5-the-display-wall)).
 
 ## 9. Inventory behavior for finds
 

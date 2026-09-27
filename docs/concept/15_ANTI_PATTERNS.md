@@ -19,7 +19,8 @@ See [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md).
 | Gate progression behind a minigame or non-digging activity | Every zone stays diggable with current equipment; money buys power and convenience, never a compulsory depth gate |
 | Ship an upgrade that is bigger but slower in the ground it replaces | Every tier improves familiar-ground output; power outpaces new ground resistance and material responses stay distinct |
 | Add gambling, casino or betting mechanics | No gambling; money sinks are explicit purchases with visible value |
-| Wall off depth and force in-area grinding | No mandatory depth/tool-power walls, even when labeled clearly; optional pockets always yield visible progress to the current tool |
+| Wall off depth and force in-area grinding | No mandatory depth/tool-power walls, even when labeled clearly; ground places always yield visible progress to the current tool and every rock body has a soft path (One Man's Trash's tier walls) |
+| Make a new zone or material feel like a restart | At the expected tool level each zone's main ground digs no slower than the last felt; no material needs a new tool (Meltopia's blue snow and Tesla gun) |
 
 ## Pressure and failure
 
@@ -31,6 +32,8 @@ See [Fuel and recovery](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery).
 | Add stamina/commute mechanics that interrupt digging | Battery is the only pressure; no commuting design |
 | Punish falls with health/chip damage | Harmless landing feedback; no battery loss, input lock or ordinary-fall recovery |
 | Add hunger, oxygen, warmth, food, overheating or other upkeep meters | No additional upkeep meters |
+| Charge for battery refills | Recharging at camp is free; a price that grows with battery size punishes upgrading (Keep Digging) |
+| Make the ground itself dangerous | Gravel pours and C4 never harm, bury or trap the player; no cave-ins |
 | Make darkness a hazard or horror | Unlit ground is near-black, but lamps are always available and nothing in the dark can hurt the player |
 | Drain battery for looking, reading or standing still | Drain only on powered actions |
 | Add a day/night cycle, forced rest or time-gated content | The battery and the player's greed are the only pressure; the clock never gates digging or content |
@@ -42,8 +45,11 @@ See [Discoveries](05_DISCOVERIES.md) and [World and Site](03_WORLD_AND_SITE.md).
 | Never | Rule here |
 |---|---|
 | Turn the detector into a value radar | No value/rarity hints, ever |
+| Make ground tells a treasure radar | Tells show presence, never value; some cracks and channels fade out |
+| Generate caves, tunnel networks or identical corridors | Every passage is player-dug; only small sealed rooms exist, and the player breaks in (Meltopia's getting-lost complaint) |
+| Make C4 weak against a common ground | C4 is strong everywhere and stronger on cracks (Keep Digging's "useless" dynamite, Meltopia's dirt nerf) |
 | Leave floating specks that snag movement | Plain crumbs vanish; valuables collect only with space, overflow persists nonblocking; interesting objects remain |
-| Require archaeology chores (brushing, 100% cleaning, analysis timers) | Recognition without bureaucracy |
+| Require archaeology chores (brushing, 100% cleaning, analysis timers) | Recognition without bureaucracy; cleaning a unique at the yard is optional, quick and has no meter |
 | Ship a game where the trailer is the whole game | Four zones, escalating silhouettes, density rules |
 | Clump all novelty early / empty late game | Validated pacing, late silhouettes |
 | Depth-only value with nothing sideways | Fixed price per type; deeper zones can contain richer types; coherent scenes and connected finds reward sideways digging |

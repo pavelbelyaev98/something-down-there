@@ -43,13 +43,17 @@ Design rules:
 
 ## 3. Vision
 
-- **Colorblind palettes** for materials, ore, detector cues and UI, plus custom palette option.
+- **Colorblind palettes** for materials, tells, ore, UI and (while it exists) detector cues, plus a custom palette option.
+- **Tells never rely on colour alone:** cracks, backfill and gravel channels differ by line, grain and
+  chunk shape, and the sudden change in dig speed is felt, so they work for colour-blind players and
+  in the dark.
 - **Shape + label redundancy** everywhere: no information is color-only.
 - Contrast and brightness options plus an optional ambient-light floor; the game stays readable at both ends of the display range without removing the need for lamps.
 - **Subtitles for all significant sounds**, including ambient tells, with size/background
  options chosen in the text pass; the captions themselves are required.
 - UI scale/font scale and screen-reader support remain optional later work.
-- Detector feedback is visual by design; the game is fully playable muted. To adhere to multi-sensory accessibility standards, an optional audio ping toggle and high-contrast cues are available for players who need them.
+- Detector feedback is visual by design; the game is fully playable muted. An optional audio ping
+  and high-contrast cues are added only if the detector survives its playtest (it is frozen until then).
 
 ## 4. Hearing
 

@@ -10,8 +10,8 @@ no doors, no menu mazes, no NPCs.
 |---|---|---|
 | **The shaft** | The hole itself, physically changing as the player digs | The player sees their own excavation from the rim; the landmark that never repeats |
 | **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
-| **Winch & salvage pad** | Recover whole objects marked underground | A rim winch sends a rope along the excavated route, attaches and hauls through dirt bottlenecks; uniques are stored for display, oversized salvage awaits cash-in |
-| **Fuel point** | Battery refill | Amount and price shown before purchase; bigger tanks keep current fuel |
+| **Winch & salvage pad** | Recover whole objects marked underground | A rim winch sends a rope along the excavated route, attaches and hauls through dirt bottlenecks; uniques arrive muddy for optional cleaning and display, oversized salvage awaits cash-in. Being tested: the same winch hauls the player home at zero battery |
+| **Charging point** | Battery refill | Free and automatic: the battery refills by itself while the player is back at camp; a visible cable and charge light, no button, no price ([why](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)) |
 | **Display wall** | Special unsellable exhibits and salvage records | Empty spaces visible; displays unique oddities plus miniatures/photos of whole-salvage finds |
 | **Lamp / charges shelf** | Buy reusable lamps and C4 | Supports remaining play |
 | **Cosmetics rack** | Tool skins and yard decorations | Purely visual; another late sink |
@@ -24,7 +24,7 @@ wall and what the player digs up.
 Learning happens through the world, not a compulsory tutorial or popup chain.
 Contextual action prompts and the optional controls reference are allowed:
 
-- Stenciled signs and painted arrows: **SELL**, **UPGRADE**, **FUEL**.
+- Stenciled signs and painted arrows: **SELL**, **UPGRADE**, **CHARGE**.
 - The standing computer has a visible screen and keyboard for both selling and upgrades; the
  display wall's empty spaces invite placement.
 - A compact pause reference lists controls, and settings explain options.
@@ -69,8 +69,19 @@ filling.
 - A rope-recovered unique remains visibly secured on the receiving pad until the player places it
  on a compatible stand. Recovery never automatically sells it or chooses its exhibit placement.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.
-- Placed objects support inspection and story rereading. First delivery stays for playtesting,
- leaning before placement.
+- Placed objects support inspection and story rereading. The story line first appears when the
+ unique is cleaned or placed, whichever comes first.
+- **Optional cleaning.** A unique arrives on the pad caked in mud. Holding dig on it at the yard
+ sprays the mud off in big chunks: a few seconds, not careful brushing. Its real colours and details
+ appear, and its story line with them. It is never required: the player can place it muddy, clean it
+ later or never, and there is no percentage, meter or grade. Only uniques get this (a few per game);
+ ordinary finds never do.
+  - *Feel:* the PowerWash moment. Mud slides off, a shape you recognised underground becomes an
+    object you want on the shelf.
+  - *Why:* reviewers of all four reference games recommend them to PowerWash Simulator fans, so
+    this satisfaction lands with this audience. It stays optional and quick because required cleaning
+    is an archaeology chore ([Anti-Patterns](15_ANTI_PATTERNS.md#discovery-and-content)) and surface
+    time must stay short; the developer's own Meltopia notes reject waiting at the surface.
 - The wall grows only through play; its arrangement is the player's choice. Basic capacity is
  available without buying more frames. Choosing a place makes the special find feel personal.
 - Completing the exhibit collection feeds the 100% definition, regardless of arrangement.

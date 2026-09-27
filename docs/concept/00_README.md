@@ -8,11 +8,12 @@ undecided choices are collected in [Open Questions](13_OPEN_QUESTIONS.md).
 A first-person excavation game. You arrive at a drained highland lake in a fictional
 Eastern-European country after seeing a news story about valuables and bones exposed by falling
 water, and you conclude — reasonably — that there must be more down there. You dig a free-form voxel
-hole with one evolving, increasingly ridiculous machine, follow silent detector cues toward buried
-oddities, reveal objects by their shape before you know what they are, haul them home before your
-shared battery dies, sell everything ordinary at the surface computer, and upgrade on that same screen. You dig
-deeper through four zones, from recent rubbish to old sediment to deep clay and finally to something
-constructed that should not exist. The finds belong to a buried place with a history, and the major
+hole with one evolving, increasingly ridiculous machine, read the ground (a crack in the rock, a
+loose patch where someone dug before you, an old gravel riverbed) toward buried oddities, reveal
+objects by their shape before you know what they are, haul them home before your shared battery
+dies, sell everything ordinary at the surface computer, and upgrade on that same screen. You dig
+150 m deeper through four zones, each with its own main ground, from recent rubbish to old clay to
+deep rock and finally to something constructed that should not exist. The finds belong to a buried place with a history, and the major
 discoveries are connected. What they add up to is still open: one huge buried structure, or parts
 collected to open something else. The last find makes the connection clear; then you keep playing.
 
@@ -26,8 +27,10 @@ grow stronger both need to pull the player into the next outing.
 
 1. **The hole is yours.** Full voxel terrain, untouched start, no pre-dug paths, no intended route.
  Sideways digging earns its keep through physical buried connections ("Follow the thing"), coherent scenes, and oversized cable-winch salvage. Navigation is naturally intuitive and vertical (near the surface, looking up reveals the open sky and daylight shaft; deeper down, lamps mark the way); no map, ever.
-2. **The signal and the reveal.** A silent detector builds a hunch; the reward is recognizing an
- object from its half-buried shape. Every find requires deliberate excavation exposure before collection—no vacuum auto-collect. No value radar. No treasure GPS.
+2. **Read the ground, then the reveal.** The ground builds the hunch: when it suddenly digs
+ easier, you are on to something ([ground tells](03_WORLD_AND_SITE.md#4-materials-and-their-tells)).
+ The HUD detector is frozen until a playtest decides whether the tells replace it. The reward is
+ recognizing an object from its half-buried shape. Every find requires deliberate excavation exposure before collection—no vacuum auto-collect. No value radar. No treasure GPS.
 3. **One ridiculous machine.** A single tool that visibly escalates from an ordinary shovel through a drill attachment into a garage-built absurdity.
  Automatic adaptation through the final tier; power outpaces tougher ground. No mode chores, no
  replacement tool that invalidates your investment.
@@ -54,9 +57,9 @@ grow stronger both need to pull the player into the next outing.
 | [Concept overview](00_README.md) | This page: pitch, pillars, map |
 | [Fantasy and Tone](01_FANTASY_AND_TONE.md) | Setting, protagonist, humor, mystery, boundaries |
 | [Core Loop](02_CORE_LOOP.md) | The loop, sessions, pacing, anti-straight-down rules, the core test |
-| [World and Site](03_WORLD_AND_SITE.md) | Site, boundaries, four zones, materials, lighting, terrain tech |
+| [World and Site](03_WORLD_AND_SITE.md) | Site, boundaries, four zones and their main grounds, material tells, host ground, ground places, sealed rooms, lighting, terrain tech |
 | [Tool and Movement](04_TOOL_AND_MOVEMENT.md) | The machine, adaptation, attachments, jetpack, crouch, C4 |
-| [Discoveries](05_DISCOVERIES.md) | Find tiers, detector rules, clusters, slice objects, large finds |
+| [Discoveries](05_DISCOVERIES.md) | Find tiers, where finds sit, the frozen detector, clusters, slice objects, large finds |
 | [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) | Tracks, levels, money, fuel, capacity, recovery |
 | [Surface Hub and Display](07_SURFACE_HUB_AND_DISPLAY.md) | Yard, machines, signage, the special display |
 | [Interface and Controls](08_INTERFACE_AND_CONTROLS.md) | HUD, object inspection, pause, controls, photo mode, saves |
@@ -64,6 +67,14 @@ grow stronger both need to pull the player into the next outing.
 | [Accessibility and Comfort](10_ACCESSIBILITY_AND_COMFORT.md) | Motion, motor, vision, hearing, cognitive design |
 | [Ending and Mystery](11_ENDING_AND_MYSTERY.md) | Mystery trail, final object, components, Continue Playing |
 | [Achievements and Completion](12_ACHIEVEMENTS_AND_COMPLETION.md) | 5–10 fair achievements; what beaten and 100% mean |
-| [Open Questions](13_OPEN_QUESTIONS.md) | Everything intentionally undecided, with current options |
+| [Open Questions](13_OPEN_QUESTIONS.md) | Everything intentionally undecided, plus closed ideas and why they were rejected |
 | [Prototype Plan](14_PROTOTYPE_PLAN.md) | Vertical slice scope, experiments, numbers to tune |
 | [Anti-Patterns](15_ANTI_PATTERNS.md) | The game-specific "never do this" list |
+
+## Evidence behind the rules
+
+Steam review analyses of four comparable games live in [`.research/`](../../.research/README.md):
+A Game About Digging a Hole, Keep Digging, Meltopia and One Man's Trash (the last two include the
+developer's own playthrough notes). They are evidence only; the design lives here. Chapters name
+the game a rule came from ("Meltopia's blue snow", "Keep Digging's dynamite") so the reason stays
+attached to the rule. Before changing a rule that cites research, reread that evidence.

@@ -12,7 +12,7 @@ Delivered entirely through finds, never through NPCs or text popups:
 
 **Visible impossibility, not just depth**: A plastic bottle beside a fossil can look like mixed rubbish. Impossibility becomes undeniable when modern objects are visibly fused into intact ancient stone, or when the exact same strange modular connector appears on a 1980s washing machine and a deep subterranean megalith.
 
-**The grand mystery direction**: An ancient machine that manufactures ordinary modern junk (an enormous fabrication device). Earlier distinctive finds contain recognizable mechanical fragments of its output; the final discovery explains where all the oddities came from.
+**The mystery payoff is undecided** and not needed until the mystery and ending work begins. Candidates: an ancient machine that manufactures ordinary modern junk (earlier finds carry recognizable fragments of its output, and the final discovery explains where the oddities came from); one huge buried structure the player keeps meeting in pieces; or parts collected to open something, possibly at ground level. No candidate is preferred yet ([Open Questions](13_OPEN_QUESTIONS.md#content-and-systems)).
 
 Rules:
 - Each step lives in its zone; never dumped together.
@@ -42,8 +42,9 @@ Three or four objects outside the normal bag:
 - One obvious interaction inserts any owned parts, leaving missing sockets visible. Partial visits
  are optional; the player can fit the complete set at once. No puzzle.
 - Their placement is off the main shaft, rewarding lateral exploration and giving the anti-straight-
- down design its endgame teeth. Related objects and the existing broad detector make each required
- part discoverable; every seed contains all parts, reachable with baseline equipment.
+ down design its endgame teeth. Related objects, trails and ground tells make each required part
+ discoverable, and none depends on the frozen detector; every seed contains all parts, reachable with
+ baseline equipment.
 
 ## 3. The final discovery
 
@@ -65,7 +66,8 @@ The object must be readable at a glance and unmistakably manufactured.
 Rules:
 
 - The player reaches and exposes the final object using **the normal upgraded excavation systems**:
- the machine, the detector, the jetpack, C4. Nothing is disabled, stripped or swapped.
+ the machine, the jetpack, C4 (and the detector, if it survives its playtest). Nothing is disabled,
+ stripped or swapped.
 - There is **no genre switch**: no stealth, no combat, no puzzle, no timed escape, no chase.
 - The sequence is a **presentation break after a normal excavation payoff** — a cutscene, not a
  replacement gameplay mode.
@@ -86,10 +88,13 @@ Rules:
   this hole, never a generic montage.
 - The display wall and the hole itself can appear as a quiet montage — the player's own excavation
  as the record of the journey.
-- **Timelapse candidate:** a short, skippable retrospective sequence of this save changing from untouched
-  ground to the final excavated hole makes the scale of the player's work visible during the finale/credits.
-  Before-and-after views are a simpler fallback. Live surveying stations or cross-section viewer props are
-  strictly excluded to uphold the "no map, ever" pillar. This remains an [open presentation choice](13_OPEN_QUESTIONS.md#interface-and-ending).
+- **Before and after:** the ending shows the site as it was before the first dig next to the hole the
+  player made, then the display wall. The untouched site is rebuilt from the save's seed, so nothing
+  has to be recorded during play. Live surveying stations or cross-section viewer props are strictly
+  excluded to uphold the "no map, ever" pillar.
+  - *Why not a timelapse:* replaying the whole dig would mean recording every cut from the first
+    minute of the save, all for about twenty seconds at the end. Before-and-after shows the same scale
+    for far less work ([closed ideas](13_OPEN_QUESTIONS.md#closed-ideas)).
 
 ## 6. Continue Playing
 
@@ -114,8 +119,8 @@ After the cutscene:
 
 ## 8. Undecided
 
-- The mystery payoff: one huge buried structure (current experimental direction), parts that open
-  something, or another answer.
+- The mystery payoff: an ancient junk-making machine, one huge buried structure, parts that open
+  something, or another answer. No leaning yet.
 - The exact final object (direction locked, object TBD after prototype).
 - Exact staging and length of the cutscene.
 

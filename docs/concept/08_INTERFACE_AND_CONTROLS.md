@@ -11,7 +11,7 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Battery** | Current charge; the shared dig + jetpack resource |
 | **Return warning** | Adaptive safe / risky / critical estimate based on depth and ascent energy |
 | **Lamp kit** | Available reusable lamps, with a compact placement shortcut |
-| **Detector** | Separate compact HUD with three signal bars based on aim alignment: strongest when looking directly toward a nearby buried find. Hidden when looking away, out of range or once any part is uncovered. No direction/height hints; the aiming reticle stays independent. Silent by default; optional accessibility audio remains planned. |
+| **Detector** (frozen) | Kept as built until the detector-off playtest decides whether ground tells replace it ([Discoveries](05_DISCOVERIES.md#2-the-detector)). Separate compact HUD with three signal bars based on aim alignment: strongest when looking directly toward a nearby buried find. Hidden when looking away, out of range or once any part is uncovered. No direction/height hints; the aiming reticle stays independent. Silent by default; optional accessibility audio remains planned. |
 
 Not on the HUD: minimap, compass, ore counters, objective list, damage numbers, news ticker, or any
 permanent tutorial text.
@@ -28,7 +28,7 @@ permanent tutorial text.
 - No stats, equipping, sorting or discard menu. Looking never drains the battery.
 - **Price on hover remains undecided:** a small fixed sale price could appear once a sellable find
  is exposed enough to collect. It must not reveal hidden objects, price unsellable items or delay
- common pickups. See [Open Questions](13_OPEN_QUESTIONS.md#interface-and-ending).
+ common pickups. Decided from the playable-slice playtest; see [Open Questions](13_OPEN_QUESTIONS.md#interface).
 
 ## 3. Pause menu
 
@@ -83,8 +83,9 @@ No postcard export or separate sharing system; the existing photo mode stays.
 - **Three manual save slots** for different worlds/seeds.
 - **Asynchronous, non-blocking save serialization:** save writes run in background threads or
  delta-diff chunks with a prototype frame-impact target of <100 ms and no perceptible hitch.
- Saving a large voxel hole must preserve responsive input and smooth digging. Total background save
- duration is a separate measure from a visible frame hitch.
+ Saving a large voxel hole must preserve responsive input and smooth digging, including a heavily
+ dug 150 m site. Total background save duration is a separate measure from a visible frame hitch.
+ Meltopia's multi-second save freezes read as crashes and cost it player trust.
 - **Independent rolling backups:** several backup generations are written at different save events,
  and a corrupted active save can never take the backups down with it. Loading a damaged save falls
  back to the newest valid generation and says so plainly — the world is never silently reset.
