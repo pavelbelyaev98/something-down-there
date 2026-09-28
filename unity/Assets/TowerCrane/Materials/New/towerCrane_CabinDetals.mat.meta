@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bf8d85bfb64c7ba4cb0e9a08187b6752
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Materials/New/towerCrane_CabinDetals.mat
+  uploadId: 527710

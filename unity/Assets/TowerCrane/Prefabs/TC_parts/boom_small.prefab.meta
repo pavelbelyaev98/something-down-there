@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1743258e584680d479e1a9f8a2728330
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_parts/boom_small.prefab
+  uploadId: 527710

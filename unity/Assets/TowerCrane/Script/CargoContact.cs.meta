@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 2eb445319f8286d44b50296b118c649c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Script/CargoContact.cs
+  uploadId: 527710

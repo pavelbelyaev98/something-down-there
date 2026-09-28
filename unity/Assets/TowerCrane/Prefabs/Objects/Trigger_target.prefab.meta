@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6630aadce0f35e14ea652831568fa776
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/Objects/Trigger_target.prefab
+  uploadId: 527710

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3f768b62435d532489b8bcbfd5f65083
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/Objects/ground.prefab
+  uploadId: 527710

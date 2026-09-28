@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 25a40745f1159d546bc283fa358c8e66
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Script/Controller_TC_rails.cs
+  uploadId: 527710

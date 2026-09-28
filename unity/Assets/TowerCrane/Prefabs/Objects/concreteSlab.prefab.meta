@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c8df9285614d5ab4fa24c12772ea0cf1
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/Objects/concreteSlab.prefab
+  uploadId: 527710

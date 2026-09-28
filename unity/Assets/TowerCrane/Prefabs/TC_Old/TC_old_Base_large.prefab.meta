@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c603c1b7d243a6941bc21879e725dedc
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_Old/TC_old_Base_large.prefab
+  uploadId: 527710

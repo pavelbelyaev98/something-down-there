@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f6b0ddad93c735d4d88ddf0d94690f49
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_parts/jib_partEnd.prefab
+  uploadId: 527710

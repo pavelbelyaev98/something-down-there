@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c7a9973a0b12bbf4caf18a6e8ec914c7
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Scenes/All_TC_cranes.unity
+  uploadId: 527710

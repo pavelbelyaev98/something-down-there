@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c11e173637b1df44fb493acc0a4757bd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Materials/Old/towerCrane_Dirt_ConcreteBase.mat
+  uploadId: 527710

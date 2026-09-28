@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 06b7e03e25ff3eb4a98931ee1fad6224
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Materials/Old/rails_Dirt.mat
+  uploadId: 527710

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fbf89bbaf790b524cad7cb0220e53ef6
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Scenes/Controller_demo.unity
+  uploadId: 527710

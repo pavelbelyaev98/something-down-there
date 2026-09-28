@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bfe6eb5ff9dc9fa43b0f68bbcd89c071
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_parts/rails.prefab
+  uploadId: 527710

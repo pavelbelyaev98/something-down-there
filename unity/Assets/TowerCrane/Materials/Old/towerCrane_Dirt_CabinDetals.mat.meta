@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 21be32a4c85eeb3418b4bb7e6a382649
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Materials/Old/towerCrane_Dirt_CabinDetals.mat
+  uploadId: 527710

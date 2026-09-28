@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f848112530dce3b49b0685b13c817166
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Materials/concrete.mat
+  uploadId: 527710

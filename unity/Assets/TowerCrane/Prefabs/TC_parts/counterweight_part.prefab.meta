@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e042f061ca793c44783453fec2608e79
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_parts/counterweight_part.prefab
+  uploadId: 527710

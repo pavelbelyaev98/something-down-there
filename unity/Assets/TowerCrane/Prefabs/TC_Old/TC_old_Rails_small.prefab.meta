@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 100fd11510248d74bb2ca1d8cee7f502
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_Old/TC_old_Rails_small.prefab
+  uploadId: 527710

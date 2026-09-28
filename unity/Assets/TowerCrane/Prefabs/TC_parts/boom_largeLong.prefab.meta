@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 69ddcad2fc99d2f4ba784ba5a95dad5a
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 232940
+  packageName: Tower Crane + controller
+  packageVersion: 1.0
+  assetPath: Assets/TowerCrane/Prefabs/TC_parts/boom_largeLong.prefab
+  uploadId: 527710
