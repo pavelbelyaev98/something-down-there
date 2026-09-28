@@ -40,7 +40,7 @@
 ## 4. Hub & Economy (`unity/Assets/Runtime/Player/`, `Runtime/Interaction/`)
 - **Surface computer:** one Cosmic retro terminal opens selling for a carried haul, then upgrades immediately after Sell All or the last individual sale; an empty bag opens upgrades directly. The prompt reads simply `Use`, with no key prefix. Tool, battery and bag each have ten levels with independent sequential purchases from `EquipmentProgression` and its shared price ladder; parameters stay in code. The tool row previews the shovel-to-drill milestone; final-level rows remain visible and cannot charge again.
 - **Refill Economy:** Paid battery recharge ($1 minimum, whole-dollar `$`).
-- **Recovery yard:** One winch chooses an unoccupied receiving pad for each computer; the saved route retains that destination. Independent exhibit stands place the same stored objects into their own saved sockets; subsequent interactions show each find's name, original depth and story. Two unlinked rim-winch candidates (slewing tripod hoist A with a compact lifting magnet, trailer crane B with slewing turret, luffing jib and a suction cup) stand in their home pose behind the tape on the camp arc as props for the user's pick; nothing references or animates them.
+- **Recovery yard:** One winch chooses an unoccupied receiving pad for each computer; the saved route retains that destination. Independent exhibit stands place the same stored objects into their own saved sockets; subsequent interactions show each find's name, original depth and story.
 
 ## 5. UI & Presentation (`unity/Assets/Runtime/UI/`)
 - **UI Toolkit:** Single UI Document (`FpsHud`) driving the HUD, Pause menu, Settings tabs, and Station trading interfaces with unified grayscale styling.
