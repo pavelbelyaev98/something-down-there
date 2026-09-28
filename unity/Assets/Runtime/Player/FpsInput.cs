@@ -36,7 +36,8 @@ namespace SomethingDownThere
         private readonly InputAction refill, returnToSurface, adminMenu, adminCtrl, adminShift, xray;
         private readonly InputAction lamp, mark, rotatePlacement;
         private bool lampArmed, markArmed, rotateArmed;
-        private readonly InputAction[] adminLevels = new InputAction[EquipmentProgression.LevelCount];
+        // Ctrl+Shift+1..9 pick levels 1-9; 0 picks the last level.
+        private readonly InputAction[] adminLevels = new InputAction[10];
         private bool digArmed, grabArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
         private InputPreferences preferences;
         private int preferenceRevision = -1;
@@ -158,7 +159,7 @@ namespace SomethingDownThere
             // an ordinary key is held must never turn that old press into an admin action.
             bool adminChord = FpsPlayer.AdminBuild && adminCtrl.IsPressed() && adminShift.IsPressed();
             for (int i = 0; i < adminLevels.Length; i++)
-                if (adminChord && adminLevels[i].WasPressedThisFrame()) adminLevel = i + 1;
+                if (adminChord && adminLevels[i].WasPressedThisFrame()) adminLevel = i < 9 ? i + 1 : EquipmentProgression.LevelCount;
 
             return new FpsInputFrame
             {

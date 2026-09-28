@@ -1,5 +1,8 @@
 # Playtest 099 — Disturbed Ground, Odd Spots & Detector-Off Test
 
+**On hold:** the site has one plain ground for now (no tells to follow); play this once the grounds
+return.
+
 **Build & start:** launch `SomethingDownThere.exe -noDetector` and start a New Game (or Ctrl+Shift+F10
 → Detector: OFF right after you spawn). **No help**: no X-ray, no developer shortcuts, no spec.
 

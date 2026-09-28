@@ -164,10 +164,11 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
             // A deep volume only materializes the top layer that owns the ground plane, plus the
-            // sealed rooms' chunks so their far walls exist the moment the player breaks in.
+            // sealed rooms' chunks (when the layered ground is on) so their far walls exist the
+            // moment the player breaks in.
             var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
             Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
-            Assert.That(terrain.Rooms.Length, Is.GreaterThanOrEqualTo(2));
+            Assert.That(terrain.Rooms.Length > 0, Is.EqualTo(SiteLayout.LayeredGround));
             int surfaceLayer = (terrain.Dimensions.y - 1) / 16, deep = 0;
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
             {
@@ -178,7 +179,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(terrain.Rooms.Any(room => Vector3.Distance(centre, room.ToGrid(room.AirCentre)) < 8), Is.True,
                     "Below the surface only sealed rooms are materialized.");
             }
-            Assert.That(deep, Is.GreaterThan(0));
+            Assert.That(deep > 0, Is.EqualTo(terrain.Rooms.Length > 0));
             Assert.That(terrain.ChunkCount, Is.EqualTo(chunks.x * chunks.z + deep));
             Assert.That(terrain.Revision, Is.Zero);
             foreach (Vector3 origin in new[] { new Vector3(-7, 2, -7), new Vector3(0, 2, 0), new Vector3(7, 2, 7) })
@@ -760,7 +761,8 @@ namespace SomethingDownThere.Tests
             var timer = System.Diagnostics.Stopwatch.StartNew();
             var snapshot = terrain.Capture(); timer.Stop();
             Assert.That(snapshot.Density.Length, Is.EqualTo((SiteLayout.Size.x + 1) * (SiteLayout.Size.y + 1) * (SiteLayout.Size.z + 1)));
-            Assert.That(busiest, Is.InRange(1, 16), "A narrow deep cut rebuilds only the chunks around it.");
+            // A cut plus the loose remnant it detaches stays within the 3x3x3 chunks around it.
+            Assert.That(busiest, Is.InRange(1, 27), "A narrow deep cut rebuilds only the chunks around it.");
             // The hole must survive a checkpoint restore at the new depth.
             yield return terrain.Restore(snapshot, terrain.ExcavationSeed);
             RaycastHit restored = Hit(ray, Vector3.down);
@@ -830,9 +832,11 @@ namespace SomethingDownThere.Tests
 
         // Concept 03 §5 / 09 §4: the seeded room is closed and dark; digging through its wall opens it
         // once, and dust drifts in.
+        [Explicit("The site holds one plain ground for now; sealed rooms return with SiteLayout.LayeredGround.")]
         [UnityTest]
         public IEnumerator BreakingThroughASealedRoomWallOpensItOnce()
         {
+            if (!SiteLayout.LayeredGround) Assert.Ignore("Sealed rooms return with the layered ground.");
             var room = terrain.Rooms[0];
             var grid = (ExcavationGrid)typeof(TerrainVolume).GetField("grid",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(terrain);

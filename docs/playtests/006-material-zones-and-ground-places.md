@@ -1,5 +1,7 @@
 # Playtest 006 — Material Zones & Ground Places
 
+**On hold:** the site has one plain ground for now; play this once the grounds return.
+
 **Build & start:** current build, New Game. Best played with normal purchases for at least the first
 two zones; developer shortcuts are fine for going deeper.
 Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.

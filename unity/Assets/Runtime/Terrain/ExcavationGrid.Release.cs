@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Ground that lets go after a cut (concept 03 §4): undercut gravel pours, undercut backfill and
-    // thin soil (roofs, shelves and lips under a metre) slump, and a cut into a crack's shattered band
-    // breaks the connected band loose along the crack. Removal only, so none of it can bury the
-    // player or close a route; ordinary cleanup clears anything left floating, and finds in the
-    // released ground are simply exposed (their own release drops them).
-    public enum GroundRelease { GravelPour, BackfillSlump, SoilSlump, CrackBreak }
+    // Ground that lets go after a cut (concept 03 §4): undercut gravel pours, undercut backfill
+    // slumps, and a cut into a crack's shattered band breaks the connected band loose along the
+    // crack. Removal only, so none of it can bury the player or close a route; ordinary cleanup
+    // clears anything left floating, and finds in the released ground are simply exposed (their own
+    // release drops them). Soil never collapses.
+    public enum GroundRelease { GravelPour, BackfillSlump, CrackBreak }
 
     public sealed partial class ExcavationGrid
     {
@@ -17,15 +17,12 @@ namespace SomethingDownThere
         public const int PourSeeds = 12;
         // A crack breaks from a handful of freshly exposed band samples.
         public const int CrackSeeds = 4;
-        // The gravel section stays within this reach of the undercut; backfill and soil slump less.
-        public const float PourReach = 3f, BackfillSlumpReach = 2f, SoilSlumpReach = 1.5f;
-        // Soil only slumps where it is thinner than this above the air it overhangs.
-        public const float ThinSoilMetres = 1f;
+        // The gravel section stays within this reach of the undercut; backfill slumps less.
+        public const float PourReach = 3f, BackfillSlumpReach = 2f;
         public static int MaximumSamples(GroundRelease kind) => kind switch
         {
             GroundRelease.GravelPour => 16000,
             GroundRelease.BackfillSlump => 10000,
-            GroundRelease.SoilSlump => 6000,
             _ => 3000
         };
         private readonly List<int> releaseSamples = new List<int>(4096);
@@ -35,7 +32,6 @@ namespace SomethingDownThere
         {
             GroundRelease.GravelPour => material == TerrainMaterialId.Gravel,
             GroundRelease.BackfillSlump => material == TerrainMaterialId.Backfill,
-            GroundRelease.SoilSlump => material == TerrainMaterialId.Soil,
             _ => material is TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack or TerrainMaterialId.FracturedConcrete
         };
 
@@ -56,7 +52,6 @@ namespace SomethingDownThere
                 // Loose ground seeds where the cut left air right beneath it; a crack where the cut
                 // exposed its band.
                 if (crack ? !Exposed(x, y, z) : density[index - strideY] > 0) continue;
-                if (kind == GroundRelease.SoilSlump && !ThinSoil(x, y, z)) continue;
                 releaseSamples.Add(index); releaseVisited.Add(index);
                 sum += new Vector3(x, y, z);
             }
@@ -77,7 +72,6 @@ namespace SomethingDownThere
                     int next = nx + ny * strideY + nz * strideZ;
                     if (!Releases(kind, materials[next]) || density[next] <= 0 || releaseVisited.Contains(next)) continue;
                     if ((new Vector3(nx, ny, nz) - seed).sqrMagnitude > reachSquared) continue;
-                    if (kind == GroundRelease.SoilSlump && !ThinSoil(nx, ny, nz)) continue;
                     releaseVisited.Add(next); releaseSamples.Add(next);
                 }
             }
@@ -109,18 +103,6 @@ namespace SomethingDownThere
                 int nx = x + (n == 0 ? 1 : n == 1 ? -1 : 0), ny = y + (n == 2 ? 1 : n == 3 ? -1 : 0), nz = z + (n == 4 ? 1 : n == 5 ? -1 : 0);
                 if (nx < 0 || ny < 0 || nz < 0 || nx > Size.x || ny > Size.y || nz > Size.z) continue;
                 if (density[nx + ny * strideY + nz * strideZ] <= 0) return true;
-            }
-            return false;
-        }
-
-        // Soil with air (or the open surface) less than ThinSoilMetres above it.
-        private bool ThinSoil(int x, int y, int z)
-        {
-            int span = Mathf.CeilToInt(ThinSoilMetres / CellSize);
-            for (int up = 1; up <= span; up++)
-            {
-                if (y + up > Size.y) return true;
-                if (density[x + (y + up) * strideY + z * strideZ] <= 0) return true;
             }
             return false;
         }

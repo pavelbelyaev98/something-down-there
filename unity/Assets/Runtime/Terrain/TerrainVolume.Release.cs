@@ -5,14 +5,14 @@ using UnityEngine.Rendering;
 namespace SomethingDownThere
 {
     // After a tool cut, ground that lets go does (ExcavationGrid.TryRelease): a crack breaks
-    // along its band, undercut gravel pours, undercut backfill and thin soil slump. Debris is
+    // along its band, undercut gravel pours, undercut backfill slumps. Debris is
     // visual only: pooled chips and dust fall through the emptied ground.
     public sealed partial class TerrainVolume
     {
         [SerializeField] private Material pourChipsMaterial, pourDustMaterial;
         private ParticleSystem pourChips, pourDust;
         private readonly System.Random pourRandom = new System.Random(4211);
-        private readonly float[] releasedVolumes = new float[4];
+        private readonly float[] releasedVolumes = new float[3];
         // Released kind, volume (m³) and world centre: audio (028) and C4 (026) listen here.
         public event Action<GroundRelease, float, Vector3> Released;
         // Volume each kind released after the last tool cut.
@@ -25,7 +25,6 @@ namespace SomethingDownThere
             Release(GroundRelease.CrackBreak, cut, Mathf.Clamp(toolRadius * 1.5f, .4f, 1.2f));
             Release(GroundRelease.GravelPour, cut, ExcavationGrid.PourReach);
             Release(GroundRelease.BackfillSlump, cut, ExcavationGrid.BackfillSlumpReach);
-            Release(GroundRelease.SoilSlump, cut, ExcavationGrid.SoilSlumpReach);
         }
 
         private void Release(GroundRelease kind, BoundsInt cut, float reach)
@@ -49,7 +48,6 @@ namespace SomethingDownThere
         {
             new[] { new Color(.22f, .2f, .18f), new Color(.6f, .55f, .47f), new Color(.42f, .38f, .32f, .22f) },
             new[] { new Color(.2f, .15f, .1f), new Color(.45f, .33f, .22f), new Color(.4f, .31f, .22f, .22f) },
-            new[] { new Color(.25f, .17f, .1f), new Color(.5f, .36f, .22f), new Color(.45f, .35f, .25f, .22f) },
             new[] { new Color(.45f, .45f, .44f), new Color(.8f, .78f, .72f), new Color(.6f, .58f, .55f, .22f) }
         };
 

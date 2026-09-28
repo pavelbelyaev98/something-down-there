@@ -53,7 +53,7 @@ namespace SomethingDownThere
                 d >= 1.2f && d <= 2.4f ? TerrainMaterialId.Gravel : TerrainMaterialId.Soil),
             new Bay("Backfill pit", "1 m pit in clay: undercut it", (u, d, v) =>
                 Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Clay),
-            new Bay("Thin soil roof", "hollow under 0.6 m: dig down", Only(TerrainMaterialId.Soil), cavity: true),
+            new Bay("Thin soil roof", "hollow under 0.6 m: soil holds", Only(TerrainMaterialId.Soil), cavity: true),
             new Bay("Thin clay roof", "same hollow; clay holds", Only(TerrainMaterialId.Clay), cavity: true),
             new Bay("Soil, clay, rock", "zone changes at 2 m and 4 m", (u, d, v) =>
                 d < 2f ? TerrainMaterialId.Soil : d < 4f ? TerrainMaterialId.Clay : TerrainMaterialId.Rock),

@@ -29,7 +29,9 @@ foreach ($taskMode in $taskModes) {
     [xml]$taskXml = Get-Content -LiteralPath $taskResultPath -Raw
     $taskRun = $taskXml.'test-run'
     Write-Output "$taskMode : $($taskRun.result), $($taskRun.passed)/$($taskRun.total) passed. Results: $taskResultPath"
-    if ($taskProcess.ExitCode -ne 0 -or $taskRun.result -ne 'Passed' -or [int]$taskRun.total -eq 0) {
+    # An ignored test marks the run 'Skipped:Ignored'; like the live-Editor path, only failures fail it.
+    $taskIgnoredOnly = $taskRun.result -eq 'Skipped:Ignored' -and [int]$taskRun.failed -eq 0 -and [int]$taskRun.passed -gt 0
+    if (($taskProcess.ExitCode -ne 0 -and -not $taskIgnoredOnly) -or ($taskRun.result -ne 'Passed' -and -not $taskIgnoredOnly) -or [int]$taskRun.total -eq 0) {
         throw "FPS validation failed. Read $taskResultPath and $taskLogPath"
     }
 }

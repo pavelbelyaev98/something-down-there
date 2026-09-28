@@ -264,16 +264,17 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator EveryTrackBuysThroughTenAndTheDrillMilestoneIsVisible()
+        public IEnumerator EveryTrackBuysThroughTheLastLevelAndTheDrillMilestoneIsVisible()
         {
-            player.Wallet.TryCredit(3 * Enumerable.Range(1, 9).Sum(EquipmentProgression.Price));
+            int last = EquipmentProgression.LevelCount;
+            player.Wallet.TryCredit(3 * Enumerable.Range(1, last - 1).Sum(EquipmentProgression.Price));
             Face(computer); Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
             foreach (string track in new[] { "Tool", "Backpack", "Fuel tank" })
             {
-                for (int level = 1; level < 10; level++)
+                for (int level = 1; level < last; level++)
                 {
-                    StringAssert.Contains($"{level}/10", Text(track + " name"));
+                    StringAssert.Contains($"{level}/{last}", Text(track + " name"));
                     if (track == "Tool" && level == 6)
                     {
                         StringAssert.Contains("Shovel → Drill", Text("Tool effect"));
@@ -287,7 +288,7 @@ namespace SomethingDownThere.Tests
                 }
                 var max = Button("Upgrade " + track);
                 Assert.That(max.text, Is.EqualTo("MAX")); Assert.That(max.enabledSelf, Is.False);
-                StringAssert.Contains("10/10", Text(track + " name"));
+                StringAssert.Contains($"{last}/{last}", Text(track + " name"));
                 decimal balance = player.Wallet.Balance; MenuTestUI.Click(max);
                 Assert.That(player.Wallet.Balance, Is.EqualTo(balance));
             }

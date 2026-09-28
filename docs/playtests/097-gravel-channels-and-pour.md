@@ -1,5 +1,8 @@
 # Playtest 097 — Gravel Channels & the Pour
 
+**On hold in the game:** the site has one plain ground for now; the pour and the backfill slump can
+be tried in the Ground Lab.
+
 **Build & start:** current build, New Game.
 Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 
@@ -13,7 +16,7 @@ Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill m
 - The pour is a surprise but fair: the gravel within about 3 m slides down as debris with dust, finds
   inside drop and can be collected, and nothing is lost.
 - After one pour you start reading the ceiling before you undercut it.
-- Undercut backfill and thin soil roofs (under a metre) slump the same harmless way; clay never does.
+- Undercut backfill slumps the same harmless way; soil and clay never collapse.
 
 ## Tell the agent
 - Whether pours feel too big, too small or too frequent, and any debris that floats or traps you.

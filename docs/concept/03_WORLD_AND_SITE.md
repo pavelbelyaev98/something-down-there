@@ -147,7 +147,7 @@ of feeling the machine stall.
 
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
-| Soil     | Fast, broad rounded cuts; thin roofs and shelves (under a metre) slump when undercut | Disturbed ground                       | Rubbish, junk, plain rocks                          |
+| Soil     | Fast, broad rounded cuts; plain ground that never collapses | Disturbed ground                       | Rubbish, junk, plain rocks                          |
 | Gravel   | Loose grainy cuts; trickles; pours when undercut | Channels: winding old riverbeds      | Heavy things: coins, tokens, metal, nuggets         |
 | Clay     | Steady, narrow smooth shavings                 | Disturbed ground; basins               | Bones, wood, leather, fossils, organic things       |
 | Rock     | Small faceted chips                            | Cracks and veins                       | Ore                                                 |
@@ -239,8 +239,8 @@ map ("a gravel channel off to the left, worth a look"); that is knowledge, not a
 
 ### Local cleanup rules
 
-- These are cutting responses, visual debris and the bounded releases (gravel pours, backfill and
-  thin-soil slumps, crack breaks), never a global collapse
+- These are cutting responses, visual debris and the bounded releases (gravel pours, backfill
+  slumps, crack breaks), never a global collapse
   hazard.
 - Paper-thin soil fins and ribbons crumble as they are carved, even when long or attached at both
   ends. Remove their collision with their visible geometry; thicker useful ledges remain stable.

@@ -109,7 +109,7 @@ namespace SomethingDownThere
             if (grid != null) return;
             if ((transform.lossyScale - Vector3.one).sqrMagnitude > 0.0001f)
                 throw new InvalidOperationException("TerrainVolume requires unit scale; configure its dimensions instead.");
-            grid = new ExcavationGrid(dimensions, cellSize, excavationSeed, oddSpots);
+            grid = new ExcavationGrid(dimensions, cellSize, SiteLayout.LayeredGround ? excavationSeed : (int?)null, oddSpots);
             grid.SetBank(SiteLayout.BankColumns(dimensions, cellSize), SiteLayout.BankDepth);
             if (untouchedPreview != null) untouchedPreview.SetActive(false);
             chunkRoot = new GameObject("Chunks").transform;
@@ -233,9 +233,20 @@ namespace SomethingDownThere
                 return false;
             if (!ExcavationGrid.Finite(radius) || radius < cellSize || radius > 4f) return false;
             Vector3 surface = transform.InverseTransformPoint(hit.point);
-            // The net approximates the isosurface within a cell. Accept that tolerance,
-            // but reject a cached hit into the air left by a previous scoop.
-            if (grid.Sample(surface) < -cellSize * 0.75f) return false;
+            // The net approximates the isosurface within a cell, and around a thin feature a vertex can
+            // sit a little further out: accept the hit when solid ground lies just behind it, but
+            // reject a cached hit into the air left by a previous scoop.
+            if (grid.Sample(surface) < -cellSize * 0.75f)
+            {
+                Vector3 inward = -transform.InverseTransformDirection(hit.normal).normalized;
+                bool behind = false;
+                for (int step = 1; step <= 3 && !behind; step++)
+                {
+                    var probe = surface + inward * (cellSize * .5f * step);
+                    if (grid.Sample(probe) > 0) { surface = probe; behind = true; }
+                }
+                if (!behind) return false;
+            }
             // Removing an island can leave zero-density surface samples in empty air.
             // Recheck the actual mesh too, so its old hit cannot carve nearby soil.
             float hitTolerance = cellSize * 0.75f;

@@ -28,7 +28,7 @@ namespace SomethingDownThere
         public const float DetectorMediumAngle = 25f;
         public const float DetectorStrongAngle = 10f;
         public const float DetectorAngleHysteresis = 2f;
-        public const int LevelCount = 10;
+        public const int LevelCount = 12;
         public const int DrillLevel = 7;
         public const float FuelPerCredit = 100f;
         public const float ShavingIntervalScale = 0.1f;
@@ -64,7 +64,7 @@ namespace SomethingDownThere
         // What each ground does beyond its bite (concept 03 section 4), for the developer ground table.
         public static string GroundEffect(TerrainMaterialId material) => material switch
         {
-            TerrainMaterialId.Soil => "Thin roofs and shelves under 1 m slump when undercut",
+            TerrainMaterialId.Soil => "Plain ground; never collapses",
             TerrainMaterialId.Gravel => "Pours when undercut (3 m section); heavy finds",
             TerrainMaterialId.Clay => "Steady narrow shavings; never collapses",
             TerrainMaterialId.PondClay => "Basin and odd-spot tell: bites easier than clay",
@@ -94,15 +94,16 @@ namespace SomethingDownThere
             { TerrainMaterialId.Backfill, TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack,
               TerrainMaterialId.Clay, TerrainMaterialId.FracturedConcrete, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
         // Every track pays the same for the same next level. No scene-owned copies.
-        private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100 };
-        private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40 };
-        private static readonly float[] Fuel = { 50, 50, 100, 100, 150, 200, 250, 300, 400 };
-        // User-set ends (playtest 2026-09-27): level 1 bites 0.229 m at 2.11x the stroke time, level
-        // 10 bites 0.708 m at 2.63x with 1.42 m extra reach. Shovel levels grow evenly (~1.13x),
-        // the drill (level 7) is a clear step up (~1.27x) so it out-digs the last shovel even on
-        // fresh rock, then grows evenly to level 10; cadence and reach grow linearly. A zone's main
-        // ground is matched two purchases later.
-        private static readonly float[] BiteRadii = { .229f, .2596f, .2943f, .3336f, .3782f, .4287f, .5445f, .5943f, .6487f, .708f };
+        private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100, 1600, 2300 };
+        private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40, 40, 40 };
+        private static readonly float[] Fuel = { 50, 50, 100, 100, 150, 200, 250, 300, 400, 500, 600 };
+        // User-set ends (playtest 2026-09-27): level 1 bites 0.229 m at 2.11x the stroke time, the
+        // last level (12) bites 0.708 m at 2.63x with 1.42 m extra reach. Shovel levels grow evenly
+        // (~1.12x), the drill (level 7) is a clear step up (~1.27x) so it out-digs the last shovel
+        // even on fresh rock, then grows evenly (~1.07x, every purchase still >1.2x volume) to the
+        // last level; cadence and reach grow linearly. A zone's main ground is matched two
+        // purchases later.
+        private static readonly float[] BiteRadii = { .229f, .2565f, .2873f, .3217f, .3603f, .4036f, .5114f, .5458f, .5824f, .6216f, .6633f, .708f };
         public static ShovelProfile[] ToolProfiles()
         {
             var profiles = new ShovelProfile[LevelCount];
@@ -117,10 +118,10 @@ namespace SomethingDownThere
         // energy/m); level 1 is the starter pack. Hover hold arrives with the first purchase.
         public const int HoverLevel = 2;
         public const float HoverEnergyScale = .5f, HoverBrake = 45f, HoverGroundClearance = .5f;
-        private static readonly float[] AscentSpeeds = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
-        private static readonly float[] AscentEnergy = { 8, 8.1f, 8.2f, 8.25f, 8.3f, 8.3f, 8.4f, 8.4f, 8.5f, 8.5f };
+        private static readonly float[] AscentSpeeds = { 8, 8.8f, 9.6f, 10.5f, 11.3f, 12.1f, 12.9f, 13.7f, 14.5f, 15.4f, 16.2f, 17 };
+        private static readonly float[] AscentEnergy = { 8, 8.05f, 8.1f, 8.15f, 8.2f, 8.25f, 8.3f, 8.35f, 8.4f, 8.45f, 8.48f, 8.5f };
         public static JetpackProfile Jetpack(int level) => level >= 1 && level <= LevelCount
-            ? new JetpackProfile(AscentSpeeds[level - 1], 30f + 2f * (level - 1), AscentEnergy[level - 1], level >= HoverLevel)
+            ? new JetpackProfile(AscentSpeeds[level - 1], 30f + 18f * (level - 1) / (LevelCount - 1), AscentEnergy[level - 1], level >= HoverLevel)
             : throw new System.ArgumentOutOfRangeException(nameof(level));
         public static bool UsesDrill(int level) => level >= DrillLevel;
         public static string ToolName(int level) => UsesDrill(level) ? "Drill" : "Shovel";

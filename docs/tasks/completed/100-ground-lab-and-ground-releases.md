@@ -1,6 +1,6 @@
 # 100 — Ground Lab, Ground Releases & Tool Retune
 
-**Status:** complete. Development builds open a Ground Lab from the title (every ground in labelled bays plus behaviour mixes, never saved); after a tool cut, crack bands break loose along the crack and undercut backfill and thin soil slump beside the gravel pour; the tool ladder follows the user's level 1 and level 10 dials, hardness is mostly bite size with a little stroke time, every stroke throws its ground's debris, and grounds can be dialled live in Developer admin.
+**Status:** complete. Development builds open a Ground Lab from the title (every ground in labelled bays plus behaviour mixes, never saved) while the site itself holds one plain ground; after a tool cut, crack bands break loose along the crack and undercut backfill slumps beside the gravel pour; every track has twelve levels, the tool ladder runs from the user's level 1 dial to their max dial at level 12 with the drill at 7, hardness is mostly bite size with a little stroke time, every stroke throws its ground's debris, and grounds can be dialled live in Developer admin.
 
 ## Objective
 
@@ -70,3 +70,12 @@ something visible, and hand them the dials.
 - Top soil is not harder by the numbers (level 1: soil 50 L/s, clay 29, rock 21; a first bite on flat
   ground is 80% of a bite in a hole). The likely cause is the permanent bank just outside the plot
   outline (first 1.2 m never removable), right beside the spawn.
+
+## Iteration (2026-09-28)
+
+- The user will redesign the grounds one by one in the Ground Lab: the site now holds one plain
+  ground (soil; `SiteLayout.LayeredGround` off, generator kept for the return). The soil slump was
+  removed (soil never collapses). Every track has twelve levels (drill stays at 7; the user's max
+  dial is level 12; prices and capacities extend at the same rhythm); Ctrl+Shift+0 picks the last
+  level. The HUD reads the full depth (150 m) on the site floor. The grounds reference lives in
+  `docs/playtests/100-ground-lab.md`.

@@ -155,7 +155,7 @@ namespace SomethingDownThere.Tests
         public void AutomaticMotionImprovesFreshAndSustainedOutputAcrossTheDrillMilestone(TerrainMaterialId material)
         {
             float previousFresh = 0, previousSustained = 0;
-            Assert.That(EquipmentProgression.ToolProfiles().Length, Is.EqualTo(10));
+            Assert.That(EquipmentProgression.ToolProfiles().Length, Is.EqualTo(EquipmentProgression.LevelCount));
             for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
             {
                 var (first, sustained) = Output(material, level);
@@ -167,8 +167,8 @@ namespace SomethingDownThere.Tests
         }
 
         // Concept 03 zone rule: arriving in a zone at the level a player typically owns there never
-        // feels like a restart. Clay is the working ground around levels 3-6 and rock from about the
-        // drill (level 7); at those levels two purchases outpace the previous zone's main ground.
+        // feels like a restart. Clay is the working ground around levels 3-6 and rock arrives around
+        // the drill (levels 6-8); at those levels two purchases outpace the previous zone's main ground.
         [Test]
         public void OneLevelOutpacesTheNextZonesMainGround()
         {
@@ -177,7 +177,7 @@ namespace SomethingDownThere.Tests
             float[] soil = Sustained(TerrainMaterialId.Soil), clay = Sustained(TerrainMaterialId.Clay), rock = Sustained(TerrainMaterialId.Rock);
             for (int level = 3; level <= 6; level++)
                 Assert.That(clay[level - 1], Is.GreaterThanOrEqualTo(soil[level - 3]), $"Clay at level {level} vs soil at {level - 2}");
-            for (int level = 6; level <= EquipmentProgression.LevelCount; level++)
+            for (int level = 6; level <= 8; level++)
                 Assert.That(rock[level - 1], Is.GreaterThanOrEqualTo(clay[level - 3]), $"Rock at level {level} vs clay at {level - 2}");
             // Tells: basins bite clearly easier than the clay around them; the band beside a crack
             // clearly easier than the rock or concrete it breaks, at every level.

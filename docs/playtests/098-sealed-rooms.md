@@ -1,5 +1,7 @@
 # Playtest 098 — Sealed Break-Through Rooms
 
+**On hold:** the site has one plain ground for now; play this once the grounds return.
+
 **Build & start:** current build, New Game; developer shortcuts are fine for reaching depth. Bring
 lamps.
 Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.

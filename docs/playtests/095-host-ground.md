@@ -1,5 +1,7 @@
 # Playtest 095 — Host Ground
 
+**On hold:** the site has one plain ground for now; play this once the grounds return.
+
 **Build & start:** current build, New Game; developer shortcuts are fine for reaching rock.
 Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.
 

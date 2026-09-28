@@ -124,7 +124,7 @@ namespace SomethingDownThere.Tests
             trade = new StationTrade(bag, wallet, shovel, fuel);
             wallet.TryCredit(Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Sum(EquipmentProgression.Price));
             var item = bag.Items[0];
-            int[] capacities = kind == EquipmentKind.Inventory ? new[] { 15, 20, 30, 40, 55, 75, 100, 130, 170 } : new[] { 150, 200, 300, 400, 550, 750, 1000, 1300, 1700 };
+            int[] capacities = kind == EquipmentKind.Inventory ? new[] { 15, 20, 30, 40, 55, 75, 100, 130, 170, 210, 250 } : new[] { 150, 200, 300, 400, 550, 750, 1000, 1300, 1700, 2200, 2800 };
             for (int i = 0; i < EquipmentProgression.LevelCount - 1; i++)
             {
                 var offer = trade.OfferUpgrade(kind);

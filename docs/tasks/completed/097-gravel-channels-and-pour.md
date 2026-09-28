@@ -85,5 +85,5 @@ leaves floating specks or deletes a find. C4 under gravel triggers it later (`02
 
 ## Iteration (playtest 2026-09-27)
 
-- The pour became one of several ground releases: undercut backfill and thin soil (under 1 m) now
-  slump too, and crack bands break loose; see [100](100-ground-lab-and-ground-releases.md).
+- The pour became one of several ground releases (a thin-soil slump was tried and removed again):
+  undercut backfill slumps too, and crack bands break loose; see [100](100-ground-lab-and-ground-releases.md).

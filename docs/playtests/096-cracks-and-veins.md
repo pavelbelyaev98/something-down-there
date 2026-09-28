@@ -1,5 +1,8 @@
 # Playtest 096 — Cracks & Veins
 
+**On hold in the game:** the site has one plain ground for now; cracks can be tried in the Ground Lab
+(rock and concrete crack bays).
+
 **Build & start:** current build, New Game; developer shortcuts are fine for reaching the rock zone
 (below about 75 m) or a concrete structure. Bring lamps for the dark.
 Developer admin → **Ground X-ray** marks cracks red, gravel yellow, backfill magenta, pond clay cyan and concrete white through the ground.

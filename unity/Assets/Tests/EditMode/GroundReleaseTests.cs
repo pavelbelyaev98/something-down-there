@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace SomethingDownThere.Tests
 {
-    // Concept 03 §4: undercut gravel pours, undercut backfill and thin soil slump, a crack breaks
-    // along its band; each release is bounded and nothing else moves.
+    // Concept 03 §4: undercut gravel pours, undercut backfill slumps, a crack breaks along its band;
+    // each release is bounded, soil never collapses and nothing else moves.
     public sealed class GroundReleaseTests
     {
         // 8 x 6 x 8 m of one ground with a second ground wherever `inside` says so.
@@ -80,19 +80,13 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void OnlyThinSoilSlumps()
+        public void SoilNeverCollapses()
         {
-            // A cavity under a 0.3 m soil roof: cutting into the roof brings the thin roof down.
+            // Even a thin soil roof over a hollow holds: soil is plain ground with no release.
             var grid = Fixture(TerrainMaterialId.Soil, TerrainMaterialId.Soil, p => false);
             Assert.That(grid.RemoveSphere(new Vector3(4, 5.1f, 4), .6f, out var roof), Is.True);
-            Assert.That(grid.TryRelease(GroundRelease.SoilSlump, roof, ExcavationGrid.SoilSlumpReach, out _, out _), Is.True);
-            Assert.That(grid.IsSolid(new Vector3(4, 5.85f, 4)), Is.False, "The thin roof slumps open.");
-            Assert.That(grid.IsSolid(new Vector3(4, 5.85f, 6.5f)), Is.True, "Roof beyond the reach stays.");
-            Assert.That(grid.IsSolid(new Vector3(4, 4.2f, 4)), Is.True, "The cavity's floor stays.");
-            // A tunnel deep in soil keeps its ceiling: soil more than a metre thick never slumps.
-            grid = Fixture(TerrainMaterialId.Soil, TerrainMaterialId.Soil, p => false);
-            Assert.That(grid.RemoveSphere(new Vector3(4, 2, 4), .8f, out var deep), Is.True);
-            Assert.That(grid.TryRelease(GroundRelease.SoilSlump, deep, ExcavationGrid.SoilSlumpReach, out _, out _), Is.False);
+            foreach (GroundRelease kind in Enum.GetValues(typeof(GroundRelease)))
+                Assert.That(grid.TryRelease(kind, roof, 3, out _, out _), Is.False, kind.ToString());
         }
 
         [Test]

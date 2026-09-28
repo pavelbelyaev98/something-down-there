@@ -9,6 +9,9 @@ namespace SomethingDownThere
     public static class SiteLayout
     {
         public const float CellSize = 0.125f;
+        // The site currently holds one plain ground (soil) while the user redesigns the grounds one
+        // by one in the Ground Lab; the layered generator (TerrainGround) stays for their return.
+        public static bool LayeredGround => false;
         public const int DepthCells = 1200;
         // East-west is wider than north-south; the grid stays inside the save sample budget.
         public const int WidthCells = 288;

@@ -275,7 +275,8 @@ function Get-EditorCount {
 function Invoke-BatchTests([string]$mode, [string]$filter) {
     $arguments = @('-NoProfile', '-File', (Join-Path $PSScriptRoot 'test-fps.ps1'), '-Mode', $mode)
     if ($filter) { $arguments += @('-Filter', $filter) }
-    & powershell @arguments | Select-Object -Last 3
+    # Show the runner's tail without letting it into the return value.
+    & powershell @arguments | Select-Object -Last 3 | Out-Host
     return $LASTEXITCODE
 }
 

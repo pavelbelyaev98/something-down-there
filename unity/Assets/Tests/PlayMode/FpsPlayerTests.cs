@@ -89,7 +89,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryDig(), Is.False);
             Assert.That(player.TryInteract(), Is.False);
             Assert.That(dig.HitsRemaining, Is.EqualTo(3));
-            for (int level = 2; level <= 6; level++) player.Shovel.TryUpgradeTo(level);
+            for (int level = 2; level <= 7; level++) player.Shovel.TryUpgradeTo(level);
             Assert.That(player.AdminAvailable, Is.False, "Owned reach must not depend on admin scene wiring.");
             Assert.That(player.TryDig(), Is.True);
             Assert.That(player.TryInteract(), Is.False, "Shovel upgrades do not extend collection reach.");
@@ -278,7 +278,7 @@ namespace SomethingDownThere.Tests
                 player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
                 Assert.That(player.transform.position.y, Is.EqualTo(held).Within(.03f));
             }
-            Assert.That(charge - player.Battery.Charge, Is.EqualTo(2f * 8.1f * EquipmentProgression.HoverEnergyScale).Within(.05f));
+            Assert.That(charge - player.Battery.Charge, Is.EqualTo(2f * EquipmentProgression.Jetpack(2).EnergyPerSecond * EquipmentProgression.HoverEnergyScale).Within(.05f));
             for (int i = 0; i < 20; i++) player.Tick(default, 1f / 60f);
             Assert.That(player.IsHovering, Is.False, "Letting go of dig drops as before.");
             Assert.That(player.VerticalSpeed, Is.LessThan(0));

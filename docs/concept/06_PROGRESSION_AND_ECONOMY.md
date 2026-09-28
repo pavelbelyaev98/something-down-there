@@ -23,7 +23,7 @@
 | **Bag capacity** | Bag capacity | Strong steps; a full trip becomes a real haul |
 | **C4** | Blast size, pack size, efficiency | Room-clearing blasts; cheaper demolition |
 
-**Every track has ten levels**, including its starter level, with nine sequential purchases. Every purchase must noticeably
+**Every track has twelve levels**, including its starter level, with eleven sequential purchases. Every purchase must noticeably
 improve the next outing — no "invisible +5%" upgrades or cosmetic bolts standing in for power.
 Purchases apply immediately, without a blocking animation. The tool uses shovel scoops through
 level six and gains continuous drill motion at level seven; subsequent levels strengthen it.
@@ -136,7 +136,7 @@ extra upkeep or repeated chores are added just to sustain spending.
 | Metric | Target |
 |---|---|
 | First purchase | affordable from the first sale; within the first minutes |
-| Median time between milestone (capability) purchases | prototype-tuned across ten levels; major capability milestones remain more widely spaced than ordinary purchases |
+| Median time between milestone (capability) purchases | prototype-tuned across twelve levels; major capability milestones remain more widely spaced than ordinary purchases |
 | Purchases affordable at any moment | ≥ 3 |
 | Maxed tracks before credits | 50–85% of players (i.e., some left for Continue Playing) |
 | Rare find value | ≈ one big upgrade, never several |

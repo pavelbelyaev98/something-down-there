@@ -51,7 +51,7 @@ namespace SomethingDownThere.Tests
             AssertSame(saved, WorldSaveCodec.Read(memory));
         }
 
-        [TestCase(0)] [TestCase(11)]
+        [TestCase(0)] [TestCase(13)]
         public void InvalidEquipmentLevelsCannotBeSaved(int level)
         {
             var saved = Snapshot(1); saved.ShovelLevel = level;

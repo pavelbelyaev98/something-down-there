@@ -5,7 +5,7 @@
 There is exactly one excavation tool. It starts as an ordinary shovel and ends as a garage-built
 absurdity. The player never switches tools; upgrades bolt onto the same object.
 
-- **Ordinary baseline:** Begin with recognizable shovel scoops. Improvements strengthen the same shovel through level six; level seven adds continuous drill-like cutting, retained through level ten. This is automatic progression, not a tool swap or a mode selection. Digging retains the shared battery budget throughout the progression.
+- **Ordinary baseline:** Begin with recognizable shovel scoops. Improvements strengthen the same shovel through level six; level seven adds continuous drill-like cutting, retained through level twelve. This is automatic progression, not a tool swap or a mode selection. Digging retains the shared battery budget throughout the progression.
 - **Visible body:** The tool only — no hands visible. The player watches the machine evolve for the whole game.
 - **Visual escalation:** Motors, battery packs, wider heads, pipes, reinforcement, a late nozzle,
  welded plates and cables. The silhouette grows ridiculous while staying recognizably the same
@@ -57,7 +57,7 @@ behavior automatically:
 ## 4. Upgrade tracks and the tool
 
 The tool's own track (Tool) controls power, bite size and adaptation quality; see
-[Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) for all tracks. Each track has ten levels;
+[Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) for all tracks. Each track has twelve levels;
 each purchase noticeably improves the next outing and applies without a blocking animation.
 
 ## 5. Jetpack
