@@ -24,7 +24,7 @@ permanent tutorial text.
 - The computer opens selling for a carried haul, switches directly to upgrades after selling
   the last item, and opens upgrades immediately when there is nothing to sell.
 - Its interaction prompt is simply **Use**, with no key prefix.
-- Inspect objects in the world and on their displays. Placed uniques always allow story rereading.
+- Inspect objects in the world. Recovered uniques always allow story rereading where they stand.
 - No stats, equipping, sorting or discard menu. Looking never drains the battery.
 - **Price on hover remains undecided:** a small fixed sale price could appear once a sellable find
  is exposed enough to collect. It must not reveal hidden objects, price unsellable items or delay
@@ -44,7 +44,7 @@ persist immediately and across launches.
 | Dig / use tool | Hold left mouse / trigger | Hold-to-dig; toggle mode available |
 | Jetpack | Space / A or bumper | Simple input; stable handling; rebindable |
 | Crouch (precision) | Ctrl / stick click | Held; no stealth or stamina |
-| Interact (machines, placement, extraction marking) | E / face button | Tap for machines/placement; hold on any visible part of an exposure-ready rope target to mark it |
+| Interact (machines, placement, extraction marking) | E / face button | Tap for machines/placement; hold on any visible part of an exposure-ready unique to bolt on a lifting eye for the crane |
 | Work lamp | L | Preview; primary places, secondary cancels, Interact retrieves |
 | World marking | M | Preview arrow/home/return-here; repeat to change symbol, Interact erases |
 | Rotate placement | R | Rotate the current lamp or marking preview |
@@ -54,7 +54,7 @@ persist immediately and across launches.
 Rules:
 
 - **Every action is fully rebindable** on every device.
-- **Controller parity is mandatory:** every screen, including shop and display placement,
+- **Controller parity is mandatory:** every screen, including the shop,
  works with a controller; glyphs swap automatically.
 - **Left-handed preset** mirrors mouse buttons and updates prompts.
 - Sensitivity, invert, deadzone and hold/toggle options exist per action and per input device.

@@ -26,7 +26,7 @@ grow stronger both need to pull the player into the next outing.
 ## The seven pillars
 
 1. **The hole is yours.** Full voxel terrain, untouched start, no pre-dug paths, no intended route.
- Sideways digging earns its keep through physical buried connections ("Follow the thing"), coherent scenes, and oversized cable-winch salvage. Navigation is naturally intuitive and vertical (near the surface, looking up reveals the open sky and daylight shaft; deeper down, lamps mark the way); no map, ever.
+ Sideways digging earns its keep through physical buried connections ("Follow the thing"), coherent scenes, and oversized crane salvage. Navigation is naturally intuitive and vertical (near the surface, looking up reveals the open sky and daylight shaft; deeper down, lamps mark the way); no map, ever.
 2. **Read the ground, then the reveal.** The ground builds the hunch: when it suddenly digs
  easier, you are on to something ([ground tells](03_WORLD_AND_SITE.md#4-materials-and-their-tells)).
  The HUD detector is frozen until a playtest decides whether the tells replace it. The reward is
@@ -37,7 +37,7 @@ grow stronger both need to pull the player into the next outing.
 4. **Always a reason to dig, never a reason to fear losing it.** Money is banked only on the surface,
  but recovery never deletes your finds. The only real cost of failure is time and a fee.
 5. **Short, dense, replayable.** 30–60 minute sessions, 3–5 hours to the ending, randomized
- placement per save, fresh progression on a new run, and a personal display you arrange yourself.
+ placement per save, fresh progression on a new run, and the uniques you pulled out standing at camp.
 6. **Fun first, honest always.** Controlled absurdity with deadpan delivery. No horror, no combat,
  no jump scares, no bait-and-switch. The store page tells the truth.
 7. **Respect the body and the schedule.** Hold-to-dig, full rebinding, comfort settings, no FOMO, no

@@ -72,7 +72,7 @@ $map = @(
     @{ Pattern = '^unity/Assets/Tests/EditMode/'; Play = @() },
     # Interaction owners before the folder catch-all.
     @{ Pattern = '^unity/Assets/Runtime/Interaction/(FindDetector|DetectorTargeting)\.cs$|^unity/Assets/Runtime/UI/Toolkit/(DetectorCue|GameHudView)\.cs$|^unity/Assets/Editor/RetroComputerSetup\.cs$'; Play = @('DetectorIntegrationTests') },
-    @{ Pattern = '^unity/Assets/Runtime/Interaction/(SalvageWinch\w*|RopeDynamics|ExtractionRoutePlanner|WinchRopeView|RecoveryMarkView|UniqueDisplayStand)\.cs$|^unity/Assets/Editor/SalvageWinchSetup\.cs$|^unity/Assets/Content/Salvage/'; Play = @('UniqueRecoveryIntegrationTests') },
+    @{ Pattern = '^unity/Assets/Runtime/Interaction/(SalvageCrane\w*|TowerCraneRig|CraneRopeView|RopeDynamics|ExtractionRoutePlanner|SalvageRopeSettings|RecoveryMarkView)\.cs$|^unity/Assets/Runtime/Persistence/ExtractionSnapshot\.cs$|^unity/Assets/Editor/SalvageCraneSetup\.cs$|^unity/Assets/Content/Salvage/|^unity/Assets/TowerCrane/'; Play = @('UniqueRecoveryIntegrationTests', 'DetectorIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Interaction/(ComputerStation|StationTrade|SessionWallet|SessionInventory|EquipmentProgression|InventoryItem)\.cs$|^unity/Assets/Runtime/UI/Toolkit/ToolkitStationRows\.cs$'; Play = @('StationIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Interaction/(WorksiteTools|WorkLamp|WorldMark)\.cs$|^unity/Assets/Editor/WorksiteToolsSetup\.cs$|^unity/Assets/Content/WorksiteTools/'; Play = @('WorksiteToolsIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Interaction/(DiscoveryField|DiscoveryCatalog)\.cs$'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests', 'SaveIntegrationTests'); Population = $true },
@@ -108,7 +108,11 @@ function Get-Checks([string]$file) {
     if ($file -match '\.meta$' -or $file -notmatch '^(unity|art)/' -or $file -match '^unity/Assets/(InitTestScene|_Recovery/)') { return $null }
     $rule = $map | Where-Object { $file -match $_.Pattern } | Select-Object -First 1
     if ($rule) { return @{ Play = @($rule.Play); Broad = [bool]$rule.Broad; Population = [bool]$rule.Population; Unknown = $false } }
-    if ($file -match '^unity/Assets/Tests/PlayMode/(\w+)\.cs$') { return @{ Play = @($Matches[1]); Broad = $false; Population = $false; Unknown = $false } }
+    if ($file -match '^unity/Assets/Tests/PlayMode/(\w+)\.cs$') {
+        # A deleted suite has nothing left to run.
+        if (-not (Test-Path -LiteralPath (Join-Path $root $file))) { return $null }
+        return @{ Play = @($Matches[1]); Broad = $false; Population = $false; Unknown = $false }
+    }
     if ($file -match '^unity/Assets/') { return @{ Play = @('StartupMenuTests'); Broad = $false; Population = $false; Unknown = $true } }
     return $null
 }

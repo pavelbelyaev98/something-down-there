@@ -315,7 +315,7 @@ Sealed rooms keep that moment without cave networks.
 - Markings conform to the worked surface, can be rotated and erased for free, and save with the
   hole. Excavating their painted surface removes them. Lamps release physically when their
   support disappears, remain lit nearby, and retain their kit ownership. Sustained contact from a
-  winched load can knock a mounted lamp loose; portable lighting never permanently blocks recovery.
+  load on the crane's rope can knock a mounted lamp loose; portable lighting never permanently blocks recovery.
 - **Sky light reaches down open shafts** and fades with depth.
 - **A generous daylight reach:** shallow and middle-depth excavation stay comfortably readable,
   including short covered branches. Darkness develops gradually along substantially deeper or

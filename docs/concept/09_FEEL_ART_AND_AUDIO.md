@@ -69,9 +69,10 @@ Absurdity is controlled and deadpan:
 
 - The machine escalates into a welded, bolted, over-batteried monster.
 - Objects are placed straight-faced; the jokes are in what they are and what they are worth.
-- Physical comedy is allowed: pile wobble, a car yanked out of the ground, the salvage winch
- straining a taut cable before a dirt rupture sends the load swinging into the next obstruction.
- Recovery has a brisk strain–release rhythm, with momentum-driven chains of breakage rather than constant-speed careful chipping.
+- Physical comedy is allowed: pile wobble, a car yanked out of the ground, the salvage crane's rope
+ straining taut before a dirt rupture sends the load swinging into the next obstruction.
+ Recovery has a brisk strain–release rhythm, with momentum-driven chains of breakage rather than constant-speed careful chipping,
+ watched from a big machine that swings over your hole and carries the find away to camp.
 - No random wackiness, no jokes baked into every texture, no cartoon eyes on the drill.
 
 ## 4. Dig feel
@@ -144,7 +145,7 @@ Ambience and feedback only. **No music. No voice acting**.
 Comfort-safe effects:
 
 - Dust, crumbs, sparkles, smoke from C4, splash from water-adjacent areas.
-- Winch soil breaks eject a brief local burst of dirt crumbs and soft dust at the retaining contact, only when ground is actually removed. Keep the load and nearby excavation readable through the effect.
+- Rope soil breaks eject a brief local burst of dirt crumbs and soft dust at the retaining contact, only when ground is actually removed. Keep the load and nearby excavation readable through the effect.
 - No screen shake, no blood or gore, no full-screen flashes, no chromatic aberration,
  no forced bloom.
 - Particles never collide and never deal damage.

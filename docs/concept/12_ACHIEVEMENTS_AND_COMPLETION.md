@@ -31,12 +31,12 @@ collectathons and false "no cheating" detectors. None of that exists here.
 | 1 | Story | Reach and expose the final impossible object |
 | 2 | Depth | Reach the deepest zone for the first time |
 | 3 | Tool | Fully upgrade the machine's Tool track |
-| 4 | Discovery | Place the first special exhibit |
+| 4 | Discovery | Recover the first special exhibit |
 | 5 | Discovery | Find a complete fossil or micro-scene set |
-| 6 | Collection | Place a meaningful fraction of the special collection |
+| 6 | Collection | Recover a meaningful fraction of the special collection |
 | 7 | Fun | Perform a natural absurd action (e.g., extract a car, or something equally silly) |
 | 8 | Completion | All tracks maxed |
-| 9 | Completion | All special exhibits collected and placed |
+| 9 | Completion | All special exhibits recovered |
 | 10 | Mystery | Discover all three mystery-escalation finds |
 
 Final list should stay in the 5–10 range and prefer "things players naturally want to do anyway".
@@ -46,7 +46,7 @@ Final list should stay in the 5–10 range and prefer "things players naturally 
 | State | Requirement |
 |---|---|
 | **Beaten** | Final object found and components assembled; credits shown |
-| **100%** | Ending completed + all special exhibits collected and placed + all upgrade tracks maxed + every zone reached |
+| **100%** | Ending completed + all special exhibits recovered + all upgrade tracks maxed + every zone reached |
 | **Never required** | 100% terrain removal, perfectly straight shafts, retaining every temporary item |
 
 Achievements must remain attainable after the ending on the same save: missed finds are still

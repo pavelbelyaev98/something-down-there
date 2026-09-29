@@ -97,7 +97,7 @@ See [Save system](08_INTERFACE_AND_CONTROLS.md#7-save-system-player-facing) and 
 | Delete or corrupt saves; no backups | Autosave + manual slots + independent rolling backup generations with validated fallback |
 | Make balance patches reroll an existing world | Population persists; no forced rerolls |
 | Lock achievements behind NG+, RNG or bugs | All required content in every seed; fair one-run Steam achievements separate from current-save completion |
-| Delete or invalidate the display / collection | Special exhibits persist; any compatible display arrangement counts |
+| Delete or invalidate the recovered collection | Special exhibits persist where the crane set them down |
 | Trigger the finale purely via depth or void boundary volumes | Finale requires intentional physical insertion of components |
 | Block the main thread during save serialization or freeze the game on save | Nonblocking saves preserve input and dig rhythm; frame-impact and total background-save duration are different measurements |
 

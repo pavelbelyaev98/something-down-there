@@ -276,7 +276,7 @@ namespace SomethingDownThere.Tests
                 // Survey tape outlines the plot on its permanent collar, without colliders.
                 var boundary = environment.Find("Dig boundary");
                 Assert.That(boundary.Cast<Transform>().Select(m => m.name), Is.EqualTo(new[] { "Survey tape" }));
-                Assert.That(boundary.GetComponentsInChildren<Collider>(true), Is.Empty, "Digging, aiming and the winch cable pass the boundary.");
+                Assert.That(boundary.GetComponentsInChildren<Collider>(true), Is.Empty, "Digging and aiming pass the boundary.");
                 foreach (var marker in boundary.GetComponentsInChildren<MeshFilter>(true))
                 {
                     var reach = marker.sharedMesh.vertices.Select(v => marker.transform.TransformPoint(v))
@@ -367,9 +367,12 @@ namespace SomethingDownThere.Tests
                 // Only elevated demo ponds keep their walkable surface; nothing collides at lake level.
                 float lakeTop = lake.GetComponent<Renderer>().bounds.max.y;
                 Assert.That(environment.GetComponentsInChildren<Collider>().Where(c => c.name.StartsWith("Water") && c.enabled && c.bounds.max.y < lakeTop + 5), Is.Empty);
-                // Stations stand on permanent ground around the opening.
+                // Stations, the crane and its set-down spots stand on permanent ground around the opening.
+                var crane = root.GetComponentInChildren<SalvageCrane>();
+                Assert.That(crane.Configured, Is.True, "Run Configure Salvage Crane.");
                 foreach (var station in root.GetComponentsInChildren<StationTarget>().Select(s => s.transform)
-                    .Concat(new[] { root.Find("Surface/SalvageWinch/WinchFixture"), root.Find("Surface/RechargeZone"), root.Find("Player") }))
+                    .Concat(new[] { crane.Rig.transform, root.Find("Surface/RechargeZone"), root.Find("Player") })
+                    .Concat(Enumerable.Range(0, crane.SpotCount).Select(i => root.Find("Surface/SalvageCrane/SetDownSpot " + (i + 1)))))
                 {
                     var position = station.position;
                     Assert.That(SiteLayout.BeyondOpening(new Vector2(position.x, position.z)), Is.InRange(0, 11.5f), station.name);
@@ -379,6 +382,8 @@ namespace SomethingDownThere.Tests
                     Assert.That(LakebedSiteSetup.InPlayArea(area, new Vector2(position.x, position.z)), Is.True, station.name + " is inside the play area.");
                     Assert.That(support.Max(h => h.point.y), Is.InRange(SiteLayout.GroundTop - .02f, SiteLayout.RimTop + .01f), station.name);
                 }
+                // The crane sets every load down within its trolley's reach (its rope reaches any hole).
+                for (int i = 0; i < crane.SpotCount; i++) Assert.That(crane.Rig.Reaches(crane.Spot(i)), Is.True, "Set-down spot " + i);
             }
             finally { EditorSceneManager.CloseScene(scene, true); }
         }

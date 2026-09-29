@@ -20,14 +20,14 @@ build curiosity about what they add up to.
 | Jetpack | Stable and usable from the start; ordinary falls are harmless |
 | Materials | The zone-1 and zone-2 main grounds (soil, clay) with gravel channels, backfill pits and one rock mass with cracks, each with its tell and host finds |
 | Detector | Frozen as built. The slice is also played with the detector off to test whether ground tells replace it |
-| Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and rope recovery |
-| Rope recovery | Hold Interact on the exposed computer; rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks and preserving in-flight saves |
+| Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and crane recovery |
+| Crane recovery | Hold Interact on the exposed computer; the crane parks over the hole, its rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks, and the crane sets it down at camp, preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
 | Ground places | One concrete structure with cracks and a sealed cellar, diggable by the current tool; cracks, upgrades or C4 are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
 | Economy | Shared sell/upgrade computer, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
-| Display | Compatible shelf/stand spaces; individual special placement and rereading, no undiscovered silhouettes or inventory screen |
-| Surface | Compact yard: shaft, computer, winch pad, free charging point, display with optional cleaning |
+| Display | Recovered uniques stand at camp where the crane set them, rereadable; no inventory screen |
+| Surface | Compact yard: shaft, computer, salvage crane, free charging point, recovered uniques with optional cleaning |
 | Interface | Minimal HUD, world inspection, pause, full rebinding, controller support |
 | Saving | Autosave + restore exact hole, position, charge, finds and display |
 | Story | One anachronistic junk object for the mystery trail |
@@ -35,7 +35,7 @@ build curiosity about what they add up to.
 Mechanics can be tested first with independent unique computer identities sharing the approved model. The detector stays HUD-only and frozen; no physical attachment is built unless it survives the detector-off test. New slice objects and the connected scene remain required before the playable-slice acceptance gate.
 
 Explicitly out of the slice: zones 2–4, the full roster, the ending, achievements, photo mode, late
-sinks and finished large-object content. First test the accepted winch on a larger load through
+sinks and finished large-object content. First test the crane's rope on a larger load through
 bends and beneath an overhang. Use that evidence to decide whether bladder-assisted release and
 mud unsticking need a separate mechanic; the whole-object payoff must work without a transport
 shaft to the sky or cable clipping. Gate bulk content on a fresh slice playthrough, early economy
@@ -51,7 +51,7 @@ and long-session validation before release.
   help? This decides the detector ([Discoveries §2](05_DISCOVERIES.md#2-the-detector)).
 - Zone arrival: at the expected tool level, does any zone's main ground feel like a restart?
 - Return at depth: jetpack return time from typical working depths across the 150 m site.
-- Winch self-rescue vs automatic recovery at zero battery: which feels fairer and better?
+- Crane self-rescue vs automatic recovery at zero battery: which feels fairer and better?
 - Optional unique cleaning: do players enjoy it, and does anyone feel forced to do it?
 - Sealed rooms: does breaking in land as a moment, and do the half-sunk finds keep the reveal?
 - Starting shovel speed vs. frustration; ten meaningful upgrade levels, the shovel-to-drill milestone and output on familiar ground.
@@ -62,9 +62,9 @@ and long-session validation before release.
 - Cluster spacing: how far players search after finding one related object.
 - Ground places: visible starting-tool progress vs. following cracks, using C4, or returning later for a much faster excavation.
 - Rare find value: how many expeditions a "big find" should equal.
-- Station time: seconds spent in the yard per trip; nonblocking selling/upgrades and individual
- special placement without underground carrying.
-- Story delivery: compare before pickup and immediately before placement; display rereading in both.
+- Station time: seconds spent in the yard per trip; nonblocking selling/upgrades and crane
+ recovery without underground carrying.
+- Story delivery: compare before pickup and on arrival at camp; rereading at camp in both.
 - Once deeper content exists: test connected major parts and whichever payoff direction is chosen
   (repeated encounters with one huge buried structure are the current experiment), flexible
   discovery order, required-find trails, power growth against tougher ground, and useful play after

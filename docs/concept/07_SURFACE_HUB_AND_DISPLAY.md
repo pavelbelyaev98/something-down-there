@@ -10,14 +10,14 @@ no doors, no menu mazes, no NPCs.
 |---|---|---|
 | **The shaft** | The hole itself, physically changing as the player digs | The player sees their own excavation from the rim; the landmark that never repeats |
 | **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
-| **Winch & salvage pad** | Recover whole objects marked underground | A rim winch sends a rope along the excavated route, attaches and hauls through dirt bottlenecks; uniques arrive muddy for optional cleaning and display, oversized salvage awaits cash-in. Being tested: the same winch hauls the player home at zero battery |
+| **Salvage crane** | Recover whole objects marked underground | A small tower crane beside the camp swings its hook right above the hole and lowers it down the shaft; its one rope turns smart and the hook rides its end along the excavated route into the lifting eye the player bolted on; the crane reels the find in through dirt bottlenecks and carries it to camp. Uniques arrive muddy for optional cleaning, oversized salvage awaits cash-in. Being tested: the same rope hauls the player home at zero battery |
 | **Charging point** | Battery refill | Free and automatic: the battery refills by itself while the player is back at camp; a visible cable and charge light, no button, no price ([why](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)) |
-| **Display wall** | Special unsellable exhibits and salvage records | Empty spaces visible; displays unique oddities plus miniatures/photos of whole-salvage finds |
+| **Recovered uniques** | Special unsellable exhibits | Each stands where the crane set it down beside the camp, readable (name, depth, story) |
 | **Lamp / charges shelf** | Buy reusable lamps and C4 | Supports remaining play |
 | **Cosmetics rack** | Tool skins and yard decorations | Purely visual; another late sink |
 
-There are no characters, dialogue, or quest-givers. The story is told by the objects on the display
-wall and what the player digs up.
+There are no characters, dialogue, or quest-givers. The story is told by the uniques standing at camp
+and what the player digs up.
 
 ## 2. Diegetic learning (no tutorial)
 
@@ -25,8 +25,7 @@ Learning happens through the world, not a compulsory tutorial or popup chain.
 Contextual action prompts and the optional controls reference are allowed:
 
 - Stenciled signs and painted arrows: **SELL**, **UPGRADE**, **CHARGE**.
-- The standing computer has a visible screen and keyboard for both selling and upgrades; the
- display wall's empty spaces invite placement.
+- The standing computer has a visible screen and keyboard for both selling and upgrades.
 - A compact pause reference lists controls, and settings explain options.
 - **First-session full loop:** an unguided newcomer must find, sell and buy without a wiki or video —
  the stenciled signs and the shared computer are the teaching tools, and the
@@ -57,39 +56,33 @@ Contextual action prompts and the optional controls reference are allowed:
 - Buying produces a visible, immediate change on the machine in your hands — the core reward loop of
  the surface.
 
-## 5. The display wall
+## 5. Recovered uniques at camp
 
-The emotional record of the run. It is not a museum with staff; it is a shelf wall the player keeps
-filling.
+The emotional record of the run: the finds the crane pulled out of the hole, standing beside the camp.
 
 - **A few special exhibits:** ordinary and repeatable valuables sell; no first-copy exceptions.
-- **Spaces are pre-placed:** empty shelves/stands are visible, with no undiscovered silhouettes.
-- When a special find is collected, it is stored safely. At the yard the player brings it out and
- places it individually in any compatible spot — a small, satisfying physical interaction, not a menu.
-- A rope-recovered unique remains visibly secured on the receiving pad until the player places it
- on a compatible stand. Recovery never automatically sells it or chooses its exhibit placement.
+- The crane sets each unique down upright at its own spot beside the camp, where it stays. No
+ stands, shelves or placement step, and recovery never sells it.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.
-- Placed objects support inspection and story rereading. The story line first appears when the
- unique is cleaned or placed, whichever comes first.
-- **Optional cleaning.** A unique arrives on the pad caked in mud. Holding dig on it at the yard
- sprays the mud off in big chunks: a few seconds, not careful brushing. Its real colours and details
- appear, and its story line with them. It is never required: the player can place it muddy, clean it
- later or never, and there is no percentage, meter or grade. Only uniques get this (a few per game);
- ordinary finds never do.
+- Recovered uniques support inspection and story rereading where they stand. The story line first
+ appears when the unique is cleaned or recovered, whichever comes first.
+- **Optional cleaning.** A unique arrives caked in mud. Holding dig on it at the yard sprays the mud
+ off in big chunks: a few seconds, not careful brushing. Its real colours and details appear, and its
+ story line with them. It is never required: it can stay muddy, be cleaned later or never, and there
+ is no percentage, meter or grade. Only uniques get this (a few per game); ordinary finds never do.
   - *Feel:* the PowerWash moment. Mud slides off, a shape you recognised underground becomes an
-    object you want on the shelf.
+    object you want to keep looking at.
   - *Why:* reviewers of all four reference games recommend them to PowerWash Simulator fans, so
     this satisfaction lands with this audience. It stays optional and quick because required cleaning
     is an archaeology chore ([Anti-Patterns](15_ANTI_PATTERNS.md#discovery-and-content)) and surface
     time must stay short; the developer's own Meltopia notes reject waiting at the surface.
-- The wall grows only through play; its arrangement is the player's choice. Basic capacity is
- available without buying more frames. Choosing a place makes the special find feel personal.
-- Completing the exhibit collection feeds the 100% definition, regardless of arrangement.
+- The row of uniques grows only through play, one crane lift at a time.
+- Recovering the whole exhibit collection feeds the 100% definition.
 
 ## 6. Yard progression (cosmetic only)
 
 The worksite can visibly grow as milestones pass: more lamps, a shelter over the computer, a tarp over
-the display wall, small decorations bought with late-game money. Purely cosmetic, never functional
+the recovered uniques, small decorations bought with late-game money. Purely cosmetic, never functional
 gates, and never a base-building system. After the ending, the media
 wall appears: clippings, a radio and a small TV recording the discovery — the only station the
 story adds to the yard. Reports are printed/captioned; radio/TV props add no voices, music or faces.

@@ -28,7 +28,6 @@ namespace SomethingDownThere.Tests
             var ids = Site(seed);
             // Per zone, the share of each family away from the bands, sampled every 4th column.
             var counts = new int[4, (int)TerrainMaterialSnapshot.Last + 1];
-            int placeCracks = 0;
             var band = new HashSet<byte>[3];
             for (int b = 0; b < 3; b++) band[b] = new HashSet<byte>();
             for (int z = 0; z <= SiteLayout.Size.z; z += 4)

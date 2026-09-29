@@ -27,7 +27,7 @@ namespace SomethingDownThere
         public const float RimLip = .004f, RimBevel = .35f;
         // Keep the fixed surface above the shallowest saved finds.
         public const float RimBottom = -.01f;
-        // The stations, winch and spawn stand on this arc; the rest of the plot widens.
+        // The stations and spawn stand on this arc, the salvage crane behind them; the rest of the plot widens.
         public const float CampOpeningRadius = 12f;
         public const float CampCompass = 170f, CampHalfArc = 45f;
         public static readonly Vector3Int Size = new Vector3Int(WidthCells, DepthCells, LengthCells);
@@ -38,7 +38,7 @@ namespace SomethingDownThere
         public static float Compass(Vector2 xz) => Mathf.Repeat(Mathf.Atan2(xz.x, xz.y) * Mathf.Rad2Deg, 360);
 
         // Irregular dig plot outline: a wide east-west ellipse with lobes and bays, always inside
-        // the grid. The camp arc keeps the tested 12 m circle for the stations and winch.
+        // the grid. The camp arc keeps the tested 12 m circle for the stations.
         public static float PlotRadius(float compass)
         {
             float c = compass * Mathf.Deg2Rad, s = Mathf.Sin(c), k = Mathf.Cos(c);

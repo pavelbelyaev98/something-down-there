@@ -17,7 +17,7 @@ Delivered entirely through finds, never through NPCs or text popups:
 Rules:
 - Each step lives in its zone; never dumped together.
 - Required finale components have guaranteed valid placements in constrained regions with recoverable physical leads (cables/pipes) so missing one never turns into an unguided full-map grind.
-- Never signposted by UI or dialogue; the display wall serves as the quiet record.
+- Never signposted by UI or dialogue; the uniques standing at camp serve as the quiet record.
 - Each impossible find is also a real discovery with its own reward. The mystery can be ignored
  while digging; its components are required when the player chooses to finish the story.
 - **Awe, never dread.** The impossible is presented as craft, wonder and wrongness — never as a
@@ -84,12 +84,12 @@ Rules:
   starts filling with printed/captioned reports after the discovery; no characters, dialogue, crowd,
   music or voices. Radio/TV props stay silent or captioned.
 - No retcon that erases the player's work; the dig mattered and the world reacts to it.
-- The reports reference the finds actually displayed and the depths reached — the epilogue pays off
+- The reports reference the finds actually recovered and the depths reached — the epilogue pays off
   this hole, never a generic montage.
-- The display wall and the hole itself can appear as a quiet montage — the player's own excavation
+- The recovered uniques and the hole itself can appear as a quiet montage — the player's own excavation
  as the record of the journey.
 - **Before and after:** the ending shows the site as it was before the first dig next to the hole the
-  player made, then the display wall. The untouched site is rebuilt from the save's seed, so nothing
+  player made, then the recovered uniques at camp. The untouched site is rebuilt from the save's seed, so nothing
   has to be recorded during play. Live surveying stations or cross-section viewer props are strictly
   excluded to uphold the "no map, ever" pillar.
   - *Why not a timelapse:* replaying the whole dig would mean recording every cut from the first
@@ -111,7 +111,7 @@ After the cutscene:
 ## 7. Completion
 
 - **Beaten:** the final object is found and the components assembled; credits roll.
-- **100% on this save:** ending completed, all special exhibits collected and placed, all upgrade
+- **100% on this save:** ending completed, all special exhibits recovered, all upgrade
  tracks maxed, and every zone reached. Steam achievements are a separate record. “Explored” never
  means clearing the zone's terrain.
 - **Never required:** clearing every voxel of terrain, erasing the player's own useful routes, or

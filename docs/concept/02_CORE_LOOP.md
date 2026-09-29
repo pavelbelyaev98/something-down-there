@@ -17,20 +17,20 @@ Rules for each beat:
 | **Investigate** | The player chooses to follow the hint, dig sideways, or keep going down | Hints suggest, never prescribe; ignoring one is never wasted work |
 | **Reveal** | Digging around an object exposes it little by little; shape becomes readable before identity | Deliberate exposure required for all finds (50–60%); no vacuum auto-collect through solid dirt |
 | **Recognize** | "Wait… is that a—" The object's silhouette resolves into identity | This moment is the game's core reward; objects must read at partial exposure |
-| **Collect** | Ordinary pickups enter the bag; rope-recovered finds are marked underground and hauled whole to the surface | Exposure precedes interaction; hold Interact on a visible part to mark; uniques remain unsellable exhibits |
-| **Return** | Climb your own hole with the jetpack; battery is an action budget; return-power warning shows safe/risky/critical; the battery refills by itself, free, back at camp | No normal surface teleport or added return system; jetpack, reusable lamps, no map. At zero battery a paid recovery brings you up with everything (the winch self-rescue is being tested) |
+| **Collect** | Ordinary pickups enter the bag; uniques are marked underground, the yard crane's rope hauls them whole out of the hole and the crane carries them to camp | Exposure precedes interaction; hold Interact on a visible part to mark; uniques remain unsellable exhibits |
+| **Return** | Climb your own hole with the jetpack; battery is an action budget; return-power warning shows safe/risky/critical; the battery refills by itself, free, back at camp | No normal surface teleport or added return system; jetpack, reusable lamps, no map. At zero battery a paid recovery brings you up with everything (a crane self-rescue is being tested) |
 | **Sell** | The surface computer sells the ordinary haul, then immediately shows upgrades | One Sell All button; no deposit chore or second station |
 | **Upgrade** | Buy the next level of a track; visible change on the tool; practical benefit shown | Sequential, transparent, each purchase changes the next outing |
 
 ## 2. The session loop (30–60 min)
 
-1. **Plan (1 min):** check the special display, the fat wallet, the next upgrade. Pick an intention:
+1. **Plan (1 min):** check the uniques at camp, the fat wallet, the next upgrade. Pick an intention:
  "reach the rock zone", "follow that gravel channel", "afford the drill".
 2. **Dig (20–45 min):** descend, follow tells, break into a sealed room, explore sideways, discover, get greedy.
 3. **Tension (optional):** the bag fills, the battery drops, the return warning turns orange.
 4. **Decide:** keep going for one more thing, or leave with everything. This decision is the game's
  entire risk.
-5. **Return and cash in (5–10 min):** climb (the battery refills by itself at camp), sell, upgrade, clean and place a special find, glance at the display wall.
+5. **Return and cash in (5–10 min):** climb (the battery refills by itself at camp), sell, upgrade, clean a recovered unique, glance at the ones already standing at camp.
 6. **Repeat** because a discovery or the next meaningful upgrade makes another outing appealing.
 
 These are session targets, not timed stages. A session can contain several outings; a calm, voluntary

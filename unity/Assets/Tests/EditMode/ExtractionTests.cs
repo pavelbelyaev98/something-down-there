@@ -67,22 +67,29 @@ namespace SomethingDownThere.Tests
         }
 
         [TestCase(ExtractionPhase.Planning)]
+        [TestCase(ExtractionPhase.Reaching)]
+        [TestCase(ExtractionPhase.Lowering)]
         [TestCase(ExtractionPhase.Deploying)]
         [TestCase(ExtractionPhase.Attaching)]
         [TestCase(ExtractionPhase.Hauling)]
-        [TestCase(ExtractionPhase.Delivering)]
         [TestCase(ExtractionPhase.Retensioning)]
+        [TestCase(ExtractionPhase.Lifting)]
+        [TestCase(ExtractionPhase.Carrying)]
+        [TestCase(ExtractionPhase.SettingDown)]
         public void JobAndSingleOwnerRoundTripTogether(ExtractionPhase phase)
         {
             var state = Snapshot();
             state.Extraction.Phase = phase;
             state.Extraction.Attached = phase >= ExtractionPhase.Hauling;
-            if(state.Extraction.Attached) { state.Extraction.LinearVelocity=Vector3.up*7.5f; state.Extraction.AngularVelocity=Vector3.right*12f; }
+            bool craning = ExtractionSnapshot.Craning(phase);
+            if(state.Extraction.Attached && !craning) { state.Extraction.LinearVelocity=Vector3.up*7.5f; state.Extraction.AngularVelocity=Vector3.right*12f; }
             if (phase == ExtractionPhase.Planning) state.Extraction.Route = Array.Empty<Vector3>();
-            if (phase == ExtractionPhase.Delivering)
+            if (craning)
             {
-                state.Extraction.Progress = ExtractionSnapshot.Length(state.Extraction.Route, state.Extraction.AnchorIndex);
-                state.Finds[0].Position = ExtractionSnapshot.Point(state.Extraction.Route, state.Extraction.Progress, out _);
+                // The rope's haul is done; the crane holds the load wherever it swings.
+                state.Extraction.Progress = ExtractionSnapshot.Length(state.Extraction.Route);
+                state.Extraction.GrabLocal = new Vector3(0, .45f, 0);
+                state.Finds[0].Position += new Vector3(4, 3, -2);
             }
             using var bytes = new MemoryStream();
             WorldSaveCodec.Write(bytes, state); bytes.Position = 0;
@@ -90,8 +97,14 @@ namespace SomethingDownThere.Tests
             Assert.That(loaded.Extraction.Phase, Is.EqualTo(phase));
             Assert.That(loaded.Extraction.Route, Is.EqualTo(state.Extraction.Route));
             Assert.That(loaded.Extraction.AttachLocal, Is.EqualTo(state.Extraction.AttachLocal));
+            Assert.That(loaded.Extraction.GrabLocal, Is.EqualTo(state.Extraction.GrabLocal));
             Assert.That(loaded.Extraction.LinearVelocity, Is.EqualTo(state.Extraction.LinearVelocity));
             Assert.That(loaded.Extraction.AngularVelocity, Is.EqualTo(state.Extraction.AngularVelocity));
+            Assert.That(loaded.Extraction.Spot, Is.EqualTo(2));
+            Assert.That(loaded.Extraction.Pose.Yaw, Is.EqualTo(-37.5f));
+            Assert.That(loaded.Extraction.Pose.Reach, Is.EqualTo(21.25f));
+            Assert.That(loaded.Extraction.Pose.Rope, Is.EqualTo(61.5f));
+            Assert.That(loaded.Extraction.Pose.HookYaw, Is.EqualTo(12f));
             Assert.That(loaded.Finds.Single().Item.Kind, Is.EqualTo(DiscoveryKind.Unique));
             Assert.That(loaded.Finds.Single().DiscoveryDepth, Is.EqualTo(.6f));
             Assert.That(loaded.Inventory, Is.Empty);
@@ -116,13 +129,11 @@ namespace SomethingDownThere.Tests
 
         [TestCase(FindState.World)]
         [TestCase(FindState.Stored)]
-        [TestCase(FindState.Displayed)]
-        public void WorldPadAndExhibitKeepTheirIdentityOnRepeatedLoads(FindState lifecycle)
+        public void WorldAndCampKeepTheirIdentityOnRepeatedLoads(FindState lifecycle)
         {
             var state = Snapshot();
             state.Extraction = null;
             state.Finds[0].State = lifecycle;
-            state.Finds[0].DisplaySocket = lifecycle == FindState.Displayed ? "first-exhibit" : "";
             for (int repeat = 0; repeat < 3; repeat++)
             {
                 using var bytes = new MemoryStream();
@@ -140,7 +151,7 @@ namespace SomethingDownThere.Tests
             state.Extraction.Phase = ExtractionPhase.Hauling;
             state.Extraction.Attached = true;
             state.Extraction.Progress = .5f;
-            Assert.DoesNotThrow(() => state.Validate(), "The physical attachment may lag the winch guide.");
+            Assert.DoesNotThrow(() => state.Validate(), "The physical attachment may lag the rope guide.");
             state.Extraction.LinearVelocity=new Vector3(float.NaN,0,0);
             Assert.Throws<InvalidDataException>(() => state.Validate());
             state.Extraction.LinearVelocity=Vector3.zero;
@@ -151,8 +162,29 @@ namespace SomethingDownThere.Tests
             Assert.Throws<InvalidDataException>(() => state.Validate());
             state.Finds[0].Position = ExtractionSnapshot.Point(state.Extraction.Route, .5f, out _);
             Assert.DoesNotThrow(() => state.Validate());
-            state.Extraction.Phase = ExtractionPhase.Delivering;
+            state.Extraction.Phase = ExtractionPhase.Carrying;
+            Assert.Throws<InvalidDataException>(() => state.Validate(), "The crane takes over only at the top of the route.");
+        }
+
+        [Test]
+        public void CorruptCraneStateCannotResume()
+        {
+            WorldSnapshot Reaching() { var s = Snapshot(); s.Extraction.Phase = ExtractionPhase.Reaching; return s; }
+            var state = Reaching();
+            Assert.DoesNotThrow(() => state.Validate(), "The crane swinging over the hole is a valid checkpoint.");
+            state.Extraction.Spot = -1;
             Assert.Throws<InvalidDataException>(() => state.Validate());
+            state = Reaching(); state.Extraction.Pose.Rope = float.NaN;
+            Assert.Throws<InvalidDataException>(() => state.Validate());
+            state = Reaching(); state.Extraction.Phase = ExtractionPhase.Lifting; state.Extraction.Attached = true;
+            state.Extraction.Progress = ExtractionSnapshot.Length(state.Extraction.Route);
+            Assert.DoesNotThrow(() => state.Validate());
+            state.Extraction.LinearVelocity = Vector3.up;
+            Assert.Throws<InvalidDataException>(() => state.Validate(), "A load on the hook has no rope motion.");
+            state = Reaching(); state.Finds[0].State = FindState.Stored; state.Extraction = null;
+            Assert.DoesNotThrow(() => state.Validate());
+            state.Finds[0].PhysicsReleased = true;
+            Assert.Throws<InvalidDataException>(() => state.Validate(), "A unique at camp stays put.");
         }
 
         private static WorldSnapshot Snapshot() => new WorldSnapshot
@@ -164,7 +196,8 @@ namespace SomethingDownThere.Tests
                 Id = "unique-1", Name = "Computer", Kind = DiscoveryKind.Unique },
                 Position = Vector3.one, Rotation = Quaternion.identity, Scale = Vector3.one,
                 State = FindState.Extracting, DepthRecorded = true, DiscoveryDepth = .6f } },
-            Extraction = new ExtractionSnapshot { FindId = "unique-1", Outward = Vector3.up,
+            Extraction = new ExtractionSnapshot { FindId = "unique-1", Outward = Vector3.up, Spot = 2,
+                Pose = new CranePose { Yaw = -37.5f, Reach = 21.25f, Rope = 61.5f, HookYaw = 12 },
                 Route = new[] { Vector3.one, new Vector3(1, 3, 1), new Vector3(2, 3, 1), new Vector3(2, 2.5f, 1) } },
             Inventory = Array.Empty<ItemSnapshot>(), InventoryCapacity = 10,
             ShovelLevel = 1, BatteryCapacity = 100, BatteryCharge = 50

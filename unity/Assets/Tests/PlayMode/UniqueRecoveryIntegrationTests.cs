@@ -17,7 +17,7 @@ namespace SomethingDownThere.Tests
         private Scene scene;
         private InputTestFixture devices;
         private SimulationMode originalSimulation;
-        private SalvageWinchSettings tuningOverride;
+        private SalvageRopeSettings tuningOverride;
 
         [SetUp] public void RememberPhysics() => originalSimulation=Physics.simulationMode;
 
@@ -33,10 +33,10 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator FullBagBentTunnelReloadAndDisplayKeepOneComputer() => Recover(false);
+        public IEnumerator FullBagBentTunnelReloadAndCampDeliveryKeepOneComputer() => Recover(false);
 
         [UnityTest]
-        public IEnumerator SideAttachmentCanSwingThroughBentTunnelAndSettleOnPad() => Recover(true);
+        public IEnumerator SideAttachmentCanSwingThroughBentTunnelAndLandAtCamp() => Recover(true);
 
         [UnityTest]
         public IEnumerator PopulatedAngledPassageLoosensBlockingFindsAndRecoversComputer() => Recover(true, true);
@@ -69,12 +69,12 @@ namespace SomethingDownThere.Tests
             player.Tuning.Gravity = 0;
             player.SetApplicationFocus(true); player.CloseMenu();
             var terrain = player.ExcavationTerrain;
-            var winch = player.Winch; winch.enabled = false;
+            var winch = player.Crane; winch.enabled = false;
             if(persistentJam)
             {
                 tuningOverride=UnityEngine.Object.Instantiate(winch.Settings);
                 tuningOverride.ContactStallSeconds=2f;
-                typeof(SalvageWinch).GetField("settings",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
+                typeof(SalvageCrane).GetField("settings",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
                     .SetValue(winch,tuningOverride);
             }
             var find = player.Discoveries.Finds.Single(f => f.SaveContentId == "unique_reservoir_computer");
@@ -110,8 +110,8 @@ namespace SomethingDownThere.Tests
             Vector3 start = terrain.transform.InverseTransformPoint(find.transform.TransformPoint(attach));
             var job = new ExtractionSnapshot { FindId = find.Item.InstanceId, Phase = ExtractionPhase.Hauling,
                 AttachLocal = attach, Outward = Vector3.up, Attached = true, AngularVelocity = Vector3.up * 1.5f,
-                Route = new[] { start, start + Vector3.up * 4, start + Vector3.up * 5,
-                    start + Vector3.up * 5 + Vector3.right, start + Vector3.up * 4 + Vector3.right } };
+                // The rope's anchor stays underground here, so the crane never takes the load over.
+                Route = new[] { start, start + Vector3.up * 4, start + Vector3.up * 5 } };
             winch.Restore(job);
             Physics.simulationMode = SimulationMode.Script;
             if(lampObstacle)
@@ -145,7 +145,7 @@ namespace SomethingDownThere.Tests
                     var retreat = winch.Capture();
                     var hook = terrain.transform.InverseTransformPoint(body.position + body.rotation * Vector3.Scale(find.transform.lossyScale, attach));
                     retreat.Progress = 0; retreat.LinearVelocity = retreat.AngularVelocity = Vector3.zero;
-                    retreat.Route = new[] { hook, start, start, start, start };
+                    retreat.Route = new[] { hook, start, start };
                     winch.Restore(retreat); redirected = true;
                 }
                 player.SetApplicationFocus(true);
@@ -182,9 +182,9 @@ namespace SomethingDownThere.Tests
                     Assert.That(body.linearVelocity, Is.EqualTo(beforeVelocity), "The loaded spring, not a scripted velocity kick, produces recoil.");
                     float releasedPull = find.GetComponent<SpringJoint>().spring;
                     Assert.That(releasedPull, Is.GreaterThan(ordinaryPull * 1.5f), "Keep the motor loaded during rupture, with its force limited by the remaining speed headroom.");
-                    Assert.That((float)typeof(SalvageWinch).GetField("tensionCharge",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
+                    Assert.That((float)typeof(SalvageCrane).GetField("tensionCharge",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)
                         .GetValue(winch), Is.GreaterThanOrEqualTo(1), "Rupture must retain the stored windup.");
-                    var rope = scene.GetRootGameObjects()[0].GetComponentInChildren<WinchRopeView>();
+                    var rope = scene.GetRootGameObjects()[0].GetComponentInChildren<CraneRopeView>();
                     float cableLength = 0;
                     for (int p = 1; p < rope.ParticleCount; p++) cableLength += Vector3.Distance(rope.ParticlePosition(p-1), rope.ParticlePosition(p));
                     float span = Vector3.Distance(rope.ParticlePosition(0), rope.ParticlePosition(rope.ParticleCount-1));
@@ -241,7 +241,7 @@ namespace SomethingDownThere.Tests
 
         private static IEnumerator VerifyImpactChain(FpsPlayer player, BuriedFind find, RecoveryContactProbe probe, float elapsed)
         {
-            var winch = player.Winch; var terrain = player.ExcavationTerrain; var body = find.GetComponent<Rigidbody>();
+            var winch = player.Crane; var terrain = player.ExcavationTerrain; var body = find.GetComponent<Rigidbody>();
             float lastContact = elapsed, peakSpeed = 0, nextContact = -1;
             bool leftFirstRoof = false, chained = false, surgeSaved = false;
             var trace = new System.Text.StringBuilder();
@@ -258,19 +258,19 @@ namespace SomethingDownThere.Tests
                         { [find.Item.InstanceId] = find.Capture() }, terrain.Capture());
                     surgeSaved = true;
                 }
-                int contacts = (int)typeof(SalvageWinch).GetField("contactCount", flags).GetValue(winch);
+                int contacts = (int)typeof(SalvageCrane).GetField("contactCount", flags).GetValue(winch);
                 if (contacts == 0 && elapsed-lastContact > .06f && body.linearVelocity.y > winch.Settings.ImpactBreakSpeed) leftFirstRoof = true;
                 long revision = terrain.StateRevision;
                 if (leftFirstRoof && contacts > 0 && nextContact < 0) nextContact = elapsed;
-                var impacts = (float[])typeof(SalvageWinch).GetField("contactImpactSpeeds", flags).GetValue(winch);
+                var impacts = (float[])typeof(SalvageCrane).GetField("contactImpactSpeeds", flags).GetValue(winch);
                 float impact = contacts > 0 ? impacts.Take(contacts).Max() : 0;
                 player.SetApplicationFocus(true); player.CloseMenu();
                 winch.Tick(.02f);
                 if (contacts > 0 || step % 10 == 0) trace.AppendLine($"t={elapsed:F2} y={body.position.y:F2} speed={body.linearVelocity.magnitude:F2} impact={impact:F2} contacts={contacts} cut={terrain.StateRevision != revision} flight={leftFirstRoof}");
                 if (leftFirstRoof && contacts > 0 && terrain.StateRevision != revision && elapsed-nextContact < .06f)
                 {
-                    Assert.That((float)typeof(SalvageWinch).GetField("pressureSeconds", flags).GetValue(winch), Is.Zero);
-                    float carried = ((Vector3)typeof(SalvageWinch).GetField("impactCarry", flags).GetValue(winch)).magnitude;
+                    Assert.That((float)typeof(SalvageCrane).GetField("pressureSeconds", flags).GetValue(winch), Is.Zero);
+                    float carried = ((Vector3)typeof(SalvageCrane).GetField("impactCarry", flags).GetValue(winch)).magnitude;
                     Assert.That(carried, Is.GreaterThan(0), "A hard impact carries residual momentum through the ruptured soil.");
                     Assert.That(carried, Is.LessThan(impact), "Breaking dirt must spend some of the incoming kinetic energy.");
                     chained = true; break;
@@ -285,7 +285,7 @@ namespace SomethingDownThere.Tests
 
         private static IEnumerator PullPastLamp(FpsPlayer player, BuriedFind find, WorkLamp lamp)
         {
-            var winch=player.Winch;var terrain=player.ExcavationTerrain;
+            var winch=player.Crane;var terrain=player.ExcavationTerrain;
             var probe=find.gameObject.AddComponent<RecoveryContactProbe>();
             probe.WatchedCollider=lamp.GetComponent<Collider>();
             long revision=terrain.StateRevision;
@@ -322,7 +322,7 @@ namespace SomethingDownThere.Tests
             var player = root.GetComponentInChildren<FpsPlayer>();
             var terrain = player.ExcavationTerrain;
             var field = player.Discoveries;
-            var winch = player.Winch;
+            var winch = player.Crane;
             Assert.That(winch.Configured, Is.True);
             winch.enabled = false;
             player.Tuning.Gravity = 0;
@@ -364,9 +364,9 @@ namespace SomethingDownThere.Tests
             player.ViewCamera.transform.LookAt(find.transform.position);
             Physics.SyncTransforms();
             Assert.That(player.TryGetTarget(player.Tuning.InteractReach, out var aimed) && aimed.collider.GetComponentInParent<BuriedFind>() == find, Is.True);
-            var rope = root.GetComponentInChildren<WinchRopeView>();
+            var rope = root.GetComponentInChildren<CraneRopeView>();
             winch.SendMessage("RefreshMark");
-            var mark = rope.transform.Find("Recovery surface mark");
+            var mark = winch.transform.Find("Recovery surface mark");
             Assert.That(mark, Is.Not.Null);
             Assert.That(mark.gameObject.activeSelf, Is.True, "Hover previews the actual eligible attachment.");
             Assert.That(Vector3.Distance(mark.position, aimed.point), Is.LessThan(.02f));
@@ -522,33 +522,37 @@ namespace SomethingDownThere.Tests
             Assert.That(wallChecked, Is.True, "A blocked haul keeps pulling and resumes automatically when free.");
             Assert.That(ropeChecked, Is.True);
             Assert.That(largestRotation, Is.GreaterThan(10f), "The marked point pulls a rotating physical load.");
-            CollectionAssert.IsSubsetOf(new[] { ExtractionPhase.Deploying, ExtractionPhase.Attaching,
-                ExtractionPhase.Hauling, ExtractionPhase.Delivering }, phases);
+            CollectionAssert.IsSubsetOf(new[] { ExtractionPhase.Reaching, ExtractionPhase.Lowering, ExtractionPhase.Deploying, ExtractionPhase.Attaching,
+                ExtractionPhase.Hauling, ExtractionPhase.Lifting, ExtractionPhase.Carrying, ExtractionPhase.SettingDown }, phases);
             Assert.That(find.State, Is.EqualTo(FindState.Stored));
             Assert.That(mark.gameObject.activeSelf, Is.False, "Completed recovery removes its mark.");
             Assert.That(terrain.Capture().RemovedVolume, Is.GreaterThan(initialVolume), "The narrow dug route is widened by the load.");
             Assert.That(player.Inventory.Count, Is.EqualTo(bagCount));
             Assert.That(player.Battery.Charge, Is.EqualTo(battery));
-            var stand = root.GetComponentInChildren<UniqueDisplayStand>();
-            Assert.That(stand.TryInteract(player), Is.True);
-            Assert.That(find.State, Is.EqualTo(FindState.Displayed));
-            Assert.That(stand.TryInteract(player), Is.True, "Inspecting again must not create a second object.");
+            // The crane set it down upright on the first free spot beside the camp, where it stays.
+            Vector3 spot = winch.Spot(0), rest = find.WorldBounds.center;
+            Assert.That(new Vector2(rest.x - spot.x, rest.z - spot.z).magnitude, Is.LessThan(.2f), "Set down on the first spot at camp.");
+            Assert.That(find.WorldBounds.min.y, Is.EqualTo(spot.y).Within(.05f), "Resting on the ground.");
+            Assert.That(Vector3.Angle(find.transform.up, Vector3.up), Is.LessThan(1f), "Standing upright.");
+            Assert.That(find.GetComponent<Rigidbody>().isKinematic, Is.True);
+            Assert.That(find.TryInteract(player), Is.True);
+            Assert.That(find.TryInteract(player), Is.True, "Inspecting again must not create a second object.");
             Assert.That(field.Finds.Count(f => f.Item.InstanceId == identity), Is.EqualTo(1));
             CollectionAssert.AreEquivalent(identities,field.Finds.Select(f=>f.Item.InstanceId), "Recovery never deletes finds in its way.");
             Assert.That(find.Item.InstanceId, Is.EqualTo(identity));
             Assert.That(find.DepthRecorded && find.DiscoveryDepth > 0, Is.True);
-            Assert.That(stand.GetPrompt(player), Does.Contain(find.DisplayName));
+            Assert.That(find.GetPrompt(player), Does.Contain(find.DisplayName).And.Contain("Found at"));
             Debug.Log($"Recovery fixture worst planning/haul substep: {worstPlanning:F1}/{worstHaul:F1} ms.");
             Debug.Log($"Recovery rope mean simulation: {ropeCost / System.Math.Max(1, ropeSteps):F3} ms.");
         }
 
-        private static string DescribeHaul(SalvageWinch winch, BuriedFind find, TerrainVolume terrain)
+        private static string DescribeHaul(SalvageCrane winch, BuriedFind find, TerrainVolume terrain)
         {
             var job = winch.Capture(); var body = find.GetComponent<Rigidbody>();
             const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             string fields = string.Join(", ", new[] { "pressureSeconds", "pressureObstacle", "pressurePosition", "contactCount", "stalledSeconds" }
-                .Select(name => name + "=" + typeof(SalvageWinch).GetField(name, flags)?.GetValue(winch)));
-            var contacts = (ContactPoint[])typeof(SalvageWinch).GetField("loadContacts", flags).GetValue(winch);
+                .Select(name => name + "=" + typeof(SalvageCrane).GetField(name, flags)?.GetValue(winch)));
+            var contacts = (ContactPoint[])typeof(SalvageCrane).GetField("loadContacts", flags).GetValue(winch);
             string lastContacts = string.Join("; ", contacts.Take(4).Select(c => {
                 var other = c.otherCollider?.GetComponentInParent<BuriedFind>();
                 var otherBody = other?.GetComponent<Rigidbody>();

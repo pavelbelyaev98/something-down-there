@@ -29,7 +29,6 @@ namespace SomethingDownThere
         public FindState State { get; private set; }
         public bool DepthRecorded { get; private set; }
         public float DiscoveryDepth { get; private set; }
-        public string DisplaySocket { get; private set; } = "";
         public string LoreCard => $"{DisplayName}  |  Found at {DiscoveryDepth:F1} m\n{lore}";
         private TerrainVolume terrain;
         private MeshCollider hitCollider;
@@ -40,7 +39,7 @@ namespace SomethingDownThere
         private readonly RaycastHit[] coveringHits = new RaycastHit[32];
         public InventoryItem Item { get; private set; }
         public float Exposure { get; private set; }
-        public bool Collected => State == FindState.Collected || State == FindState.Stored || State == FindState.Displayed;
+        public bool Collected => State == FindState.Collected || State == FindState.Stored;
         // Visibility/range are checked against the actual collider when collecting.
         public float RequiredExposure => Mathf.Clamp(collectionThreshold, 0.1f, 1f);
         public bool IsHeld => physical != null && physical.Held;
@@ -134,7 +133,7 @@ namespace SomethingDownThere
             bool released = physical != null && physical.Released;
             if (captured != null && !transform.hasChanged && !UsesPhysicalPose && ReferenceEquals(capturedItem, Item)
                 && captured.State == State && captured.PhysicsReleased == released && captured.DepthRecorded == DepthRecorded
-                && captured.DiscoveryDepth == DiscoveryDepth && captured.DisplaySocket == DisplaySocket)
+                && captured.DiscoveryDepth == DiscoveryDepth)
                 return captured;
             captured = Record(released);
             capturedItem = Item;
@@ -147,7 +146,7 @@ namespace SomethingDownThere
             Position = terrain.transform.InverseTransformPoint(UsesPhysicalPose ? physical.Body.position : transform.position),
             Rotation = Quaternion.Inverse(terrain.transform.rotation) * (UsesPhysicalPose ? physical.Body.rotation : transform.rotation),
             Scale = transform.localScale, State = State, PhysicsReleased = released,
-            DepthRecorded = DepthRecorded, DiscoveryDepth = DiscoveryDepth, DisplaySocket = DisplaySocket };
+            DepthRecorded = DepthRecorded, DiscoveryDepth = DiscoveryDepth };
 
         public void Restore(FindSnapshot state)
         {
@@ -156,7 +155,7 @@ namespace SomethingDownThere
             transform.SetPositionAndRotation(terrain.transform.TransformPoint(state.Position), terrain.transform.rotation * state.Rotation);
             transform.localScale = state.Scale;
             State = state.State;
-            DepthRecorded = state.DepthRecorded; DiscoveryDepth = state.DiscoveryDepth; DisplaySocket = state.DisplaySocket;
+            DepthRecorded = state.DepthRecorded; DiscoveryDepth = state.DiscoveryDepth;
             if (physical != null) physical.Restore(state.PhysicsReleased);
             visual.enabled = hitCollider.enabled = State != FindState.Collected;
             gameObject.SetActive(State != FindState.Collected);
@@ -219,9 +218,8 @@ namespace SomethingDownThere
 
         public string GetPrompt(FpsPlayer player)
         {
-            if (State == FindState.Stored) return $"{DisplayName}  |  Ready for the exhibit stand";
-            if (State == FindState.Displayed) return LoreCard + $"\n{player.InputSettings.Display(PlayerBinding.Interact)} to inspect";
-            if (State == FindState.Extracting) return player.Winch != null ? player.Winch.Prompt : "Recovery in progress";
+            if (State == FindState.Stored) return LoreCard + $"\n{player.InputSettings.Display(PlayerBinding.Interact)} to read";
+            if (State == FindState.Extracting) return player.Crane != null ? player.Crane.Prompt : "Recovery in progress";
             if (Collected || !isActiveAndEnabled) return "";
             ObserveDiscovery();
             if (!ExposureReady) return $"Uncover more  |  {Mathf.RoundToInt(Exposure * 100)}% / {Mathf.RoundToInt(RequiredExposure * 100)}% exposed";
@@ -317,14 +315,13 @@ namespace SomethingDownThere
             field?.NotifyMotion();
         }
 
-        internal bool Transition(FindState expected, FindState next, string socket = "")
+        internal bool Transition(FindState expected, FindState next)
         {
             if (!RopeTarget || State != expected) return false;
             bool valid = expected == FindState.World && next == FindState.Extracting
-                || expected == FindState.Extracting && (next == FindState.World || next == FindState.Stored)
-                || expected == FindState.Stored && next == FindState.Displayed && !string.IsNullOrEmpty(socket);
+                || expected == FindState.Extracting && (next == FindState.World || next == FindState.Stored);
             if (!valid) return false;
-            State = next; DisplaySocket = socket; field?.NotifyMotion(); RefreshExposure(false);
+            State = next; field?.NotifyMotion(); RefreshExposure(false);
             return true;
         }
 
@@ -338,7 +335,7 @@ namespace SomethingDownThere
         public bool TryInteract(FpsPlayer player)
         {
             if (player == null || !player.GameplayActive) return false;
-            if (State == FindState.Displayed) { player.ShowFeedback(LoreCard); return true; }
+            if (State == FindState.Stored) { player.ShowFeedback(LoreCard); return true; }
             return false;
         }
     }

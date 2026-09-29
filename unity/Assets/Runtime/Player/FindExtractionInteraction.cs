@@ -9,13 +9,13 @@ namespace SomethingDownThere
         private float seconds;
         private int bindingRevision = -1;
         private bool waitForRelease;
-        public float Progress => player.Winch == null ? 0 : Mathf.Clamp01(seconds / player.Winch.Settings.MarkSeconds);
+        public float Progress => player.Crane == null ? 0 : Mathf.Clamp01(seconds / player.Crane.Settings.MarkSeconds);
         public FindExtractionInteraction(FpsPlayer player) => this.player=player;
         public void Reset() { seconds=0; target=null; waitForRelease=true; }
         internal bool TryGetTarget(out BuriedFind find, out RaycastHit hit)
         {
             find=null; hit=default;
-            if (!player.GameplayActive || player.Winch==null || !player.Winch.Configured || player.Winch.Busy
+            if (!player.GameplayActive || player.Crane==null || !player.Crane.Configured || player.Crane.Busy
                 || player.HeldFind!=null || player.WorksiteTools != null && player.WorksiteTools.IsPlacing
                 || player.BindingCapture != null && player.BindingCapture.BlocksInput
                 || !player.TryGetTarget(player.Tuning.InteractReach, out hit)) return false;
@@ -33,7 +33,7 @@ namespace SomethingDownThere
             seconds+=Mathf.Max(0,dt);
             if(Progress>=1)
             {
-                player.Winch.TryMark(find,hit.point,hit.normal);
+                player.Crane.TryMark(find,hit.point,hit.normal);
                 Reset();
             }
             return true;

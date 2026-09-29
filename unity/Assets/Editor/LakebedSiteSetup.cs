@@ -852,8 +852,8 @@ namespace SomethingDownThere.Editor
             Put(surface.Find("RechargeZone"), new Vector3(0, 0, -14.5f));
             Put(surface.Find("ReturnAnchor"), new Vector3(0, .1f, -13.5f));
             Put(root.Find("Player"), new Vector3(0, .1f, -13));
-            // Winch, pads and stands keep SalvageWinchSetup's local layout under this parent.
-            Put(surface.Find("SalvageWinch"), Vector3.zero);
+            // The crane and its set-down spots keep SalvageCraneSetup's layout under this parent.
+            Put(surface.Find("SalvageCrane"), Vector3.zero);
         }
 
         // Site-local footprints of the stations, kept clear of terrain grass.
@@ -863,7 +863,8 @@ namespace SomethingDownThere.Editor
             foreach (var renderer in surface.GetComponentsInChildren<Renderer>())
             {
                 var bounds = renderer.bounds;
-                if (bounds.size.x <= 0 || renderer is LineRenderer) continue;
+                // Only what stands on the ground clears grass: not the crane's jib high overhead.
+                if (bounds.size.x <= 0 || renderer is LineRenderer || bounds.min.y > 1) continue;
                 footprints.Add(Rect.MinMaxRect(bounds.min.x - .7f, bounds.min.z - .7f, bounds.max.x + .7f, bounds.max.z + .7f));
             }
             return footprints.ToArray();
@@ -896,7 +897,7 @@ namespace SomethingDownThere.Editor
         }
 
         // Invisible walls and a flight ceiling keep the player on the drained section. They use
-        // the Ignore Raycast layer, so aiming, digging, lamps and the winch never hit them.
+        // the Ignore Raycast layer, so aiming, digging and lamps never hit them.
         private static void BuildPlayArea(Transform environment, Vector2[] outline)
         {
             int ignoreRaycast = LayerMask.NameToLayer("Ignore Raycast");

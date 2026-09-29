@@ -90,7 +90,7 @@ The machine performs two clean auxiliary interactions without switching tools:
   resumes after a fresh press. Menus, focus loss, recovery and loading cancel placement.
 - **Salvage tagging:** Attaches a recovery clamp/tag to exposed oversized set pieces, claiming them for surface salvage transfer.
 - **Cleaning at the yard (optional):** holding dig on a muddy unique at the yard sprays its mud off in
- big chunks ([display wall](07_SURFACE_HUB_AND_DISPLAY.md#5-the-display-wall)). Same input, no mode.
+ big chunks ([recovered uniques](07_SURFACE_HUB_AND_DISPLAY.md#5-recovered-uniques-at-camp)). Same input, no mode.
 
 ## 8. C4
 
@@ -123,7 +123,7 @@ C4 arrives late in the progression as an optional excavation accelerator.
 - Ordinary falls give harmless landing feedback only: no battery loss, forced input lock or surface
  recovery. Experimenting in your own hole should not cost progress.
 - At 0 battery underground: recovery with all finds kept, a depth-scaled fee and interest-free debt
- that preserves the next outing. Being tested: the rim winch lowers its rope, hooks the player and
+ that preserves the next outing. Being tested: the salvage crane lowers its rope, hooks the player and
  hauls them up their own route ([Progression and Economy](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)). Geometry faults are implementation repairs.
 - Falls never delete items, never kill, never roll back progress.
 

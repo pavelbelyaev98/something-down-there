@@ -47,7 +47,7 @@ Players have total freedom to invest in whichever tracks fit their personal play
 - Commons and repeatable distinctives sell for money; rare finds can pay for a major purchase.
  Uniques give display and story, without money or mechanical perks.
 - **Uniques and ending parts consume zero bag slots.** Players are never forced to sacrifice income for the discoveries the game most wants them to appreciate.
-- **Whole-object salvage payouts:** Rope-recovered oversized set pieces yield a once-only lump-sum payout at the surface computer after arrival on the salvage pad. Rope-recovered uniques remain unsellable exhibits; the recovery method does not change their purpose.
+- **Whole-object salvage payouts:** Crane-recovered oversized set pieces yield a once-only lump-sum payout at the surface computer after the crane sets them down at camp. Crane-recovered uniques remain unsellable exhibits; the recovery method does not change their purpose.
 - A fixed price per item type: deeper zones contain richer types or mixes, but a gold bar always
  has the same price.
 - Depth pays through the mix, not through a price bonus: each type keeps one fixed price, and the
@@ -65,7 +65,7 @@ Late-game sinks support remaining discoveries and optional decoration after the 
 
 - extra C4 charges;
 - reusable lamps (buy individually; useful for lighting and photography);
-- display decoration (basic shelf/stand capacity never requires a frame purchase);
+- yard decoration around the recovered uniques;
 - cosmetic tool skins and yard items;
 - spare C4 charges.
 
@@ -86,7 +86,7 @@ extra upkeep or repeated chores are added just to sustain spending.
 - **Return-power warning:** an adaptive indicator with safe / risky / critical states — never exact
  required-energy math. It serves as an estimate, accounting for depth and ascent cost.
 - **Recovery as a supported service:** At zero fuel underground (or called intentionally from pause as an "I'm stuck" option), recovery returns the player to the surface with full fuel, **all finds kept**, and a depth-scaled fee. If broke, interest-free debt is applied; the next outing is never blocked. With free recharging, this fee is the only money cost tied to the battery, so pushing your luck still carries a price.
-- **Winch self-rescue (to test):** instead of moving the player up automatically, the rim winch lowers its rope down the player's own hole, hooks them and hauls them up the dug route, just as it hauls uniques; the player can look around and watch their hole go by, and the fee is paid on arrival. Keep whichever of the two feels better in play. Digging your own way out with a dead machine is rejected: at 150 m it would be long, punishing survival friction.
+- **Crane self-rescue (to test):** instead of moving the player up automatically, the salvage crane parks over the player's hole and lowers its rope down it, hooks them and hauls them up the dug route, just as it hauls uniques; the player can look around and watch their hole go by, and the fee is paid on arrival. Keep whichever of the two feels better in play. Digging your own way out with a dead machine is rejected: at 150 m it would be long, punishing survival friction.
 - Recovery never blocks progress, never deletes items, and never permanently ruins a save.
 
 ## 6. Capacity (the bag)

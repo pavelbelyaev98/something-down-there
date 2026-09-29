@@ -73,8 +73,8 @@ namespace SomethingDownThere.Editor
         // Gravel pours (097) reuse the recovery crumb and dust particle materials.
         public static void ConfigurePourFeedback(SerializedObject terrain)
         {
-            terrain.FindProperty("pourChipsMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Salvage/SoilCrumbs.mat");
-            terrain.FindProperty("pourDustMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/Salvage/SoilDust.mat");
+            terrain.FindProperty("pourChipsMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(Folder + "SoilCrumbs.mat");
+            terrain.FindProperty("pourDustMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(Folder + "SoilDust.mat");
         }
 
         // Developer ground X-ray markers: one instanced unlit material, coloured per ground at draw time.

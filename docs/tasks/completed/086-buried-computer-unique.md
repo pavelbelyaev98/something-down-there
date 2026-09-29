@@ -1,6 +1,6 @@
 # 086 — Buried Computer Unique
 
-> **Complete and accepted for v1 with [winch extraction](002-rope-extraction.md):** the Reservoir Computer uses the existing free computer 7 as a unique authored deeper underground, separate from the trading terminal. One unsellable discovery record survives rope recovery, pad storage and deliberate exhibit placement with its original discovery depth and story.
+> **Complete:** the Reservoir Computer uses the existing free computer 7 as a unique authored deeper underground, separate from the trading terminal. One unsellable discovery record survives crane recovery ([101](101-salvage-crane.md)) to its spot at camp with its original discovery depth and story.
 
 ## Objective and delivery boundary
 

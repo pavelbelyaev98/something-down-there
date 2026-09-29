@@ -45,7 +45,6 @@ namespace SomethingDownThere
         public bool Initialized => initialized || (developmentContent && !FpsPlayer.AdminBuild);
         public void DeferGeneration() => generationDeferred = true;
         public BuriedFind Find(string id) => finds.Find(f => f.Item.InstanceId == id);
-        public BuriedFind StoredUnique => finds.Find(f => f.State == FindState.Stored);
 
         private Matrix4x4 capturedTerrainPose;
 

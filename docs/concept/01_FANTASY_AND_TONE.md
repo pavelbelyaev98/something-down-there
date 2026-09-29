@@ -60,7 +60,7 @@ them; the final object reveals what they belong to. Another option being conside
 parts that open something, possibly at ground level. The player still chooses the digging route and
 can encounter parts in different orders.
 
-The display wall records special finds so the player builds the story themselves. Nothing is
+The uniques standing at camp record special finds so the player builds the story themselves. Nothing is
 signposted by UI text. Earlier discoveries gain meaning as the larger form becomes clear.
 
 ## 6. Boundaries (what this game is not)

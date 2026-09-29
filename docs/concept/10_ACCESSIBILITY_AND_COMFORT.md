@@ -69,7 +69,7 @@ Zero-pressure design:
 
 - **Pause anywhere**, any time; no online requirement.
 - **No timed content** in normal play (no countdowns, no day/night deadlines, no decay).
-- **No missables**: story objects and display slots remain findable; nothing expires.
+- **No missables**: story objects remain findable; nothing expires.
 - **No FOMO**: no daily rewards, no limited events, no login streaks.
 - **No jumpscares, no horror, no combat**. Dark areas exist but are calm, never scary.
 - Intensity warnings are unnecessary by content policy, but a brief note about dark areas appears in

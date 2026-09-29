@@ -4,31 +4,46 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    public enum ExtractionPhase { Planning, Deploying, Attaching, Hauling, Delivering, Retensioning }
+    // Route planning, the crane swinging over the hole and lowering its hook down the shaft, the hook
+    // riding the smart rope along the route into the lifting eye and the crane reeling the load in, then
+    // lifting it clear, carrying it to camp and setting it down.
+    public enum ExtractionPhase { Planning, Reaching, Lowering, Deploying, Attaching, Hauling, Retensioning, Lifting, Carrying, SettingDown }
 
     public sealed class ExtractionSnapshot
     {
-        public const int MaximumWaypoints = 8192;
+        public const int MaximumWaypoints = 8192, MaximumSpots = 16;
         public string FindId;
         public ExtractionPhase Phase;
-        public Vector3 AttachLocal, Outward;
+        // Find-local: the marked rope attachment and, once the crane holds the load, its grab point.
+        public Vector3 AttachLocal, GrabLocal, Outward;
         public Vector3 LinearVelocity, AngularVelocity;
+        // Site-local route from the attachment up the dug passage to the crane's hook over the mouth (the last point).
         public Vector3[] Route = Array.Empty<Vector3>();
         public float Progress, PhaseSeconds;
         public bool Attached;
-        public int AnchorIndex => Route.Length - 3;
-        public ExtractionSnapshot Copy() => new ExtractionSnapshot { FindId=FindId, Phase=Phase, AttachLocal=AttachLocal,
-            Outward=Outward, LinearVelocity=LinearVelocity, AngularVelocity=AngularVelocity,
-            Route=(Vector3[])Route.Clone(), Progress=Progress, PhaseSeconds=PhaseSeconds, Attached=Attached };
+        public int Spot;
+        public CranePose Pose;
+        public int AnchorIndex => Route.Length - 1;
+        public static bool Craning(ExtractionPhase phase) => phase >= ExtractionPhase.Lifting;
+        public ExtractionSnapshot Copy()
+        {
+            var copy = (ExtractionSnapshot)MemberwiseClone();
+            copy.Route = (Vector3[])Route.Clone();
+            return copy;
+        }
 
         public void Validate(Dictionary<string,FindSnapshot> population, GridSnapshot terrain)
         {
             WorldSnapshot.Require(!string.IsNullOrEmpty(FindId) && population.TryGetValue(FindId,out var owner)
                 && owner.State==FindState.Extracting && owner.Item.Kind==DiscoveryKind.Unique,"Extraction has no unique owner.");
             WorldSnapshot.Require(Enum.IsDefined(typeof(ExtractionPhase),Phase) && WorldSnapshot.Valid(AttachLocal)
-                && AttachLocal.sqrMagnitude<100 && WorldSnapshot.Valid(Outward) && Outward.sqrMagnitude>.5f && Outward.sqrMagnitude<1.5f
+                && AttachLocal.sqrMagnitude<100 && WorldSnapshot.Valid(GrabLocal) && GrabLocal.sqrMagnitude<100
+                && WorldSnapshot.Valid(Outward) && Outward.sqrMagnitude>.5f && Outward.sqrMagnitude<1.5f
                 && WorldSnapshot.Finite(Progress) && Progress>=0 && WorldSnapshot.Finite(PhaseSeconds) && PhaseSeconds>=0 && PhaseSeconds<=60,
                 "Invalid extraction progress.");
+            WorldSnapshot.Require(Spot>=0 && Spot<MaximumSpots, "Invalid set-down spot.");
+            WorldSnapshot.Require(Pose.Finite && Mathf.Abs(Pose.Yaw)<=360 && Mathf.Abs(Pose.HookYaw)<=360
+                && Pose.Reach>=0 && Pose.Reach<=200 && Pose.Rope>=0 && Pose.Rope<=1000, "Invalid crane pose.");
             WorldSnapshot.Require(Route!=null && Route.Length<=MaximumWaypoints,"Invalid extraction route size.");
             // Off-centre rupture/contact impulses can briefly exceed the body's
             // pre-solver spin cap. Preserve those real spins in the checkpoint.
@@ -36,22 +51,24 @@ namespace SomethingDownThere
                 && WorldSnapshot.Valid(AngularVelocity) && AngularVelocity.sqrMagnitude<=400, "Invalid extraction motion.");
             WorldSnapshot.Require(Attached || LinearVelocity==Vector3.zero && AngularVelocity==Vector3.zero,
                 "Unattached extraction has rope motion.");
+            WorldSnapshot.Require(!Craning(Phase) || LinearVelocity==Vector3.zero && AngularVelocity==Vector3.zero,
+                "A load on the crane hook has rope motion.");
             bool hasRoute=Phase!=ExtractionPhase.Planning;
-            WorldSnapshot.Require(!hasRoute || Route.Length>=4,"Extraction route is missing.");
-            WorldSnapshot.Require(Route.Length==0 || Route.Length>=4,"Extraction route is incomplete.");
+            WorldSnapshot.Require(!hasRoute || Route.Length>=3,"Extraction route is missing.");
+            WorldSnapshot.Require(Route.Length==0 || Route.Length>=3,"Extraction route is incomplete.");
             Vector3 extent=(Vector3)terrain.Size*terrain.CellSize;
             foreach(var point in Route) WorldSnapshot.Require(WorldSnapshot.Valid(point)
-                && point.y>=0 && point.y<=extent.y+20 && point.x>=-20 && point.x<=extent.x+20 && point.z>=-20 && point.z<=extent.z+20,
+                && point.y>=0 && point.y<=extent.y+60 && point.x>=-40 && point.x<=extent.x+40 && point.z>=-40 && point.z<=extent.z+40,
                 "Extraction waypoint outside the site.");
-            WorldSnapshot.Require(Progress<=Length(Route)+.001f,"Extraction progress exceeds its route.");
-            float haulLength = Route.Length < 4 ? 0 : Length(Route, AnchorIndex);
+            float haulLength = Route.Length < 3 ? 0 : Length(Route);
+            WorldSnapshot.Require(Progress<=haulLength+.001f,"Extraction progress exceeds its route.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Planning || (!Attached && Route.Length == 0 && Progress == 0), "Invalid route planning.");
-            WorldSnapshot.Require(Phase != ExtractionPhase.Deploying || (!Attached && Progress <= haulLength), "Invalid rope deployment.");
+            WorldSnapshot.Require(Phase != ExtractionPhase.Reaching && Phase != ExtractionPhase.Lowering || (!Attached && Progress == 0), "Invalid crane approach.");
+            WorldSnapshot.Require(Phase != ExtractionPhase.Deploying || !Attached, "Invalid rope deployment.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Attaching || (!Attached && Progress == 0), "Invalid rope attachment.");
-            WorldSnapshot.Require(Phase != ExtractionPhase.Hauling || (Attached && Progress <= haulLength + .001f), "Invalid haul progress.");
-            WorldSnapshot.Require(Phase != ExtractionPhase.Delivering || (Attached && Progress >= haulLength - .001f), "Invalid pad delivery.");
-            WorldSnapshot.Require(Phase != ExtractionPhase.Retensioning || (Attached && Progress <= haulLength + .001f), "Invalid automatic tension recovery.");
-            if (Route.Length >= 4)
+            WorldSnapshot.Require(Phase != ExtractionPhase.Hauling && Phase != ExtractionPhase.Retensioning || Attached, "Invalid haul progress.");
+            WorldSnapshot.Require(!Craning(Phase) || (Attached && Progress >= haulLength - .001f), "Invalid crane lift.");
+            if (Route.Length >= 3 && !Craning(Phase))
             {
                 var find = population[FindId];
                 Vector3 hook = find.Position + find.Rotation * Vector3.Scale(find.Scale, AttachLocal);

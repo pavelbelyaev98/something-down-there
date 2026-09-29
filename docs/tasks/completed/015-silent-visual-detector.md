@@ -1,6 +1,6 @@
 # 015 — Silent Visual Detector
 
-> **Complete:** A separate silent HUD detector shows three aim-alignment signal levels for nearby buried finds and disappears when looking away or once any part is uncovered. Independent prototype computers share approved art while retaining physical recovery, separate receiving space and individual saved exhibits.
+> **Complete:** A separate silent HUD detector shows three aim-alignment signal levels for nearby buried finds and disappears when looking away or once any part is uncovered. Independent prototype computers share approved art, each recovered to its own spot at camp.
 
 ## Objective
 Guide ordinary digging toward noteworthy buried finds with a passive, silent, readable hunch. Reuse the approved unique computer model for independent prototype finds while new slice objects and connected scenes move later in the queue.

@@ -34,7 +34,7 @@ namespace SomethingDownThere.Tests
             yield return null;
             player.Tuning.Gravity = 0;
             player.SetApplicationFocus(true); player.CloseMenu();
-            player.Winch.enabled = false;
+            player.Crane.enabled = false;
         }
 
         [UnityTearDown]
@@ -169,25 +169,22 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator ComputerCopiesRecoverToSeparatePadsAndKeepIndividualDisplaysOnReload()
+        public IEnumerator EveryComputerLandsOnItsOwnSpotAtCampAndStaysAfterReload()
         {
             Physics.simulationMode = SimulationMode.Script;
             var field = player.Discoveries;
             var terrain = player.ExcavationTerrain;
-            var winch = player.Winch;
+            var crane = player.Crane;
             var uniques = field.Finds.Where(f => f.Kind == DiscoveryKind.Unique).ToArray();
             Assert.That(uniques.Length, Is.GreaterThan(1));
             Assert.That(uniques.Select(f => f.SaveContentId).Distinct().Count(), Is.EqualTo(uniques.Length));
-            var stands = scene.GetRootGameObjects()[0].GetComponentsInChildren<UniqueDisplayStand>();
-            Assert.That(stands.Length, Is.EqualTo(uniques.Length));
-            Assert.That(stands.Select(s => s.SocketId).Distinct().Count(), Is.EqualTo(stands.Length));
+            Assert.That(crane.SpotCount, Is.GreaterThanOrEqualTo(uniques.Length), "Every unique has room beside the camp.");
             foreach (var common in field.Finds.Where(f => f.Kind == DiscoveryKind.Common)) common.gameObject.SetActive(false);
             var arrivals = new System.Collections.Generic.List<Vector3>();
             foreach (var find in uniques)
             {
-                // Existing bent-underground recovery tests own terrain/rope strain.
-                // This fixture exercises the real mark -> plan -> haul -> arrival
-                // pipeline repeatedly with the prior computers still on their pads.
+                // Tunnel hauls belong to UniqueRecoveryIntegrationTests. This fixture runs the
+                // real mark -> rope -> crane -> set-down pipeline repeatedly with the earlier computers at camp.
                 var state = find.Capture();
                 state.Position = terrain.transform.InverseTransformPoint(new Vector3(1.5f, .9f, -8.3f));
                 state.PhysicsReleased = false;
@@ -197,36 +194,36 @@ namespace SomethingDownThere.Tests
                 Physics.SyncTransforms();
                 Assert.That(player.TryGetTarget(player.Tuning.InteractReach, out var hit), Is.True);
                 Assert.That(hit.collider.GetComponentInParent<BuriedFind>(), Is.SameAs(find));
-                Assert.That(winch.TryMark(find, hit.point, hit.normal), Is.True);
+                Assert.That(crane.TryMark(find, hit.point, hit.normal), Is.True, player.Feedback);
                 Assert.That(FindDetector.Eligible(find), Is.False);
-                for (int step = 0; step < 5000 && winch.Busy; step++)
+                for (int step = 0; step < 5000 && crane.Busy; step++)
                 {
-                    player.SetApplicationFocus(true); winch.Tick(.02f); Physics.Simulate(.02f);
+                    player.SetApplicationFocus(true); crane.Tick(.02f); Physics.Simulate(.02f);
                     if (step % 50 == 0) yield return null;
                 }
-                Assert.That(winch.Busy, Is.False, "Each computer must arrive without needing the previous one displayed.");
+                Assert.That(crane.Busy, Is.False, "Each computer arrives with the earlier ones already at camp.");
                 Assert.That(find.State, Is.EqualTo(FindState.Stored), player.Feedback);
                 foreach (var arrival in arrivals) Assert.That(Vector3.Distance(arrival, find.WorldBounds.center), Is.GreaterThan(2));
                 arrivals.Add(find.WorldBounds.center);
             }
-            foreach (var stand in stands) Assert.That(stand.TryInteract(player), Is.True);
-            Assert.That(uniques.All(f => f.State == FindState.Displayed), Is.True);
             var checkpoint = new WorldSnapshot { Sequence = 1, UtcTicks = DateTime.UtcNow.Ticks,
                 Terrain = terrain.Capture(), TerrainPosition = terrain.transform.position, TerrainRotation = terrain.transform.rotation,
                 Finds = field.Capture(), ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = field.Seed };
             player.Capture(checkpoint);
             using var bytes = new MemoryStream(); WorldSaveCodec.Write(bytes, checkpoint); bytes.Position = 0;
             var loaded = WorldSaveCodec.Read(bytes);
-            winch.ValidateRestore(loaded); field.Restore(loaded.Finds, loaded.DiscoverySeed);
-            winch.Restore(loaded.Extraction);
-            foreach (var stand in stands)
+            crane.ValidateRestore(loaded); field.Restore(loaded.Finds, loaded.DiscoverySeed);
+            crane.Restore(loaded.Extraction);
+            var restored = field.Finds.Where(f => f.Kind == DiscoveryKind.Unique).ToArray();
+            Assert.That(restored.Length, Is.EqualTo(uniques.Length));
+            foreach (var find in restored)
             {
-                Assert.That(stand.Displayed, Is.Not.Null);
-                Assert.That(FindDetector.Eligible(stand.Displayed), Is.False);
-                Assert.That(stand.TryInteract(player), Is.True);
-                Assert.That(stand.GetPrompt(player), Does.Contain(stand.Displayed.DisplayName));
+                Assert.That(find.State, Is.EqualTo(FindState.Stored));
+                Assert.That(arrivals.Min(a => Vector3.Distance(a, find.WorldBounds.center)), Is.LessThan(.01f), "Each stays on its spot.");
+                Assert.That(FindDetector.Eligible(find), Is.False);
+                Assert.That(find.TryInteract(player), Is.True);
+                Assert.That(find.GetPrompt(player), Does.Contain(find.DisplayName));
             }
-            Assert.That(field.Finds.Count(f => f.Kind == DiscoveryKind.Unique), Is.EqualTo(uniques.Length));
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 12;
+        public const int Version = 14;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
@@ -42,7 +42,7 @@ namespace SomethingDownThere
                 w.Write(s.Finds.Length);
                 foreach (var f in s.Finds)
                 {
-                    WriteString(w, f.ContentId); Write(w, f.Item); Write(w, f.Position); Write(w, f.Rotation); Write(w, f.Scale); w.Write((byte)f.State); w.Write(f.DepthRecorded); w.Write(f.DiscoveryDepth); WriteString(w,f.DisplaySocket);
+                    WriteString(w, f.ContentId); Write(w, f.Item); Write(w, f.Position); Write(w, f.Rotation); Write(w, f.Scale); w.Write((byte)f.State); w.Write(f.DepthRecorded); w.Write(f.DiscoveryDepth);
                 }
                 w.Write(s.Inventory.Length);
                 foreach (var item in s.Inventory) Write(w, item);
@@ -56,10 +56,11 @@ namespace SomethingDownThere
                 w.Write(s.Extraction!=null);
                 if(s.Extraction!=null)
                 {
-                    var e=s.Extraction; WriteString(w,e.FindId); w.Write((byte)e.Phase); Write(w,e.AttachLocal); Write(w,e.Outward);
+                    var e=s.Extraction; WriteString(w,e.FindId); w.Write((byte)e.Phase); Write(w,e.AttachLocal); Write(w,e.GrabLocal); Write(w,e.Outward);
                     w.Write(e.Progress); w.Write(e.PhaseSeconds); w.Write(e.Attached); w.Write(e.Route.Length);
                     foreach(var point in e.Route) Write(w,point);
                     Write(w,e.LinearVelocity); Write(w,e.AngularVelocity);
+                    w.Write(e.Spot); w.Write(e.Pose.Yaw); w.Write(e.Pose.Reach); w.Write(e.Pose.Rope); w.Write(e.Pose.HookYaw);
                 }
                 w.Write(s.Worksite.Lamps.Length);
                 foreach (var lamp in s.Worksite.Lamps)
@@ -117,7 +118,7 @@ namespace SomethingDownThere
             s.Finds = new FindSnapshot[Count(r, DiscoveryField.MaximumPopulation)];
             for (int i = 0; i < s.Finds.Length; i++)
                 s.Finds[i] = new FindSnapshot { ContentId = ReadString(r), Item = ReadItem(r), Position = ReadVector(r),
-                    Rotation = ReadRotation(r), Scale = ReadVector(r), State = (FindState)r.ReadByte(), DepthRecorded = r.ReadBoolean(), DiscoveryDepth = r.ReadSingle(), DisplaySocket = ReadString(r) };
+                    Rotation = ReadRotation(r), Scale = ReadVector(r), State = (FindState)r.ReadByte(), DepthRecorded = r.ReadBoolean(), DiscoveryDepth = r.ReadSingle() };
             s.Inventory = new ItemSnapshot[Count(r, 256)];
             for (int i = 0; i < s.Inventory.Length; i++) s.Inventory[i] = ReadItem(r);
             int samples = Count(r, MaximumSamples);
@@ -131,10 +132,12 @@ namespace SomethingDownThere
             s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32(); s.JetpackLevel = r.ReadInt32();
             if(r.ReadBoolean())
             {
-                var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r), Outward=ReadVector(r),
-                    Progress=r.ReadSingle(), PhaseSeconds=r.ReadSingle(), Attached=r.ReadBoolean(), Route=new Vector3[Count(r,ExtractionSnapshot.MaximumWaypoints)] };
+                var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r), GrabLocal=ReadVector(r),
+                    Outward=ReadVector(r), Progress=r.ReadSingle(), PhaseSeconds=r.ReadSingle(), Attached=r.ReadBoolean(),
+                    Route=new Vector3[Count(r,ExtractionSnapshot.MaximumWaypoints)] };
                 for(int i=0;i<e.Route.Length;i++) e.Route[i]=ReadVector(r);
                 e.LinearVelocity=ReadVector(r); e.AngularVelocity=ReadVector(r);
+                e.Spot=r.ReadInt32(); e.Pose=new CranePose { Yaw=r.ReadSingle(), Reach=r.ReadSingle(), Rope=r.ReadSingle(), HookYaw=r.ReadSingle() };
                 s.Extraction=e;
             }
             s.Worksite.Lamps = new LampSnapshot[Count(r, WorksiteTools.LampCapacity)];

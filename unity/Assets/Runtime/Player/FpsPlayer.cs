@@ -51,11 +51,11 @@ namespace SomethingDownThere
         private PlayerCrouch crouch;
         private FindHandling findHandling;
         public FindDetector Detector { get; private set; }
-        [SerializeField] private SalvageWinch winch;
+        [SerializeField] private SalvageCrane crane;
         [SerializeField] private WorksiteTools worksiteTools;
         public WorksiteTools WorksiteTools => worksiteTools;
         private FindExtractionInteraction extractionInteraction;
-        public SalvageWinch Winch => winch;
+        public SalvageCrane Crane => crane;
         public float ExtractionMarkProgress => extractionInteraction?.Progress ?? 0;
         internal bool TryGetRecoveryMark(out BuriedFind find, out RaycastHit hit)
         {

@@ -8,8 +8,8 @@ using UnityEngine.Rendering;
 namespace SomethingDownThere.Editor
 {
     // The dig plot outline is marked like an excavation site: timber survey stakes with red-and-white
-    // barrier tape on the permanent collar just outside where digging starts, open where the camp's
-    // winch cable enters. No colliders, so digging, aiming and the winch cable pass through.
+    // barrier tape on the permanent collar just outside where digging starts, open toward the camp.
+    // No colliders, so digging and aiming pass through.
     public static partial class LakebedSiteSetup
     {
         public const string BoundaryMeshFolder = Folder + "/Boundary";
@@ -58,8 +58,7 @@ namespace SomethingDownThere.Editor
 
         private static Vector3 Ground(Vector2 point, float height = 0) => new Vector3(point.x, SiteLayout.RimTop + height, point.y);
 
-        // Timber stakes with red-and-white barrier tape along the outline, open where the camp's
-        // winch cable enters the plot.
+        // Timber stakes with red-and-white barrier tape along the outline, open toward the camp.
         private static GameObject SurveyTape(Transform parent, Material wood, Material red, Material white)
         {
             var random = new System.Random(77);

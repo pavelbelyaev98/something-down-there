@@ -63,24 +63,20 @@ namespace SomethingDownThere
                 population.Add(find.Item.Id, find);
             }
             var uniques = new HashSet<string>(StringComparer.Ordinal);
-            var sockets = new HashSet<string>(StringComparer.Ordinal);
             int extracting = 0;
             foreach (var find in Finds)
             {
                 Require(Enum.IsDefined(typeof(FindState),find.State), "Unknown find state.");
                 Require(Finite(find.DiscoveryDepth) && find.DiscoveryDepth>=0 && find.DiscoveryDepth<=Terrain.Size.y*Terrain.CellSize,
                     "Invalid discovery depth.");
-                Require(find.DisplaySocket!=null && find.DisplaySocket.Length<=128, "Invalid display socket.");
                 if(find.Item.Kind==DiscoveryKind.Unique)
                 {
                     Require(uniques.Add(find.ContentId) && find.State!=FindState.Collected,"Invalid unique ownership.");
                     Require(!find.PhysicsReleased || find.State==FindState.World || find.State==FindState.Extracting,"Stored unique cannot be dynamic.");
                     Require(find.State==FindState.World || find.DepthRecorded,"Recovered unique has no discovery record.");
                     if(find.State==FindState.Extracting) extracting++;
-                    Require(find.State!=FindState.Displayed || !string.IsNullOrEmpty(find.DisplaySocket) && sockets.Add(find.DisplaySocket),"Duplicate exhibit socket.");
-                    Require(find.State==FindState.Displayed || find.DisplaySocket.Length==0,"Undisplayed find has a socket.");
                 }
-                else Require((find.State==FindState.World || find.State==FindState.Collected) && !find.DepthRecorded && find.DisplaySocket.Length==0,
+                else Require((find.State==FindState.World || find.State==FindState.Collected) && !find.DepthRecorded,
                     "Ordinary find has unique state.");
             }
             Require(extracting==(Extraction==null?0:1),"Extraction ownership is inconsistent.");
@@ -146,10 +142,9 @@ namespace SomethingDownThere
         public Vector3 Position, Scale;
         public Quaternion Rotation;
         public FindState State;
-        public bool Collected => State == FindState.Collected || State == FindState.Stored || State == FindState.Displayed;
+        public bool Collected => State == FindState.Collected || State == FindState.Stored;
         public bool PhysicsReleased, DepthRecorded;
         public float DiscoveryDepth;
-        public string DisplaySocket = "";
     }
 
     public sealed class ItemSnapshot

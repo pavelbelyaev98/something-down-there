@@ -1,6 +1,6 @@
 # 007 — Material IDs & Tool Auto-Adaptation
 
-**Complete:** Soil, clay and rock identities persist with the voxel field, and the existing tool automatically changes cut shape, penetration and cadence while retaining material differences through upgrades. Stable shaving footprints and committed material feedback extend the existing dig/save pipeline without changing winch removal or lighting.
+**Complete:** Soil, clay and rock identities persist with the voxel field, and the existing tool automatically changes cut shape, penetration and cadence while retaining material differences through upgrades. Stable shaving footprints and committed material feedback extend the existing dig/save pipeline without changing rope removal or lighting.
 
 ## Objective
 

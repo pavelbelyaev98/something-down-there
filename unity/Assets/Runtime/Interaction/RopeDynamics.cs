@@ -7,7 +7,7 @@ namespace SomethingDownThere
         Vector3 Project(Vector3 from, Vector3 point, float radius);
     }
 
-    // The two attachments are prescribed by the winch/load. Interior particles
+    // The two attachments are prescribed by the crane hook/load. Interior particles
     // retain velocity; route waypoints only seed the initial cable.
     public sealed class RopeDynamics
     {

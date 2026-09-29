@@ -4,4 +4,5 @@
 - **Source & License:** Original Blender MCP bakes (`GroundTextures.blend`, `trials/A-Sunny-r8/`, etc.); [LICENSE.txt](LICENSE.txt) (free commercial use, no attribution).
 - **Unity Path:** `unity/Assets/Content/GroundTextures/` (soil Albedo, Normal and Surface Masks).
 - **Setup / Tooling:** Applied via triplanar material `GardenGround` (`Content/GroundTextures/GroundTriplanar.shader`).
+- **Pour debris:** `SoilCrumbs.mat`/`SoilDust.mat` here draw the gravel pour's crumbs and dust with the original procedural `Soil Break` shader (`Runtime/Terrain/SoilBreak.shader`); no textures.
 - **Status:** Not used by the dig ground since clay loam replaced it; only the unbound `GardenGround` material references it.

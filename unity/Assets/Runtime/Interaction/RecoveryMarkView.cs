@@ -3,11 +3,16 @@ using UnityEngine.Rendering;
 
 namespace SomethingDownThere
 {
-    // A single surface glyph, shared by aiming and the active recovery job.
-    // The saved attachment is authoritative; this view has no independent ownership.
+    // A single surface glyph, shared by aiming and the active recovery job: it previews the point while
+    // the player holds the mark, and the accepted mark is a swivel lifting eye bolted on there for the
+    // crane's hook. The saved attachment is authoritative; this view has no independent ownership.
     internal sealed class RecoveryMarkView
     {
+        // The hook's seat rests in the eye's ring this far from the load's surface (art/lifting-eye).
+        public const float HookReach = .21f;
+        private const float GlyphSize = .14f;
         private readonly GameObject root;
+        private readonly Transform eye;
         private readonly Mesh mesh;
         private readonly MeshRenderer renderer;
         private readonly MaterialPropertyBlock properties = new MaterialPropertyBlock();
@@ -16,7 +21,7 @@ namespace SomethingDownThere
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
         private static readonly int PlacedId = Shader.PropertyToID("_Placed");
 
-        public RecoveryMarkView(Transform owner, Material material)
+        public RecoveryMarkView(Transform owner, Material material, GameObject liftingEye)
         {
             root = new GameObject("Recovery surface mark", typeof(MeshFilter), typeof(MeshRenderer))
                 { layer = 2, hideFlags = HideFlags.DontSave };
@@ -33,6 +38,12 @@ namespace SomethingDownThere
             renderer.receiveShadows = false;
             renderer.lightProbeUsage = LightProbeUsage.Off;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+            eye = Object.Instantiate(liftingEye, root.transform, false).transform;
+            eye.name = "Lifting eye";
+            foreach (var part in eye.GetComponentsInChildren<Transform>(true)) part.gameObject.hideFlags = HideFlags.DontSave;
+            eye.localScale = Vector3.one / GlyphSize;
+            eye.localPosition = Vector3.back * (.012f / GlyphSize);
+            eye.gameObject.SetActive(false);
         }
 
         public void Show(BuriedFind find, Vector3 attachment, Vector3 worldNormal, float progress, bool placed)
@@ -47,11 +58,23 @@ namespace SomethingDownThere
             if (up.sqrMagnitude < .01f) up = Vector3.ProjectOnPlane(target.transform.forward, normal);
             root.transform.SetPositionAndRotation(target.transform.TransformPoint(point) + normal * .012f,
                 Quaternion.LookRotation(normal, up.normalized));
-            root.transform.localScale = Vector3.one * .14f;
+            root.transform.localScale = Vector3.one * GlyphSize;
             properties.SetFloat(ProgressId, Mathf.Clamp01(progress));
             properties.SetFloat(PlacedId, placed ? 1 : 0);
             renderer.SetPropertyBlock(properties);
+            renderer.enabled = !placed;
+            eye.gameObject.SetActive(placed);
+            eye.localRotation = Quaternion.FromToRotation(Vector3.up, Vector3.forward);
             root.SetActive(true);
+        }
+
+        // The eye swivels toward the hook pulling on it, never into the load.
+        public void Aim(Vector3 direction)
+        {
+            Vector3 normal = root.transform.forward;
+            if (Vector3.Dot(direction, normal) < 0) direction = Vector3.ProjectOnPlane(direction, normal);
+            if (direction.sqrMagnitude < .000001f) direction = normal;
+            eye.rotation = Quaternion.FromToRotation(Vector3.up, direction.normalized);
         }
 
         private static Vector3 RestoreNormal(BuriedFind find, Vector3 attachment)

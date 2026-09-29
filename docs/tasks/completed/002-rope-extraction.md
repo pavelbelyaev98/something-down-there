@@ -1,6 +1,6 @@
 # 002 — Hold-to-Mark Rope Extraction
 
-> Manually exposed uniques receive a visible surface recovery mark, then a loaded cable hauls them with escalating pull, local ruptures and momentum-driven chains of dirt impacts. The marked physical load retains its identity and motion through bends, pauses and checkpoints before safe pad delivery.
+> Manually exposed uniques receive a visible surface recovery mark, then a loaded cable hauls them with escalating pull, local ruptures and momentum-driven chains of dirt impacts. The marked physical load retains its identity and motion through bends, pauses and checkpoints. The rope now hangs from the salvage crane's hook and the crane carries the load to camp; the rim winch fixture and pads were replaced ([101](101-salvage-crane.md)).
 
 ## Objective and scope
 

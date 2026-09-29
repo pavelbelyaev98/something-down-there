@@ -8,7 +8,7 @@
 | **Distinctive** | 30–50 types | Noteworthy ones signal; some stay silent by design | Sell only; no first-copy/duplicate routing | Good money | 1–2 slots |
 | **Unique** | Small set (a few) | Signals | Kept on the display forever; unsellable; one-sentence story; no mechanical perk | No sale | **0 slots** (never crowds bag) |
 | **Ending parts / keys** | 3–4 finale components; other keys by content | Required parts have a discoverable trail | Unsellable; automatically available when needed | No sale | **0 slots** (never crowds bag) |
-| **Oversized Salvage** | Handful of set pieces | Signals | Fixed surface salvage pad | Huge payday | **0 slots** (claimed via tag/clamp) |
+| **Oversized Salvage** | Handful of set pieces | Signals | Crane set-down spot at camp | Huge payday | **0 slots** (claimed via tag/clamp) |
 
 Commons include the mineral ladder (coal → copper → iron → silver → gold → emerald → ruby → diamond),
 bottles, plain stones, commonplace scrap, packaging and rubbish. "Common" means routine to find
@@ -102,8 +102,8 @@ The detector is passive equipment: the player never equips it. They simply dig.
 3. Once enough is exposed, the object becomes interactable and can be collected.
 4. **Recognition is the reward:** curved metal → handle → rectangular body → "…oh, it's a washing machine."
 5. **Uniques tell a story:** one deadpan sentence, with first delivery decided in play. The
- current leaning is before placement; before pickup versus immediately before placement remains open.
- Placed objects always support inspection and rereading. No inventory reading or inspection of commons.
+ current leaning is on arrival at camp; before pickup versus on arrival remains open.
+ Recovered objects always support inspection and rereading. No inventory reading or inspection of commons.
 6. No archaeology: no brushing minigame, no required cleaning (the yard cleaning of uniques is optional and quick), no identification timers, no
    mailing objects for appraisal. The game decides when enough is revealed; the player
    decides what is worth revealing.
@@ -137,18 +137,20 @@ Extensions of the cluster system where discoveries physically connect through th
 - **Keep it simple:** No wiring puzzles, cable inventory, or repair chores. Following the connection means doing more of what is fun: digging.
 - Built from authored, fully buried arrangements with preserved relationships, seeded and oriented as units.
 
-**Whole-object rope recovery (mark underground, haul automatically)**:
+**Whole-object crane recovery (mark underground, haul automatically)**:
 The first proof is the unique buried retro computer; later oversized discoveries reuse the same mechanism.
-- **Deliberate exposure:** Excavate enough to meet the object's authored exposure requirement. Unique finds require manually aiming at the dirt around them: digging directly at the exposed object never redirects a stroke to its remaining covering soil. Ordinary finds retain that uncover assist. Full cleaning is unnecessary. Rope targets remain in the world; digging, proximity pickup and physical grabbing cannot collect them.
-- **Mark anywhere on the visible object:** Aim at any unobstructed part within interaction reach and hold Interact (E by default). A surface marker previews the chosen point and fills during the hold; releasing or losing the target cancels the unfinished hold. The confirmed marker changes shape and stays attached at that point through deployment and hauling, including after saving/loading. It is hidden by soil and objects, never a through-ground locator, and disappears when recovery finishes or planning fails. No special attachment hotspot.
-- **Automatic deployment:** Marking starts the rim winch. The rope comes down through connected space in the player's excavation and visibly attaches. No surface-button trip or continued button hold is required.
+The yard's small tower crane (the purchased pack's rig and motion) does it with its own rope and hook, the way riggers do: a lifting eye goes on the load and the crane's hook takes it. The crane's cable is one rope from the trolley to the hook at all times: hanging, it runs straight down; on a recovery the same rope is the smart rope, bending down the hole and along the tunnel, its edges doing the work of a pulley at each corner. The idle crane rests with its hook over the set-down spots beside the camp, so the swing out to a hole is part of the show.
+- **Deliberate exposure:** Excavate enough to meet the object's authored exposure requirement. Unique finds require manually aiming at the dirt around them: digging directly at the exposed object never redirects a stroke to its remaining covering soil. Ordinary finds retain that uncover assist. Full cleaning is unnecessary. Crane targets remain in the world; digging, proximity pickup and physical grabbing cannot collect them.
+- **Mark anywhere on the visible object:** Aim at any unobstructed part within interaction reach and hold Interact (E by default). A surface marker previews the chosen point and fills during the hold; releasing or losing the target cancels the unfinished hold. Completing the hold bolts a lifting eye (a swivel hoist ring, sized for the crane's hook) on at that point; it stays through deployment and hauling, including after saving/loading, and swivels toward the hook once hooked. It is hidden by soil and objects, never a through-ground locator, and disappears when recovery finishes or planning fails. No special attachment hotspot.
+- **Automatic deployment:** Marking finds the rope's way through connected space in the player's excavation and calls the crane; it starts moving only once the mark is placed. It swings its hook right above the hole mouth (as near as its jib reaches for a mouth beyond it) and lowers it straight down the shaft. At the bottom of the straight shaft the rope becomes smart: the crane's own hook rides its end along the dug route to the object and visibly hooks into the lifting eye. From marking to the hook entering the tunnel takes several seconds, not tens. No surface-button trip or continued button hold is required.
+- **Crane motion:** The pack's own levers (slew, trolley, hoist, hook turn), worked briskly by an automatic operator (the pack's overall speed knob raised). The long hoist rope trails the trolley's starts and stops like a pendulum, but an anti-sway assist settles it instead of letting it swing on, so the hook comes to rest over the hole within moments and loads touch down gently.
 - **The haul:** Rope tension pulls a dynamic rigid body at the marked attachment point along that excavated route, including lateral passages and bends. The object swings, rotates and collides naturally; its pose is never locked to a rail. The player remains free to move and watch from underground or the rim; no camera takeover.
 - **The rope:** The cable itself has gravity, inertia and length constraints. Slack hangs and sways while deploying, but a hauling cable visibly straightens under the load, including its last span at the hook. Stretching the pulling spring must not pay out extra cable. Recoil can briefly unload the rope before the reel catches up. The dug route supplies its initial shape, not fixed intermediate anchors: the rope rests and slides against the actual tunnel, reacting when supporting dirt is removed. Payout and reeling preserve its motion instead of rebuilding a rigid polyline.
 - **Strain, rupture and momentum:** Recovery is a forceful, uneven haul. A slow jam first stretches the cable and winds up the motor; retaining dirt then tears away in a local chunk and the object surges, swings and rotates. Stronger pulls and harder impacts break larger chunks. If that surge hits the next dirt obstruction hard enough, its remaining kinetic energy breaks it immediately instead of restarting a careful waiting cycle. Breaking ground spends momentum; a spent or newly wedged load winds up again. Nearby untouched dirt, soft brushes and glancing contact remain intact. Every real break ejects crumbs and dust. Blocking commons loosen without losing their identities; mounted lamps can be knocked loose and remain recoverable. Follow the existing route and preserve unrelated ground and permanent obstacles. Once marked, recovery never asks for manual clearance or an Interact retry: persistent wedging builds a stronger pull and carries tension around bends. Sideways rocking alone does not count as escape. Saving or pausing during a jam resumes automatic effort; arrival still lowers the load safely onto its pad.
-- **Arrival:** Lower the whole object onto the receiving pad. A unique is stored safely for individual display placement and never sold; oversized salvage becomes eligible for once-only cash-in at the surface computer and a display record.
-- **Continuity:** Full bags do not block recovery, the winch does not spend the player's battery, and saving mid-haul preserves the object, rope progress and changed terrain together. Dense finds and automatic ground clearance must keep movement and camera control responsive throughout the haul, including each fresh cut during ascent; a high average frame rate does not compensate for recurring stalls.
+- **Arrival:** At the top the hook goes back on the crane's hoist with the load hanging from its eye; the crane lifts it clear, carries it to a free spot beside the camp, turns it upright and sets it down. It stays there for good: never sold, never moved into the bag, no stand or placement step. Oversized salvage becomes eligible for once-only cash-in at the surface computer.
+- **Continuity:** Full bags do not block recovery, the crane does not spend the player's battery, and saving mid-haul preserves the object, rope progress, the crane's pose and changed terrain together. Dense finds and automatic ground clearance must keep movement and camera control responsive throughout the haul, including each fresh cut during ascent; a high average frame rate does not compensate for recurring stalls.
 
-**Moving discoveries**: objects, including unique rope targets, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
+**Moving discoveries**: objects, including uniques waiting for the crane, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig out a
 suitcase, expose and open it with the existing tool, then see coins or an odd keepsake inside.
@@ -169,7 +171,7 @@ The outside gives a clue; the contents deliver a second reveal and a small piece
 | Hand drill | Small handheld silhouette recognition |
 | Gearbox / engine block | Machine parts; natural lead-in to a cluster |
 | Mammoth bone / tusk | Organic curves; ties to the Danube bones inspiration |
-| Buried retro computer | Unique exhibit, recognizable computer silhouette and whole-object rope recovery; a different model from the trading terminal |
+| Buried retro computer | Unique exhibit, recognizable computer silhouette and whole-object crane recovery; a different model from the trading terminal |
 
 These five are prototyped and reviewed before any large content batch.
 
@@ -193,10 +195,10 @@ Clusters should read as parts of a coherent buried place — a household, worksh
 
 A few per run (target 3–5): a car, a large appliance pile, a machinery section. The player
 excavates most of it first; a short local extraction gives the physical payoff, then the whole object
-is transferred to its surface destination. The existing winch is the default release. Whether some
+is transferred to its surface destination. The salvage crane is the default release. Whether some
 heavy finds (a vehicle, a boiler) need a special local release, such as salvage bladders that
 inflate with a hiss and unstick the find with a mud-release pop, is decided from the first oversized
-salvage playtest, only if the winch cannot deliver the load.
+salvage playtest, only if the crane cannot deliver the load.
 
 Once released, the whole object transfers to the surface automatically. No crawler sled, widened routes,
 car-wide shaft to the sky or cinematic camera takeovers; the player stays in control. Test the transfer
@@ -227,18 +229,16 @@ No jackpots that finish the economy; no trash that feels like a waste of a slot.
 The same item has the same price at every depth. Deeper zones can contain richer types or mixes;
 a gold bar never receives a depth bonus. “Rare” describes a payout, not another upgrade system.
 
-## 8. Display integration
+## 8. Recovered uniques at camp
 
-- The surface display is a growing shelf/wall/column with **compatible spaces**.
-- **Empty spaces are visible from the start; undiscovered shapes stay hidden**.
-- A special exhibit is stored safely on pickup. At the yard, bring it out and place it individually;
- choose any compatible shelf space or stand, with neat snap placement. No carrying task underground.
-- The display records name + depth found. No prices, no condition, no rarity labels.
-- Placed objects support story inspection and rereading. Completion follows the exhibit collection,
- not an assigned arrangement. Basic display capacity never requires a frame purchase.
+- The crane sets each recovered unique down at its own spot beside the camp, where it stays. No
+ stands, shelves or placement step; no carrying task underground.
+- Each records name + depth found. No prices, no condition, no rarity labels.
+- Recovered uniques support story inspection and rereading where they stand. Completion follows the
+ recovered collection.
 - **Optional cleaning:** a unique arrives caked in mud; the player may spray it clean with the tool
-  before placing it. The story line appears when it is cleaned or placed, whichever comes first
-  ([display wall](07_SURFACE_HUB_AND_DISPLAY.md#5-the-display-wall)).
+  where it stands. The story line appears when it is cleaned or recovered, whichever comes first
+  ([recovered uniques](07_SURFACE_HUB_AND_DISPLAY.md#5-recovered-uniques-at-camp)).
 
 ## 9. Inventory behavior for finds
 

@@ -15,15 +15,15 @@ namespace SomethingDownThere
         {
             if(player.Persistence!=null) throw new InvalidOperationException("Recovery validation must not own a save.");
             var terrain=player.ExcavationTerrain;
-            var winch=player.Winch;
-            winch.enabled=false;
+            var crane=player.Crane;
+            crane.enabled=false;
             var snapshot=WorldSaveStore.Read(Path.GetFullPath(input));
             if(snapshot.Extraction==null || !snapshot.Extraction.Attached)
                 throw new InvalidOperationException("Provide a copied attached recovery to exercise automatic hauling.");
             yield return terrain.Restore(snapshot.Terrain,snapshot.ExcavationSeed);
             player.Discoveries.Restore(snapshot.Finds,snapshot.DiscoverySeed);
             player.WorksiteTools.Restore(snapshot.Worksite);
-            winch.Restore(snapshot.Extraction);
+            crane.Restore(snapshot.Extraction);
             Physics.SyncTransforms();
             yield return new WaitForFixedUpdate();
             var find=player.Discoveries.Find(snapshot.Extraction.FindId);
@@ -49,19 +49,19 @@ namespace SomethingDownThere
             var gpu=new List<double>(8192);
             var timings=new FrameTiming[1];
             var markers=new[]{"Excavation.LoadSweep","Excavation.Commit","Excavation.Mesh","Excavation.Collision",
-                "Excavation.Cleanup","Discovery.TerrainChanged","Discovery.Exposure","Discovery.Physics","Winch.Haul","Winch.Contacts","Winch.Planning"};
+                "Excavation.Cleanup","Discovery.TerrainChanged","Discovery.Exposure","Discovery.Physics","Crane.Haul","Crane.Contacts","Crane.Planning"};
             var recorders=new ProfilerRecorder[markers.Length];
             for(int i=0;i<markers.Length;i++)recorders[i]=ProfilerRecorder.StartNew(ProfilerCategory.Scripts,markers[i],1);
             var slowFrames=new List<object>();
             player.Tuning.Gravity=0;player.enabled=true;
             player.SetApplicationFocus(true);player.CloseMenu();
-            Time.timeScale=1;winch.enabled=true;
+            Time.timeScale=1;crane.enabled=true;
             using(var sweep=ProfilerRecorder.StartNew(ProfilerCategory.Scripts,"Excavation.LoadSweep",1))
             using(var notify=ProfilerRecorder.StartNew(ProfilerCategory.Scripts,"Discovery.TerrainChanged",1))
             using(var simulate=ProfilerRecorder.StartNew(ProfilerCategory.Physics,"Physics.Simulate",1))
             {
                 double start=Time.realtimeSinceStartupAsDouble;
-                while(winch.Busy && Time.realtimeSinceStartupAsDouble-start<90)
+                while(crane.Busy && Time.realtimeSinceStartupAsDouble-start<90)
                 {
                     player.SetApplicationFocus(true);player.CloseMenu();
                     player.ViewCamera.transform.SetPositionAndRotation(eyePosition,eyeRotation);

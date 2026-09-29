@@ -135,8 +135,8 @@ namespace SomethingDownThere
 
         internal void ClaimForRecovery()
         {
-            // Winch owns the body until release/storage; terrain notifications must
-            // not freeze it again when its rotating hull clears another patch of soil.
+            // The crane's rope owns the body until the crane sets it down; terrain notifications
+            // must not freeze it again when its rotating hull clears another patch of soil.
             transform.SetPositionAndRotation(body.position, body.rotation);
             StopMotion();
             Held = false; Released = true; enabled = false;
@@ -228,7 +228,7 @@ namespace SomethingDownThere
         private void OnCollisionStay(Collision collision)
         {
             // Unity sends contact callbacks even while normal find motion is
-            // disabled for recovery. The winch, not this component, owns the pull.
+            // disabled for recovery. The crane's rope, not this component, owns the pull.
             RecoveryContact?.Invoke(collision);
             if (Held || !Released) return;
             var supportBody = collision.rigidbody;
