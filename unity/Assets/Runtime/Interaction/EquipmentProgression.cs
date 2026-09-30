@@ -33,6 +33,9 @@ namespace SomethingDownThere
         public const float FuelPerCredit = 100f;
         public const float ShavingIntervalScale = 0.1f;
         public const float ShavingDepthRatio = 0.12f;
+        // Work lamps are not a track: New Game gives a few, every further lamp is bought once at a flat
+        // price and kept for good. The cap bounds saves; only the nearest lamps shine at once.
+        public const int StarterLamps = 4, MaximumLamps = 200, LampPrice = 20;
         // Relative to the owned tool: every tier retains material character and all families remain
         // diggable. Fuel follows cadence, so a slower stroke costs proportionally more.
         private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);

@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 14;
+        public const int Version = 15;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
@@ -52,7 +52,7 @@ namespace SomethingDownThere
                 g.Materials.Write(w);
                 w.Write(s.CrouchAmount);
                 foreach (var find in s.Finds) w.Write(find.PhysicsReleased);
-                w.Write(s.InventoryLevel); w.Write(s.FuelLevel); w.Write(s.JetpackLevel);
+                w.Write(s.InventoryLevel); w.Write(s.FuelLevel); w.Write(s.JetpackLevel); w.Write(s.LampsOwned);
                 w.Write(s.Extraction!=null);
                 if(s.Extraction!=null)
                 {
@@ -129,7 +129,7 @@ namespace SomethingDownThere
             s.Terrain.Materials = TerrainMaterialSnapshot.Read(r, materialSamples);
             s.CrouchAmount = r.ReadSingle();
             foreach (var find in s.Finds) find.PhysicsReleased = r.ReadBoolean();
-            s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32(); s.JetpackLevel = r.ReadInt32();
+            s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32(); s.JetpackLevel = r.ReadInt32(); s.LampsOwned = r.ReadInt32();
             if(r.ReadBoolean())
             {
                 var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r), GrabLocal=ReadVector(r),
@@ -140,7 +140,7 @@ namespace SomethingDownThere
                 e.Spot=r.ReadInt32(); e.Pose=new CranePose { Yaw=r.ReadSingle(), Reach=r.ReadSingle(), Rope=r.ReadSingle(), HookYaw=r.ReadSingle() };
                 s.Extraction=e;
             }
-            s.Worksite.Lamps = new LampSnapshot[Count(r, WorksiteTools.LampCapacity)];
+            s.Worksite.Lamps = new LampSnapshot[Count(r, EquipmentProgression.MaximumLamps)];
             for (int i = 0; i < s.Worksite.Lamps.Length; i++)
                 s.Worksite.Lamps[i] = new LampSnapshot { Slot = r.ReadInt32(), Position = ReadVector(r), Rotation = ReadRotation(r),
                     Anchored = r.ReadBoolean(), SupportPoint = ReadVector(r), SupportNormal = ReadVector(r),

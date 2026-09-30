@@ -130,6 +130,7 @@ namespace SomethingDownThere
         public bool IsHovering { get; private set; }
         public ShovelState Shovel { get; private set; }
         public JetpackState Jetpack { get; private set; }
+        public LampKit LampKit { get; private set; }
         // Unity 6.6 uses managed code variants; DEVELOPMENT_BUILD is deprecated.
         // This engine-owned build flag is true in the Editor/development players.
         public static bool AdminBuild => Debug.isDebugBuild;
@@ -201,7 +202,8 @@ namespace SomethingDownThere
             Rescue = new RescueController(Inventory, Wallet, Mathf.Max(0, maximumRescueFee));
             Shovel = new ShovelState(shovelLevels);
             Jetpack = new JetpackState();
-            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack);
+            LampKit = new LampKit();
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
             pitch = Mathf.DeltaAngle(0f, viewCamera.transform.localEulerAngles.x);
             if (InputSettings == null)
                 ConfigureInputPreferences(new DevicePreferencesFile(System.IO.Path.Combine(Application.persistentDataPath,
@@ -273,6 +275,7 @@ namespace SomethingDownThere
             snapshot.InventoryLevel = Inventory.Level;
             snapshot.FuelLevel = Battery.Level;
             snapshot.JetpackLevel = Jetpack.Level;
+            snapshot.LampsOwned = LampKit.Owned;
             snapshot.Inventory = new ItemSnapshot[Inventory.Count];
             for (int i = 0; i < Inventory.Count; i++) snapshot.Inventory[i] = ItemSnapshot.Capture(Inventory.Items[i]);
             snapshot.Credits = Wallet.WholeCredits;
@@ -314,7 +317,8 @@ namespace SomethingDownThere
             Shovel = shovel;
             Battery = battery;
             Jetpack = jetpack;
-            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack);
+            LampKit = new LampKit(snapshot.LampsOwned);
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
             unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = false;

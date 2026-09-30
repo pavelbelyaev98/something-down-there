@@ -28,11 +28,11 @@ namespace SomethingDownThere
 
         public void Validate()
         {
-            WorldSnapshot.Require(Lamps != null && Lamps.Length <= WorksiteTools.LampCapacity
+            WorldSnapshot.Require(Lamps != null && Lamps.Length <= EquipmentProgression.MaximumLamps
                 && Marks != null && Marks.Length <= WorksiteTools.MaximumMarks, "Invalid worksite equipment count.");
             var slots = new HashSet<int>();
             foreach (var lamp in Lamps)
-                WorldSnapshot.Require(lamp != null && lamp.Slot >= 0 && lamp.Slot < WorksiteTools.LampCapacity && slots.Add(lamp.Slot)
+                WorldSnapshot.Require(lamp != null && lamp.Slot >= 0 && lamp.Slot < EquipmentProgression.MaximumLamps && slots.Add(lamp.Slot)
                     && WorldSnapshot.Valid(lamp.Position) && WorldSnapshot.Valid(lamp.Rotation)
                     && WorldSnapshot.Valid(lamp.LinearVelocity) && lamp.LinearVelocity.sqrMagnitude <= 10000
                     && WorldSnapshot.Valid(lamp.AngularVelocity) && lamp.AngularVelocity.sqrMagnitude <= 10000

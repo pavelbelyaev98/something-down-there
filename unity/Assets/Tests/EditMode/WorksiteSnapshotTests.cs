@@ -37,7 +37,7 @@ namespace SomethingDownThere.Tests
         {
             var state = Fixture();
             if (corruption == 0) state.Lamps = new[] { state.Lamps[0], state.Lamps[0] };
-            if (corruption == 1) state.Lamps[0].Slot = WorksiteTools.LampCapacity;
+            if (corruption == 1) state.Lamps[0].Slot = EquipmentProgression.MaximumLamps;
             if (corruption == 2) state.Lamps[0].Position = new Vector3(float.NaN, 0, 0);
             if (corruption == 3) state.Lamps[0].SupportNormal = Vector3.zero;
             if (corruption == 4) state.Marks[0].Kind = (WorldMarkKind)99;

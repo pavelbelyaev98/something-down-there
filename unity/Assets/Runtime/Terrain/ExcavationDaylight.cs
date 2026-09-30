@@ -14,6 +14,9 @@ namespace SomethingDownThere
         private static readonly int ExtentId = Shader.PropertyToID("_ExcavationDaylightExtent");
         private static readonly int MatrixId = Shader.PropertyToID("_ExcavationDaylightWorldToLocal");
         private static readonly int EnabledId = Shader.PropertyToID("_ExcavationDaylightEnabled");
+        private static readonly int BounceId = Shader.PropertyToID("_ExcavationBounce");
+        // Share of open-sky light that underground walls receive as light scattered down the route.
+        public const float Bounce = 3f;
         private sealed class Receiver
         {
             public Renderer Renderer;
@@ -28,7 +31,7 @@ namespace SomethingDownThere
         private Texture3D texture;
         private IEnumerator rebuild;
         private Bounds pending;
-        private bool dirty;
+        private bool dirty, patched;
         private double accumulatedMilliseconds;
         public int PublishedRevision { get; private set; }
         public bool IsUpdating => dirty || rebuild != null;
@@ -58,6 +61,7 @@ namespace SomethingDownThere
             Shader.SetGlobalVector(SizeId, (Vector3)grid.Size);
             Shader.SetGlobalVector(ExtentId, grid.Extent);
             Shader.SetGlobalMatrix(MatrixId, transform.worldToLocalMatrix);
+            Shader.SetGlobalFloat(BounceId, Bounce);
             RefreshShaderState();
             foreach (var receiver in receivers)
                 if (receiver.Renderer != null) receiver.Renderer.sharedMaterials = receiver.Adapted;
@@ -108,6 +112,8 @@ namespace SomethingDownThere
                     (i & 4) == 0 ? worldBounds.min.z : worldBounds.max.z)));
             if (dirty) pending.Encapsulate(local); else pending = local;
             dirty = true;
+            // Light the fresh cut now instead of when the route rebuild lands.
+            if (!terrain.IsRestoring) { grid.Patch(local, IsOpen); patched = true; }
         }
 
         private bool IsOpen(Vector3 local) => terrain.SignedDensity(transform.TransformPoint(local)) <= 0.001f;
@@ -128,18 +134,23 @@ namespace SomethingDownThere
                 do { more = rebuild.MoveNext(); }
                 while (more && timer.Elapsed.TotalMilliseconds < 1.25);
                 accumulatedMilliseconds += timer.Elapsed.TotalMilliseconds;
-                if (more) return;
-                rebuild = null;
-                texture.SetPixelData(grid.Light, 0); texture.Apply(false, false);
-                PublishedRevision++;
-                LastRebuildMilliseconds = accumulatedMilliseconds;
-                for (int i = receivers.Count - 1; i >= 0; i--)
+                if (!more)
                 {
-                    if (receivers[i].Renderer != null) continue;
-                    registered.Remove(receivers[i].Renderer);
-                    receivers.RemoveAt(i);
+                    rebuild = null;
+                    // Cuts made while it ran are not in this result yet: light them again.
+                    if (dirty) grid.Patch(pending, IsOpen);
+                    patched = true;
+                    PublishedRevision++;
+                    LastRebuildMilliseconds = accumulatedMilliseconds;
+                    for (int i = receivers.Count - 1; i >= 0; i--)
+                    {
+                        if (receivers[i].Renderer != null) continue;
+                        registered.Remove(receivers[i].Renderer);
+                        receivers.RemoveAt(i);
+                    }
                 }
             }
+            if (patched) { texture.SetPixelData(grid.Light, 0); texture.Apply(false, false); patched = false; }
         }
 
         public float SampleAmbient(Vector3 worldPosition) =>

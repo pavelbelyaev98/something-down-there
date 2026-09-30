@@ -141,9 +141,9 @@ have their own surprises"; this is the same pull.
 
 Six ground types, each different in **how it digs, what it hides and how it points somewhere**.
 Hardness shows mostly as **bite size** and only a little as rhythm: harder ground takes smaller,
-shallower bites at a slightly slower stroke (softer ground and tells take bigger ones), and every
-stroke throws that ground's own chips and dust. A player who hits rock sees the bites shrink instead
-of feeling the machine stall.
+shallower bites at a slightly slower stroke (softer ground and tells take bigger ones). Strokes throw
+no particles (user, 2026-09-30); the ground's own look and the cut's shape carry it. A player who hits
+rock sees the bites shrink instead of feeling the machine stall.
 
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
@@ -307,21 +307,29 @@ Sealed rooms keep that moment without cave networks.
 - **The "No Map Ever" pillar:** No minimap, compass, or GPS radar, ever.
 - **Inherently vertical navigation (why this differs from _Meltopia_):** In _Meltopia_, players suffered navigation fatigue because the world was a sprawling, flat maze of identical horizontal tunnels. _Something Down There_ is fundamentally different: **it is vertical**. Near the surface, looking up reveals the open sky and the shaft of daylight; deeper down, the lamps you leave behind become the way home. The player's own carved shaft always points straight up.
 - **Optional world markings:** For complex lateral branches off the main vertical shaft, the tool can apply simple, free, reusable chalk/spray symbols (arrow, home, return-here) readable by shape.
-- **Early route lighting:** Basic placeable lamps are available at the first major branch to illuminate lateral chambers and photography spots.
-- The starter kit is available immediately. Preview placement on exposed ground or permanent
-  any solid worksite surface, including rough ground, walls, ceilings and props, then retrieve
-  the lamp to place it again. A lamp released into open space falls and remains recoverable. Lamp ownership is
-  separate from the find bag. The preview emits no light; only a placed lamp illuminates the work.
+- **Early route lighting:** a few lamps come with the starter kit; every further lamp is bought one
+  at a time at the computer for a flat price and kept for good. Lamps are not an upgrade track: one
+  lamp is as good at the end as at the start, and a run leaves around a hundred of them lighting the
+  hole. Lamp ownership is separate from the find bag.
+- **Place anywhere:** a small, hand-sized lamp goes wherever the player aims: floors (upright),
+  walls and ceilings (spike first), corners, next to finds or other lamps, at the player's feet.
+  A spot too tight for it moves the lamp back along the aim; with nothing solid under it, it falls
+  and settles, and remains recoverable. Only an empty kit refuses. The preview emits no light;
+  only a placed lamp illuminates the work. Retrieve a lamp to place it again.
 - Markings conform to the worked surface, can be rotated and erased for free, and save with the
   hole. Excavating their painted surface removes them. Lamps release physically when their
   support disappears, remain lit nearby, and retain their kit ownership. Sustained contact from a
   load on the crane's rope can knock a mounted lamp loose; portable lighting never permanently blocks recovery.
 - **Sky light reaches down open shafts** and fades with depth.
-- **A generous daylight reach:** shallow and middle-depth excavation stay comfortably readable,
-  including short covered branches. Darkness develops gradually along substantially deeper or
-  longer routes; the first underground work area must not immediately need a lamp.
-- **Sideways travel loses daylight faster.** Brightness follows the open route from
-  the surface, so a long covered branch can become near-black even at shallow depth.
+- **Daylight reach:** daylight fades from the first metres, as it would down a real shaft:
+  noticeably dimmer by 5 m, dim but readable at 10 m, lamps wanted from about 12-15 m, dark by
+  about 20 m. Light scattered down the route comes from above: floors catch it, walls less,
+  overhangs none. A walked ramp darkens almost like a shaft; the first underground work area never
+  needs a lamp.
+- **Sideways travel loses daylight at once.** Brightness follows the open route from the
+  surface: going down costs little until the dark depth, but every metre dug sideways (or back
+  up) dims it, like light turning a corner. A side tunnel is clearly darker a few metres in and
+  near-black about 10 m in, at any depth; only its first metre or two still catch the shaft's light.
   There is no permanent ambient fill keeping soil or finds visible in unlit ground.
 - **The shaft reads from below:** its light column and drifting dust are landmarks where the shaft
   is visible. Light does not pass through overhangs; the jetpack and reusable lamps support returns.
@@ -341,8 +349,8 @@ Sealed rooms keep that moment without cave networks.
   One lamp lights a useful stretch of tunnel or chamber with a broad, gradual falloff, not just a small pool beside its housing.
 - **No personal light.** The tool does not act as a headlamp; that is what makes lamps the way you
   see and the way you remember the hole.
-- **Zone lighting moods:** warm daylight near the surface → shade in covered shallow ground → true
-  darkness in the deep zones, broken only by lamps.
+- **Zone lighting moods:** warm daylight near the surface → shade lower in the first zone →
+  true darkness from there down, broken only by lamps.
 
 ## 8. Randomization rules
 

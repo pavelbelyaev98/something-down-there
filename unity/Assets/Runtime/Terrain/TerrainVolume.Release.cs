@@ -75,44 +75,6 @@ namespace SomethingDownThere
             }
         }
 
-        // Every stroke throws a little of its ground: colour, chip size and dust differ per ground,
-        // so each one reads and feels different at the tool (concept 09 section 4).
-        private static readonly (Color low, Color high, float size, float dust)[] StrokeLooks =
-        {
-            (new Color(.26f, .18f, .11f), new Color(.46f, .33f, .2f), .035f, .25f),   // Soil
-            (new Color(.5f, .28f, .14f), new Color(.72f, .42f, .22f), .06f, .08f),    // Clay: fewer, bigger clumps
-            (new Color(.3f, .31f, .32f), new Color(.56f, .57f, .58f), .03f, .45f),    // Rock: shards and dust
-            (new Color(.3f, .28f, .25f), new Color(.62f, .58f, .5f), .045f, .15f),    // Gravel: stones
-            (new Color(.55f, .55f, .53f), new Color(.82f, .81f, .78f), .025f, .6f),   // Concrete: grit and dust
-            (new Color(.36f, .42f, .46f), new Color(.56f, .63f, .67f), .05f, .05f),   // Pond clay: smooth flakes
-            (new Color(.5f, .5f, .48f), new Color(.84f, .82f, .76f), .04f, .4f),      // Fractured rock
-            (new Color(.55f, .55f, .53f), new Color(.85f, .84f, .8f), .035f, .5f),    // Fractured concrete
-            (new Color(.5f, .5f, .48f), new Color(.84f, .82f, .76f), .04f, .4f),      // Crack
-            (new Color(.18f, .14f, .1f), new Color(.55f, .4f, .26f), .045f, .2f)      // Backfill: mixed
-        };
-
-        private void EmitStroke(TerrainMaterialId material, Vector3 point, Vector3 normal, float volume)
-        {
-            if (!EnsureDebrisParticles()) return;
-            var look = StrokeLooks[Mathf.Clamp((int)material, 0, StrokeLooks.Length - 1)];
-            int chips = Mathf.Clamp(Mathf.RoundToInt(volume * 400f), 2, 16), puffs = Mathf.RoundToInt(chips * look.dust);
-            for (int i = 0; i < chips + puffs; i++)
-            {
-                bool dust = i >= chips;
-                var jitter = new Vector3(Random01(-.12f, .12f), Random01(-.12f, .12f), Random01(-.12f, .12f));
-                var emit = new ParticleSystem.EmitParams
-                {
-                    position = point + normal * .05f + jitter,
-                    velocity = normal * Random01(.4f, 1.4f) + new Vector3(Random01(-.4f, .4f), dust ? Random01(-.1f, .2f) : Random01(-.2f, .6f), Random01(-.4f, .4f)),
-                    startLifetime = dust ? Random01(.6f, 1.1f) : Random01(.35f, .8f),
-                    startSize = dust ? Random01(.15f, .3f) : Random01(.6f, 1.4f) * look.size,
-                    rotation = Random01(0, 360),
-                    startColor = dust ? new Color(look.high.r, look.high.g, look.high.b, .16f) : Color.Lerp(look.low, look.high, Random01(0, 1))
-                };
-                (dust ? pourDust : pourChips).Emit(emit, 1);
-            }
-        }
-
         private float Random01(float min, float max) => Mathf.Lerp(min, max, (float)pourRandom.NextDouble());
 
         private ParticleSystem CreatePourParticles(string label, Material material, bool dust)

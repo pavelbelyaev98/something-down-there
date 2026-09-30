@@ -12,6 +12,7 @@ namespace SomethingDownThere.Editor
     public static class WorksiteToolsSetup
     {
         public const string Folder = "Assets/Content/WorksiteTools";
+        public const float LampIntensity = 100;
         [MenuItem("Tools/Something Down There/Configure Work Lamps and Markings")]
         public static void Configure()
         {
@@ -63,14 +64,19 @@ namespace SomethingDownThere.Editor
                 }
                 UnityEngine.Object.DestroyImmediate(model);
                 var box = template.AddComponent<BoxCollider>(); box.center = WorksiteTools.LampCenter; box.size = WorksiteTools.LampHalfSize * 2;
-                var body = template.AddComponent<Rigidbody>(); body.mass = 3; body.linearDamping = .8f; body.angularDamping = 2;
+                // A hand-sized puck: light, and gently pushed out if it is placed overlapping ground.
+                var body = template.AddComponent<Rigidbody>(); body.mass = .4f; body.linearDamping = .8f; body.angularDamping = 2;
+                body.maxDepenetrationVelocity = 1;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; body.interpolation = RigidbodyInterpolation.Interpolate; body.isKinematic = true;
                 var light = new GameObject("Diffuse lantern light", typeof(Light), typeof(UniversalAdditionalLightData)).GetComponent<Light>();
-                light.transform.SetParent(template.transform, false); light.transform.localPosition = new Vector3(0, .24f, 0);
-                light.type = LightType.Point; light.range = WorksiteTools.LightRange; light.intensity = 28;
+                light.transform.SetParent(template.transform, false); light.transform.localPosition = new Vector3(0, .066f, 0);
+                // The shader caps each lamp's near brightness, so output mostly buys reach.
+                light.type = LightType.Point; light.range = WorksiteTools.LightRange; light.intensity = LampIntensity;
                 light.color = new Color(.91f, .96f, 1);
                 light.shadows = LightShadows.Soft; light.shadowBias = .015f; light.shadowNormalBias = .04f; light.shadowNearPlane = .04f;
                 var data = light.GetComponent<UniversalAdditionalLightData>(); data.usePipelineSettings = false;
+                // Shadows from the ground only: finds piled against a lamp must not black out the room.
+                data.customShadowLayers = true; data.shadowRenderingLayers = TerrainVolume.LampShadowLayer;
                 using (var serialized = new SerializedObject(data))
                 {
                     serialized.FindProperty("m_AdditionalLightsShadowResolutionTier").intValue = 1;
@@ -113,14 +119,18 @@ namespace SomethingDownThere.Editor
             using (var serialized = new SerializedObject(pipeline))
             {
                 serialized.FindProperty("m_AdditionalLightShadowsSupported").boolValue = true;
-                // Eight point lights need six faces each; this atlas fits every face
-                // at the selected tier without URP silently shrinking shadow tiles.
+                // The lit budget (eight lamps) needs six faces each; this atlas fits every
+                // face at the selected tier without URP silently shrinking shadow tiles.
                 serialized.FindProperty("m_AdditionalLightsShadowmapResolution").intValue = 4096;
                 serialized.FindProperty("m_AdditionalLightsShadowResolutionTierMedium").intValue = 512;
                 serialized.FindProperty("m_AdditionalLightsRenderingMode").intValue = 1;
                 serialized.FindProperty("m_AdditionalLightsPerObjectLimit").intValue = 8;
+                // Needed for the lamps' ground-only shadow layers; every renderer keeps the default
+                // layer, so which lights reach what is unchanged.
+                serialized.FindProperty("m_SupportsLightLayers").boolValue = true;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
             }
+            UnityEditor.Rendering.RenderPipelineEditorUtility.TryAddRenderingLayerName("Lamp shadows");
             EditorSceneManager.MarkSceneDirty(scene); AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
             Debug.Log("Reusable work lamps and navigation markings configured in MainGame.");
         }

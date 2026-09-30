@@ -84,8 +84,9 @@ namespace SomethingDownThere.Tests
             player.enabled = false;
             Assert.That(Physics.Raycast(new Vector3(-8, 2, -8), Vector3.down, out var hit, 5), Is.True);
             Assert.That(terrain.TryDig(hit, .6f), Is.True);
-            Assert.That(Physics.Raycast(new Vector3(-6, 2, -6), Vector3.down, out var lampFloor, 4), Is.True);
-            var lamp = player.WorksiteTools.PlaceLamp(lampFloor.point, lampFloor.normal, Quaternion.identity);
+            Assert.That(player.Wallet.TryCredit(EquipmentProgression.LampPrice), Is.True);
+            Assert.That(player.Trade.TryBuyLamp(player.Trade.OfferLamp()), Is.True, "One bought lamp joins the kit for good.");
+            var lamp = player.WorksiteTools.PlaceLamp(player.WorksiteTools.SolveLamp(new Vector3(-6, 2, -6), Vector3.down, 4, 0));
             Assert.That(lamp, Is.Not.Null);
             Vector3 lampPosition = lamp.transform.position;
             Assert.That(player.WorksiteTools.PlaceMark(new MarkSnapshot { Kind = WorldMarkKind.Home,
@@ -102,7 +103,8 @@ namespace SomethingDownThere.Tests
             Assert.That(player.WorksiteTools.Lamps.Count, Is.EqualTo(1));
             Assert.That(player.WorksiteTools.Lamps[0].transform.position, Is.EqualTo(lampPosition));
             Assert.That(player.WorksiteTools.Lamps[0].Anchored, Is.True);
-            Assert.That(player.WorksiteTools.AvailableLamps, Is.EqualTo(WorksiteTools.LampCapacity - 1));
+            Assert.That(player.LampKit.Owned, Is.EqualTo(EquipmentProgression.StarterLamps + 1));
+            Assert.That(player.WorksiteTools.AvailableLamps, Is.EqualTo(EquipmentProgression.StarterLamps));
             Assert.That(player.WorksiteTools.MarkCount, Is.EqualTo(1));
         }
 

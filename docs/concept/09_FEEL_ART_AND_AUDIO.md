@@ -53,14 +53,14 @@ new generated ground patterns.
 
 | Zone | Palette | Lighting mood |
 |---|---|---|
-| Recent fill | Warm browns, greens, rusty metal, bright sky | Warm daylight, open, hopeful |
-| Old sediment | Grey-blue, clay orange, dull steel | Cool daylight fading, nostalgic |
+| Recent fill | Warm browns, greens, rusty metal, bright sky | Warm daylight, open, hopeful; fading to black in its lower part |
+| Old sediment | Grey-blue, clay orange, dull steel | Darkness; the player's lamps light it, nostalgic |
 | Deep clay/stone | Dark grey rock with rust-red clay veins and pale crack lines | True darkness; only placed lamps light the ground |
 | Ancient constructed | Cold tones, unnatural smoothness, faint glow accents | Total darkness; only placed lamps show the surfaces |
 
 Darkness escalates from shade to true black; lit ground stays readable, and lamps are the only light underground.
-Give early digging a generous daylight reach, with a gradual transition before deep darkness.
-Long lateral tunnels also reach darkness; terrain and finds lose their ambient colour
+Daylight fades from the first metres down the open route, is dim by about 10 m and gone by about 20 m.
+Side tunnels darken within a few metres at any depth; terrain and finds lose their ambient colour
 and sky reflections together instead of retaining an artificial visibility floor.
 
 ## 3. The absurdity, visually

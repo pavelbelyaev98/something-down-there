@@ -281,7 +281,6 @@ namespace SomethingDownThere
             if (adaptMaterials)
             {
                 ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
-                EmitStroke(material, hit.point, hit.normal, LastRemovedVolume);
                 ReleaseGround(changed, radius);
                 CheckBreakIn(changed, hit.point);
             }
@@ -390,6 +389,11 @@ namespace SomethingDownThere
             return changed;
         }
 
+        // Work lamps take their shadows from the ground only: their shadow rendering layers are this
+        // one, so a find resting against a lamp never throws a room-sized shadow (the sun still takes
+        // shadows from everything). Named "Lamp shadows" by WorksiteToolsSetup.
+        public const uint LampShadowLayer = 1u << 1;
+
         // Chunk objects are created on demand: the full-depth volume keeps thousands of keys but only
         // materializes the ground plane and whatever a cut has reached.
         private Chunk Materialize(Vector3Int key)
@@ -408,6 +412,7 @@ namespace SomethingDownThere
             root.GetComponent<MeshFilter>().sharedMesh = chunk.Mesh;
             chunk.BeforeMeshWrite = chunk.DetachCollider;
             chunk.Renderer.sharedMaterial = CurrentSoilMaterial;
+            chunk.Renderer.renderingLayerMask |= LampShadowLayer;
             chunks.Add(key, chunk);
             return chunk;
         }

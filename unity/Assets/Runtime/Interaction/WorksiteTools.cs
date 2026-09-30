@@ -8,42 +8,51 @@ namespace SomethingDownThere
     [DisallowMultipleComponent]
     public sealed class WorksiteTools : MonoBehaviour
     {
-        public const int LampCapacity = 8, MaximumMarks = 96;
-        public const float LightRange = 16, LightCullDistance = 36;
-        public static readonly Vector3 LampCenter = new Vector3(0, .25f, 0);
-        public static readonly Vector3 LampHalfSize = new Vector3(.145f, .245f, .145f);
+        public const int MaximumMarks = 96;
+        // Only the nearest lamps shine: each needs six faces of the shared shadow atlas, and the
+        // Forward renderer takes eight lights per object. The rest keep their glowing dome.
+        public const int LitLampBudget = 8;
+        // Range + cull distance is the sun shadow distance (URP drops local shadows beyond it),
+        // so the surface keeps its authored shadows; lamps fade out over the last metres.
+        public const float LightRange = 22, LightCullDistance = 30, LightFadeDistance = 6;
+        public static readonly Vector3 LampCenter = new Vector3(0, .056f, 0);
+        public static readonly Vector3 LampHalfSize = new Vector3(.056f, .056f, .056f);
         [SerializeField] private FpsPlayer player;
         [SerializeField] private TerrainVolume terrain;
         [SerializeField] private WorkLamp lampPrefab;
         [SerializeField] private Mesh[] stencils;
         [SerializeField] private Material markMaterial, validPreview, invalidPreview;
-        private readonly List<WorkLamp> lamps = new List<WorkLamp>(LampCapacity);
+        private readonly List<WorkLamp> lamps = new List<WorkLamp>(EquipmentProgression.StarterLamps);
         private readonly List<WorldMark> marks = new List<WorldMark>(MaximumMarks);
         private readonly Collider[] overlaps = new Collider[32];
         private readonly RaycastHit[] surfaceHits = new RaycastHit[32];
+        private readonly float[] lampDistances = new float[EquipmentProgression.MaximumLamps];
+        private readonly int[] lampOrder = new int[EquipmentProgression.MaximumLamps];
         private GameObject lampGhost;
         private Renderer[] ghostRenderers;
         private WorldMark markGhost;
         private int placement; // 0 none, 1 lamp, 2..4 stencils.
         private float rotation;
         private RaycastHit surface;
-        private Vector3 proposedPosition, lampSupportPoint, lampSupportNormal;
+        private Vector3 proposedPosition;
         private Quaternion proposedRotation;
+        private LampSnapshot lampPose;
         private bool valid;
         private string reason = "Aim at ground within reach";
         public FpsPlayer Player => player;
         public TerrainVolume Terrain => terrain;
         public IReadOnlyList<WorkLamp> Lamps => lamps;
         public int MarkCount => marks.Count;
-        public int AvailableLamps => LampCapacity - lamps.Count;
+        public int AvailableLamps => Mathf.Max(0, player.LampKit.Owned - lamps.Count);
         public long Revision { get; private set; }
         public bool IsPlacing => placement != 0;
         public bool PlacementValid => IsPlacing && valid;
         public bool Configured => player != null && terrain != null && lampPrefab != null && lampPrefab.WorkLight != null
             && stencils != null && stencils.Length == 3 && Array.TrueForAll(stencils, mesh => mesh != null)
             && markMaterial != null && validPreview != null && invalidPreview != null;
+        // A round lamp has no visible heading, so only markings offer rotation.
         public string PlacementPrompt => !IsPlacing ? "" : (valid ? $"{Binding(PlayerBinding.Dig)}  Place {SelectionName}" : reason)
-            + $"\n{Binding(PlayerBinding.RotatePlacement)} Rotate  |  {Binding(PlayerBinding.Grab)} Cancel"
+            + (placement > 1 ? $"\n{Binding(PlayerBinding.RotatePlacement)} Rotate  |  " : "\n") + $"{Binding(PlayerBinding.Grab)} Cancel"
             + (placement > 1 ? $"  |  {Binding(PlayerBinding.Mark)} Next symbol" : "");
         private string SelectionName => placement == 1 ? "work lamp" : MarkName((WorldMarkKind)(placement - 2));
         private string Binding(PlayerBinding binding) => player.InputSettings.Display(binding);
@@ -60,10 +69,19 @@ namespace SomethingDownThere
             if (!player.GameplayActive) Cancel();
             Vector3 eye = player.ViewCamera.transform.position;
             for (int i = lamps.Count - 1; i >= 0; i--)
+                if (lamps[i].transform.position.y < terrain.transform.position.y - 2) Retrieve(lamps[i]);
+            int candidates = 0;
+            for (int i = 0; i < lamps.Count; i++)
             {
-                var lamp = lamps[i]; lamp.Tick(player.GameplayActive, eye);
-                if (lamp.transform.position.y < terrain.transform.position.y - 2) Retrieve(lamp);
+                float distance = (lamps[i].transform.position - eye).sqrMagnitude;
+                if (distance >= LightCullDistance * LightCullDistance) continue;
+                lampDistances[candidates] = distance; lampOrder[candidates++] = i;
             }
+            Array.Sort(lampDistances, lampOrder, 0, candidates);
+            for (int i = 0; i < lamps.Count; i++) lamps[i].Shine = 0;
+            for (int i = 0; i < Mathf.Min(candidates, LitLampBudget); i++)
+                lamps[lampOrder[i]].Shine = Mathf.Clamp01((LightCullDistance - Mathf.Sqrt(lampDistances[i])) / LightFadeDistance);
+            foreach (var lamp in lamps) lamp.Tick(player.GameplayActive, Time.unscaledDeltaTime);
         }
 
         public bool HandleInput(FpsInputFrame frame)
@@ -98,41 +116,34 @@ namespace SomethingDownThere
         private void UpdatePreview()
         {
             valid = false; reason = "Aim at ground within reach";
+            if (placement == 1)
+            {
+                var eye = player.ViewCamera.transform;
+                lampPose = SolveLamp(eye.position, eye.forward, player.Tuning.InteractReach, rotation);
+                valid = AvailableLamps > 0;
+                reason = "All lamps placed: pick one up, or buy more at the computer";
+                EnsureLampGhost(); lampGhost.SetActive(true); lampGhost.transform.SetPositionAndRotation(lampPose.Position, lampPose.Rotation);
+                foreach (var renderer in ghostRenderers) renderer.sharedMaterial = valid ? validPreview : invalidPreview;
+                return;
+            }
             bool hit = player.TryGetTarget(player.Tuning.InteractReach, out surface);
-            if (placement > 1 && (!hit || !IsSurface(surface.collider)))
+            if (!hit || !IsSurface(surface.collider))
             {
                 if (lampGhost != null) lampGhost.SetActive(false);
                 if (markGhost != null) markGhost.Object.SetActive(false);
                 return;
             }
-            Vector3 normal = hit ? surface.normal : Vector3.up;
-            if (placement == 1)
-            {
-                lampSupportPoint = hit ? surface.point : player.ViewCamera.transform.position
-                    + player.ViewCamera.transform.forward * Mathf.Min(2f, player.Tuning.InteractReach);
-                lampSupportNormal = normal;
-                Vector3 forward = Vector3.ProjectOnPlane(player.ViewCamera.transform.forward, normal);
-                if (forward.sqrMagnitude < .01f) forward = Vector3.ProjectOnPlane(player.ViewCamera.transform.up, normal);
-                proposedRotation = Quaternion.AngleAxis(rotation, normal) * Quaternion.LookRotation(forward.normalized, normal);
-                valid = TryLampPosition(lampSupportPoint, normal, proposedRotation, out proposedPosition)
-                    && AvailableLamps > 0 && (!hit || IsLampSurface(surface.collider));
-                reason = AvailableLamps == 0 ? "All lamps placed — pick one up to reuse it" : "Not enough room for the lamp";
-                EnsureLampGhost(); lampGhost.SetActive(true); lampGhost.transform.SetPositionAndRotation(proposedPosition, proposedRotation);
-                foreach (var renderer in ghostRenderers) renderer.sharedMaterial = valid ? validPreview : invalidPreview;
-            }
-            else
-            {
-                proposedPosition = surface.point;
-                Vector3 up = Vector3.ProjectOnPlane(Vector3.up, normal);
-                if (up.sqrMagnitude < .01f) up = Vector3.ProjectOnPlane(player.ViewCamera.transform.forward, normal);
-                proposedRotation = Quaternion.AngleAxis(rotation, normal) * Quaternion.LookRotation(normal, up.normalized);
-                if (markGhost == null) markGhost = new WorldMark(this, stencils[placement - 2], validPreview);
-                markGhost.Object.SetActive(true);
-                valid = markGhost.Project(new MarkSnapshot { Kind = (WorldMarkKind)(placement - 2), Position = proposedPosition, Rotation = proposedRotation })
-                    && marks.Count < MaximumMarks && !MarkOverlaps(proposedPosition);
-                reason = marks.Count >= MaximumMarks ? "Erase a marking before adding another" : "Choose an unmarked, unbroken surface";
-                markGhost.Renderer.sharedMaterial = valid ? validPreview : invalidPreview;
-            }
+            Vector3 normal = surface.normal;
+            proposedPosition = surface.point;
+            Vector3 up = Vector3.ProjectOnPlane(Vector3.up, normal);
+            if (up.sqrMagnitude < .01f) up = Vector3.ProjectOnPlane(player.ViewCamera.transform.forward, normal);
+            proposedRotation = Quaternion.AngleAxis(rotation, normal) * Quaternion.LookRotation(normal, up.normalized);
+            if (markGhost == null) markGhost = new WorldMark(this, stencils[placement - 2], validPreview);
+            markGhost.Object.SetActive(true);
+            valid = markGhost.Project(new MarkSnapshot { Kind = (WorldMarkKind)(placement - 2), Position = proposedPosition, Rotation = proposedRotation })
+                && marks.Count < MaximumMarks && !MarkOverlaps(proposedPosition);
+            reason = marks.Count >= MaximumMarks ? "Erase a marking before adding another" : "Choose an unmarked, unbroken surface";
+            markGhost.Renderer.sharedMaterial = valid ? validPreview : invalidPreview;
         }
 
         private void EnsureLampGhost()
@@ -150,19 +161,59 @@ namespace SomethingDownThere
 
         private bool Commit()
         {
-            if (placement == 1) return PlaceLamp(lampSupportPoint, lampSupportNormal, proposedRotation) != null;
+            if (placement == 1) return PlaceLamp(lampPose) != null;
             return PlaceMark(new MarkSnapshot { Kind = (WorldMarkKind)(placement - 2), Position = proposedPosition, Rotation = proposedRotation });
         }
 
-        public WorkLamp PlaceLamp(Vector3 point, Vector3 normal, Quaternion orientation)
+        // Places exactly the previewed pose. Only an empty kit refuses.
+        public WorkLamp PlaceLamp(LampSnapshot pose)
         {
-            if (AvailableLamps <= 0 || !TryLampPosition(point, normal, orientation, out var position)) return null;
+            if (pose == null || AvailableLamps <= 0) return null;
             int slot = 0;
-            for (; slot < LampCapacity; slot++) if (!lamps.Exists(l => l.Slot == slot)) break;
-            var lamp = Spawn(new LampSnapshot { Slot = slot, Position = position, Rotation = orientation, Anchored = HasLampSupport(point, normal),
-                SupportPoint = point, SupportNormal = normal });
+            for (; slot < EquipmentProgression.MaximumLamps; slot++) if (!lamps.Exists(l => l.Slot == slot)) break;
+            var lamp = Spawn(new LampSnapshot { Slot = slot, Position = pose.Position, Rotation = pose.Rotation, Anchored = pose.Anchored,
+                SupportPoint = pose.SupportPoint, SupportNormal = pose.SupportNormal });
             Dirty(); player.Persistence?.RequestCheckpoint(); return lamp;
         }
+
+        // Turns an aim into a lamp pose and never fails. Floors stand the lamp upright; walls and
+        // ceilings take it spike-first along the surface. A blocked spot (crevice, corner, next to a
+        // find or lamp) lifts the lamp a little, then backs it along the aim to the first clear spot,
+        // never behind the aimed surface. It anchors only when its base touches fixed scenery;
+        // otherwise it is a loose lamp that falls and settles.
+        public LampSnapshot SolveLamp(Vector3 origin, Vector3 direction, float reach, float yaw)
+        {
+            direction = direction.normalized;
+            bool hit = Physics.Raycast(origin, direction, out var aimed, reach, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            float distance = hit ? aimed.distance : Mathf.Min(2f, reach);
+            Vector3 up = hit && aimed.normal.y <= .7f ? aimed.normal : Vector3.up;
+            Vector3 forward = Vector3.ProjectOnPlane(direction, up);
+            if (forward.sqrMagnitude < .01f) forward = Vector3.ProjectOnPlane(Vector3.forward, up);
+            if (forward.sqrMagnitude < .01f) forward = Vector3.ProjectOnPlane(Vector3.right, up);
+            var orientation = Quaternion.AngleAxis(yaw, up) * Quaternion.LookRotation(forward.normalized, up);
+            Vector3 point = origin + direction * distance;
+            for (int step = 0; step < 8; step++)
+            {
+                Vector3 position = point + up * (.004f + step * .025f);
+                if (HasLampClearance(position, orientation)) return LampPose(position, orientation, up);
+            }
+            Vector3 offset = orientation * LampCenter, start = origin + direction * Mathf.Min(.3f, distance);
+            if (HasLampClearance(start - offset, orientation))
+            {
+                float travel = distance - Mathf.Min(.3f, distance);
+                if (Physics.BoxCast(start, LampHalfSize, direction, out var block, orientation, travel,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) travel = Mathf.Max(0, block.distance - .01f);
+                return LampPose(start + direction * travel - offset, orientation, up);
+            }
+            // Pressed against a wall in a crawl space: a loose lamp just ahead; physics settles it.
+            return LampPose(start - offset, orientation, up);
+        }
+
+        private LampSnapshot LampPose(Vector3 position, Quaternion orientation, Vector3 up) => new LampSnapshot
+        {
+            Position = position, Rotation = orientation, SupportPoint = position, SupportNormal = up,
+            Anchored = HasLampSupport(position, up)
+        };
 
         private WorkLamp Spawn(LampSnapshot state)
         {
@@ -216,27 +267,13 @@ namespace SomethingDownThere
         public bool HasSupport(Vector3 point, Vector3 normal)
             => SurfaceRay(point + normal * .012f, normal, .075f, .35f, out _);
 
-        private bool IsLampSurface(Collider collider) => collider != null && !collider.isTrigger
-            && collider.GetComponentInParent<WorkLamp>() == null && collider.GetComponentInParent<FpsPlayer>() == null;
-
+        // The spike reaches a few centimetres past the base: support within that distance holds it.
         public bool HasLampSupport(Vector3 point, Vector3 normal)
         {
             if (!Physics.Raycast(point + normal * .012f, -normal, out var hit, .075f,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) return false;
-            // Fixed scenery accepts attachment; loose props let the lamp settle with physics.
-            return IsLampSurface(hit.collider) && hit.rigidbody == null && Vector3.Dot(hit.normal, normal) > .35f;
-        }
-
-        private bool TryLampPosition(Vector3 point, Vector3 normal, Quaternion orientation, out Vector3 position)
-        {
-            // Lift the compact base clear of an uneven patch instead of requiring a flat footprint.
-            for (int step = 0; step < 6; step++)
-            {
-                position = point + normal * (.02f + step * .035f);
-                if (HasLampClearance(position, orientation)) return true;
-            }
-            position = point + normal * .02f;
-            return false;
+            // Fixed scenery accepts attachment; loose props (lamps, finds) let the lamp settle with physics.
+            return hit.rigidbody == null && Vector3.Dot(hit.normal, normal) > .35f;
         }
 
         private bool SurfaceRay(Vector3 origin, Vector3 normal, float distance, float alignment, out RaycastHit hit)
@@ -258,10 +295,8 @@ namespace SomethingDownThere
             Vector3 center = position + orientation * LampCenter;
             int count = Physics.OverlapBoxNonAlloc(center, LampHalfSize, overlaps, orientation, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
             if (count == overlaps.Length) return false;
+            // Lamps ignore the player's body (like finds), so it never blocks placement.
             for (int i = 0; i < count; i++) if (overlaps[i] != null) return false;
-            // Player may use Ignore Raycast, so explicitly reject placement inside their body.
-            var motor = player.GetComponent<CharacterController>();
-            if (motor != null && motor.enabled && motor.bounds.SqrDistance(center) < .06f) return false;
             return true;
         }
 
@@ -274,7 +309,7 @@ namespace SomethingDownThere
                 var lamp = lamps[i];
                 if (!bounds.Contains(lamp.transform.position)) continue;
                 if (terrain.IsSolid(lamp.transform.TransformPoint(LampCenter))) Retrieve(lamp);
-                else lamp.CheckSupport();
+                else lamp.CheckSupport(); // Also wakes a loose lamp whose ground was dug away.
             }
             for (int i = marks.Count - 1; i >= 0; i--)
                 if (bounds.Intersects(marks[i].Bounds) && !marks[i].Supported())

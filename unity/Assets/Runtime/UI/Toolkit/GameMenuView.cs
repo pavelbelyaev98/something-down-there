@@ -405,13 +405,13 @@ namespace SomethingDownThere
 
         private void BuildUpgradeRow(VisualElement parent, ComputerStation station, int index, long revision)
         {
-            bool refill = index == ComputerStation.RefillCommand;
+            bool refill = index == ComputerStation.RefillCommand, lamp = index == ComputerStation.LampCommand, serviceRow = refill || lamp;
             var offer = station.OfferAt(index);
-            string track = refill ? "Refill fuel" : EquipmentProgression.Name(offer.Kind);
+            string track = refill ? "Refill fuel" : lamp ? "Work lamp" : EquipmentProgression.Name(offer.Kind);
             // The row is decoration; only the price button is interactive.
-            var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", refill ? "station-row service" : "station-row");
+            var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", serviceRow ? "station-row service" : "station-row");
             var main = ToolkitStationRows.Block(row, track + " main", "station-row-main");
-            string caption = refill ? track : $"{track}  {offer.OwnedLevel}/{offer.LevelCount}";
+            string caption = serviceRow ? track : $"{track}  {offer.OwnedLevel}/{offer.LevelCount}";
             ToolkitStationRows.Text(main, track + " name", caption, "station-cell-name");
             bool shortfall = false;
             bool maxed = false;
@@ -422,6 +422,12 @@ namespace SomethingDownThere
                 if (service.Full) { price = "FULL"; maxed = true; }
                 else if (service.Cost == 0) { price = "$1"; shortfall = true; }
                 else { price = $"${service.Cost:0}"; }
+            }
+            else if (lamp)
+            {
+                var sale = station.Lamp;
+                if (sale.Full) { price = "MAX"; maxed = true; }
+                else { price = $"${sale.Cost}"; shortfall = player.Wallet.Balance < sale.Cost; }
             }
             else if (offer.Complete) { price = "MAX"; maxed = true; }
             else { price = $"${offer.Cost}"; shortfall = player.Wallet.Balance < offer.Cost; }
@@ -437,12 +443,12 @@ namespace SomethingDownThere
             // leave the progress cell empty so both columns still line up.
             var bottom = ToolkitStationRows.Block(main, track + " bottom", "station-cell-bottom");
             var progress = ToolkitStationRows.Block(bottom, track + " bar slot", "station-bar-slot");
-            if (!refill) ToolkitStationRows.Segments(progress, track + " pips", offer.OwnedLevel, offer.LevelCount);
-            ToolkitStationRows.Text(bottom, track + " effect", refill ? RefillHeadline(station) : UpgradeHeadline(offer),
-                "station-cell-effect");
+            if (!serviceRow) ToolkitStationRows.Segments(progress, track + " pips", offer.OwnedLevel, offer.LevelCount);
+            ToolkitStationRows.Text(bottom, track + " effect", refill ? RefillHeadline(station) : lamp ? LampHeadline(station)
+                : UpgradeHeadline(offer), "station-cell-effect");
             // Everything else the purchase changes stays one hover away instead of
             // adding another column or sentence to the table.
-            buy.tooltip = refill ? RefillDetail(station) : UpgradeDetail(offer);
+            buy.tooltip = refill ? RefillDetail(station) : lamp ? "Yours for good: pick a lamp up to place it again" : UpgradeDetail(offer);
             if (buy.name == purchasedCard)
             {
                 buy.schedule.Execute(() => buy.AddToClassList("just-bought"));
@@ -496,6 +502,9 @@ namespace SomethingDownThere
 
         private static string RefillDetail(ComputerStation station) =>
             $"$1 per {EquipmentProgression.FuelPerCredit:0.#} fuel, rounded up";
+
+        private static string LampHeadline(ComputerStation station) => station.Lamp.Full
+            ? $"{station.Lamp.Owned} owned" : $"{station.Lamp.Owned} → {station.Lamp.Owned + 1} owned";
 
         private string RefillHeadline(ComputerStation station)
         {

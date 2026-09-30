@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - Water
   layers:
   - Default
   - TransparentFX
@@ -43,4 +44,5 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
+  - Lamp shadows
   m_MigratedRenderPipelines: []

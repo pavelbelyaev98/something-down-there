@@ -64,7 +64,8 @@ Primary: the five tracks.
 Late-game sinks support remaining discoveries and optional decoration after the tracks are maxed:
 
 - extra C4 charges;
-- reusable lamps (buy individually; useful for lighting and photography);
+- reusable lamps (bought one at a time at a flat price from the start and kept for good; the
+  deep dark makes them a steady purchase, not only a late one);
 - yard decoration around the recovered uniques;
 - cosmetic tool skins and yard items;
 - spare C4 charges.

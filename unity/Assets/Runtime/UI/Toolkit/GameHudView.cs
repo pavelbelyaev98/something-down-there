@@ -74,7 +74,7 @@ namespace SomethingDownThere
             shovelStatus.text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m cut"
                 + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.DisplayDepth:F1} m";
             if (player.WorksiteTools != null)
-                shovelStatus.text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {player.WorksiteTools.AvailableLamps}/{WorksiteTools.LampCapacity}"
+                shovelStatus.text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {player.WorksiteTools.AvailableLamps}/{player.LampKit.Owned}"
                     + $"    |    {player.InputSettings.Display(PlayerBinding.Mark)}  MARK";
 
             adminHint.text = !player.AdminAvailable || !gameplay ? ""

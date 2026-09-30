@@ -87,18 +87,42 @@ namespace SomethingDownThere
             }
         }
 
+        // One more work lamp at a flat price. Bound to the owned count, so a stale offer never
+        // buys a second lamp.
+        public sealed class LampOffer
+        {
+            internal readonly StationTrade Owner;
+            internal readonly long WalletRevision;
+            internal bool Used;
+            public int Owned { get; }
+            public int Cost { get; }
+            public bool Full { get; }
+
+            internal LampOffer(StationTrade owner)
+            {
+                Owner = owner;
+                WalletRevision = owner.wallet.Revision;
+                Owned = owner.lamps.Owned;
+                Full = owner.lamps.Full;
+                Cost = Full ? 0 : EquipmentProgression.LampPrice;
+            }
+        }
+
         private readonly SessionInventory inventory;
         private readonly SessionWallet wallet;
         private readonly ShovelState shovel;
         private readonly Battery battery;
         private readonly JetpackState jetpack;
-        public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, Battery battery = null, JetpackState jetpack = null)
+        private readonly LampKit lamps;
+        public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, Battery battery = null,
+            JetpackState jetpack = null, LampKit lamps = null)
         {
             this.inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
             this.wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             this.shovel = shovel ?? throw new ArgumentNullException(nameof(shovel));
             this.battery = battery;
             this.jetpack = jetpack;
+            this.lamps = lamps;
         }
 
         public SaleOffer OfferSale(string instanceId = null) => new SaleOffer(this, instanceId);
@@ -110,6 +134,7 @@ namespace SomethingDownThere
             return new UpgradeOffer(this, kind);
         }
         public RefillOffer OfferRefill() => battery == null ? throw new InvalidOperationException("Refills require the session battery.") : new RefillOffer(this);
+        public LampOffer OfferLamp() => lamps == null ? throw new InvalidOperationException("Lamp sales require the session lamp kit.") : new LampOffer(this);
         private int Level(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Level : kind == EquipmentKind.Fuel ? battery.Level
             : kind == EquipmentKind.Jetpack ? jetpack.Level : shovel.Level;
         private long EquipmentRevision(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Revision : kind == EquipmentKind.Fuel ? battery.Revision
@@ -149,6 +174,23 @@ namespace SomethingDownThere
             else if (offer.Kind == EquipmentKind.Fuel) battery.TryUpgradeTo(offer.NextLevel);
             else if (offer.Kind == EquipmentKind.Jetpack) jetpack.TryUpgradeTo(offer.NextLevel);
             else shovel.TryUpgradeTo(offer.NextLevel);
+            return true;
+        }
+
+        public TradeResult Check(LampOffer offer)
+        {
+            if (offer == null || offer.Owner != this || offer.Used || offer.WalletRevision != wallet.Revision
+                || offer.Owned != lamps.Owned) return TradeResult.Changed;
+            if (offer.Full) return TradeResult.Complete;
+            return wallet.Balance < offer.Cost ? TradeResult.Unaffordable : TradeResult.Ready;
+        }
+
+        public bool TryBuyLamp(LampOffer offer)
+        {
+            if (Check(offer) != TradeResult.Ready) return false;
+            offer.Used = true;
+            wallet.TrySpend(offer.Cost);
+            lamps.TryAdd();
             return true;
         }
 

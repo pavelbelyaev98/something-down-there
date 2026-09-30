@@ -522,7 +522,7 @@ Shader "Something Down There/Ground Triplanar"
                 lighting.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 lighting.fogCoord = input.fogFactor;
                 lighting.vertexLighting = VertexLighting(input.positionWS, normal);
-                lighting.bakedGI = SampleSH(normal);
+                lighting.bakedGI = SampleSH(normal) + ExcavationBounce(input.positionWS, normal);
                 lighting.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
                 lighting.shadowMask = half4(1, 1, 1, 1);
                 SurfaceData surface = (SurfaceData)0;

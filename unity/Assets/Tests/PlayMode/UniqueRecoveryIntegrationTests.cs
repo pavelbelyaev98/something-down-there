@@ -116,8 +116,9 @@ namespace SomethingDownThere.Tests
             Physics.simulationMode = SimulationMode.Script;
             if(lampObstacle)
             {
-                Assert.That(Physics.Raycast(bounds.center+Vector3.up*(bounds.extents.y+.05f),Vector3.up,out var ceiling,2f), Is.True);
-                var lamp=player.WorksiteTools.PlaceLamp(ceiling.point,ceiling.normal,Quaternion.FromToRotation(Vector3.up,ceiling.normal));
+                Vector3 below=bounds.center+Vector3.up*(bounds.extents.y+.05f);
+                Assert.That(Physics.Raycast(below,Vector3.up,2f), Is.True);
+                var lamp=player.WorksiteTools.PlaceLamp(player.WorksiteTools.SolveLamp(below,Vector3.up,2f,0));
                 Assert.That(lamp, Is.Not.Null); Assert.That(lamp.Anchored, Is.True);
                 Physics.SyncTransforms();
                 yield return PullPastLamp(player,find,lamp);
@@ -307,7 +308,7 @@ namespace SomethingDownThere.Tests
             var saved=player.WorksiteTools.Capture();
             Assert.That(saved.Lamps.Single().Slot, Is.EqualTo(slot));
             Assert.That(saved.Lamps.Single().Anchored, Is.False);
-            Assert.That(player.WorksiteTools.AvailableLamps, Is.EqualTo(WorksiteTools.LampCapacity-1));
+            Assert.That(player.WorksiteTools.AvailableLamps, Is.EqualTo(player.LampKit.Owned-1));
         }
 
         private IEnumerator Recover(bool sideAttachment, bool populated = false)

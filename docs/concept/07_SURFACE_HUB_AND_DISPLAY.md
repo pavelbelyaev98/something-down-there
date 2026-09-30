@@ -13,7 +13,7 @@ no doors, no menu mazes, no NPCs.
 | **Salvage crane** | Recover whole objects marked underground | A small tower crane beside the camp swings its hook right above the hole and lowers it down the shaft; its one rope turns smart and the hook rides its end along the excavated route into the lifting eye the player bolted on; the crane reels the find in through dirt bottlenecks and carries it to camp. Uniques arrive muddy for optional cleaning, oversized salvage awaits cash-in. Being tested: the same rope hauls the player home at zero battery |
 | **Charging point** | Battery refill | Free and automatic: the battery refills by itself while the player is back at camp; a visible cable and charge light, no button, no price ([why](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)) |
 | **Recovered uniques** | Special unsellable exhibits | Each stands where the crane set it down beside the camp, readable (name, depth, story) |
-| **Lamp / charges shelf** | Buy reusable lamps and C4 | Supports remaining play |
+| **Lamp / charges shelf** | Buy C4 (work lamps are sold at the computer) | Supports remaining play |
 | **Cosmetics rack** | Tool skins and yard decorations | Purely visual; another late sink |
 
 There are no characters, dialogue, or quest-givers. The story is told by the uniques standing at camp

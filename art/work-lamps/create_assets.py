@@ -13,29 +13,55 @@ scene.unit_settings.system = 'METRIC'
 scene.unit_settings.scale_length = 1
 
 def point(v): return (v[0], -v[2], v[1])
-def box(name, p, size, bevel=.01):
-    bpy.ops.mesh.primitive_cube_add(size=1, location=point(p))
-    obj = bpy.context.object
+# Set ONLY = {'WorkLamp'} before running to re-export a subset without touching the others.
+ONLY = globals().get('ONLY') or {'WorkLamp', 'Arrow', 'Home', 'ReturnHere'}
+
+def finish(obj, name, smooth=True):
     obj.name = name
-    obj.scale = (size[0], size[2], size[1])
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    mod = obj.modifiers.new('Soft manufactured edges', 'BEVEL')
-    mod.width = bevel; mod.segments = 2
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+    if smooth:
+        try: bpy.ops.object.shade_smooth_by_angle(angle=0.7)
+        except Exception: bpy.ops.object.shade_smooth()
+    return obj
+
+def cylinder(name, y, height, radius, bevel=.003):
+    bpy.ops.mesh.primitive_cylinder_add(vertices=28, radius=radius, depth=height, location=point((0, y, 0)))
+    obj = finish(bpy.context.object, name)
+    mod = obj.modifiers.new('Soft edges', 'BEVEL'); mod.width = bevel; mod.segments = 2
     bpy.ops.object.modifier_apply(modifier=mod.name)
     return obj
 
-parts = [box('Rubber foot', (0,.025,0), (.28,.05,.28)),
-    box('Yellow battery', (0,.08,0), (.24,.08,.24)),
-    box('Yellow lantern cap', (0,.365,0), (.25,.035,.25)),
-    box('Lens', (0,.235,0), (.20,.23,.20), .018),
-    box('Steel handle left', (-.09,.42,0), (.024,.10,.032)),
-    box('Steel handle right', (.09,.42,0), (.024,.10,.032)),
-    box('Rubber handle', (0,.475,0), (.20,.027,.036))]
-for x in [-.115,.115]:
-    for z in [-.115,.115]:
-        parts.append(box('Steel corner guard', (x,.24,z), (.018,.245,.018), .004))
+def ring(name, y, major, minor, rotation=(0, 0, 0), keep_above=None):
+    bpy.ops.mesh.primitive_torus_add(major_radius=major, minor_radius=minor, major_segments=36, minor_segments=8,
+        location=point((0, y, 0)), rotation=rotation)
+    obj = finish(bpy.context.object, name)
+    if keep_above is not None:
+        import bmesh
+        mesh = bmesh.new(); mesh.from_mesh(obj.data)
+        cut = keep_above - obj.location.z
+        bmesh.ops.delete(mesh, geom=[v for v in mesh.verts if v.co.z < cut], context='VERTS')
+        mesh.to_mesh(obj.data); mesh.free()
+    return obj
+
+# Hand-sized puck work light: rubber foot, yellow housing, frosted dome in a steel guard with a
+# hanging loop, and a spike under the base that reads as jabbed into the ground. Base at y = 0.
+parts = [cylinder('Rubber foot', .006, .012, .054),
+    cylinder('Yellow housing', .029, .034, .05, .004)]
+bpy.ops.mesh.primitive_uv_sphere_add(segments=28, ring_count=14, radius=.041, location=point((0, .062, 0)))
+lens = finish(bpy.context.object, 'Lens')
+for v in lens.data.vertices: v.co.z = max(v.co.z, -.017)   # flat bottom seated in the housing
+parts.append(lens)
+bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=6, radius=.0055, location=point((0, .03, .049)))
+parts.append(finish(bpy.context.object, 'Status lens'))
+parts.append(ring('Steel guard ring', .064, .045, .0032))
+parts.append(ring('Steel guard arc', .062, .046, .0028, rotation=(1.5708, 0, 0), keep_above=.06))
+parts.append(ring('Steel guard arc', .062, .046, .0028, rotation=(1.5708, 0, 1.5708), keep_above=.06))
+parts.append(ring('Steel loop', .117, .009, .0024, rotation=(1.5708, 0, 0)))
+bpy.ops.mesh.primitive_cone_add(vertices=12, radius1=0, radius2=.011, depth=.055, location=point((0, -.0275, 0)))
+parts.append(finish(bpy.context.object, 'Steel spike'))
 
 def export(name, objects):
+    if name not in ONLY: return
     bpy.ops.object.select_all(action='DESELECT')
     for obj in objects: obj.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]

@@ -44,6 +44,7 @@ namespace SomethingDownThere.Tests
         {
             var saved = Snapshot(1);
             saved.ShovelLevel = saved.InventoryLevel = saved.FuelLevel = saved.JetpackLevel = level;
+            saved.LampsOwned = level * 15;
             saved.InventoryCapacity = 10 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.InventoryIncrease);
             saved.BatteryCapacity = 100 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.FuelIncrease);
             using var memory = new MemoryStream();
@@ -62,6 +63,20 @@ namespace SomethingDownThere.Tests
             Assert.Throws<InvalidDataException>(saved.Validate);
             saved.FuelLevel = 1; saved.JetpackLevel = level;
             Assert.Throws<InvalidDataException>(saved.Validate);
+        }
+
+        [TestCase(EquipmentProgression.StarterLamps - 1, 0)]
+        [TestCase(EquipmentProgression.MaximumLamps + 1, 0)]
+        [TestCase(EquipmentProgression.StarterLamps, EquipmentProgression.StarterLamps + 1)]
+        public void LampOwnershipIsBoundedAndCoversEveryPlacedLamp(int owned, int placed)
+        {
+            var saved = Snapshot(1); saved.LampsOwned = owned;
+            saved.Worksite.Lamps = new LampSnapshot[placed];
+            for (int i = 0; i < placed; i++)
+                saved.Worksite.Lamps[i] = new LampSnapshot { Slot = i, Rotation = Quaternion.identity, SupportNormal = Vector3.up };
+            Assert.Throws<InvalidDataException>(saved.Validate);
+            saved.LampsOwned = Mathf.Clamp(Mathf.Max(owned, placed), EquipmentProgression.StarterLamps, EquipmentProgression.MaximumLamps);
+            Assert.DoesNotThrow(saved.Validate);
         }
 
         [TestCase(SaveWriteStage.BeforeWrite, 1)]
@@ -353,6 +368,7 @@ namespace SomethingDownThere.Tests
             Assert.That(actual.InventoryCapacity, Is.EqualTo(expected.InventoryCapacity));
             Assert.That(actual.FuelLevel, Is.EqualTo(expected.FuelLevel));
             Assert.That(actual.JetpackLevel, Is.EqualTo(expected.JetpackLevel));
+            Assert.That(actual.LampsOwned, Is.EqualTo(expected.LampsOwned));
             Assert.That(actual.BatteryCapacity, Is.EqualTo(expected.BatteryCapacity));
             Assert.That(actual.PlayerPosition, Is.EqualTo(expected.PlayerPosition));
             Assert.That(actual.PlayerRotation, Is.EqualTo(expected.PlayerRotation));

@@ -22,6 +22,32 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
+        public void LampsSellOneAtATimeAtAFlatPriceUntilTheCap()
+        {
+            var kit = new LampKit();
+            var lamps = new StationTrade(bag, wallet, shovel, lamps: kit);
+            Assert.Throws<System.InvalidOperationException>(() => trade.OfferLamp());
+            Assert.That(lamps.Check(lamps.OfferLamp()), Is.EqualTo(TradeResult.Unaffordable));
+            wallet.TryCredit(EquipmentProgression.LampPrice * 2);
+            var first = lamps.OfferLamp(); var stale = lamps.OfferLamp();
+            Assert.That(first.Cost, Is.EqualTo(EquipmentProgression.LampPrice));
+            Assert.That(lamps.TryBuyLamp(first), Is.True);
+            Assert.That(kit.Owned, Is.EqualTo(EquipmentProgression.StarterLamps + 1));
+            Assert.That(wallet.Balance, Is.EqualTo(EquipmentProgression.LampPrice));
+            Assert.That(lamps.TryBuyLamp(first), Is.False, "An offer buys once.");
+            Assert.That(lamps.TryBuyLamp(stale), Is.False, "An older quote cannot buy a second lamp.");
+            Assert.That(lamps.Check(stale), Is.EqualTo(TradeResult.Changed));
+            Assert.That(bag.Count, Is.EqualTo(2)); Assert.That(shovel.Level, Is.EqualTo(1));
+
+            var full = new LampKit(EquipmentProgression.MaximumLamps - 1);
+            var capped = new StationTrade(bag, wallet, shovel, lamps: full);
+            Assert.That(capped.TryBuyLamp(capped.OfferLamp()), Is.True);
+            Assert.That(full.Full, Is.True);
+            Assert.That(capped.Check(capped.OfferLamp()), Is.EqualTo(TradeResult.Complete));
+            Assert.That(wallet.Balance, Is.Zero);
+        }
+
+        [Test]
         public void SellOneUsesSelectedIdentityAndEveryOfferCommitsAtMostOnce()
         {
             var first = bag.Items[0];
