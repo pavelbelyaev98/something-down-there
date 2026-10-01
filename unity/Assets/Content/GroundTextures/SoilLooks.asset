@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f50be337e0beeaa40a2ffb0a5a431596, type: 3}
+  m_Name: SoilLooks
+  m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.SoilLooks
+  AuthoredName: Clay loam
+  Looks:
+  - Name: Light clay loam
+    Albedo: {fileID: 2800000, guid: 28893c22527e45c0bc613977651c64bf, type: 3}
+    Normal: {fileID: 2800000, guid: 0557460f480c47e397af6cd71bf6516b, type: 3}
+    Mask: {fileID: 2800000, guid: 1324c751514f4a21937ca2dc16778080, type: 3}
+    TerrainLayerMask: 1
+    Tint: {r: 0.837, g: 1.3230001, b: 1.6875, a: 1}
+    TileMetres: 4
+    NormalStrength: 1.5
+    StoneNormalStrength: 1.5
+  - Name: Brown mud
+    Albedo: {fileID: 2800000, guid: da55130d8a454b5abe8c49dbe89ba8ef, type: 3}
+    Normal: {fileID: 2800000, guid: 8066c10484024ce3b1ff17efa6e7340e, type: 3}
+    Mask: {fileID: 2800000, guid: 76d64b994b264b0ca2864b43c5b88e6a, type: 3}
+    TerrainLayerMask: 1
+    Tint: {r: 0.76, g: 0.76, b: 0.76, a: 1}
+    TileMetres: 4
+    NormalStrength: 1
+    StoneNormalStrength: 1
+  - Name: Original soil
+    Albedo: {fileID: 2800000, guid: 579c3b5de05b35e46af52cba989a8a41, type: 3}
+    Normal: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
+    Mask: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
+    TerrainLayerMask: 0
+    Tint: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+    TileMetres: 2
+    NormalStrength: 0.55
+    StoneNormalStrength: 0.9
+  - Name: First soil bake
+    Albedo: {fileID: 2800000, guid: 6f761353c0d816940a0e504a674d89cb, type: 3}
+    Normal: {fileID: 2800000, guid: cfee4b4aa8777db47862d4c4adfc79bb, type: 3}
+    Mask: {fileID: 2800000, guid: f0fe5df7fdc09e644b2db730e323101c, type: 3}
+    TerrainLayerMask: 0
+    Tint: {r: 1, g: 1, b: 1, a: 1}
+    TileMetres: 2
+    NormalStrength: 0.55
+    StoneNormalStrength: 0.9
+  - Name: Loam
+    Albedo: {fileID: 2800000, guid: 887b99f835ee1f744ab22c6b8995aa09, type: 3}
+    Normal: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
+    Mask: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
+    TerrainLayerMask: 0
+    Tint: {r: 0.33, g: 0.28, b: 0.21, a: 1}
+    TileMetres: 2
+    NormalStrength: 0.55
+    StoneNormalStrength: 0.9
+  - Name: Dark loam
+    Albedo: {fileID: 2800000, guid: 887b99f835ee1f744ab22c6b8995aa09, type: 3}
+    Normal: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
+    Mask: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
+    TerrainLayerMask: 0
+    Tint: {r: 0.24, g: 0.2, b: 0.15, a: 1}
+    TileMetres: 2
+    NormalStrength: 0.55
+    StoneNormalStrength: 0.9
+  - Name: Olive silt
+    Albedo: {fileID: 2800000, guid: 887b99f835ee1f744ab22c6b8995aa09, type: 3}
+    Normal: {fileID: 2800000, guid: 3581ee1b8a0371b42a06a2824fa2f9e1, type: 3}
+    Mask: {fileID: 2800000, guid: 78250383c65b5f547ac7f6ad5d50b311, type: 3}
+    TerrainLayerMask: 0
+    Tint: {r: 0.3, g: 0.31, b: 0.26, a: 1}
+    TileMetres: 2
+    NormalStrength: 0.55
+    StoneNormalStrength: 0.9

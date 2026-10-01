@@ -8,23 +8,20 @@ fine: X-ray (Ctrl+Shift+X) to find it, Ctrl+Shift+0 for the fastest tool.
 **Try:**
 - Dig a hole down, then a tunnel sideways (with a bend) to a computer. Uncover it and hold E on it: a
   yellow lifting eye bolts on where you aimed.
-- Watch: the crane swings round from the camp; the moment it is over your hole its hook (on the model's
-  own two cables) goes straight down from where it hangs, into your hole, without waiting for the swing.
-- Stay underground: the two cables come down your hole together, run along your tunnel as a doubled
-  cable and spread into the hook as it rides to the computer and hooks into the eye. The crane reels it
-  out, tears through tight spots and surges on; a narrow shaft dug straight down onto a computer should
-  be ripped open, not ground through. Pause, or save, quit and continue mid-haul: it carries on.
-- At the top it swings from the hook as the crane carries it to camp, lowers it and lets go: it lands
-  however it hangs and stays. Aim at it there: name, depth and story show; E repeats them.
-- Recover all three computers: each gets its own spot, and they stay after reloading.
+- The crane swings over your hole and its hook, on its own two cables, rides straight down and along
+  your tunnel into the eye. It reels the computer out, tearing through tight spots (a narrow shaft dug
+  onto it is ripped open, not ground through). Pause, or save, quit and continue mid-haul: it carries on.
+- At the top it swings from the hook to camp, is lowered and let go, and stays however it lands. Aim at
+  it: name, depth and story show. Recover all three: each gets its own spot, kept after reloading.
 
 **Good feels like:** a big machine working for you. You bolt an eye on the find, the crane swings over
 your hole, its own rope and hook come down your tunnel and drag the find out through the dirt, and it
 lands at camp for good.
 
+**Compare (A/B):** Developer admin (Ctrl+Shift+F10), session only. **Shaft dust** ON/OFF: dust hangs in
+your hole for a few seconds after breaks.
+
 **Tell the agent:**
-- The hook enters your tunnel about 8 s after marking; a recovery takes about 25–30 s. Faster, slower or fine?
-- Do the two cables read as the crane's own, hanging and down your tunnel? Is the hook riding the tunnel by itself OK?
-- After hooking on, does it sit stuck too long or tear out too much dirt? Do the breaks look right
-  (clods landing and sinking away, dust, trickle): too much, too little, wrong colour?
-- Crane look (clean paint is a one-line swap), its spot, anything off: clipping, swinging, landings.
+- Recovery takes about 25–30 s. Faster, slower or fine? Do the cables read as the crane's own?
+- Stuck too long or tearing too much? Clods now crumble where they land and dust clears in about a
+  second: anything still lingering, or too brief? Keep shaft dust?

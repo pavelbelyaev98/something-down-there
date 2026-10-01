@@ -24,6 +24,7 @@ Shader "Something Down There/Soil Break"
             #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
             #pragma multi_compile_fog
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "ExcavationLighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half _Dust, _Solid;
@@ -52,9 +53,12 @@ Shader "Something Down There/Soil Break"
             half3 SoilLight(float3 positionWS, half3 normalWS, float4 positionCS, half wrap)
             {
                 half daylight = ExcavationAmbient(positionWS, normalWS);
-                half3 light = SampleSH(normalWS) * daylight + ExcavationBounce(positionWS, normalWS);
+                half3 light = SampleSH(normalWS) * daylight;
                 Light sun = GetMainLight(TransformWorldToShadowCoord(positionWS));
                 light += sun.color * (sun.shadowAttenuation * daylight * saturate((dot(normalWS, sun.direction) + wrap) / (1 + wrap)));
+                // Fine dust scatters sunlight forward: it glows when seen against the sun, as in a sunbeam.
+                half toward = saturate(dot(normalize(positionWS - _WorldSpaceCameraPos), sun.direction));
+                light += sun.color * (sun.shadowAttenuation * daylight * _Dust * 2.5 * pow(toward, 8));
             #if defined(_ADDITIONAL_LIGHTS)
                 InputData inputData = (InputData)0;
                 inputData.positionWS = positionWS;
@@ -87,6 +91,9 @@ Shader "Something Down There/Soil Break"
                     half chip = saturate((.9 - edge) / max(fwidth(edge), .015));
                     half dust = pow(saturate(1 - dot(p, p)), 2);
                     alpha *= lerp(chip, dust, _Dust);
+                    // A dust puff thins out where it meets the ground instead of cutting a hard line.
+                    float scene = LinearEyeDepth(SampleSceneDepth(GetNormalizedScreenSpaceUV(input.positionCS)), _ZBufferParams);
+                    alpha *= lerp(1, saturate((scene - LinearEyeDepth(input.positionCS.z, _ZBufferParams)) / .25), _Dust);
                     float3 toCamera = normalize(_WorldSpaceCameraPos - input.positionWS);
                     float bulge = sqrt(saturate(1 - dot(p, p))) + lerp(.15, .9, _Dust);
                     normal = normalize(UNITY_MATRIX_V[0].xyz * p.x + UNITY_MATRIX_V[1].xyz * p.y + toCamera * bulge);

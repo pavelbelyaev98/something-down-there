@@ -84,6 +84,8 @@ namespace SomethingDownThere
         private bool adminDetectorOff;
         private bool adminHoverOnRelease;
         private bool adminGroundXray;
+        // Crane effect A/B (101): dust lingering in the shaft after rope breaks (on by default).
+        private bool adminShaftDustOff;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -137,10 +139,12 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray);
+            || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray
+            || adminShaftDustOff || (excavationTerrain != null && excavationTerrain.SoilLook != 0));
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
+        public bool ShaftDust => !(AdminAvailable && adminShaftDustOff);
         public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
             ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
         public string AdminMotionLabel => (adminShavingOverride.HasValue ? "Override: " : "Automatic: ")
@@ -613,7 +617,7 @@ namespace SomethingDownThere
                 string markPrompt = worksiteTools.MarkPrompt();
                 if (!string.IsNullOrEmpty(markPrompt)) TargetPrompt = markPrompt;
             }
-            // Ground Lab: name the bay and ground under the crosshair from anywhere on the plot.
+            // Ground Lab: name the bay or crane scene and the ground under the crosshair from anywhere on the plot.
             if (string.IsNullOrEmpty(TargetPrompt) && Persistence != null && Persistence.State == WorldSaveState.Lab
                 && TryGetTarget(40f, out var far) && Contract<TerrainVolume>(far.collider) == excavationTerrain)
                 TargetPrompt = GroundLab.Describe(far.point, excavationTerrain.MaterialAt(far.point - far.normal * .05f));
@@ -775,6 +779,8 @@ namespace SomethingDownThere
             adminDetectorOff = false;
             adminHoverOnRelease = false;
             adminGroundXray = false;
+            adminShaftDustOff = false;
+            excavationTerrain?.SetSoilLook(0);
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
@@ -826,6 +832,25 @@ namespace SomethingDownThere
             MenuChanged?.Invoke();
         }
 
+        public void ToggleAdminShaftDust()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminShaftDustOff = !adminShaftDustOff;
+            ShowFeedback(ShaftDust ? "Shaft dust on" : "Shaft dust off for this session");
+            MenuChanged?.Invoke();
+        }
+
+        // Soil look A/B: the freshly cut soil's texture set, cycled through the authored one and its variants.
+        public string AdminSoilLookLabel => excavationTerrain != null ? excavationTerrain.SoilLookName : "-";
+
+        public void CycleAdminSoilLook()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin) || excavationTerrain == null) return;
+            excavationTerrain.SetSoilLook(excavationTerrain.SoilLook + 1);
+            ShowFeedback("Soil look: " + excavationTerrain.SoilLookName);
+            MenuChanged?.Invoke();
+        }
+
         public void ToggleAdminXray()
         {
             if (!focused || !AdminAvailable || discoveries == null
@@ -842,7 +867,7 @@ namespace SomethingDownThere
         {
             if (!AdminAvailable) return;
             unlimitedBattery = true;
-            ShowFeedback("Ground Lab: unlimited battery on. Ctrl+Shift+1-9/0 picks a tool level; nothing here is saved.");
+            ShowFeedback("Ground Lab: unlimited battery on. Ctrl+Shift+1-9/0 picks a tool level; the holes around the bays hold computers for the crane. Nothing here is saved.");
             MenuChanged?.Invoke();
         }
 

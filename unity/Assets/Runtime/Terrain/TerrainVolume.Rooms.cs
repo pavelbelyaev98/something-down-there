@@ -14,17 +14,22 @@ namespace SomethingDownThere
         public TerrainGround.GroundLayout GroundLayout => grid?.Layout ?? TerrainGround.GroundLayout.Empty;
         private bool[] roomsOpened;
 
-        private void MaterializeRooms()
+        // Seeded air (sealed rooms, a lab's hollows and dug scenes) below the surface layer has no cut to
+        // create its chunks, so they are built up front.
+        private void MaterializeSeededAir()
         {
-            foreach (var room in grid.Rooms)
-            {
-                Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)room.Min / cellSize) - Vector3Int.one * 2) / chunkSize;
-                Vector3Int last = Vector3Int.Min(dimensions - Vector3Int.one, Vector3Int.CeilToInt((Vector3)room.Max / cellSize) + Vector3Int.one * 2) / chunkSize;
-                for (int z = first.z; z <= last.z; z++)
-                for (int y = first.y; y <= last.y; y++)
-                for (int x = first.x; x <= last.x; x++)
-                    Refresh(new Vector3Int(x, y, z));
-            }
+            foreach (var room in grid.Rooms) MaterializeAround(room.Min, room.Max);
+            foreach (var (min, max) in grid.LabBounds()) MaterializeAround(min, max);
+        }
+
+        private void MaterializeAround(Vector3 min, Vector3 max)
+        {
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt(min / cellSize) - Vector3Int.one * 2) / chunkSize;
+            Vector3Int last = Vector3Int.Min(dimensions - Vector3Int.one, Vector3Int.CeilToInt(max / cellSize) + Vector3Int.one * 2) / chunkSize;
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+                Refresh(new Vector3Int(x, y, z));
         }
 
         // A cut opened a room when it cleared a shell sample right against the room's air.

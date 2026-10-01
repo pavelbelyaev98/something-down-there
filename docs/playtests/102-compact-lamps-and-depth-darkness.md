@@ -11,9 +11,8 @@ panel's money button helps you buy lamps quickly.
 - At about 6 m, dig a tunnel sideways: it should get darker with every metre and be close to black
   about 10 m in.
 - Drill fast, down and sideways: freshly cut ground should never flash dark for a moment.
-- Place lamps everywhere: floor, walls, ceiling, a tight corner, a narrow slot, right at your feet,
-  on top of another lamp, into open air. The preview should never turn red unless you are out of lamps.
-- In a dark room, place one lamp and look how far it reaches; then four.
+- Place lamps everywhere: floor, walls, ceiling, a tight corner, a narrow slot, at your feet, on another
+  lamp, into open air (red only when out of lamps). In a dark room, see how far one lamp reaches; then four.
 - Run out of lamps, go to the computer and buy more (Services, "Work lamp", one per click).
 - Place more than eight lamps close together: only the nearest eight shine, the others just glow.
 
@@ -23,7 +22,8 @@ chunk of the hole; the first part of the dig is lit by daylight and the dark sta
 **Tell the agent:**
 - Darkness: does it feel natural now? Lamps from ~12-15 m right, or too early/late? Does a side
   tunnel darken fast enough, too fast, or should its first metres already be darker?
-- Is the shallow shaft now too bright compared with the surface?
+- Holes are now lit only by sun and sky, like the ground around them (no extra fill): does a hole
+  read as the same ground? Shafts darken sooner than before: are lamps needed too early now?
 - Lamp look and size; does one lamp light enough? Does the $20 price feel right?
 - Anywhere a lamp still refused, floated oddly, or dropped somewhere unexpected.
 - With many lamps: did far lamps switching off (glowing only) bother you?

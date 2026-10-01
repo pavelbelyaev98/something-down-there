@@ -14,9 +14,6 @@ namespace SomethingDownThere
         private static readonly int ExtentId = Shader.PropertyToID("_ExcavationDaylightExtent");
         private static readonly int MatrixId = Shader.PropertyToID("_ExcavationDaylightWorldToLocal");
         private static readonly int EnabledId = Shader.PropertyToID("_ExcavationDaylightEnabled");
-        private static readonly int BounceId = Shader.PropertyToID("_ExcavationBounce");
-        // Share of open-sky light that underground walls receive as light scattered down the route.
-        public const float Bounce = 3f;
         private sealed class Receiver
         {
             public Renderer Renderer;
@@ -61,7 +58,6 @@ namespace SomethingDownThere
             Shader.SetGlobalVector(SizeId, (Vector3)grid.Size);
             Shader.SetGlobalVector(ExtentId, grid.Extent);
             Shader.SetGlobalMatrix(MatrixId, transform.worldToLocalMatrix);
-            Shader.SetGlobalFloat(BounceId, Bounce);
             RefreshShaderState();
             foreach (var receiver in receivers)
                 if (receiver.Renderer != null) receiver.Renderer.sharedMaterials = receiver.Adapted;

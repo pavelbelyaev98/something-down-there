@@ -145,7 +145,6 @@ Shader "Something Down There/Excavation Lit"
             half4 ExcavationPBR(InputData lighting, SurfaceData surface)
             {
                 surface.occlusion *= ExcavationAmbient(lighting.positionWS, lighting.normalWS);
-                lighting.bakedGI += ExcavationBounce(lighting.positionWS, lighting.normalWS);
                 return UniversalFragmentPBR(lighting, surface);
             }
             #define UniversalFragmentPBR ExcavationPBR

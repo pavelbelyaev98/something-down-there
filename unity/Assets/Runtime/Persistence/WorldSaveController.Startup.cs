@@ -51,8 +51,11 @@ namespace SomethingDownThere
             else StartCoroutine(CreateNewGame());
         }
 
-        // Developer Ground Lab: the bays instead of the site, never saved (no store, never
-        // initialized, so nothing is captured or written); leaving reloads MainGame.
+        // Developer Ground Lab: the bays and crane scenes instead of the site, never saved (no store,
+        // never initialized, so nothing is captured or written); leaving reloads MainGame, restarting
+        // reloads it straight back into the lab.
+        private static bool restartLab;
+
         public void StartGroundLab()
         {
             if (!FpsPlayer.AdminBuild || State != WorldSaveState.Startup || player.Menu != PlayerMenu.MainMenu || terrain == null) return;
@@ -65,6 +68,7 @@ namespace SomethingDownThere
             player.ShowPersistenceMenu();
             yield return null;
             terrain.UseGroundLab();
+            if (discoveries != null && discoveries.Catalog != null) discoveries.UseGroundLab();
             SetState(WorldSaveState.Lab);
             player.CloseMenu();
             player.BeginGroundLab();
@@ -74,6 +78,21 @@ namespace SomethingDownThere
         {
             if (State != WorldSaveState.Lab) return;
             UnityEngine.SceneManagement.SceneManager.LoadScene(gameObject.scene.name);
+        }
+
+        public void RestartGroundLab()
+        {
+            if (State != WorldSaveState.Lab) return;
+            restartLab = true;
+            LeaveGroundLab();
+        }
+
+        // After a restart the reloaded title goes straight back into the lab.
+        private void ResumeRestartedLab()
+        {
+            if (!restartLab || State != WorldSaveState.Startup || player.Menu != PlayerMenu.MainMenu || player.GraphicsTuner.Running) return;
+            restartLab = false;
+            StartGroundLab();
         }
 
         public void CancelNewGame()

@@ -6,8 +6,9 @@ namespace SomethingDownThere
 {
     // Developer Ground Lab (development builds, title menu): the site's grid refilled with labelled
     // 3 x 3 m bays, 12 m deep, each one ground alone or a mix that shows one behaviour (a pour, a
-    // slump, a crack break, a zone change). Never saved; leaving reloads MainGame.
-    public static class GroundLab
+    // slump, a crack break, a zone change), plus the crane scenes around them (GroundLab.Crane).
+    // Never saved; leaving reloads MainGame, restarting reloads it straight back into the lab.
+    public static partial class GroundLab
     {
         public const float BayHalf = 1.5f, BayDepth = 12f;
         private static readonly float[] Columns = { -8.75f, -5.25f, -1.75f, 1.75f, 5.25f, 8.75f };
@@ -102,24 +103,28 @@ namespace SomethingDownThere
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
 
-        // Air boxes (grid-local metres) under the thin-roof bays: 2 x 2 m wide, 0.6-1.8 m down.
-        public static List<(Vector3 min, Vector3 max)> Cavities(Vector3Int size, float cellSize)
+        // The lab's air (grid-local metres): boxes under the thin-roof bays (2 x 2 m wide, 0.6-1.8 m
+        // down) and the crane scenes' pits, shafts and tunnels.
+        public static List<ExcavationGrid.LabCarve> Cavities(Vector3Int size, float cellSize)
         {
-            var boxes = new List<(Vector3, Vector3)>();
+            var boxes = new List<ExcavationGrid.LabCarve>();
+            AddCraneCarves(boxes);
             float top = size.y * cellSize;
             for (int bay = 0; bay < Bays.Length; bay++)
             {
                 if (!Bays[bay].Cavity) continue;
                 var centre = BayCentre(bay) - new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
-                boxes.Add((new Vector3(centre.x - 1, top - 1.8f, centre.y - 1), new Vector3(centre.x + 1, top - .6f, centre.y + 1)));
+                boxes.Add(ExcavationGrid.LabCarve.Box(new Vector3(centre.x - 1, top - 1.8f, centre.y - 1), new Vector3(centre.x + 1, top - .6f, centre.y + 1)));
             }
             return boxes;
         }
 
-        // The aim prompt names the bay under the crosshair and the ground actually hit (3D text
-        // would draw through the world with the built-in font shader).
+        // The aim prompt names the bay or crane scene under the crosshair and the ground actually hit
+        // (3D text would draw through the world with the built-in font shader).
         public static string Describe(Vector3 world, TerrainMaterialId hit)
         {
+            var crane = DescribeCrane(world);
+            if (crane != null) return crane;
             int bay = BayAt(world.x, world.z, out _, out _);
             string ground = "hitting " + hit;
             return bay < 0 ? "Ground Lab  |  " + ground : $"{Bays[bay].Name}: {Bays[bay].Hint}  |  {ground}";

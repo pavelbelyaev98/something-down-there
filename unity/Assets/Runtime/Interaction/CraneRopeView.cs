@@ -177,7 +177,11 @@ namespace SomethingDownThere
             if (centre.Count > 1 && (rig.RopeEntry - centre[centre.Count - 1]).sqrMagnitude < MergeDistance * MergeDistance) centre[centre.Count - 1] = rig.RopeEntry;
             else centre.Add(rig.RopeEntry);
             // The block turns about its rope, smoothly, so its entries meet the falls where they arrive.
-            across = Vector3.Slerp(across, Frame(), 1 - Mathf.Exp(-BlockTurnRate * Time.deltaTime));
+            // Its two entries are alike, so it never turns more than a quarter turn: a frame that flips
+            // round would otherwise leave it half a turn behind with the falls crossed into it.
+            Vector3 frame = Frame();
+            if (Vector3.Dot(frame, across) < 0) frame = -frame;
+            across = Vector3.Slerp(across, frame, 1 - Mathf.Exp(-BlockTurnRate * Time.deltaTime));
             rig.PlaceHook(tip, direction, across);
             centre[centre.Count - 1] = rig.RopeEntry;
             Build();
@@ -228,6 +232,8 @@ namespace SomethingDownThere
             for (int i = 1; i < count; i++) lengths.Add(lengths[i - 1] + Vector3.Distance(centre[i - 1], centre[i]));
             float total = Mathf.Max(lengths[count - 1], .0001f);
             Vector3 top = rig.SheaveSpread, bottom = rig.EntrySpread;
+            // Each fall enters the block on its own side: a block turned the other way round swaps entries.
+            if (count > 2 && Vector3.Dot(sides[count - 2], bottom) < 0) bottom = -bottom;
             float radius = rig.StrandRadius;
             float ground = terrain != null ? terrain.SurfaceHeight : float.NegativeInfinity;
             spacings.Clear();

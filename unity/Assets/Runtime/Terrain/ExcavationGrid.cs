@@ -35,8 +35,18 @@ namespace SomethingDownThere
         private float bankDepth;
         // The seeded ground's rooms, pits and odd spots; sealed rooms' air is part of untouched ground.
         public TerrainGround.GroundLayout Layout { get; private set; } = TerrainGround.GroundLayout.Empty;
-        // Ground Lab air boxes (grid-local metres), carved on every reset; null for the site.
-        private List<(Vector3 min, Vector3 max)> labCavities;
+        // A developer lab's air (grid-local metres), carved on every reset like a sealed room's: boxes
+        // (Ground Lab hollows) and round-ended tubes (its crane scenes' pits, shafts and tunnels). Null for the site.
+        public readonly struct LabCarve
+        {
+            public readonly Vector3 A, B;
+            public readonly float Radius;
+            private LabCarve(Vector3 a, Vector3 b, float radius) { A = a; B = b; Radius = radius; }
+            public bool IsBox => Radius < 0;
+            public static LabCarve Box(Vector3 min, Vector3 max) => new LabCarve(min, max, -1);
+            public static LabCarve Tube(Vector3 a, Vector3 b, float radius) => new LabCarve(a, b, radius);
+        }
+        private List<LabCarve> labCarves;
         public TerrainGround.Room[] Rooms => Layout.Rooms;
         public Vector3Int Size { get; }
         public float CellSize { get; }
@@ -116,7 +126,7 @@ namespace SomethingDownThere
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
             foreach (var room in Layout.Rooms) CarveRoom(room);
-            if (labCavities != null) foreach (var (min, max) in labCavities) CarveBox(min, max);
+            if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
             LastDetachedSamples = LastSupportVisitedSamples = 0;
@@ -134,21 +144,44 @@ namespace SomethingDownThere
         {
             materials = GroundLab.Materials(Size, CellSize);
             Layout = TerrainGround.GroundLayout.Empty;
-            labCavities = GroundLab.Cavities(Size, CellSize);
+            labCarves = GroundLab.Cavities(Size, CellSize);
             Reset();
         }
 
-        private void CarveBox(Vector3 min, Vector3 max)
+        // Grid-local bounds of a lab's carved air, so its chunks get geometry before anyone digs there.
+        public IEnumerable<(Vector3 min, Vector3 max)> LabBounds()
         {
-            Vector3 centre = (min + max) * .5f, half = (max - min) * .5f;
+            if (labCarves == null) yield break;
+            foreach (var carve in labCarves)
+                yield return carve.IsBox ? (carve.A, carve.B)
+                    : (Vector3.Min(carve.A, carve.B) - Vector3.one * carve.Radius, Vector3.Max(carve.A, carve.B) + Vector3.one * carve.Radius);
+        }
+
+        // A smooth signed-distance box or tube of air.
+        private void Carve(LabCarve carve)
+        {
+            Vector3 min = carve.IsBox ? carve.A : Vector3.Min(carve.A, carve.B) - Vector3.one * carve.Radius;
+            Vector3 max = carve.IsBox ? carve.B : Vector3.Max(carve.A, carve.B) + Vector3.one * carve.Radius;
+            Vector3 centre = (min + max) * .5f, half = (max - min) * .5f, axis = carve.B - carve.A;
+            float length = axis.sqrMagnitude;
             Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt(min / CellSize) - Vector3Int.one);
             Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt(max / CellSize) + Vector3Int.one);
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
             for (int x = first.x; x <= last.x; x++)
             {
-                var d = new Vector3(Mathf.Abs(x * CellSize - centre.x), Mathf.Abs(y * CellSize - centre.y), Mathf.Abs(z * CellSize - centre.z)) - half;
-                float outside = Vector3.Max(d, Vector3.zero).magnitude + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                var p = new Vector3(x, y, z) * CellSize;
+                float outside;
+                if (carve.IsBox)
+                {
+                    var d = new Vector3(Mathf.Abs(p.x - centre.x), Mathf.Abs(p.y - centre.y), Mathf.Abs(p.z - centre.z)) - half;
+                    outside = Vector3.Max(d, Vector3.zero).magnitude + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                }
+                else
+                {
+                    float t = length > 0 ? Mathf.Clamp01(Vector3.Dot(p - carve.A, axis) / length) : 0;
+                    outside = Vector3.Distance(p, carve.A + axis * t) - carve.Radius;
+                }
                 if (outside >= band) continue;
                 int index = x + y * strideY + z * strideZ;
                 density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));

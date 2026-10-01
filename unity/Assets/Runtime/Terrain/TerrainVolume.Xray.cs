@@ -118,7 +118,7 @@ namespace SomethingDownThere
             XrayEnabled = enabled;
             if (enabled && xrayMaterial == null && soilMaterial != null)
             {
-                xrayMaterial = new Material(soilMaterial) { name = "Transparent excavation ground", hideFlags = HideFlags.DontSave };
+                xrayMaterial = new Material(BaseSoilMaterial) { name = "Transparent excavation ground", hideFlags = HideFlags.DontSave };
                 xrayMaterial.SetFloat("_GroundOpacity", .12f);
                 xrayMaterial.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
                 xrayMaterial.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);

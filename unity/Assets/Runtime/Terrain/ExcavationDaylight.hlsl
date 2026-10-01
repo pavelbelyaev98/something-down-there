@@ -3,7 +3,7 @@
         TEXTURE3D(_ExcavationDaylight); SAMPLER(sampler_ExcavationDaylight);
         float4x4 _ExcavationDaylightWorldToLocal;
         float3 _ExcavationDaylightSize, _ExcavationDaylightExtent;
-        float _ExcavationDaylightEnabled, _ExcavationBounce;
+        float _ExcavationDaylightEnabled;
 
         half ExcavationAmbient(float3 position, half3 normal)
         {

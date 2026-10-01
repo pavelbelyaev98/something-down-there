@@ -273,6 +273,7 @@ namespace SomethingDownThere
                 var comfort = Button(pauseActions, "Settings", player.ShowSettings);
                 if (player.Persistence != null && player.Persistence.State == WorldSaveState.Lab)
                 {
+                    Button(pauseActions, "Restart Ground Lab", player.Persistence.RestartGroundLab);
                     Button(pauseActions, "Leave Ground Lab", player.Persistence.LeaveGroundLab);
                     Button(pauseActions, "Quit", player.Persistence.RequestExit, true, "quiet");
                 }
@@ -624,6 +625,8 @@ namespace SomethingDownThere
             Button(grid, "X-ray: " + (player.AdminXray ? "ON" : "OFF"), player.ToggleAdminXray, player.Discoveries != null);
             Button(grid, "Ground X-ray: " + (player.AdminGroundXray ? "ON" : "OFF"), player.ToggleAdminGroundXray);
             Button(grid, "Detector: " + (player.DetectorShown ? "ON" : "OFF"), player.ToggleAdminDetector);
+            Button(grid, "Shaft dust: " + (player.ShaftDust ? "ON" : "OFF"), player.ToggleAdminShaftDust);
+            Button(grid, "Soil look: " + player.AdminSoilLookLabel, player.CycleAdminSoilLook);
             Button(grid, "Add $500", player.GrantAdminMoney);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);
             Button(actions, "Resume digging", player.CloseMenu, true, "primary");
@@ -668,8 +671,9 @@ namespace SomethingDownThere
             if (save.State == WorldSaveState.Lab)
             {
                 title.text = "Ground Lab";
-                Text(scroll, "Body", "Every ground in its own bay, plus mixes. Aim at a bay to read it. Nothing here is saved.", "body");
+                Text(scroll, "Body", "Every ground in its own bay, plus mixes, and six holes around them with computers ready for the crane. Aim at a bay or hole to read it. Nothing here is saved.", "body");
                 Button(actions, "Start digging", player.CloseMenu, true, "primary");
+                Button(actions, "Restart Ground Lab", save.RestartGroundLab);
                 Button(actions, "Leave Ground Lab", save.LeaveGroundLab);
                 return;
             }

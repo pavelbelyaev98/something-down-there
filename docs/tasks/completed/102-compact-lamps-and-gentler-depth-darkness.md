@@ -1,6 +1,6 @@
 # 102 — Compact Lamps, Place-Anywhere, Bought Lamps & Depth Darkness
 
-A hand-sized work lamp places wherever the player aims (only an empty kit refuses) and lights a wide area with a per-light near-brightness cap; New Game gives a few lamps and the computer sells more one at a time, with no lamp upgrade track and only the nearest eight lamps shining. Underground daylight tallies descent and sideways travel along the dug route, plus sky light scattered down it: a shaft or walked ramp fades naturally from the first metres (dim by about 10 m, lamps from about 12-15 m, dark by about 20 m), a side tunnel darkens from its first metres at any depth, fresh cuts are lit at once, and the surface is untouched.
+A hand-sized work lamp places wherever the player aims (only an empty kit refuses) and lights a wide area with a per-light near-brightness cap; New Game gives a few lamps and the computer sells more one at a time, with no lamp upgrade track and only the nearest eight lamps shining. Underground daylight tallies descent and sideways travel along the dug route (sun and sky only, no fill inside holes): a shaft or walked ramp fades naturally from the first metres (dim by about 10 m, lamps from about 12-15 m, dark by about 20 m), a side tunnel darkens from its first metres at any depth, fresh cuts are lit at once, and the surface is untouched.
 
 ## Objective
 User request (2026-09-29): the placed work lamp is too big, its preview often turns red and refuses
@@ -189,3 +189,29 @@ first zone; below it lamps are the only light), 03 §7 and 06 §4 (starter lamps
   room; ground shadow edges into a side branch remain. Finds therefore never shadow lamp light.
 - Removed the per-stroke chips and dust (`TerrainVolume.EmitStroke`); pour, crack-break and break-in
   debris stay. Queue entry `031` updated.
+
+## Iteration: light hole walls (user, 2026-10-01)
+
+- Feedback (screenshot looking down a ~2.5 m hole): the floor is light, the walls very dark; make
+  them light. Measured: route daylight on the walls was ~1.0, SSAO made little difference; the sun is
+  overhead, so walls get no direct sun, and the scattered light gave walls half the floor's share and
+  faded to zero over the top 0.5-2 m, so the band under the rim got none.
+- `ExcavationBounce` now stands for sky light plus sunlight thrown back off the lit floor and walls:
+  floors 1, walls 0.8, overhangs 0 (falling linearly for downward faces). The open surface is
+  unchanged. The hole now reads lighter than the darker plot surface around it.
+- Rejected: keeping the old 0.5-2 m fade for upward faces only (smoothstep on the normal's up
+  component) while walls took the light from 0.15 m down. The facing used the normal-mapped normal, so
+  around the lip the fade flipped from triangle to triangle: jagged light and dark teeth along the rim
+  (user screenshot). The fade is now by depth alone, smoothstep over 0.03-0.3 m, for every face.
+
+## Iteration: no fill light in holes (user, 2026-10-01)
+
+- Feedback (screenshots of a wide pit and a deep shaft in the Ground Lab): the same ground looked like
+  two different textures, the wider hole glowing; "I do not want extra light when the hole is wider,
+  it looks way too artificial... make it more natural and simpler."
+- `ExcavationBounce` (and `ExcavationDaylight.Bounce`) is removed from the ground, adapted finds and soil
+  debris: dug ground gets only sun and sky, scaled by the route's daylight, like the surface. A live
+  A/B (bounce 3 vs 0) from the user's viewpoint: without it the pit reads as the field's ground and the
+  deep shaft darkens naturally. Rejected: both the original floor fill (0.5-2 m fade) and the wall fill
+  above. Deep shafts are darker than the 102 tuning assumed; the daylight curve is unchanged pending
+  the user's playtest.

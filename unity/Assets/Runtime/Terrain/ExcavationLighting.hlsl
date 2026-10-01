@@ -13,21 +13,6 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 #include "ExcavationDaylight.hlsl"
 
-// Sky light scattered down the open route. It arrives from above: floors and upward faces
-// catch it, walls get about half, overhangs none, so a shaft keeps a natural top-down gradient
-// instead of an even fill. Zero at the surface and faded in over the first metres. It is scaled
-// by the route's daylight here and again through occlusion, so it dies out faster than direct
-// daylight and never reaches sealed rooms.
-half3 ExcavationBounce(float3 positionWS, half3 normalWS)
-{
-    if (_ExcavationDaylightEnabled < 0.5) return 0;
-    float3 p = mul(_ExcavationDaylightWorldToLocal, float4(positionWS, 1)).xyz;
-    if (p.x < 0 || p.z < 0 || p.x > _ExcavationDaylightExtent.x || p.z > _ExcavationDaylightExtent.z) return 0;
-    half below = saturate((_ExcavationDaylightExtent.y - p.y - 0.5) / 1.5);
-    half facing = saturate(0.5 + 0.5 * normalWS.y);
-    return SampleSH(half3(0, 1, 0)) * (_ExcavationBounce * below * facing * ExcavationAmbient(positionWS, normalWS));
-}
-
 Light ExcavationMainLight(InputData inputData, half4 shadowMask, AmbientOcclusionFactor aoFactor)
 {
     Light light = GetMainLight(inputData, shadowMask, aoFactor);

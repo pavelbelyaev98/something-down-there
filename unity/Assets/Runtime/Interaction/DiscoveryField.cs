@@ -34,6 +34,10 @@ namespace SomethingDownThere
         private readonly List<BuriedFind> finds = new List<BuriedFind>();
         private bool initialized;
         private bool generationDeferred;
+        // Ground Lab: computers set down at camp clear away after this long, keeping the crane's spots free.
+        private const float LabStoredSeconds = 5;
+        private bool clearsStored;
+        private readonly Dictionary<BuriedFind, float> storedSince = new Dictionary<BuriedFind, float>();
         private Camera xrayCamera;
         private readonly Collider[] changedFinds = new Collider[256];
         public IReadOnlyList<BuriedFind> Finds => finds;
@@ -136,6 +140,46 @@ namespace SomethingDownThere
         private void LateUpdate()
         {
             if (xrayCamera != null) UpdateXrayVisibility();
+            if (clearsStored) ClearStored();
+        }
+
+        // Developer Ground Lab: its crane scenes' computers and wall rocks instead of the site's population.
+        // Nothing is saved.
+        public void UseGroundLab()
+        {
+            foreach (var find in finds) { find.gameObject.SetActive(false); Destroy(find.gameObject); }
+            finds.Clear();
+            var computers = Array.FindAll(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Unique);
+            var rock = Array.Find(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Common);
+            int computer = 0;
+            foreach (var (isComputer, position, rotation) in GroundLab.CraneFinds())
+            {
+                var source = isComputer ? computers[computer++ % computers.Length].Prefab : rock.Prefab;
+                var find = Instantiate(source, position, rotation, transform);
+                find.Initialize(terrain, $"ground-lab-{finds.Count:D2}", this);
+                find.name = find.Item.DisplayName + " (lab " + finds.Count + ")";
+                finds.Add(find);
+            }
+            foreach (var find in finds) find.RefreshExposure();
+            clearsStored = true;
+            initialized = true;
+            PopulationRevision++;
+        }
+
+        private void ClearStored()
+        {
+            for (int i = finds.Count - 1; i >= 0; i--)
+            {
+                var find = finds[i];
+                if (find.State != FindState.Stored) continue;
+                if (!storedSince.TryGetValue(find, out float since)) { storedSince[find] = Time.time; continue; }
+                if (Time.time - since < LabStoredSeconds) continue;
+                storedSince.Remove(find);
+                finds.RemoveAt(i);
+                find.gameObject.SetActive(false);
+                Destroy(find.gameObject);
+                PopulationRevision++;
+            }
         }
 
         private void UpdateXrayVisibility()

@@ -323,9 +323,9 @@ Sealed rooms keep that moment without cave networks.
 - **Sky light reaches down open shafts** and fades with depth.
 - **Daylight reach:** daylight fades from the first metres, as it would down a real shaft:
   noticeably dimmer by 5 m, dim but readable at 10 m, lamps wanted from about 12-15 m, dark by
-  about 20 m. Light scattered down the route comes from above: floors catch it, walls less,
-  overhangs none. A walked ramp darkens almost like a shaft; the first underground work area never
-  needs a lamp.
+  about 20 m. Only the sun and the sky light the dug ground, the same as the surface, so a hole
+  reads as the same ground as the field around it; there is no added fill light inside holes.
+  A walked ramp darkens almost like a shaft; the first underground work area never needs a lamp.
 - **Sideways travel loses daylight at once.** Brightness follows the open route from the
   surface: going down costs little until the dark depth, but every metre dug sideways (or back
   up) dims it, like light turning a corner. A side tunnel is clearly darker a few metres in and

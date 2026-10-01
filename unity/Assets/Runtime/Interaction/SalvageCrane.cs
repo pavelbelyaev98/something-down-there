@@ -120,6 +120,7 @@ namespace SomethingDownThere
             if (player == null || !player.GameplayActive || terrain == null || terrain.IsRestoring) SuspendLoad();
             DrawAttachedRope();
             EmitDueDebris();
+            UpdateExcavationEffects();
         }
         private void LateUpdate()
         {

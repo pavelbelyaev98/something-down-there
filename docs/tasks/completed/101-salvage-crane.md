@@ -405,3 +405,59 @@ down your own route, drags the computer out through the dirt, and the crane sets
   - about 40% more of everything at full machine drive, and bigger clods.
 - The first palette was saturated orange next to the soil; it now follows the soil texture, a little
   darker for its ambient occlusion.
+
+## Iteration: shaft dust and rupture tell A/B (user, 2026-10-01)
+
+- Asked to build the shaft dust with an admin ON/OFF switch, and variants of a tell before a rupture,
+  each switchable in the admin panel to compare. Both are session flags on `FpsPlayer` (Developer admin
+  **Shaft dust**, **Rupture tell**; Restore normal rules resets them); the crane reads them.
+- Shaft dust (default on): every break adds to a dust load (capped, 7 s settling time constant); while
+  it lasts, faint motes (pale soil dust, 6-10 s, slow upward drift with noise) spawn along the route
+  from the last break up to where it leaves the ground and 0.6 m above, thickest at the break. The
+  first version spawned along the whole route, which runs 3 m above ground to the hoist: motes hung in
+  the air; it now stops at the mouth. Dark dust was invisible against the shaft walls and pale ground,
+  so it is paler than the break's dust and alpha 0.1-0.2. `SoilBreak.shader` dust now fades softly where
+  it meets the ground (scene depth) and scatters sunlight forward, glowing when seen toward the sun.
+- Rupture tell (default off, since concept 09 still says debris only appears when ground is removed):
+  strain is tracked while a stalled load presses on soil that opposes the pull (opposition > 0.2; finds
+  and lamps never count): 0.75 from the rope's wind-up (pull 0.05-0.22 m) plus 0.25 from jam pressure,
+  after an 0.08 s gate; a contact dropping out for a step decays it instead of resetting. Dribble:
+  crumbs from the soil face around the contact, up to 45/s, with dust wisps above half strain. Cracks:
+  5-7 jagged branches (a few fork) projected onto the soil by density search along the contact normal,
+  revealed outward and widening with strain; a break removes them at once, a load that slips free fades
+  them. Measured on the Reservoir Computer tunnel haul: jams last at most about 0.3 s (the drive breaks
+  through quickly), so the tell is a short warning; a 0.15 s gate made it nearly invisible. The first
+  cracks (3 cm, quarter-dark) read as grey twigs; they are now 5 cm and near black.
+
+## Iteration: debris that does not linger (user, 2026-10-01)
+
+- Feedback: dust and dribble look good as they appear but not as they stay; the dust did not behave
+  like dust and should go sooner; clods sat on the ground for a second and then vanished.
+- Landed clods no longer rest and sink (the settling particle system is gone): each crumbles where its
+  flight meets the ground (floor, wall or ceiling) into a few crumbs bouncing off the surface's density
+  gradient, plus a small puff for bigger clods, and is gone.
+- Crumbs (spray, trickle, crumble, dribble) live until their arc meets the ground (the same density
+  march, at the crumbs' 0.85 gravity) and vanish into it; only crumbs still airborne fade, at the end.
+- Dust has air drag (limit-velocity drag 4): a puff bursts out, stops and thins within 0.7-1.4 s (was
+  1.3-2.6 s drifting with the load). Shaft dust settles with a 2.5 s time constant (was 7 s), its motes
+  live 2-3.5 s (was 6-10 s) and barely rise. Dribble wisps live 0.6-1 s. The trickle ends within 0.5 s.
+- Feedback (screenshot of a shallow hole): a dust blob hung artificially above the hole. Shaft dust
+  spawned up to 0.6 m above the mouth with 1.6x motes there; it now spawns only along the route below
+  the mouth, at least 0.6 m under the surface (none at all for a load that close to the top).
+
+## Iteration: crossed falls and the rupture tell's visibility (user, 2026-10-01)
+
+- Feedback (screenshot): sometimes the two falls crossed just above the block. The falls follow the
+  cable's transported frame but end at the block's real entries, and the block turns toward that frame
+  with a lag; a frame that flipped round left the block half a turn behind, so each fall ran to the
+  opposite entry. The block's entries are alike: it now turns toward whichever of the frame's two
+  directions is nearer (never more than a quarter turn), and each fall enters on its own side.
+- Feedback: no visible difference between the rupture tell variants. A stepped recording (1/30 s per
+  frame, bent-tunnel scene, dribble + cracks) showed the cracks for one to three frames before the soil
+  gave way and the computer surged: the jams this crane breaks last about 0.1-0.3 s, so the tell barely
+  exists on screen; dribble crumbs are tiny at a few metres.
+- Decision (user): drop the rupture tell and keep the break particles; it may be revisited later. The
+  tell (strain tracking in `SalvageCrane.Contacts`, the dribble and the projected crack meshes in
+  `SalvageCrane.Feedback`, the admin switch) is removed; concept 09's rule stands (debris only when
+  ground is actually removed). If it returns, it needs jams long enough to be seen (or a bolder cue):
+  measured jams here last 0.1-0.3 s.

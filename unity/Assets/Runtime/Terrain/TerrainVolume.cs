@@ -21,6 +21,7 @@ namespace SomethingDownThere
         // catalog by the discovery sync; the seeded ground shapes unlike-zone lenses around them.
         [SerializeField] private Vector4[] oddSpots = Array.Empty<Vector4>();
         [SerializeField] private Material soilMaterial;
+        [SerializeField] private SoilLooks soilLooks;
         [SerializeField] private GameObject untouchedPreview;
 
         private sealed class Chunk
@@ -39,8 +40,14 @@ namespace SomethingDownThere
         private Transform chunkRoot;
         private Material xrayMaterial;
         public bool XrayEnabled { get; private set; }
+        // Developer admin soil look (0 = the authored ground): a session copy of the ground material.
+        private Material lookMaterial;
+        public int SoilLook { get; private set; }
+        public int SoilLookCount => 1 + (soilLooks != null ? soilLooks.Looks.Length : 0);
+        public string SoilLookName => SoilLook == 0 ? (soilLooks != null ? soilLooks.AuthoredName : "authored") : soilLooks.Looks[SoilLook - 1].Name;
 
-        private Material CurrentSoilMaterial => XrayEnabled && xrayMaterial != null ? xrayMaterial : soilMaterial;
+        private Material BaseSoilMaterial => lookMaterial != null ? lookMaterial : soilMaterial;
+        private Material CurrentSoilMaterial => XrayEnabled && xrayMaterial != null ? xrayMaterial : BaseSoilMaterial;
         public Vector3Int Dimensions => dimensions;
         public float CellSize => cellSize;
         public float RemovedVolume => grid?.RemovedVolume ?? 0;
@@ -121,7 +128,7 @@ namespace SomethingDownThere
             for (int z = 0; z < dimensions.z; z += chunkSize)
             for (int x = 0; x < dimensions.x; x += chunkSize)
                 Refresh(new Vector3Int(x / chunkSize, surfaceLayer, z / chunkSize));
-            MaterializeRooms();
+            MaterializeSeededAir();
         }
 
         public bool IsSolid(Vector3 worldPoint) => grid != null && grid.IsSolid(transform.InverseTransformPoint(worldPoint));
@@ -348,6 +355,7 @@ namespace SomethingDownThere
             // Reset returns the volume to untouched soil: interior chunks a previous hole
             // materialized hold empty meshes and would only be reused by another deep dig.
             foreach (var key in released) Release(key);
+            MaterializeSeededAir();
             LastRebuiltChunkCount = 0;
             LastDigMilliseconds = 0;
             NotifyChanged(new BoundsInt(Vector3Int.zero, dimensions));
@@ -443,6 +451,34 @@ namespace SomethingDownThere
                 if (Application.isPlaying) Destroy(chunk.Mesh); else DestroyImmediate(chunk.Mesh);
             chunks.Clear();
             if (xrayMaterial != null) Destroy(xrayMaterial);
+            if (lookMaterial != null) Destroy(lookMaterial);
+        }
+
+        public void SetSoilLook(int index)
+        {
+            if (soilMaterial == null) return;
+            index = (index % SoilLookCount + SoilLookCount) % SoilLookCount;
+            if (index == SoilLook) return;
+            SoilLook = index;
+            if (lookMaterial != null) { Destroy(lookMaterial); lookMaterial = null; }
+            if (index > 0)
+            {
+                var look = soilLooks.Looks[index - 1];
+                lookMaterial = new Material(soilMaterial) { name = soilMaterial.name + " (" + look.Name + ")", hideFlags = HideFlags.DontSave };
+                lookMaterial.SetTexture("_SoilAlbedo", look.Albedo);
+                lookMaterial.SetTexture("_SoilNormal", look.Normal);
+                lookMaterial.SetTexture("_SoilRoughness", look.Mask);
+                lookMaterial.SetFloat("_MaskLayout", look.TerrainLayerMask ? 1 : 0);
+                // Colour properties are linearised for the shader.
+                lookMaterial.SetColor("_SoilTint", look.Tint.gamma);
+                lookMaterial.SetFloat("_SoilTileMetres", look.TileMetres);
+                lookMaterial.SetFloat("_NormalStrength", look.NormalStrength);
+                lookMaterial.SetFloat("_StoneNormalStrength", look.StoneNormalStrength);
+            }
+            // The x-ray copy follows the look; it is rebuilt from it when next shown.
+            if (xrayMaterial != null) { Destroy(xrayMaterial); xrayMaterial = null; }
+            if (XrayEnabled) { XrayEnabled = false; ApplyXrayMaterial(); }
+            else foreach (var chunk in chunks.Values) chunk.Renderer.sharedMaterial = CurrentSoilMaterial;
         }
     }
 }
