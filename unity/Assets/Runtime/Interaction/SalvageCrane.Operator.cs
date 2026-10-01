@@ -6,106 +6,144 @@ namespace SomethingDownThere
     // full lever while far off and easing off early enough for the crane's own inertia and drag.
     public sealed partial class SalvageCrane
     {
-        // The hook tip is "over" a point within this many metres while swinging slower than this (m/s):
-        // loosely to enter a hole, closely to set a load down on its spot.
-        private const float Alignment = .15f, SettledSpeed = .2f, SpotAlignment = .06f, SpotSettledSpeed = .1f;
+        // The crane is aligned with the hole once its trolley holds within this many metres of the park
+        // point over the mouth, moving slower than this (m/s). The hook's own swing does not matter: from
+        // there the hook is the smart rope's end and goes straight down.
+        private const float TrolleyAlignment = .25f, TrolleySettledSpeed = .3f;
+        // Over a set-down spot: the hook's seat within this many metres and slower than this (m/s), the
+        // load swinging slower than LoadSettledSpeed.
+        private const float SpotAlignment = .1f, SpotSettledSpeed = .15f, LoadSettledSpeed = .4f;
         // Close enough to the set-down spot to start lowering; the load still settles a metre up first.
         private const float Approach = .3f;
+        // With a load on the hook the hoist moves it like an operator would: at most LoadHoistSpeed (m/s),
+        // TouchdownSpeed for the last metre onto the ground, speeding up and slowing down at
+        // LoadHoistAcceleration (m/s^2) instead of starting and stopping dead.
+        private const float LoadHoistSpeed = 1.5f, TouchdownSpeed = .6f, LoadHoistAcceleration = 1.5f;
+        // A load moving slower than RestSpeed (m/s) and RestSpin (rad/s) for RestSeconds has come to rest,
+        // or after SettleSeconds at most.
+        private const float RestSpeed = .05f, RestSpin = .1f, RestSeconds = .5f, SettleSeconds = 8f;
+        private float restSeconds, hoistRate;
 
         private void Park() => rig.Step(0, 0, Hoist(restRope), 0);
 
-        // Over toward a find before its route is known: the hook at park height above it.
+        // Over toward a find before its route is known.
         private void HeadFor(Vector3 point)
         {
             Vector3 park = ParkPoint(point);
-            Steer(park, rig.RopeFor(park.y));
+            Steer(park, HoldRope(park));
         }
-
-        // The hook over the hole mouth at park height.
-        private void HoldHook() => Steer(Anchor, rig.RopeFor(Anchor.y));
 
         // The trolley held over the hole while the hook is off the hoist on the smart rope.
         private void HoldOver() => Steer(Anchor, rig.Rope);
 
+        // While the crane swings round, the hook keeps its height (never lower than where the ride would
+        // start below the park point).
+        private float HoldRope(Vector3 park) => Mathf.Min(rig.Rope, rig.RopeForSeat(park.y - rig.HookLength));
+
+        private bool Aligned(Vector3 point) => Horizontal(rig.Trolley - point).magnitude < TrolleyAlignment
+            && Horizontal(rig.TrolleyVelocity).magnitude < TrolleySettledSpeed;
+
         private void Operate(float dt)
         {
             job.PhaseSeconds = Mathf.Min(60, job.PhaseSeconds + dt);
-            float ground = terrain.SurfaceHeight, travel = ground + travelClearance;
+            float travel = terrain.SurfaceHeight + travelClearance + Hanging;
             switch (job.Phase)
             {
                 case ExtractionPhase.Reaching:
-                    // Swing over the hole mouth, the hook dropping to park height on the way.
-                    HoldHook();
-                    if (Over(Anchor)) SetPhase(ExtractionPhase.Lowering);
+                    // Swing over the hole mouth, the hook keeping its height; as soon as the crane is
+                    // aligned the hook is the smart rope's end and goes straight on down from where it is.
+                    Steer(Anchor, HoldRope(Anchor));
                     Revision++;
-                    return;
-                case ExtractionPhase.Lowering:
-                {
-                    // Straight down the shaft on the crane's cable, entering the ground only while the hook
-                    // hangs over the mouth; then the hook leaves the hoist to ride the smart rope's end.
-                    Vector3 drop = terrain.transform.TransformPoint(ExtractionSnapshot.Point(job.Route, DropDistance, out _));
-                    bool clear = rig.Tip.y < ground || Over(Anchor);
-                    Steer(Anchor, rig.RopeFor(clear ? drop.y : Mathf.Max(drop.y, ground + .5f)));
-                    if (Mathf.Abs(rig.Rope - rig.RopeFor(drop.y)) < .01f)
+                    if (Aligned(Anchor))
                     {
                         rig.ReleaseHook();
-                        ropeView.Carry(rig.Seat, Vector3.up, 0, true);
+                        ropeView.Carry(rig.Seat, Vector3.up, true);
                         SetPhase(ExtractionPhase.Deploying);
+                        job.Progress = Mathf.Min(rig.HookLength, ExtractionSnapshot.Length(job.Route));
+                        rideSpeed = 0;
+                        BeginDescent();
                     }
-                    Revision++;
                     return;
-                }
                 case ExtractionPhase.Lifting:
                 {
-                    // Straight up from the hole mouth until the load's underside is at travel height.
-                    float rope = rig.RopeForSeat(travel + BelowGrab());
-                    Steer(Anchor, rope);
+                    // Straight up from the hole mouth until the hanging load clears travel height.
+                    float rope = rig.RopeForSeat(travel);
+                    Steer(Anchor, rope, EasedHoist(rope, LoadHoistSpeed, dt));
                     if (Mathf.Abs(rig.Rope - rope) < .05f) SetPhase(ExtractionPhase.Carrying);
                     break;
                 }
                 case ExtractionPhase.Carrying:
                 {
-                    Vector3 aim = SpotAim(Spot(job.Spot));
-                    Steer(aim, rig.RopeForSeat(travel + BelowGrab()));
-                    if (Horizontal(rig.Seat - aim).magnitude < Approach && Straight) SetPhase(ExtractionPhase.SettingDown);
+                    Vector3 spot = Spot(job.Spot);
+                    float rope = rig.RopeForSeat(travel);
+                    Steer(spot, rope, EasedHoist(rope, LoadHoistSpeed, dt));
+                    if (Horizontal(rig.Seat - spot).magnitude < Approach) SetPhase(ExtractionPhase.SettingDown);
                     break;
                 }
                 case ExtractionPhase.SettingDown:
                 {
-                    // Hold a metre up until the load hangs still over its spot, then lower it onto the ground
-                    // and let go once the hook has come to rest there.
-                    Vector3 spot = Spot(job.Spot), aim = SpotAim(spot);
-                    float touch = spot.y + BelowGrab() + .01f, rest = rig.RopeForSeat(touch);
-                    // Already on the way down from the hold height (not merely level with it).
-                    bool low = rig.Rope > rig.RopeForSeat(touch + 1) + .05f;
-                    Steer(aim, low || Over(aim, SpotAlignment, SpotSettledSpeed, true) ? rest : rig.RopeForSeat(touch + 1));
-                    if (Mathf.Abs(rig.Rope - rest) < .01f && Mathf.Abs(rig.Seat.y - touch) < .01f && Mathf.Abs(rig.TipVelocity.y) < .05f)
-                    {
-                        Follow(0); Ground(spot.y); Deliver();
-                        return;
-                    }
-                    break;
+                    // Ease down to a metre up and hold until the hook and its load hang still over the spot,
+                    // then lower it slowly and let go as soon as the ground takes its weight: it lands as it
+                    // hangs, never pushed into the ground.
+                    Vector3 spot = Spot(job.Spot);
+                    float hold = rig.RopeForSeat(spot.y + Hanging + 1), bottom = rig.RopeForSeat(spot.y);
+                    bool lowering = rig.Rope > hold + .05f
+                        || Mathf.Abs(rig.Rope - hold) < .05f && Over(spot, SpotAlignment, SpotSettledSpeed, true)
+                            && LoadBody.linearVelocity.magnitude < LoadSettledSpeed;
+                    float rope = lowering ? bottom : hold;
+                    Steer(spot, rope, EasedHoist(rope, lowering ? TouchdownSpeed : LoadHoistSpeed, dt));
+                    Hang(dt);
+                    // Let go the moment it rests on the ground (read every step, so an earlier brush
+                    // cannot count); a hole under the spot never takes the weight: let go at the bottom.
+                    bool grounded = Grounded;
+                    if (lowering && (grounded || Mathf.Abs(rig.Rope - bottom) < .01f)) { LetGo(); SetPhase(ExtractionPhase.Settling); }
+                    Revision++;
+                    return;
+                }
+                case ExtractionPhase.Settling:
+                {
+                    // The hook hoists clear while the load settles wherever it landed; there it stays.
+                    Park();
+                    Wake();
+                    var body = LoadBody;
+                    restSeconds = body.linearVelocity.magnitude < RestSpeed && body.angularVelocity.magnitude < RestSpin ? restSeconds + dt : 0;
+                    Revision++;
+                    if (restSeconds >= RestSeconds || job.PhaseSeconds >= SettleSeconds) Deliver();
+                    return;
                 }
             }
-            Follow(dt);
+            Hang(dt);
             Revision++;
         }
 
         private static Vector3 Horizontal(Vector3 v) { v.y = 0; return v; }
 
-        // The hook (or a load on its seat) hangs over the point and has nearly stopped swinging.
-        private bool Over(Vector3 point, float within = Alignment, float speed = SettledSpeed, bool seat = false)
+        // The hook (or its seat) hangs over the point and has nearly stopped swinging.
+        private bool Over(Vector3 point, float within, float speed, bool seat = false)
             => Horizontal((seat ? rig.Seat : rig.Tip) - point).magnitude < within && Horizontal(rig.TipVelocity).magnitude < speed;
 
         // One operator step toward the hook hanging over a point at a hoist length. The rig's anti-sway
         // assist settles the hook under the trolley, so the trolley is steered straight at the point.
-        private void Steer(Vector3 point, float rope)
+        private void Steer(Vector3 point, float rope) => Steer(point, rope, Hoist(rope));
+
+        private void Steer(Vector3 point, float rope, float hoistLever)
         {
             rig.Aim(point, out float yaw, out float reach);
             reach = Mathf.Clamp(reach, rig.MinimumReach, rig.MaximumReach);
             float slew = Lever(Mathf.DeltaAngle(rig.Yaw, yaw) * Mathf.Deg2Rad, rig.YawSpeed * Mathf.Deg2Rad, rig.SlewAcceleration, rig.SlewDrag);
             float trolley = Lever(reach - rig.Reach, rig.ReachSpeed, rig.TrolleyAcceleration, rig.TrolleyDrag);
-            rig.Step(slew, trolley, Hoist(rope), 0);
+            rig.Step(slew, trolley, hoistLever, 0);
+        }
+
+        // Hoist lever that eases a load toward a hoist length: speeding up and slowing down at the load's
+        // acceleration, never faster than `speed`, landing on the length without overshoot.
+        private float EasedHoist(float rope, float speed, float dt)
+        {
+            float error = Mathf.Clamp(rope, 0, rig.MaximumRope) - rig.Rope;
+            float wanted = Mathf.Sign(error) * Mathf.Min(speed, Mathf.Sqrt(2 * LoadHoistAcceleration * Mathf.Abs(error)), Mathf.Abs(error) / Mathf.Max(dt, .0001f));
+            hoistRate = Mathf.MoveTowards(hoistRate, wanted, LoadHoistAcceleration * dt);
+            if (Mathf.Abs(hoistRate) * dt > Mathf.Abs(error)) hoistRate = error / Mathf.Max(dt, .0001f);
+            return Mathf.Clamp(hoistRate / rig.HoistSpeed, -1, 1);
         }
 
         // Lever for a pack axis whose full lever accelerates by `acceleration` against `drag`:
@@ -120,81 +158,22 @@ namespace SomethingDownThere
         // The hoist moves a fixed length per step at full lever, so ease off to land exactly.
         private float Hoist(float rope) => Mathf.Clamp((Mathf.Clamp(rope, 0, rig.MaximumRope) - rig.Rope) / rig.HoistStep, -1, 1);
 
-        // The pack's cargo attach: the load follows the hook point, held by its lifting eye. Once the
-        // whole object is out of the ground it turns upright.
-        private void Follow(float dt, bool straighten = true)
-        {
-            var body = payload.GetComponent<FindPhysics>().Body;
-            Quaternion rotation = body.rotation;
-            if (straighten && dt > 0 && Lowest(rotation, job.GrabLocal) > terrain.SurfaceHeight + .3f)
-            {
-                rotation = Quaternion.RotateTowards(rotation, Upright(rotation), straightenDegrees * dt);
-            }
-            Vector3 seat = rig.Seat + rig.TipVelocity * dt;
-            Vector3 position = seat - rotation * Vector3.Scale(payload.transform.lossyScale, job.GrabLocal);
-            if (dt > 0) { body.MovePosition(position); body.MoveRotation(rotation); }
-            else payload.MoveRecovered(position, rotation);
-            discoveries.NotifyMotion();
-        }
-
-        // The load's lowest corner rests exactly on the ground.
-        private void Ground(float height)
-        {
-            var body = payload.GetComponent<FindPhysics>().Body;
-            float lowest = body.position.y + LowestOffset(body.rotation);
-            payload.MoveRecovered(body.position + Vector3.up * (height - lowest), body.rotation);
-        }
-
-        private bool Straight
+        // How far the load's lowest point can hang below the hook's seat, whichever way it turns: the
+        // eye's link plus the hull corner farthest from the eye.
+        private float Hanging
         {
             get
             {
-                var rotation = payload.GetComponent<FindPhysics>().Body.rotation;
-                return Quaternion.Angle(rotation, Upright(rotation)) < .5f;
+                var hull = payload.LocalHull;
+                Vector3 scale = payload.transform.lossyScale;
+                float farthest = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    var corner = new Vector3(i % 2 == 0 ? hull.min.x : hull.max.x, i / 2 % 2 == 0 ? hull.min.y : hull.max.y, i / 4 == 0 ? hull.min.z : hull.max.z);
+                    farthest = Mathf.Max(farthest, Vector3.Scale(scale, corner - job.AttachLocal).magnitude);
+                }
+                return RecoveryMarkView.HookReach + farthest;
             }
-        }
-
-        // Where the hook hangs for the upright load's centre, not its eye, to come down on the spot.
-        private Vector3 SpotAim(Vector3 spot)
-        {
-            var rotation = Upright(payload.GetComponent<FindPhysics>().Body.rotation);
-            return spot + Horizontal(rotation * Vector3.Scale(payload.transform.lossyScale, job.GrabLocal - payload.LocalHull.center));
-        }
-
-        // Same heading, standing on its authored base (catalog uniques are authored upright).
-        private static Quaternion Upright(Quaternion rotation)
-        {
-            Vector3 forward = Vector3.ProjectOnPlane(rotation * Vector3.forward, Vector3.up);
-            if (forward.sqrMagnitude < .01f) forward = Vector3.ProjectOnPlane(rotation * Vector3.down, Vector3.up);
-            return forward.sqrMagnitude < .0001f ? Quaternion.identity : Quaternion.LookRotation(forward, Vector3.up);
-        }
-
-        // How far the load's underside hangs below the hook: the upright pose it arrives in.
-        private float BelowGrab()
-        {
-            var rotation = payload.GetComponent<FindPhysics>().Body.rotation;
-            Quaternion pose = job.Phase == ExtractionPhase.Lifting ? rotation : Upright(rotation);
-            return Vector3.Dot(pose * Vector3.Scale(payload.transform.lossyScale, job.GrabLocal), Vector3.up) - LowestOffset(pose);
-        }
-
-        // World height of the hull's lowest corner for a load hanging from the hook's seat.
-        private float Lowest(Quaternion rotation, Vector3 grab)
-        {
-            Vector3 origin = rig.Seat - rotation * Vector3.Scale(payload.transform.lossyScale, grab);
-            return origin.y + LowestOffset(rotation);
-        }
-
-        private float LowestOffset(Quaternion rotation)
-        {
-            var hull = payload.LocalHull;
-            Vector3 scale = payload.transform.lossyScale;
-            float lowest = float.PositiveInfinity;
-            for (int i = 0; i < 8; i++)
-            {
-                var corner = new Vector3(i % 2 == 0 ? hull.min.x : hull.max.x, i / 2 % 2 == 0 ? hull.min.y : hull.max.y, i / 4 == 0 ? hull.min.z : hull.max.z);
-                lowest = Mathf.Min(lowest, Vector3.Dot(rotation * Vector3.Scale(scale, corner), Vector3.up));
-            }
-            return lowest;
         }
     }
 }

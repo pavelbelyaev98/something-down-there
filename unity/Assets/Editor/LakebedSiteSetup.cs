@@ -863,8 +863,8 @@ namespace SomethingDownThere.Editor
             foreach (var renderer in surface.GetComponentsInChildren<Renderer>())
             {
                 var bounds = renderer.bounds;
-                // Only what stands on the ground clears grass: not the crane's jib high overhead.
-                if (bounds.size.x <= 0 || renderer is LineRenderer || bounds.min.y > 1) continue;
+                // Only what stands on the ground clears grass: not the crane's jib high overhead or its cable.
+                if (bounds.size.x <= 0 || renderer.GetComponent<CraneRopeView>() != null || bounds.min.y > 1) continue;
                 footprints.Add(Rect.MinMaxRect(bounds.min.x - .7f, bounds.min.z - .7f, bounds.max.x + .7f, bounds.max.z + .7f));
             }
             return footprints.ToArray();

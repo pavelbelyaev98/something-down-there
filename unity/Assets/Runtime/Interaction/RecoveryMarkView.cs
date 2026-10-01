@@ -21,7 +21,7 @@ namespace SomethingDownThere
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
         private static readonly int PlacedId = Shader.PropertyToID("_Placed");
 
-        public RecoveryMarkView(Transform owner, Material material, GameObject liftingEye)
+        public RecoveryMarkView(Transform owner, Material material, GameObject liftingEye, ExcavationDaylight lighting)
         {
             root = new GameObject("Recovery surface mark", typeof(MeshFilter), typeof(MeshRenderer))
                 { layer = 2, hideFlags = HideFlags.DontSave };
@@ -43,6 +43,9 @@ namespace SomethingDownThere
             foreach (var part in eye.GetComponentsInChildren<Transform>(true)) part.gameObject.hideFlags = HideFlags.DontSave;
             eye.localScale = Vector3.one / GlyphSize;
             eye.localPosition = Vector3.back * (.012f / GlyphSize);
+            // Lit like the ground around it: underground the eye darkens with the dig instead of shining
+            // in full daylight.
+            if (lighting != null) foreach (var part in eye.GetComponentsInChildren<Renderer>(true)) lighting.Register(part);
             eye.gameObject.SetActive(false);
         }
 
@@ -68,13 +71,18 @@ namespace SomethingDownThere
             root.SetActive(true);
         }
 
-        // The eye swivels toward the hook pulling on it, never into the load.
-        public void Aim(Vector3 direction)
+        // The eye swivels toward the hook pulling on it (never into the load; a zero pull stands it
+        // upright) and turns about that so the hook's wire runs through its ring: the ring's hole runs
+        // along the eye's local Z (art/lifting-eye).
+        public void Aim(Vector3 direction, Vector3 wire)
         {
             Vector3 normal = root.transform.forward;
             if (Vector3.Dot(direction, normal) < 0) direction = Vector3.ProjectOnPlane(direction, normal);
             if (direction.sqrMagnitude < .000001f) direction = normal;
-            eye.rotation = Quaternion.FromToRotation(Vector3.up, direction.normalized);
+            direction.Normalize();
+            Vector3 across = Vector3.ProjectOnPlane(wire, direction);
+            eye.rotation = across.sqrMagnitude > .01f ? Quaternion.LookRotation(across, direction)
+                : Quaternion.FromToRotation(eye.up, direction) * eye.rotation;
         }
 
         private static Vector3 RestoreNormal(BuriedFind find, Vector3 attachment)

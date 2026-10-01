@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 15;
+        public const int Version = 16;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
@@ -56,7 +56,7 @@ namespace SomethingDownThere
                 w.Write(s.Extraction!=null);
                 if(s.Extraction!=null)
                 {
-                    var e=s.Extraction; WriteString(w,e.FindId); w.Write((byte)e.Phase); Write(w,e.AttachLocal); Write(w,e.GrabLocal); Write(w,e.Outward);
+                    var e=s.Extraction; WriteString(w,e.FindId); w.Write((byte)e.Phase); Write(w,e.AttachLocal); Write(w,e.Outward);
                     w.Write(e.Progress); w.Write(e.PhaseSeconds); w.Write(e.Attached); w.Write(e.Route.Length);
                     foreach(var point in e.Route) Write(w,point);
                     Write(w,e.LinearVelocity); Write(w,e.AngularVelocity);
@@ -132,7 +132,7 @@ namespace SomethingDownThere
             s.InventoryLevel = r.ReadInt32(); s.FuelLevel = r.ReadInt32(); s.JetpackLevel = r.ReadInt32(); s.LampsOwned = r.ReadInt32();
             if(r.ReadBoolean())
             {
-                var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r), GrabLocal=ReadVector(r),
+                var e=new ExtractionSnapshot { FindId=ReadString(r), Phase=(ExtractionPhase)r.ReadByte(), AttachLocal=ReadVector(r),
                     Outward=ReadVector(r), Progress=r.ReadSingle(), PhaseSeconds=r.ReadSingle(), Attached=r.ReadBoolean(),
                     Route=new Vector3[Count(r,ExtractionSnapshot.MaximumWaypoints)] };
                 for(int i=0;i<e.Route.Length;i++) e.Route[i]=ReadVector(r);

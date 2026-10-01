@@ -523,18 +523,18 @@ namespace SomethingDownThere.Tests
             Assert.That(wallChecked, Is.True, "A blocked haul keeps pulling and resumes automatically when free.");
             Assert.That(ropeChecked, Is.True);
             Assert.That(largestRotation, Is.GreaterThan(10f), "The marked point pulls a rotating physical load.");
-            CollectionAssert.IsSubsetOf(new[] { ExtractionPhase.Reaching, ExtractionPhase.Lowering, ExtractionPhase.Deploying, ExtractionPhase.Attaching,
-                ExtractionPhase.Hauling, ExtractionPhase.Lifting, ExtractionPhase.Carrying, ExtractionPhase.SettingDown }, phases);
+            CollectionAssert.IsSubsetOf(new[] { ExtractionPhase.Reaching, ExtractionPhase.Deploying, ExtractionPhase.Attaching,
+                ExtractionPhase.Hauling, ExtractionPhase.Lifting, ExtractionPhase.Carrying, ExtractionPhase.SettingDown, ExtractionPhase.Settling }, phases);
             Assert.That(find.State, Is.EqualTo(FindState.Stored));
             Assert.That(mark.gameObject.activeSelf, Is.False, "Completed recovery removes its mark.");
             Assert.That(terrain.Capture().RemovedVolume, Is.GreaterThan(initialVolume), "The narrow dug route is widened by the load.");
             Assert.That(player.Inventory.Count, Is.EqualTo(bagCount));
             Assert.That(player.Battery.Charge, Is.EqualTo(battery));
-            // The crane set it down upright on the first free spot beside the camp, where it stays.
+            // The crane lowered it onto the first free spot beside the camp; it settled as it landed and stays.
             Vector3 spot = winch.Spot(0), rest = find.WorldBounds.center;
-            Assert.That(new Vector2(rest.x - spot.x, rest.z - spot.z).magnitude, Is.LessThan(.2f), "Set down on the first spot at camp.");
-            Assert.That(find.WorldBounds.min.y, Is.EqualTo(spot.y).Within(.05f), "Resting on the ground.");
-            Assert.That(Vector3.Angle(find.transform.up, Vector3.up), Is.LessThan(1f), "Standing upright.");
+            // It may topple as it lands; the spot counts as taken within 1.5 m (SalvageCrane.FreeSpot).
+            Assert.That(new Vector2(rest.x - spot.x, rest.z - spot.z).magnitude, Is.LessThan(1.5f), "Set down on the first spot at camp.");
+            Assert.That(find.WorldBounds.min.y, Is.EqualTo(spot.y).Within(.1f), "Resting on the ground.");
             Assert.That(find.GetComponent<Rigidbody>().isKinematic, Is.True);
             Assert.That(find.TryInteract(player), Is.True);
             Assert.That(find.TryInteract(player), Is.True, "Inspecting again must not create a second object.");

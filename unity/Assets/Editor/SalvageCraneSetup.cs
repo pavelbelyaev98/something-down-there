@@ -13,7 +13,7 @@ namespace SomethingDownThere.Editor
     // vendor files stay untouched: the crane is a project prefab variant with URP copies of the
     // pack's materials, its controller scripts removed (TowerCraneRig drives the same rig), the
     // hook's colliders off and interpolated motion. Its straight hoist cable is stripped from the jib
-    // mesh: CraneRopeView draws the crane's one rope, which also serves as the smart rope. Rerunnable:
+    // mesh: CraneRopeView redraws its two falls, which also serve as the smart rope. Rerunnable:
     // existing material copies, the rope settings asset and SalvageCrane tuning are kept.
     public static class SalvageCraneSetup
     {
@@ -33,8 +33,6 @@ namespace SomethingDownThere.Editor
         private const float BaseSink = .25f;
         // The trolley stops this far short of the pack's physical stop colliders.
         private const float StopMargin = .3f;
-        // The crane's one rope, a little thicker than one of the pack's two cable strands.
-        private const float CableWidth = .03f;
         // The pack's speed_General, doubled, and the rig's anti-sway assist (1/s²): the crane swings over
         // briskly and its hook settles over a hole instead of swinging on its long rope.
         private const float PackSpeed = .02f, SwayStiffness = 2f;
@@ -47,7 +45,7 @@ namespace SomethingDownThere.Editor
         {
             var scene = SceneManager.GetActiveScene();
             if (EditorApplication.isPlaying || scene.path != MainGameSceneBuilder.ScenePath) throw new InvalidOperationException("Open MainGame outside Play Mode.");
-            var variant = BuildVariant();
+            var (variant, cable) = BuildVariant();
             var root = scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").transform;
             var surface = root.Find("Surface");
             var terrain = root.GetComponentInChildren<TerrainVolume>(); var field = root.GetComponentInChildren<DiscoveryField>(); var player = root.GetComponentInChildren<FpsPlayer>();
@@ -69,14 +67,18 @@ namespace SomethingDownThere.Editor
             }
             var settings = AssetDatabase.LoadAssetAtPath<SalvageRopeSettings>(Folder + "/RopeSettings.asset");
             if (settings == null) { settings = ScriptableObject.CreateInstance<SalvageRopeSettings>(); AssetDatabase.CreateAsset(settings, Folder + "/RopeSettings.asset"); }
+            // The cable's strands are rebuilt every frame from the rig; its collision radius stays in the rope settings.
             var ropeRoot = Child(station, "Rope");
+            ropeRoot.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             var view = Get<CraneRopeView>(ropeRoot.gameObject);
-            var line = Get<LineRenderer>(ropeRoot.gameObject);
-            line.useWorldSpace = true; line.sharedMaterial = CableMaterial();
-            // Its collision radius stays in the rope settings.
-            line.startWidth = line.endWidth = CableWidth; line.numCapVertices = 3; line.numCornerVertices = 2;
-            line.generateLightingData = true; line.positionCount = 0; line.enabled = false;
-            Set(view, "rope", line); Set(view, "rig", crane.GetComponent<TowerCraneRig>());
+            var strands = Get<MeshFilter>(ropeRoot.gameObject); strands.sharedMesh = null;
+            Get<MeshRenderer>(ropeRoot.gameObject).sharedMaterial = cable.Material;
+            Set(view, "strands", strands); Set(view, "rig", crane.GetComponent<TowerCraneRig>());
+            using (var look = new SerializedObject(view))
+            {
+                look.FindProperty("uvAlong").vector2Value = cable.Along; look.FindProperty("uvAround").vector2Value = cable.Around;
+                look.ApplyModifiedPropertiesWithoutUndo();
+            }
             var salvage = Get<SalvageCrane>(station.gameObject);
             Set(salvage, "terrain", terrain); Set(salvage, "discoveries", field); Set(salvage, "player", player);
             Set(salvage, "rig", crane.GetComponent<TowerCraneRig>()); Set(salvage, "markMaterial", RecoveryMark());
@@ -95,7 +97,16 @@ namespace SomethingDownThere.Editor
             Debug.Log("Salvage crane configured in MainGame.");
         }
 
-        private static GameObject BuildVariant()
+        // The pack's hoist cable as measured from its mesh: see StripCable.
+        private struct Cable
+        {
+            public Vector3 Sheave, SheaveSpread, Entry, EntrySpread;
+            public float Radius;
+            public Material Material;
+            public Vector2 Along, Around;
+        }
+
+        private static (GameObject variant, Cable cable) BuildVariant()
         {
             var vendor = AssetDatabase.LoadAssetAtPath<GameObject>(VendorPrefab);
             if (vendor == null) throw new InvalidOperationException("Missing the purchased tower crane pack: " + VendorPrefab);
@@ -134,8 +145,8 @@ namespace SomethingDownThere.Editor
                 foreach (var skin in instance.GetComponentsInChildren<SkinnedMeshRenderer>(true)) skin.updateWhenOffscreen = true;
                 foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
                     renderer.sharedMaterials = renderer.sharedMaterials.Select(UrpCopy).ToArray();
-                var (sheave, ropeEntry) = StripCable(instance, truck.transform, hook.transform);
-                Vector3 seat = HookSeat(instance, swivel.transform);
+                var cable = StripCable(instance, truck.transform, hook.transform);
+                var (seat, wire) = HookSeat(instance, swivel.transform);
                 var rig = instance.GetComponent<TowerCraneRig>() ?? instance.AddComponent<TowerCraneRig>();
                 using (var data = new SerializedObject(rig))
                 {
@@ -150,28 +161,33 @@ namespace SomethingDownThere.Editor
                     data.FindProperty("tipDrop").floatValue = tip;
                     data.FindProperty("speedGeneral").floatValue = PackSpeed;
                     data.FindProperty("swayStiffness").floatValue = SwayStiffness;
-                    data.FindProperty("sheave").vector3Value = sheave; data.FindProperty("ropeEntry").vector3Value = ropeEntry;
-                    data.FindProperty("seat").vector3Value = seat;
+                    data.FindProperty("sheave").vector3Value = cable.Sheave; data.FindProperty("sheaveSpread").vector3Value = cable.SheaveSpread;
+                    data.FindProperty("ropeEntry").vector3Value = cable.Entry; data.FindProperty("entrySpread").vector3Value = cable.EntrySpread;
+                    data.FindProperty("strandRadius").floatValue = cable.Radius;
+                    data.FindProperty("seat").vector3Value = seat; data.FindProperty("seatWire").vector3Value = wire;
                     data.ApplyModifiedPropertiesWithoutUndo();
                 }
-                return PrefabUtility.SaveAsPrefabAsset(instance, VariantPath);
+                return (PrefabUtility.SaveAsPrefabAsset(instance, VariantPath), cable);
             }
             finally { UnityEngine.Object.DestroyImmediate(instance); }
         }
 
-        // The pack's hoist cable is stretched between the trolley and hook-block bones of the jib's
-        // skinned mesh, so it can only hang straight: the variant uses a copy of the mesh without its
-        // triangles (the only ones joining those two bones). Returns the cable's top and bottom in the
-        // trolley's and the hook block's local space, where the drawn rope starts and ends.
-        private static (Vector3 sheave, Vector3 entry) StripCable(GameObject instance, Transform truck, Transform hook)
+        // The pack's hoist cable: its two falls stretched between the trolley and hook-block bones of the
+        // jib's skinned mesh, so they can only hang straight. The variant uses a copy of the mesh without
+        // their triangles (the only ones joining those two bones); CraneRopeView redraws both falls from
+        // what is measured here: where they leave the trolley's sheaves and enter the block (centres and
+        // half the spacing between them, in the trolley's and the block's local space), a strand's radius,
+        // its material and the strip of texture its UVs cover.
+        private static Cable StripCable(GameObject instance, Transform truck, Transform hook)
         {
             var skin = instance.GetComponentsInChildren<SkinnedMeshRenderer>(true).Single(s => s.bones.Contains(truck) && s.bones.Contains(hook));
             int top = Array.IndexOf(skin.bones, truck), bottom = Array.IndexOf(skin.bones, hook);
             var source = skin.sharedMesh;
-            var weights = source.boneWeights; var vertices = source.vertices; var bind = source.bindposes;
+            var weights = source.boneWeights; var vertices = source.vertices; var bind = source.bindposes; var uv = source.uv;
             var mesh = UnityEngine.Object.Instantiate(source);
             mesh.name = source.name + " without hoist cable";
             var cable = new HashSet<int>();
+            int cableSub = -1;
             for (int sub = 0; sub < source.subMeshCount; sub++)
             {
                 var triangles = source.GetTriangles(sub); var kept = new List<int>(triangles.Length);
@@ -179,37 +195,67 @@ namespace SomethingDownThere.Editor
                 {
                     bool toTop = false, toBottom = false;
                     for (int k = 0; k < 3; k++) { int bone = weights[triangles[i + k]].boneIndex0; toTop |= bone == top; toBottom |= bone == bottom; }
-                    if (toTop && toBottom) { for (int k = 0; k < 3; k++) cable.Add(triangles[i + k]); continue; }
+                    if (toTop && toBottom) { for (int k = 0; k < 3; k++) cable.Add(triangles[i + k]); cableSub = sub; continue; }
                     kept.Add(triangles[i]); kept.Add(triangles[i + 1]); kept.Add(triangles[i + 2]);
                 }
                 mesh.SetTriangles(kept, sub);
             }
-            Vector3 sheave = Vector3.zero, entry = Vector3.zero; int tops = 0, bottoms = 0;
-            foreach (int v in cable)
-            {
-                int bone = weights[v].boneIndex0;
-                if (bone == top) { sheave += bind[top].MultiplyPoint3x4(vertices[v]); tops++; }
-                else if (bone == bottom) { entry += bind[bottom].MultiplyPoint3x4(vertices[v]); bottoms++; }
-            }
-            if (tops == 0 || bottoms == 0) throw new InvalidOperationException("The tower crane rig has changed: no hoist cable between its trolley and hook.");
+            var tops = cable.Where(v => weights[v].boneIndex0 == top).ToList();
+            var bottoms = cable.Where(v => weights[v].boneIndex0 == bottom).ToList();
+            if (tops.Count == 0 || bottoms.Count == 0) throw new InvalidOperationException("The tower crane rig has changed: no hoist cable between its trolley and hook.");
+            var (topA, topB, topRadius) = Falls(tops.Select(v => bind[top].MultiplyPoint3x4(vertices[v])).Distinct().ToList());
+            var (bottomA, bottomB, bottomRadius) = Falls(bottoms.Select(v => bind[bottom].MultiplyPoint3x4(vertices[v])).Distinct().ToList());
+            // Each fall hangs straight, so its two ends are the nearer pair.
+            Vector3 upper = truck.TransformPoint(topA);
+            if (Vector3.Distance(upper, hook.TransformPoint(bottomB)) < Vector3.Distance(upper, hook.TransformPoint(bottomA))) (bottomA, bottomB) = (bottomB, bottomA);
             string path = MaterialFolder + "/" + mesh.name + ".asset";
             var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (existing == null) AssetDatabase.CreateAsset(mesh, path);
             else { EditorUtility.CopySerialized(mesh, existing); UnityEngine.Object.DestroyImmediate(mesh); mesh = existing; }
+            var material = skin.sharedMaterials[cableSub];
             skin.sharedMesh = mesh;
-            return (sheave / tops, entry / bottoms);
+            return new Cable
+            {
+                Sheave = (topA + topB) * .5f, SheaveSpread = (topA - topB) * .5f,
+                Entry = (bottomA + bottomB) * .5f, EntrySpread = (bottomA - bottomB) * .5f,
+                Radius = (topRadius + bottomRadius) * .5f, Material = material,
+                Along = new Vector2(tops.Average(v => uv[v].x), bottoms.Average(v => uv[v].x)),
+                Around = new Vector2(cable.Min(v => uv[v].y), cable.Max(v => uv[v].y))
+            };
+        }
+
+        // One end of the cable split into its two falls: their centres and a strand's radius.
+        private static (Vector3 a, Vector3 b, float radius) Falls(List<Vector3> points)
+        {
+            Vector3 middle = points.Aggregate(Vector3.zero, (sum, p) => sum + p) / points.Count;
+            Vector3 axis = points.OrderByDescending(p => (p - middle).sqrMagnitude).First() - middle;
+            var a = points.Where(p => Vector3.Dot(p - middle, axis) >= 0).ToList();
+            var b = points.Where(p => Vector3.Dot(p - middle, axis) < 0).ToList();
+            if (a.Count == 0 || b.Count == 0) throw new InvalidOperationException("The tower crane rig has changed: its hoist cable no longer has two falls.");
+            Vector3 centreA = a.Aggregate(Vector3.zero, (sum, p) => sum + p) / a.Count, centreB = b.Aggregate(Vector3.zero, (sum, p) => sum + p) / b.Count;
+            float radius = a.Select(p => (p - centreA).magnitude).Concat(b.Select(p => (p - centreB).magnitude)).Average();
+            return (centreA, centreB, radius);
         }
 
         // The inside bottom of the small hook's bowl in the swivel's local space: just above the lowest
-        // vertex skinned to it (the bowl's outside), by the hook's metal thickness.
-        private static Vector3 HookSeat(GameObject instance, Transform swivel)
+        // vertex skinned to it (the bowl's outside), by the hook's metal thickness; and which way the
+        // hook's wire runs there (the long horizontal axis of the bowl's lower part), so a ring can hang
+        // on it across that.
+        private static (Vector3 seat, Vector3 wire) HookSeat(GameObject instance, Transform swivel)
         {
             var skin = instance.GetComponentsInChildren<SkinnedMeshRenderer>(true).Single(s => s.bones.Contains(swivel));
             int bone = Array.IndexOf(skin.bones, swivel);
             var mesh = skin.sharedMesh; var weights = mesh.boneWeights; var vertices = mesh.vertices; var bind = mesh.bindposes[bone];
-            var lowest = Enumerable.Range(0, vertices.Length).Where(v => weights[v].boneIndex0 == bone)
-                .Select(v => bind.MultiplyPoint3x4(vertices[v])).OrderBy(v => v.y).First();
-            return lowest + Vector3.up * HookThickness / swivel.lossyScale.y;
+            var points = Enumerable.Range(0, vertices.Length).Where(v => weights[v].boneIndex0 == bone)
+                .Select(v => bind.MultiplyPoint3x4(vertices[v])).ToList();
+            var lowest = points.OrderBy(v => v.y).First();
+            float top = points.Max(v => v.y);
+            var bowl = points.Where(v => v.y < lowest.y + (top - lowest.y) * .2f).ToList();
+            Vector3 middle = bowl.Aggregate(Vector3.zero, (sum, p) => sum + p) / bowl.Count;
+            float xx = bowl.Sum(p => (p.x - middle.x) * (p.x - middle.x)), zz = bowl.Sum(p => (p.z - middle.z) * (p.z - middle.z));
+            float xz = bowl.Sum(p => (p.x - middle.x) * (p.z - middle.z));
+            float angle = .5f * Mathf.Atan2(2 * xz, xx - zz);
+            return (lowest + Vector3.up * HookThickness / swivel.lossyScale.y, new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)));
         }
 
         // The lifting eye's model (art/lifting-eye): a mesh only, its material slots remapped to project
@@ -305,16 +351,6 @@ namespace SomethingDownThere.Editor
             }
             AssetDatabase.CreateAsset(material, path);
             return material;
-        }
-
-        private static Material CableMaterial()
-        {
-            string path = Folder + "/Cable.mat";
-            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material != null) return material;
-            material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            material.SetColor("_BaseColor", new Color(.22f, .23f, .24f)); material.SetFloat("_Metallic", .3f); material.SetFloat("_Smoothness", .3f);
-            AssetDatabase.CreateAsset(material, path); return material;
         }
 
         // Rope ruptures and the gravel pour throw the same soil crumbs and dust (GroundTextureSetup wires the pour).

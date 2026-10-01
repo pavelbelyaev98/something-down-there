@@ -22,7 +22,11 @@ namespace SomethingDownThere
         private Vector3 pressurePosition;
         private float pressureSeconds;
         private bool continuingJam;
-        private float ContactDelay => continuingJam ? settings.FollowupContactSeconds : settings.ContactStallSeconds;
+        // A machine already driven up when a jam begins winds up sooner (the drive it gains during that
+        // jam pulls harder but never shortens it), and lets lighter impacts smash on through.
+        private float jamThrottle = 1;
+        private float ContactDelay => (continuingJam ? settings.FollowupContactSeconds : settings.ContactStallSeconds) / Mathf.Sqrt(jamThrottle);
+        private float ImpactBreakSpeed => settings.ImpactBreakSpeed / Mathf.Sqrt(throttle);
 
         private void RecordLoadContacts(Collision collision)
         {
@@ -72,7 +76,7 @@ namespace SomethingDownThere
                 float approach = contactImpactSpeeds[i];
                 // Pulling away from a supporting floor does not break that floor.
                 // A surge can overtake the guide: its real impact still counts.
-                if (opposition < -.25f && approach < settings.ImpactBreakSpeed) continue;
+                if (opposition < -.25f && approach < ImpactBreakSpeed) continue;
                 // A permanent contact must not veto a simultaneous soil contact.
                 // Keep pulling against it, but only authorize edits to real dirt.
                 if (Blocker(other)) continue;
@@ -100,7 +104,7 @@ namespace SomethingDownThere
                         if (find != null && obstructions[j].Find == find || lamp != null && obstructions[j].Lamp == lamp)
                         { duplicate = true; break; }
                 float impact = find == null && lamp == null ? approach : 0;
-                bool hardImpact = impact >= settings.ImpactBreakSpeed;
+                bool hardImpact = impact >= ImpactBreakSpeed;
                 if (hardImpact) { priority += 4; impactReady = true; }
                 if (!duplicate) obstructions[obstructionCount++] = new LoadObstruction
                     { Contact = contact, Normal = outward, Find = find, Lamp = lamp, Priority = priority, ImpactSpeed = impact };
@@ -113,9 +117,10 @@ namespace SomethingDownThere
             // away. A slow or slack contact still needs a genuine loaded jam.
             if (!impactReady && pull.magnitude < .22f) { ResetContactPressure(); return false; }
 
-            // Rotation or side-to-side rocking alone is not escape. Only useful
-            // progress toward the pull (or lost contact) starts a fresh attempt.
-            bool progress = Vector3.Dot(AttachWorld - pressurePosition, direction) > terrain.CellSize * .3f;
+            // Rotation, side-to-side rocking or a slow creep along the wall is not
+            // escape. Only useful progress toward the pull (or lost contact) starts
+            // a fresh attempt.
+            bool progress = Vector3.Dot(AttachWorld - pressurePosition, direction) > UsefulProgress(terrain.CellSize * .3f, pressureSeconds);
             // Several contacting rocks can alternate as the strongest blocker
             // while the load stays wedged. That is still one continuous jam.
             if (pressureObstacle == null || progress)
@@ -123,6 +128,7 @@ namespace SomethingDownThere
                 if (progress) continuingJam = false;
                 pressureSeconds = 0;
                 pressurePosition = AttachWorld;
+                jamThrottle = throttle;
             }
             pressureObstacle = obstacle;
             pressureSeconds += dt;
@@ -139,7 +145,7 @@ namespace SomethingDownThere
                     if (obstructions[i].Priority > obstructions[chosen].Priority) chosen = i;
                 var obstruction = obstructions[chosen];
                 obstructions[chosen] = obstructions[--obstructionCount];
-                if (!jamReady && obstruction.ImpactSpeed < settings.ImpactBreakSpeed) continue;
+                if (!jamReady && obstruction.ImpactSpeed < ImpactBreakSpeed) continue;
                 if (BreakContact(obstruction)) { continuingJam = true; return true; }
             }
             continuingJam = false;
@@ -171,8 +177,8 @@ namespace SomethingDownThere
             {
                 // A shallow patch at the contact, with just enough depth for the
                 // voxel surface approximation. No payload envelope or future sweep.
-                float effort = Mathf.Max(Mathf.Clamp01(tensionCharge * .5f),
-                    Mathf.InverseLerp(settings.ImpactBreakSpeed, settings.MaximumBurstSpeed, obstruction.ImpactSpeed));
+                float effort = Mathf.Max(Mathf.Max(Mathf.Clamp01(tensionCharge * .5f), Throttle01),
+                    Mathf.InverseLerp(ImpactBreakSpeed, settings.MaximumBurstSpeed, obstruction.ImpactSpeed));
                 float size = Mathf.Lerp(1, settings.RuptureSizeMultiplier, effort);
                 float radius = Mathf.Max(settings.ContactBreakRadius * size, terrain.CellSize * 1.5f);
                 float depth = settings.ContactBreakDepth * size;
@@ -182,13 +188,13 @@ namespace SomethingDownThere
             }
             if (terrain.StateRevision == before) return false;
             float removed = terrain.RemovedVolume - volume;
-            if (blockingFind == null && obstruction.ImpactSpeed >= settings.ImpactBreakSpeed)
+            if (blockingFind == null && obstruction.ImpactSpeed >= ImpactBreakSpeed)
             {
                 // Spend kinetic energy on the committed volume. Return only the
                 // remainder of the normal momentum consumed by the old collider;
                 // it must not act as a solid wall after that dirt has ruptured.
                 float normalVolume = 4 * settings.ContactBreakRadius * settings.ContactBreakRadius * settings.ContactBreakDepth;
-                float work = settings.ImpactBreakSpeed * settings.ImpactBreakSpeed * Mathf.Max(.35f, removed / normalVolume);
+                float work = ImpactBreakSpeed * ImpactBreakSpeed * Mathf.Max(.35f, removed / normalVolume);
                 float residual = Mathf.Sqrt(Mathf.Max(0, obstruction.ImpactSpeed * obstruction.ImpactSpeed - work));
                 Vector3 into = -obstruction.Normal;
                 float retained = Mathf.Max(0, Vector3.Dot(LoadBody.linearVelocity, into));

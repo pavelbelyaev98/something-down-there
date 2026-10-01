@@ -31,15 +31,19 @@ MonoBehaviour:
   LoadedGuideLead: 1.35
   MaximumBurstSpeed: 8
   MaximumSpin: 5
-  ContactStallSeconds: 0.32
-  FollowupContactSeconds: 0.12
-  BlockedPullMultiplier: 3.2
-  RetensionSeconds: 0.8
-  RetensionPullMultiplier: 5
+  ContactStallSeconds: 0.22
+  FollowupContactSeconds: 0.09
+  CreepShare: 0.3
+  BlockedPullMultiplier: 3.8
+  RetensionSeconds: 0.55
+  RetensionPullMultiplier: 6
   TensionReleaseSeconds: 1.1
-  ContactBreakRadius: 0.36
-  ContactBreakDepth: 0.22
-  ImpactBreakSpeed: 3.4
+  DriveGrowthPerSecond: 0.5
+  MaximumDrive: 2.5
+  DriveRelaxSeconds: 6
+  ContactBreakRadius: 0.38
+  ContactBreakDepth: 0.24
+  ImpactBreakSpeed: 3
   RuptureSizeMultiplier: 1.4
   BreakParticleIntensity: 1
   SearchNodesPerFrame: 256

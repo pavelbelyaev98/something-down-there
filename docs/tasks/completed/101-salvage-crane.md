@@ -1,6 +1,6 @@
 # 101 — Tower Crane Salvage
 
-**Status:** complete. The purchased tower crane (the pack's smallest model, weathered, just outside the plot's south-east edge) is the salvage machine: holding E bolts a lifting eye onto the unique; an automatic operator works the pack's own levers (speed knob raised, anti-sway assist) to swing from its rest over the set-down spots to the hole mouth and lower its hook down the shaft; the crane's one rope (the pack's straight cable stripped from its mesh) then becomes the smart rope, its own hook riding the rope's end along the dug route into the eye, the crane reels the unique out through jams and ruptures and carries it to a free spot beside the camp for good; the winch fixture, pads and exhibit stands are gone and saves are format v14.
+**Status:** complete. The purchased tower crane (the pack's smallest model, weathered, just outside the plot's south-east edge) is the salvage machine: holding E bolts a lifting eye onto the unique; an automatic operator works the pack's own levers (speed knob raised, anti-sway assist) to swing from its rest over the set-down spots to the hole mouth; the crane's cable (the pack's two falls, stripped from its mesh and redrawn so they can bend) and hook are the smart rope, and the moment the crane is aligned the hook rides the rope's end in one run from where it hangs down the hole and along the dug route into the eye; the crane reels the unique out, treating a slow creep as a jam and tearing through it; out of the ground the unique swings from the hook by its eye as a physical body, and the crane lowers it onto a free spot beside the camp and lets go, and it stays where it settles; the winch fixture, pads and exhibit stands are gone.
 
 ## Objective
 
@@ -274,3 +274,117 @@ down your own route, drags the computer out through the dirt, and the crane sets
   moving only once the mark is placed. Its slewing colliders (the pack's jib box and trolley stops) are on
   Ignore Raycast: out of reach above the flight ceiling, they no longer block aim, lamp and rope rays
   wherever the jib points. The crawler, reel and their materials are removed.
+
+## Iteration: the pack's two cables and a harder haul (user, 2026-09-30)
+
+- Feedback: bring back the model's original two cables (the single drawn rope had replaced them), with
+  the smart rope during extraction; and extract more aggressively, since after hooking on the load stays
+  stuck longer than planned.
+- **Two falls.** The stripped cable is two hexagonal strands (radius 1.24 cm, 42 cm apart at the trolley's
+  sheaves, 31 cm at the block, on the jib's own material and a small UV strip). `SalvageCraneSetup`
+  measures their ends, spacing, radius, material and UV strip; `CraneRopeView` rebuilds both as tubes
+  every frame around the cable's centre line (the LineRenderer and `Cable.mat` are gone). Hanging, they
+  run straight between the pack's own ends, exactly as the original. On a recovery their pair axis is
+  carried down from the sheaves without twisting; the hole draws them together (almost touching
+  underground) and they spread again over the last 0.6 m into the block, which turns about the rope so
+  its entries meet them. A real two-part reeving pulled through a hole bunches the same way.
+- **Rejected cable attempts** (screenshots in a disposable Play Mode fixture, bent tunnel):
+  - full spacing along the route, snapping the pair across each bend: a Z-kink at every sharp corner;
+  - full spacing with each strand pushed out of the soil: a sharp V where the inner strand met a corner;
+  - the same with the spacing smoothed along the rope and the pair laid flat on floors: a crossed pinch
+    where the rope cut a corner;
+  - rolling the pair to lie along the nearest dug wall (density gradient): the voxel normals 15–25 cm
+    from a wall are noisy and the pair zig-zagged, and against side walls the falls stacked vertically.
+- **Harder haul.** Measured in simulated time with the Reservoir Computer 60% uncovered, from the hook
+  taking the eye to the handoff: a 0.9 m shaft dug straight down onto it among commons took 15.7 s, a side
+  tunnel among commons 10.3 s, a narrow side tunnel 7.2 s. The load crept up tight shafts at 0.1–0.4 m/s:
+  each creep past a few centimetres reset the jam and retension timers, so the crane never wound up.
+  Now progress only counts at a share of the haul speed (`CreepShare`), so a creep along the walls is a
+  jam, and the wind-up is shorter, the pull stronger and the chunks about a fifth bigger
+  (`RopeSettings.asset`). Result: 10.0 s, 8.7 s and 4.9 s; the creep rule alone saved 2.4 s in the shaft
+  and nothing in the side tunnel.
+- **Rejected haul attempts:** tearing out a persistent jam's two strongest contacts at once saved only
+  0.3–0.7 s, and with chunks 2.6 times the old volume a single full-effort break removed about 1 m³,
+  breaking the local-patch rule (a break stays under 0.6 m³, checked by the persistent-jam test). The
+  largest break is now about 0.46 m³.
+
+## Iteration: one run into the hole and a physical carry (user, 2026-09-30)
+
+- Feedback: out of the ground the crane turned the load into a set pose to put it down; keep the
+  physics instead. And before the hole the hook went down, stopped, then went down again: why not ride
+  the smart rope straight away?
+- **One run into the hole.** The stop was the hoist lowering the hook to 3 m above the mouth while the
+  jib was still swinging in (the hook overshot the hole by 0.8 m and crept back for ~1.5 s), then the
+  hoist lowering it down the shaft and handing over to the smart rope at the shaft bottom. The Lowering
+  phase is gone, and the hoist no longer lowers the hook at all: the crane's cable and hook are the
+  smart rope. While the jib swings in, the hook keeps its resting height; as soon as the trolley holds
+  within 25 cm of the park point (slower than 0.3 m/s) the hook leaves the hoist where it hangs, swing
+  and all, and rides straight down to the park point (its swing folding into that first straight line),
+  then along the route, at the hoist's speed down to the shaft bottom and the rope's pace along the
+  tunnel (easing between them). The hoist length follows the descending hook, so a checkpoint on the
+  way down resumes from its height. Down the straight shaft the rope hangs straight from the trolley
+  (nothing simulated); below it the simulated rope pays out as before. The drawn cable skips route
+  points in mid-air (nothing there can hold a bend), so it runs straight from the trolley to the first
+  point at or under the ground. Marking to hooking on in the bent-tunnel fixture: 10.3 s before, 9.7 s
+  now (the hook comes down from its resting height, no longer during the swing).
+- **Physical carry.** At the handoff the load stays a dynamic body: a kinematic point rides the hook's
+  seat and a joint limits the lifting eye to its link length from it, free to turn, with a little air
+  drag so the swing dies down. The crane lifts it to travel height plus the farthest the load can hang
+  below the seat, carries it with the seat over the spot, holds a metre up until the hook is still and
+  the load swings slower than 0.4 m/s, then lowers at a fifth of the hoist's speed and lets go as soon
+  as the link goes slack (or at the bottom). A new Settling phase waits until the load has been at rest
+  for 0.5 s (8 s at most) before storing it where it lies. The upright straightening, the kinematic
+  follow and the saved grab point are gone; a load on the hook now keeps its motion in saves (format
+  v16).
+- Rejected: starting the ride only once the hook had settled within 30 cm (it still hovered for ~1.5 s
+  while the swing crept in); gliding the hook onto the route while the drawn cable still passed
+  through the park point in mid-air (a kink beside the hook); and lowering the hook with the hoist as
+  the jib swung in, switching to the smart rope within 1 m of the park point (user: the smart rope took
+  over after the main hook came down; the whole hook and cable are the smart rope, starting the moment
+  the crane is aligned).
+
+## Iteration: glitch fixes (user, 2026-10-01)
+
+- Feedback: weird rotations, the two cables behaving weirdly, and the load jumping when set down (the
+  crane pushing it down). Reproduced with a sampled recovery (hook and load poses every ~0.04 s):
+  - The hook block flipped 100-180 degrees about its rope every frame on the way down. The riding hook
+    was eased toward the rope's end (14/s), so at 5 m/s it trailed ~36 cm above it and the drawn cable
+    ran past the block's entry and doubled back; that reversed last span had no direction, and the
+    block turned to match. The hook now sits exactly at the rope's end (frames interpolate like the
+    rope), a last span under 3 cm merges into the entry, spans under 1 mm and doubling-back spans do not
+    turn the falls, and the block eases its turn about the rope. Only the turn round the shaft-bottom
+    corner and the turn into the eye remain.
+  - Out of the haul the load kept spinning at up to 9 rad/s on its 21 cm link, and on arriving the hoist
+    dropped it from travel height at full speed (5-7 m/s) and stopped dead: it bounced up and flipped.
+    The eye now has pivot friction (a damping drive on the link, 1 N m s/rad per kg), and with a load on
+    the hook the hoist eases (1.5 m/s at most, 0.6 m/s for the last metre, 1.5 m/s^2).
+  - Letting go when the link went slack failed both ways: a load pivoting on a touching corner kept the
+    link taut and was pushed into the ground, and a bounce on the link at the hold height read as
+    slack and dropped it a metre. The crane now lets go the moment the load rests on something below it
+    (a touching contact from underneath), or at the bottom of the lowering.
+- Recovery in the bent-tunnel fixture: about 27 s from marking to storage (lifting and setting down
+  are slower but smooth).
+- The placed lifting eye shone underground: it was the one object never registered with the
+  excavation daylight, so it stayed lit as in full sun and bloomed against the dark dig. Its renderers
+  are registered like the finds and lamps; it now darkens with the ground around it.
+
+## Iteration: hook through the ring and a haul that gathers pace (user, 2026-10-01)
+
+- The hook hung beside the lifting eye, not through it: the eye aimed its up axis at the hook but its
+  twist was arbitrary, so its ring could lie in the hook's plane. The ring's hole runs along the eye's
+  local Z (art/lifting-eye); the setup measures which way the hook's wire runs at its seat (the long
+  horizontal axis of the bowl's lower fifth, swivel-local Z) into `TowerCraneRig`, and from the hook's
+  ride in to the set-down the eye turns about its pull so its hole runs along that wire.
+- Feedback: the load stuck for about a second, broke the ground, and repeated that many times; the
+  machine should pull harder the more it gets stuck. The machine's drive (1 = normal) grows by 0.5 for
+  every second the load is stuck (wedged against a contact, or crawling below the creep share) up to
+  2.5, and eases back with a 6 s time constant while it runs free. The pull multiplies by it, reeling
+  by up to 1.35x, impacts break at the impact speed over its square root, break size follows it toward
+  the full-effort chunk, retension comes sooner, and a jam that begins with the drive already up winds
+  up sooner (the drive gained during a jam never shortens that jam, so the first one is honest; the jam
+  tests check it). Haul times, no drive / gradual drive: shaft dug onto the find among commons 9.8 s /
+  8.2 s, side tunnel among commons 8.5 s / 5.2 s, narrow tunnel 5.1 s / 3.7 s; in the shaft the drive
+  climbs from 1 to 1.5 over the first 2 s of resistance and reaches its cap after about 4 s.
+- Rejected: raising the drive 1.5x at every break (up to 3x): breaks come constantly, so after two or
+  three it was at full aggression and the load came out almost without resistance (7.2 / 4.2 / 3.0 s;
+  user: too fast, it switched to aggressive at once).

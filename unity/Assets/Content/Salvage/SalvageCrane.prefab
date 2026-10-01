@@ -211,9 +211,13 @@ MonoBehaviour:
   hookDrop: 1.3015518
   swivelDrop: 0.2481575
   tipDrop: 0.5
-  sheave: {x: 0.0015369148, y: -0.51231563, z: -0.0014918873}
-  ropeEntry: {x: 0.0015368278, y: 0.025436208, z: -0.0008813334}
+  sheave: {x: 0.0000026217901, y: -0.5123161, z: -0.00060606}
+  sheaveSpread: {x: 0.00000010170743, y: 0.0000003874302, z: 0.21205695}
+  ropeEntry: {x: 0.0000025201207, y: 0.02543586, z: 0.000004515052}
+  entrySpread: {x: 3.808509e-11, y: 0.000000834465, z: 0.15434837}
   seat: {x: -0.016364746, y: -0.29634652, z: -0.011482239}
+  strandRadius: 0.012401534
+  seatWire: {x: 0.000006155172, y: 0, z: -1}
 --- !u!54 &4663577506953561246 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 2155935959144062227, guid: 7fa7a6133606c034d8c45ad73304eae3, type: 3}

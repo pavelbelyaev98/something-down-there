@@ -10,7 +10,7 @@ no doors, no menu mazes, no NPCs.
 |---|---|---|
 | **The shaft** | The hole itself, physically changing as the player digs | The player sees their own excavation from the rim; the landmark that never repeats |
 | **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
-| **Salvage crane** | Recover whole objects marked underground | A small tower crane beside the camp swings its hook right above the hole and lowers it down the shaft; its one rope turns smart and the hook rides its end along the excavated route into the lifting eye the player bolted on; the crane reels the find in through dirt bottlenecks and carries it to camp. Uniques arrive muddy for optional cleaning, oversized salvage awaits cash-in. Being tested: the same rope hauls the player home at zero battery |
+| **Salvage crane** | Recover whole objects marked underground | A small tower crane beside the camp swings over the hole and its cable turns smart: the hook rides its end straight down the hole and along the excavated route into the lifting eye the player bolted on; the crane reels the find in through dirt bottlenecks and carries it to camp. Uniques arrive muddy for optional cleaning, oversized salvage awaits cash-in. Being tested: the same rope hauls the player home at zero battery |
 | **Charging point** | Battery refill | Free and automatic: the battery refills by itself while the player is back at camp; a visible cable and charge light, no button, no price ([why](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)) |
 | **Recovered uniques** | Special unsellable exhibits | Each stands where the crane set it down beside the camp, readable (name, depth, story) |
 | **Lamp / charges shelf** | Buy C4 (work lamps are sold at the computer) | Supports remaining play |
@@ -61,7 +61,7 @@ Contextual action prompts and the optional controls reference are allowed:
 The emotional record of the run: the finds the crane pulled out of the hole, standing beside the camp.
 
 - **A few special exhibits:** ordinary and repeatable valuables sell; no first-copy exceptions.
-- The crane sets each unique down upright at its own spot beside the camp, where it stays. No
+- The crane sets each unique down at its own spot beside the camp, lying as it landed, where it stays. No
  stands, shelves or placement step, and recovery never sells it.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.
 - Recovered uniques support inspection and story rereading where they stand. The story line first

@@ -28,22 +28,30 @@ namespace SomethingDownThere
         [Range(1f, 8f)] public float MaximumBurstSpeed = 8f;
         [Range(1f, 5f)] public float MaximumSpin = 5f;
         [Tooltip("Continuous blocked contact under rope tension before soil can break.")]
-        [Range(.2f, 2f)] public float ContactStallSeconds = .32f;
+        [Range(.2f, 2f)] public float ContactStallSeconds = .22f;
         [Tooltip("Shorter physical retry when a chip leaves the same load wedged. Progress or lost contact resets it.")]
-        [Range(.08f, .5f)] public float FollowupContactSeconds = .12f;
+        [Range(.08f, .5f)] public float FollowupContactSeconds = .09f;
+        [Tooltip("A load advancing slower than this share of the haul speed is still jammed: creeping along the walls does not reset a wind-up.")]
+        [Range(0f, .6f)] public float CreepShare = .3f;
         [Tooltip("Spring strength builds to this multiplier during a blocked physical contact.")]
-        [Range(1f, 4f)] public float BlockedPullMultiplier = 3.2f;
+        [Range(1f, 4f)] public float BlockedPullMultiplier = 3.8f;
         [Tooltip("Without forward progress, automatically build a stronger pull; never wait for player intervention.")]
-        [Range(.4f, 3f)] public float RetensionSeconds = .8f;
-        [Range(3f, 6f)] public float RetensionPullMultiplier = 5f;
+        [Range(.4f, 3f)] public float RetensionSeconds = .55f;
+        [Range(3f, 6f)] public float RetensionPullMultiplier = 6f;
         [Tooltip("Ease the loaded spring back to normal after release, preserving its physical recoil.")]
         [Range(.1f, 2f)] public float TensionReleaseSeconds = 1.1f;
+        [Tooltip("For every second the load is stuck (wedged, or crawling far slower than the reel) the machine's drive rises by this much: it pulls harder, reels faster, tears bigger chunks, and the next jam winds up sooner.")]
+        [Range(0f, 3f)] public float DriveGrowthPerSecond = .5f;
+        [Tooltip("Highest drive the machine builds up over a haul.")]
+        [Range(1f, 5f)] public float MaximumDrive = 2.5f;
+        [Tooltip("While the load runs free the drive eases back toward normal with this time constant.")]
+        [Range(.5f, 20f)] public float DriveRelaxSeconds = 6f;
         [Tooltip("Half width of one local break at the actual terrain contact.")]
-        [Range(.15f, .5f)] public float ContactBreakRadius = .36f;
+        [Range(.15f, .5f)] public float ContactBreakRadius = .38f;
         [Tooltip("Depth of one local break into the contacted soil.")]
-        [Range(.05f, .3f)] public float ContactBreakDepth = .22f;
+        [Range(.05f, .3f)] public float ContactBreakDepth = .24f;
         [Tooltip("Opposing impact speed needed to break dirt immediately; slow contact must wind up first.")]
-        [Range(2f, 6f)] public float ImpactBreakSpeed = 3.4f;
+        [Range(2f, 6f)] public float ImpactBreakSpeed = 3f;
         [Tooltip("Extra local rupture size at full tension or a hard impact.")]
         [Range(1f, 2f)] public float RuptureSizeMultiplier = 1.4f;
         [Range(0f, 1f)] public float BreakParticleIntensity = 1f;
@@ -64,10 +72,13 @@ namespace SomethingDownThere
             && MaximumSpin >= 1 && MaximumSpin <= 5
             && ContactStallSeconds >= .2f && ContactStallSeconds <= 2
             && FollowupContactSeconds >= .08f && FollowupContactSeconds <= .5f && FollowupContactSeconds <= ContactStallSeconds
+            && CreepShare >= 0 && CreepShare <= .6f
             && BlockedPullMultiplier >= 1 && BlockedPullMultiplier <= 4
             && RetensionSeconds >= .4f && RetensionSeconds <= 3
             && RetensionPullMultiplier >= 3 && RetensionPullMultiplier <= 6
             && TensionReleaseSeconds >= .1f && TensionReleaseSeconds <= 2
+            && DriveGrowthPerSecond >= 0 && DriveGrowthPerSecond <= 3 && MaximumDrive >= 1 && MaximumDrive <= 5
+            && DriveRelaxSeconds >= .5f && DriveRelaxSeconds <= 20
             && ContactBreakRadius >= .15f && ContactBreakRadius <= .5f
             && ContactBreakDepth >= .05f && ContactBreakDepth <= .3f
             && ImpactBreakSpeed >= 2 && ImpactBreakSpeed <= 6 && ImpactBreakSpeed < MaximumBurstSpeed

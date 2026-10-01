@@ -7,12 +7,13 @@ using UnityEngine;
 namespace SomethingDownThere
 {
     // The yard's salvage machine. Marking a unique bolts a lifting eye onto it and plans a rope route
-    // through the player's own excavation; the tower crane swings over the hole mouth and lowers its hook
-    // straight down the shaft on its cable. From the bottom of the shaft the cable is the smart rope: the
-    // hook rides its end along the rest of the route into the eye, and the crane reels the load in
-    // through bends and jams, tearing out retaining dirt. At the top the hook goes back on the hoist and
-    // the crane carries the load to a free spot beside the camp for good. The crane is driven by an
-    // automatic operator (SalvageCrane.Operator) through the pack's own levers (TowerCraneRig).
+    // through the player's own excavation; the tower crane swings over the hole mouth, its hook coming
+    // down as it arrives. There the cable becomes the smart rope: the hook rides its end straight on down
+    // the hole and along the route into the eye, and the crane reels the load in through bends and jams,
+    // tearing out retaining dirt. At the top the hook goes back on the hoist with the load swinging from
+    // it, and the crane lowers it onto a free spot beside the camp, where it settles as it lands and stays
+    // for good. The crane is driven by an automatic operator (SalvageCrane.Operator) through the pack's
+    // own levers (TowerCraneRig).
     public sealed partial class SalvageCrane : MonoBehaviour
     {
         [SerializeField] private TerrainVolume terrain;
@@ -32,7 +33,6 @@ namespace SomethingDownThere
         [SerializeField, Min(1f)] private float parkHeight = 3f;
         // Height of a carried load's underside above the ground while travelling.
         [SerializeField, Min(1f)] private float travelClearance = 5f;
-        [SerializeField, Min(1f)] private float straightenDegrees = 40f;
         private ExtractionSnapshot job;
         private BuriedFind payload;
         private RecoveryMarkView mark;
@@ -56,22 +56,29 @@ namespace SomethingDownThere
         {
             ExtractionPhase.Planning => "Preparing rope route…",
             ExtractionPhase.Reaching => "Crane on its way",
-            ExtractionPhase.Lowering => "Hook coming down",
             ExtractionPhase.Deploying => "Hook on its way",
             ExtractionPhase.Attaching => "Hooking on",
             ExtractionPhase.Retensioning => "Pulling through the obstruction",
             ExtractionPhase.Hauling => "Hauling to the surface",
             ExtractionPhase.Lifting => "Lifting it clear",
             ExtractionPhase.Carrying => "Carrying it to camp",
+            ExtractionPhase.Settling => "Set down at camp",
             _ => "Setting it down at camp"
         };
         private CranePose RestPose => new CranePose { Yaw = restYaw, Reach = restReach, Rope = restRope };
         private Vector3 Anchor => terrain.transform.TransformPoint(job.Route[job.AnchorIndex]);
         private Vector3[] dropRoute;
-        private float dropDistance;
+        private float dropDistance, rideSpeed;
+        // The ride's first stretch: from where the hook hung when it left the hoist (swinging or not)
+        // straight down to the route's start under the trolley. Derived from the hook, never saved.
+        private Vector3 descentStart;
+        private float descentLength, descended;
+        // How quickly the riding hook changes pace (m/s^2): the hoist's speed down the straight shaft,
+        // the rope's pace along the rest of the route.
+        private const float RideAcceleration = 8f;
 
-        // How far the hoist lowers the hook on the route: the bottom of the straight shaft under the
-        // trolley. Beyond it the hook rides the smart rope's end.
+        // The bottom of the straight shaft under the trolley: above it the rope hangs straight to the
+        // riding hook; below it the rope is simulated.
         private float DropDistance
         {
             get
@@ -163,9 +170,8 @@ namespace SomethingDownThere
             if (!ropeView.Initialized) ropeView.Initialize(terrain, settings);
             if (!player.GameplayActive || terrain.IsRestoring)
             {
-                // Levers released: the rig coasts to a stop and a load on the hook stays with it.
+                // Levers released: the rig coasts to a stop and the load holds still where it is.
                 SuspendLoad();
-                if (job != null && payload != null && ExtractionSnapshot.Craning(job.Phase)) Follow(deltaTime, false);
                 return;
             }
             if (job == null || payload == null) { Park(); return; }
@@ -200,11 +206,25 @@ namespace SomethingDownThere
             switch (job.Phase)
             {
                 case ExtractionPhase.Deploying:
-                    HoldOver();
-                    job.Progress = Mathf.Min(DropDistance, job.Progress + settings.RopeSpeed * dt); Revision++;
+                {
+                    // One run from the hook's height down to the park point over the mouth, down the hole
+                    // and along the route.
+                    bool descending = descended < descentLength;
+                    bool shaft = descending || haulLength - job.Progress > DropDistance;
+                    rideSpeed = Mathf.MoveTowards(rideSpeed, shaft ? rig.HoistSpeed : settings.RopeSpeed, RideAcceleration * dt);
+                    float step = rideSpeed * dt;
+                    if (descending)
+                    {
+                        float down = Mathf.Min(step, descentLength - descended);
+                        descended += down; step -= down;
+                    }
+                    job.Progress = Mathf.Min(haulLength, job.Progress + step); Revision++;
+                    // The hoist pays out with the descending hook, so a checkpoint keeps its height.
+                    if (descended < descentLength) Steer(Anchor, rig.RopeForSeat(DescentSeat.y)); else HoldOver();
                     RideHook(dt, false);
-                    if (job.Progress >= DropDistance) { job.Progress = 0; SetPhase(ExtractionPhase.Attaching); }
+                    if (job.Progress >= haulLength) { job.Progress = 0; SetPhase(ExtractionPhase.Attaching); }
                     break;
+                }
                 case ExtractionPhase.Attaching:
                     HoldOver();
                     job.PhaseSeconds += dt; Revision++;
@@ -234,40 +254,58 @@ namespace SomethingDownThere
             return new Vector3(rig.Mast.x + offset.x, park.y, rig.Mast.z + offset.z);
         }
 
-        // The crane's hook riding the smart rope's free end along the route, seat first, then into the
-        // lifting eye. The rope's end stays on the route a hook's length behind the seat (the drawn rope
-        // ends at the block): a straight hook cuts bends, and an end inside the corner soil would drag
-        // the cable into it.
+        // The crane's hook riding the smart rope's free end, seat first: straight down from where it hung
+        // to the park point over the mouth, then along the route into the lifting eye. The rope's end
+        // stays on the route a hook's length behind the seat (the drawn rope ends at the block): a
+        // straight hook cuts bends, and an end inside the corner soil would drag the cable into it. Down
+        // the straight shaft the rope hangs straight from the trolley; below it the simulated rope pays out.
         private void RideHook(float dt, bool snap)
         {
-            float remaining = job.Phase == ExtractionPhase.Deploying ? DropDistance - job.Progress : 0;
-            float behind = Mathf.Min(DropDistance, remaining + rig.HookLength);
+            float full = ExtractionSnapshot.Length(job.Route);
+            float remaining = job.Phase == ExtractionPhase.Deploying ? full - job.Progress : 0;
+            float behind = Mathf.Min(full, remaining + rig.HookLength), anchor = Mathf.Max(DropDistance, behind);
             Vector3 outward = terrain.transform.TransformDirection(job.Outward);
             Vector3 seat = terrain.transform.TransformPoint(ExtractionSnapshot.Point(job.Route, remaining, out _))
                 + outward * (RecoveryMarkView.HookReach * Mathf.Clamp01(1 - remaining));
             Vector3 end = terrain.transform.TransformPoint(ExtractionSnapshot.Point(job.Route, behind, out _));
-            ropeView.Carry(seat, end - seat, dt, snap);
-            ropeView.Draw(terrain.transform, job.Route, behind, DropDistance, end, false);
+            if (job.Phase == ExtractionPhase.Deploying && descended < descentLength)
+            {
+                seat = DescentSeat;
+                end = seat + Vector3.up * rig.HookLength;
+                behind = anchor = full;
+            }
+            ropeView.Carry(seat, end - seat, snap);
+            ropeView.Draw(terrain.transform, job.Route, behind, anchor, end, false);
         }
 
-        // Once hooked on, the lifting eye swivels toward the hook.
+        // The route's start under the trolley, where the hook's seat joins the route.
+        private Vector3 RouteStart => terrain.transform.TransformPoint(
+            ExtractionSnapshot.Point(job.Route, ExtractionSnapshot.Length(job.Route) - job.Progress, out _));
+        private Vector3 DescentSeat => descentLength > 0 ? Vector3.Lerp(descentStart, RouteStart, descended / descentLength) : RouteStart;
+
+        // The hook leaves the hoist where it hangs and heads straight for the route's start.
+        private void BeginDescent()
+        {
+            descentStart = rig.Seat; descended = 0;
+            descentLength = Vector3.Distance(descentStart, RouteStart);
+        }
+
+        // As the hook comes for it the lifting eye turns so the hook's wire runs through its ring; once
+        // hooked on it also swivels toward the hook.
         private void AimEye()
         {
-            if (mark == null || job == null || payload == null || !job.Attached) return;
-            if (ExtractionSnapshot.Craning(job.Phase))
-                mark.Aim(payload.transform.TransformPoint(job.GrabLocal) - payload.transform.TransformPoint(job.AttachLocal));
-            else mark.Aim(ropeView.HookDirection);
+            if (mark == null || job == null || payload == null || job.Phase < ExtractionPhase.Deploying || job.Phase == ExtractionPhase.Settling) return;
+            Vector3 pull = !job.Attached ? Vector3.zero : ExtractionSnapshot.Craning(job.Phase) ? rig.Seat - AttachWorld : ropeView.HookDirection;
+            mark.Aim(pull, rig.SeatWire);
         }
 
         // At the top of the route the load hangs in the hook: the hook goes back on the hoist and the
-        // crane holds the load from here on.
+        // crane holds the load from here on, still swinging and turning on its own.
         private void Handoff()
         {
             ReleaseRig(); ropeView.Hide(); rig.SeatHook();
-            payload.GetComponent<FindPhysics>().ClaimForRecovery();
-            job.LinearVelocity = job.AngularVelocity = Vector3.zero;
-            job.GrabLocal = payload.transform.InverseTransformPoint(rig.Seat);
             SetPhase(ExtractionPhase.Lifting);
+            EnsureCarry();
         }
 
         private void PlanningFailed(string error)
@@ -298,6 +336,7 @@ namespace SomethingDownThere
 
         private void Deliver()
         {
+            LetGo();
             var body = payload.GetComponent<FindPhysics>().Body;
             payload.MoveRecovered(body.position, body.rotation);
             if (!payload.Transition(FindState.Extracting, FindState.Stored)) throw new InvalidOperationException("Recovery lost its owner.");
@@ -342,7 +381,7 @@ namespace SomethingDownThere
         private void ShowMark(Vector3 normal)
         {
             if (markMaterial == null) return;
-            mark ??= new RecoveryMarkView(transform, markMaterial, liftingEye);
+            mark ??= new RecoveryMarkView(transform, markMaterial, liftingEye, terrain.GetComponent<ExcavationDaylight>());
             mark.Show(payload, job.AttachLocal, normal, 1, true);
         }
 
@@ -350,7 +389,7 @@ namespace SomethingDownThere
         {
             if (markMaterial == null) return;
             if (terrain == null || terrain.IsRestoring) { mark?.Hide(); return; }
-            mark ??= new RecoveryMarkView(transform, markMaterial, liftingEye);
+            mark ??= new RecoveryMarkView(transform, markMaterial, liftingEye, terrain.GetComponent<ExcavationDaylight>());
             if (job != null && payload != null) mark.Show(payload, job.AttachLocal, Vector3.zero, 1, true);
             else if (player != null && player.TryGetRecoveryMark(out var find, out var hit))
                 mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.ExtractionMarkProgress, false);
@@ -388,9 +427,12 @@ namespace SomethingDownThere
             payload.GetComponent<FindPhysics>().ClaimForRecovery();
             rig.Apply(job.Pose);
             ShowMark(Vector3.zero);
-            if (job.Phase <= ExtractionPhase.Lowering) return;
-            if (ExtractionSnapshot.Craning(job.Phase)) { Follow(0); return; }
+            // A load on the hook or settling at camp resumes its saved motion on the next physics step.
+            if (job.Phase <= ExtractionPhase.Reaching || ExtractionSnapshot.Craning(job.Phase)) return;
             rig.ReleaseHook();
+            // A hook still at the route's start comes down from where the saved hoist left it.
+            descentLength = 0;
+            if (job.Phase == ExtractionPhase.Deploying && job.Progress <= rig.HookLength + .001f) BeginDescent();
             if (job.Attached) DrawAttachedRope(); else RideHook(0, true);
         }
     }

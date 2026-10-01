@@ -3,12 +3,21 @@ using UnityEngine;
 namespace SomethingDownThere
 {
     // The smart rope's haul: a spring guide pulls the dynamic load along the accepted route, winding
-    // up against jams until the retaining dirt breaks (SalvageCrane.Contacts).
+    // up against jams until the retaining dirt breaks (SalvageCrane.Contacts). Out of the ground the load
+    // hangs from the crane's hook by its lifting eye, still a dynamic body, until it lands at camp.
     public sealed partial class SalvageCrane
     {
         private Rigidbody guide;
         private SpringJoint tether;
+        // The hook's seat (a kinematic point riding it) and the lifting eye's link to it.
+        private Rigidbody hanger;
+        private ConfigurableJoint sling;
         private float stalledSeconds, tensionCharge;
+        // The machine's drive (1 = normal): it builds up the longer the load is stuck and eases back slowly
+        // while it runs free, so a haul that keeps getting stuck grows more and more aggressive while an
+        // easy one stays at normal force.
+        private float throttle = 1;
+        private float Throttle01 => (throttle - 1) / Mathf.Max(.001f, settings.MaximumDrive - 1);
         private Vector3 progressPosition;
         private Vector3 incomingVelocity;
         private Vector3 impactCarry;
@@ -41,6 +50,93 @@ namespace SomethingDownThere
             if(tether!=null) Destroy(tether);
             if(guide!=null) Destroy(guide.gameObject);
             tether=null; guide=null; stalledSeconds=0;
+            LetGo();
+        }
+
+        // One physics step of the load hanging from the hook: the eye's link follows the hook's seat and
+        // the load swings, turns and collides on its own.
+        private void Hang(float dt)
+        {
+            EnsureCarry();
+            hanger.MovePosition(rig.Seat+rig.TipVelocity*dt);
+            payload.GetComponent<FindPhysics>().UpdateCollisionMode(CollisionDetectionMode.ContinuousDynamic);
+            discoveries.NotifyMotion();
+        }
+
+        private void EnsureCarry()
+        {
+            if(hanger==null)
+            {
+                var seat=new GameObject("Crane hook seat") { hideFlags=HideFlags.DontSave };
+                seat.transform.SetParent(transform,false);
+                seat.transform.position=rig.Seat;
+                hanger=seat.AddComponent<Rigidbody>();
+                hanger.isKinematic=true; hanger.useGravity=false;
+                // A restored load hangs within its eye's reach of the seat.
+                Vector3 eye=AttachWorld;
+                if(Vector3.Distance(eye,rig.Seat)>RecoveryMarkView.HookReach)
+                    payload.MoveRecovered(LoadBody.position+rig.Seat+Vector3.down*RecoveryMarkView.HookReach-eye,LoadBody.rotation);
+                sling=payload.gameObject.AddComponent<ConfigurableJoint>();
+                sling.autoConfigureConnectedAnchor=false;
+                sling.anchor=job.AttachLocal; sling.connectedBody=hanger; sling.connectedAnchor=Vector3.zero;
+                sling.xMotion=sling.yMotion=sling.zMotion=ConfigurableJointMotion.Limited;
+                sling.angularXMotion=sling.angularYMotion=sling.angularZMotion=ConfigurableJointMotion.Free;
+                sling.linearLimit=new SoftJointLimit { limit=RecoveryMarkView.HookReach };
+                sling.enableCollision=false;
+                // Friction in the eye and the hook's throat: the load turns and swings on the hook, but
+                // those motions die down instead of wobbling on.
+                sling.rotationDriveMode=RotationDriveMode.Slerp;
+                sling.slerpDrive=new JointDrive { positionSpring=0, positionDamper=LoadBody.mass*PivotFriction, maximumForce=float.MaxValue };
+                SwingDrag(LoadBody);
+                hoistRate=0; resting=false;
+                payload.GetComponent<FindPhysics>().RecoveryContact+=RecordRest;
+            }
+            Wake();
+        }
+
+        // A little air drag lets the load's swing on the hook die down.
+        private static void SwingDrag(Rigidbody body) { body.linearDamping=.3f; body.angularDamping=.5f; }
+
+        // Rotational damping in the eye per kilogram of load (N m s/rad/kg).
+        private const float PivotFriction=1f;
+
+        // The load rests on something below it (a touching contact from underneath) since the last check.
+        private bool resting;
+        private bool Grounded { get { bool touched=resting; resting=false; return hanger!=null && touched; } }
+
+        private void RecordRest(Collision collision)
+        {
+            for(int i=0;i<collision.contactCount;i++)
+            {
+                var contact=collision.GetContact(i);
+                Vector3 normal=contact.thisCollider==payload.HitCollider ? contact.normal : -contact.normal;
+                if(contact.separation<=.01f && normal.y>.5f) { resting=true; return; }
+            }
+        }
+
+        private void LetGo()
+        {
+            if(hanger!=null && payload!=null) payload.GetComponent<FindPhysics>().RecoveryContact-=RecordRest;
+            if(sling!=null) Destroy(sling);
+            if(hanger!=null) Destroy(hanger.gameObject);
+            sling=null; hanger=null; restSeconds=0;
+        }
+
+        // The load dynamic again after a pause or reload, with its saved motion.
+        private void Wake()
+        {
+            var body=LoadBody;
+            if(!body.isKinematic) return;
+            body.isKinematic=false; body.useGravity=true;
+            body.constraints=RigidbodyConstraints.None;
+            body.collisionDetectionMode=CollisionDetectionMode.ContinuousDynamic;
+            body.maxLinearVelocity=settings.MaximumBurstSpeed;
+            body.maxAngularVelocity=settings.MaximumSpin;
+            SwingDrag(body);
+            body.solverIterations=12; body.solverVelocityIterations=4;
+            body.linearVelocity=terrain.transform.TransformDirection(job.LinearVelocity);
+            body.angularVelocity=terrain.transform.TransformDirection(job.AngularVelocity);
+            body.WakeUp();
         }
 
         private void EnsureRig()
@@ -60,7 +156,7 @@ namespace SomethingDownThere
                 tether.spring=body.mass*settings.SpringAcceleration;
                 tether.damper=body.mass*settings.SpringDamping;
                 tether.enableCollision=false;
-                progressPosition=AttachWorld;
+                progressPosition=AttachWorld; throttle=1;
                 if(job.Phase==ExtractionPhase.Retensioning) stalledSeconds=settings.RetensionSeconds;
                 loadPhysics=payload.GetComponent<FindPhysics>();
                 loadPhysics.RecoveryContact+=RecordLoadContacts;
@@ -88,7 +184,7 @@ namespace SomethingDownThere
             float lag=Vector3.Distance(AttachWorld,currentGuide);
             float drive=Mathf.Clamp01(tensionCharge);
             float lead=Mathf.Lerp(settings.GuideLead,settings.LoadedGuideLead,drive);
-            float haulSpeed=settings.HaulSpeed*Mathf.Lerp(1f,settings.LoadedHaulMultiplier,drive);
+            float haulSpeed=settings.HaulSpeed*Mathf.Lerp(1f,settings.LoadedHaulMultiplier,drive)*Mathf.Lerp(1f,1.35f,Throttle01);
             float distance=job.Progress;
             ExtractionSnapshot.Point(job.Route,job.Progress+.00001f,out int segment);
             float segmentStart=ExtractionSnapshot.Length(job.Route,segment);
@@ -108,17 +204,18 @@ namespace SomethingDownThere
             job.Progress=distance; Revision++;
             body.angularDamping=.28f;
 
-            // Net progress toward the guide counts; jitter and sideways rocking
-            // cannot keep restarting a jam forever. The body always stays dynamic.
+            // Net progress toward the guide counts; jitter, sideways rocking and a
+            // creep against the walls cannot keep restarting a jam forever. The
+            // body always stays dynamic.
             Vector3 pull=nextGuide-AttachWorld;
-            bool progress=Vector3.Dot(AttachWorld-progressPosition,pull.normalized)>terrain.CellSize*.5f;
+            bool progress=Vector3.Dot(AttachWorld-progressPosition,pull.normalized)>UsefulProgress(terrain.CellSize*.5f,stalledSeconds);
             if(progress || lag<.15f)
             {
                 progressPosition=AttachWorld; stalledSeconds=0;
                 if(job.Phase==ExtractionPhase.Retensioning) SetPhase(ExtractionPhase.Hauling);
             }
             else stalledSeconds+=dt;
-            if(stalledSeconds>=settings.RetensionSeconds && job.Phase!=ExtractionPhase.Retensioning)
+            if(stalledSeconds>=settings.RetensionSeconds/Mathf.Sqrt(throttle) && job.Phase!=ExtractionPhase.Retensioning)
                 SetPhase(ExtractionPhase.Retensioning);
 
             // At rest, speculative CCD can hold the hull off the surface and
@@ -129,6 +226,8 @@ namespace SomethingDownThere
             // real-contact rupture gate is ever allowed to see it.
             loadPhysics.UpdateCollisionMode(CollisionDetectionMode.ContinuousDynamic);
             bool brokeSoil=RelieveBlockedContact(dt,currentGuide-AttachWorld);
+            if(stalledSeconds>0 || pressureSeconds>0) throttle=Mathf.Min(settings.MaximumDrive,throttle+settings.DriveGrowthPerSecond*dt);
+            else throttle=1+(throttle-1)*Mathf.Exp(-dt/settings.DriveRelaxSeconds);
             UpdatePullTension(dt,brokeSoil,nextGuide,(nextGuide-currentGuide)/dt);
             contactCount=0;
             // PhysX can report an already-resolved velocity in its contact
@@ -138,6 +237,10 @@ namespace SomethingDownThere
             if(distance>=end-.00001f && lag<.22f && Anchor.y>terrain.SurfaceHeight) { Handoff(); return; }
             DrawAttachedRope();
         }
+
+        // Advance toward the pull that counts as getting somewhere after `seconds` of trying: at least
+        // `minimum`, and a share of the haul speed, so a load creeping along the walls still jams.
+        private float UsefulProgress(float minimum,float seconds)=>Mathf.Max(minimum,seconds*settings.HaulSpeed*settings.CreepShare);
 
         private void UpdatePullTension(float dt, bool brokeSoil, Vector3 target, Vector3 reelVelocity)
         {
@@ -164,7 +267,7 @@ namespace SomethingDownThere
             float acceleration=(allowedSpeed-Vector3.Dot(velocity,direction))/dt-Vector3.Dot(Physics.gravity,direction);
             float dampingAcceleration=damping*Vector3.Dot(reelVelocity-LoadBody.GetPointVelocity(AttachWorld)-impactCarry,direction);
             float maximumSpring=Mathf.Max(0,acceleration-dampingAcceleration)/Mathf.Max(.001f,pull.magnitude-tether.maxDistance);
-            tether.spring=LoadBody.mass*Mathf.Min(settings.SpringAcceleration*strength,maximumSpring);
+            tether.spring=LoadBody.mass*Mathf.Min(settings.SpringAcceleration*strength*throttle,maximumSpring);
         }
 
         private void ResetPullTension()

@@ -35,9 +35,13 @@ namespace SomethingDownThere
         // below the trolley at zero rope (hook body, swivel, hook tip).
         [SerializeField] private float minimumReach = 2.5f, maximumReach = 33.5f, maximumRope = 250f;
         [SerializeField] private float hookDrop = 1.3f, swivelDrop = .25f, tipDrop = .5f;
-        // Where the hoist cable leaves the trolley and enters the hook block, and the inside bottom of the
-        // small hook's bowl, where a load or lifting eye hangs, in their bodies' local spaces.
-        [SerializeField] private Vector3 sheave, ropeEntry, seat;
+        // Where the hoist cable's two falls leave the trolley's sheaves and enter the hook block (their
+        // middle, and half the spacing between them), and the inside bottom of the small hook's bowl,
+        // where a load or lifting eye hangs, in their bodies' local spaces; one fall's radius.
+        [SerializeField] private Vector3 sheave, sheaveSpread, ropeEntry, entrySpread, seat;
+        [SerializeField] private float strandRadius = .0125f;
+        // Which way the small hook's wire runs at its seat (swivel-local): a ring hangs on it across that.
+        [SerializeField] private Vector3 seatWire = Vector3.forward;
         private float rope, truckHeight;
         private bool initialized, released;
         private ConfigurableJointMotion[] hoistMotions;
@@ -56,18 +60,24 @@ namespace SomethingDownThere
         public float TrolleyAcceleration => speedTruck * speedGeneral / Time.fixedDeltaTime;
         public float TrolleyDrag => truck.linearDamping;
         public float HoistStep => speedHook * speedGeneral;
+        public float HoistSpeed => HoistStep / Time.fixedDeltaTime;
         public float Yaw => Vector3.SignedAngle(transform.forward, Jib, transform.up);
         public float YawSpeed => Vector3.Dot(cabin.angularVelocity, transform.up) * Mathf.Rad2Deg;
         public float Reach => Vector3.Dot(truck.position - cabin.position, Jib);
         public float ReachSpeed => Vector3.Dot(truck.linearVelocity, Jib);
         public Vector3 Mast => cabin.position;
         public Vector3 Trolley => truck.position;
+        public Vector3 TrolleyVelocity => truck.linearVelocity;
         // The hook's tip under the hook block, the rope's pendulum mass.
         public Vector3 Tip => hook.position - transform.up * (swivelDrop + tipDrop);
         public Vector3 TipVelocity => hook.linearVelocity;
         public Vector3 Sheave => truck.transform.TransformPoint(sheave);
+        public Vector3 SheaveSpread => truck.transform.TransformVector(sheaveSpread);
         public Vector3 RopeEntry => hook.transform.TransformPoint(ropeEntry);
+        public Vector3 EntrySpread => hook.transform.TransformVector(entrySpread);
+        public float StrandRadius => strandRadius * hook.transform.lossyScale.x;
         public Vector3 Seat => swivel.transform.TransformPoint(seat);
+        public Vector3 SeatWire => swivel.transform.TransformDirection(seatWire).normalized;
         // From the hook's seat up to where the cable enters its block.
         public float HookLength => Vector3.Dot(RopeEntry - Seat, hook.transform.up);
         // Off the hoist joint, riding the smart rope's end.
@@ -99,14 +109,18 @@ namespace SomethingDownThere
             foreach (var body in new[] { hook, swivel }) { body.isKinematic = true; body.interpolation = RigidbodyInterpolation.None; }
         }
 
-        // The released hook with its seat at `point`, its block toward the rope along `direction`.
-        public void PlaceHook(Vector3 point, Vector3 direction)
+        // The released hook with its seat at `point`, its block toward the rope along `direction` and
+        // turned about it so its two rope entries lie `across`, where the falls arrive.
+        public void PlaceHook(Vector3 point, Vector3 direction, Vector3 across)
         {
             if (!released) return;
             direction = direction.sqrMagnitude > .000001f ? direction.normalized : transform.up;
-            Vector3 forward = Vector3.ProjectOnPlane(hook.rotation * Vector3.forward, direction);
+            Vector3 spread = Vector3.ProjectOnPlane(entrySpread, Vector3.up);
+            if (spread.sqrMagnitude < .000001f) spread = Vector3.forward;
+            Vector3 forward = Vector3.ProjectOnPlane(across, direction);
+            if (forward.sqrMagnitude < .0001f) forward = Vector3.ProjectOnPlane(hook.rotation * spread, direction);
             if (forward.sqrMagnitude < .0001f) forward = Vector3.ProjectOnPlane(hook.rotation * Vector3.up, direction);
-            Hang(point, Quaternion.LookRotation(forward, direction));
+            Hang(point, Quaternion.LookRotation(forward, direction) * Quaternion.Inverse(Quaternion.LookRotation(spread, Vector3.up)));
         }
 
         // Both hook bodies turned to `rotation`, the seat at `point`.

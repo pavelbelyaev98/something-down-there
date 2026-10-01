@@ -1,18 +1,39 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // The salvage crane's cable, one rope from the trolley's sheave to the hook block (the pack's own
-    // straight cable is stripped from its mesh). Hanging, it runs straight down to the block. During a
-    // recovery it is the smart rope: down the hole mouth and along the dug route, with the crane's hook
-    // riding its end into the lifting eye on the load.
+    // The salvage crane's cable: the pack's two falls from the trolley's sheaves to the hook block, drawn
+    // as the pack's own strands (its straight cable is stripped from the jib mesh). Hanging, they run
+    // straight down to the block. During a recovery the cable is the smart rope: down the hole mouth and
+    // along the dug route, with the crane's hook riding its end into the lifting eye on the load; both
+    // falls follow it, drawn together through the hole and spreading again into the block.
     public sealed class CraneRopeView : MonoBehaviour, IRopeCollision
     {
-        [SerializeField] private LineRenderer rope;
+        // Sides of a strand's cross-section, as on the pack's cable.
+        private const int Sides = 6;
+        // Underground the falls run almost touching (their centres this many strand radii from the
+        // rope's), and they fan out to the block's rope entries over this last length (metres); along the
+        // rope their spacing changes at most this fast (metres per metre).
+        private const float TogetherRadii = 1.5f, FanLength = .6f, SpacingSlope = .4f;
+        // Rope points closer than this (metres) are one point; the hook block eases its turn about the
+        // rope at this rate (1/s).
+        private const float MergeDistance = .03f, BlockTurnRate = 12f;
+        [SerializeField] private MeshFilter strands;
         [SerializeField] private TowerCraneRig rig;
+        // The pack's cable texture strip: u from the sheave to the hook block, v around a strand.
+        [SerializeField] private Vector2 uvAlong, uvAround;
         private readonly RopeDynamics dynamics = new RopeDynamics();
         private readonly Vector3[] seed = new Vector3[ExtractionSnapshot.MaximumWaypoints + 2];
         private readonly RaycastHit[] hits = new RaycastHit[16];
+        private readonly List<Vector3> centre = new List<Vector3>(), sides = new List<Vector3>(), strand = new List<Vector3>();
+        private readonly List<float> lengths = new List<float>(), spacings = new List<float>();
+        private readonly List<Vector3> vertices = new List<Vector3>(), normals = new List<Vector3>();
+        private readonly List<Vector4> tangents = new List<Vector4>();
+        private readonly List<Vector2> uvs = new List<Vector2>();
+        private readonly List<int> triangles = new List<int>();
+        private Mesh mesh;
+        private int builtFrame = -1;
         private TerrainVolume terrain;
         private SalvageRopeSettings settings;
         private Vector3[] route;
@@ -20,10 +41,12 @@ namespace SomethingDownThere
         private int reelSegment;
         private Vector3 reel, attachment;
         private Vector3 previousTip, currentTip, previousDirection = Vector3.up, currentDirection = Vector3.up;
+        // Where the falls arrive at the released hook block: its rope entries turn to lie along it.
+        private Vector3 across;
         private float paidLength;
         private bool attached;
         private Collider loadCollider;
-        public bool Configured => rope != null && rig != null;
+        public bool Configured => strands != null && rig != null && uvAlong != Vector2.zero;
         public bool Initialized => terrain != null && settings != null;
         public int ParticleCount => dynamics.Count;
         public Vector3 ParticlePosition(int index) => dynamics.Position(index);
@@ -35,38 +58,41 @@ namespace SomethingDownThere
         {
             if (terrain == volume && settings == tuning) return;
             terrain = volume; settings = tuning;
-            if (terrain.TryGetComponent<ExcavationDaylight>(out var lighting)) lighting.Register(rope);
+            if (terrain.TryGetComponent<ExcavationDaylight>(out var lighting)) lighting.Register(strands.GetComponent<Renderer>());
             Hide();
-            rope.enabled = true;
         }
+
+        private void OnDestroy() { if (mesh != null) Destroy(mesh); }
 
         // Back to the hanging cable.
         public void Hide() { dynamics.Clear(); route = null; }
 
         // One physics step of the released hook riding the rope's free end: its seat at `tip`, its block
-        // toward the rope along `direction`, eased so a hand-off from the hanging hook does not jump.
-        public void Carry(Vector3 tip, Vector3 direction, float dt, bool snap)
+        // toward the rope along `direction`. It sits exactly at the rope's end (a lagging hook left the
+        // cable doubling back into it); frames between physics steps interpolate like the rope.
+        public void Carry(Vector3 tip, Vector3 direction, bool snap)
         {
             direction = direction.sqrMagnitude > .000001f ? direction.normalized : Vector3.up;
-            float follow = snap ? 1 : 1 - Mathf.Exp(-14 * dt);
             previousTip = snap ? tip : currentTip; previousDirection = snap ? direction : currentDirection;
-            currentTip = Vector3.Lerp(previousTip, tip, follow);
-            currentDirection = Vector3.Slerp(previousDirection, direction, follow).normalized;
+            currentTip = tip; currentDirection = direction;
         }
 
         // The simulated rope pays out from the route at `anchorDistance` to `end`: the rope's free end
         // behind the riding hook, or the lifting eye once it has hooked on. Above that point it is drawn
-        // straight up the route and the shaft to the trolley.
+        // straight up the route and the shaft to the trolley. While the hook is still riding down the
+        // straight shaft (the anchor at or above its end) nothing is simulated: the rope hangs straight.
         public void Draw(Transform world, Vector3[] path, float distance, float anchorDistance, Vector3 end, bool attachedToLoad)
         {
             if (path == null || path.Length < 2) { Hide(); return; }
+            bool straight = anchorDistance <= distance + .001f;
             Vector3 point = world.TransformPoint(ExtractionSnapshot.Point(path, distance, out int segment));
-            reel = world.TransformPoint(ExtractionSnapshot.Point(path, anchorDistance, out int anchorSegment));
+            Vector3 anchor = world.TransformPoint(ExtractionSnapshot.Point(path, anchorDistance, out int anchorSegment));
+            reel = straight ? end : anchor;
             routeToWorld = world.localToWorldMatrix; reelSegment = anchorSegment;
             attachment = end;
             attached = attachedToLoad;
             // The free end can sit off the route (the hook block beyond its tip): that span is paid out too.
-            float available = Mathf.Max(0, anchorDistance - distance) + (attached ? 0 : Vector3.Distance(point, end));
+            float available = straight ? 0 : Mathf.Max(0, anchorDistance - distance) + (attached ? 0 : Vector3.Distance(point, end));
             // The reel takes cable in even while the load is wedged. Adding the
             // guide/load gap here paid the spring's extension straight back out,
             // so the visible cable stayed slack while an invisible spring hauled.
@@ -79,8 +105,8 @@ namespace SomethingDownThere
                 seed[count++] = attachment;
                 dynamics.Seed(seed, count, settings.RopeSegmentLength);
                 route = path;
+                across = rig.EntrySpread;
             }
-            rope.enabled = true;
             Render();
         }
 
@@ -101,14 +127,18 @@ namespace SomethingDownThere
             Render();
         }
 
-        // Draws the cable and puts a released hook where it rides; the crane calls this after its late update.
+        // Puts a released hook where it rides and draws the cable (once per rendered frame); the crane
+        // calls this after its late update.
         public void Render()
         {
-            if (rope == null || rig == null) return;
+            if (strands == null || rig == null) return;
+            bool build = !Time.inFixedTimeStep && builtFrame != Time.frameCount;
             if (dynamics.Count < 2)
             {
-                rope.positionCount = 2;
-                rope.SetPosition(0, rig.Sheave); rope.SetPosition(1, rig.RopeEntry);
+                if (!build) return;
+                // Hanging: each fall straight from its sheave to its entry into the block, as in the pack.
+                centre.Clear(); centre.Add(rig.Sheave); centre.Add(rig.RopeEntry);
+                Build();
                 return;
             }
             float alpha = Time.inFixedTimeStep ? 1 : Mathf.Clamp01((Time.time - Time.fixedTime) / Time.fixedDeltaTime);
@@ -128,14 +158,146 @@ namespace SomethingDownThere
                 tip = Vector3.Lerp(previousTip, currentTip, alpha);
                 direction = Vector3.Slerp(previousDirection, currentDirection, alpha).normalized;
             }
-            rig.PlaceHook(tip, direction);
+            rig.PlaceHook(tip, direction, across);
             HookDirection = direction;
+            if (!build) return;
             int above = route.Length - 1 - reelSegment;
-            rope.positionCount = above + last + 2;
-            rope.SetPosition(0, rig.Sheave);
-            for (int i = 0; i < above; i++) rope.SetPosition(i + 1, routeToWorld.MultiplyPoint3x4(route[route.Length - 1 - i]));
-            for (int i = 0; i < last; i++) rope.SetPosition(above + i + 1, dynamics.RenderPosition(i, alpha));
-            rope.SetPosition(above + last + 1, rig.RopeEntry);
+            centre.Clear(); centre.Add(rig.Sheave);
+            // Nothing in mid-air holds a bend: from the trolley the cable runs straight to the first route
+            // point at or under the ground.
+            float ground = terrain != null ? terrain.SurfaceHeight + .05f : float.PositiveInfinity;
+            for (int i = 0; i < above; i++)
+            {
+                Vector3 point = routeToWorld.MultiplyPoint3x4(route[route.Length - 1 - i]);
+                if (point.y <= ground) AddCentre(point);
+            }
+            for (int i = 0; i < last; i++) AddCentre(dynamics.RenderPosition(i, alpha));
+            // The rope's end can sit right at the block's entry (the hook riding down the straight
+            // shaft): a near-zero last span has no direction, so the entry replaces that point.
+            if (centre.Count > 1 && (rig.RopeEntry - centre[centre.Count - 1]).sqrMagnitude < MergeDistance * MergeDistance) centre[centre.Count - 1] = rig.RopeEntry;
+            else centre.Add(rig.RopeEntry);
+            // The block turns about its rope, smoothly, so its entries meet the falls where they arrive.
+            across = Vector3.Slerp(across, Frame(), 1 - Mathf.Exp(-BlockTurnRate * Time.deltaTime));
+            rig.PlaceHook(tip, direction, across);
+            centre[centre.Count - 1] = rig.RopeEntry;
+            Build();
+        }
+
+        // A route point where the reel sits exactly on it is drawn once.
+        private void AddCentre(Vector3 point)
+        {
+            if ((point - centre[centre.Count - 1]).sqrMagnitude > 1e-6f) centre.Add(point);
+        }
+
+        // The falls' side-by-side direction at each point of the cable's centre line, carried down from
+        // the trolley's sheaves without twisting. Returns the direction where they reach the block.
+        private Vector3 Frame()
+        {
+            sides.Clear();
+            Vector3 tangent = Tangent(centre, 0, Vector3.down);
+            Vector3 side = Vector3.ProjectOnPlane(rig.SheaveSpread, tangent);
+            side = side.sqrMagnitude > 1e-8f ? side.normalized : Perpendicular(tangent);
+            sides.Add(side);
+            for (int i = 1; i < centre.Count; i++)
+            {
+                Vector3 next = Tangent(centre, i, tangent);
+                if ((centre[i] - centre[i - 1]).sqrMagnitude < 1e-6f) next = tangent;
+                // A cable doubling back has no one rotation between its directions: keep the side as is.
+                side = Vector3.ProjectOnPlane(Vector3.Dot(tangent, next) > -.5f ? Quaternion.FromToRotation(tangent, next) * side : side, next);
+                side = side.sqrMagnitude > 1e-8f ? side.normalized : Perpendicular(next);
+                sides.Add(side);
+                tangent = next;
+            }
+            return side;
+        }
+
+        // Both falls as the pack's hexagonal strands, their spacing narrowing from the trolley's sheaves to
+        // the block's. Through the hole they are drawn together, as the ground funnels them, so the pair
+        // runs along the dug route like one doubled cable and spreads again into the block.
+        private void Build()
+        {
+            if (mesh == null)
+            {
+                mesh = new Mesh { name = "Crane cable", hideFlags = HideFlags.DontSave };
+                mesh.MarkDynamic();
+                strands.sharedMesh = mesh;
+            }
+            builtFrame = Time.frameCount;
+            int count = centre.Count;
+            lengths.Clear(); lengths.Add(0);
+            for (int i = 1; i < count; i++) lengths.Add(lengths[i - 1] + Vector3.Distance(centre[i - 1], centre[i]));
+            float total = Mathf.Max(lengths[count - 1], .0001f);
+            Vector3 top = rig.SheaveSpread, bottom = rig.EntrySpread;
+            float radius = rig.StrandRadius;
+            float ground = terrain != null ? terrain.SurfaceHeight : float.NegativeInfinity;
+            spacings.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                float spacing = centre[i].y < ground ? radius * TogetherRadii : Mathf.Lerp(top.magnitude, bottom.magnitude, lengths[i] / total);
+                spacings.Add(Mathf.Lerp(bottom.magnitude, spacing, Mathf.Clamp01((total - lengths[i]) / FanLength)));
+            }
+            for (int i = 2; i < count - 1; i++) spacings[i] = Mathf.Min(spacings[i], spacings[i - 1] + SpacingSlope * (lengths[i] - lengths[i - 1]));
+            for (int i = count - 3; i > 0; i--) spacings[i] = Mathf.Min(spacings[i], spacings[i + 1] + SpacingSlope * (lengths[i + 1] - lengths[i]));
+            vertices.Clear(); normals.Clear(); tangents.Clear(); uvs.Clear(); triangles.Clear();
+            var toLocal = transform.worldToLocalMatrix;
+            for (int fall = 0; fall < 2; fall++)
+            {
+                float sign = fall == 0 ? 1 : -1;
+                strand.Clear();
+                strand.Add(centre[0] + top * sign);
+                for (int i = 1; i < count - 1; i++) strand.Add(centre[i] + sides[i] * (spacings[i] * sign));
+                strand.Add(centre[count - 1] + bottom * sign);
+                Tube(total, radius, toLocal);
+            }
+            mesh.Clear();
+            mesh.SetVertices(vertices); mesh.SetNormals(normals); mesh.SetTangents(tangents); mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(triangles, 0, true);
+        }
+
+        // One strand along `strand`, its rings carried along without twisting.
+        private void Tube(float total, float radius, Matrix4x4 toLocal)
+        {
+            int start = vertices.Count, count = strand.Count;
+            Vector3 forward = Tangent(strand, 0, Vector3.down);
+            Vector3 across0 = Perpendicular(forward);
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 next = Tangent(strand, i, forward);
+                across0 = Vector3.ProjectOnPlane(Quaternion.FromToRotation(forward, next) * across0, next);
+                across0 = across0.sqrMagnitude > 1e-8f ? across0.normalized : Perpendicular(next);
+                forward = next;
+                Vector3 up = Vector3.Cross(forward, across0);
+                float u = Mathf.Lerp(uvAlong.x, uvAlong.y, lengths[i] / total);
+                for (int k = 0; k <= Sides; k++)
+                {
+                    float angle = k * Mathf.PI * 2 / Sides;
+                    Vector3 radial = across0 * Mathf.Cos(angle) + up * Mathf.Sin(angle);
+                    vertices.Add(toLocal.MultiplyPoint3x4(strand[i] + radial * radius));
+                    normals.Add(toLocal.MultiplyVector(radial));
+                    Vector3 along = toLocal.MultiplyVector(forward);
+                    tangents.Add(new Vector4(along.x, along.y, along.z, 1));
+                    uvs.Add(new Vector2(u, Mathf.Lerp(uvAround.x, uvAround.y, k / (float)Sides)));
+                }
+                if (i == 0) continue;
+                int ring = start + i * (Sides + 1), previous = ring - (Sides + 1);
+                for (int k = 0; k < Sides; k++)
+                {
+                    triangles.Add(previous + k); triangles.Add(previous + k + 1); triangles.Add(ring + k);
+                    triangles.Add(previous + k + 1); triangles.Add(ring + k + 1); triangles.Add(ring + k);
+                }
+            }
+        }
+
+        private static Vector3 Tangent(List<Vector3> line, int i, Vector3 fallback)
+        {
+            Vector3 d = line[Mathf.Min(i + 1, line.Count - 1)] - line[Mathf.Max(i - 1, 0)];
+            return d.sqrMagnitude > 1e-6f ? d.normalized : fallback;
+        }
+
+        private static Vector3 Perpendicular(Vector3 direction)
+        {
+            Vector3 side = Vector3.Cross(direction, Mathf.Abs(direction.y) < .9f ? Vector3.up : Vector3.right);
+            return side.normalized;
         }
 
         public Vector3 Project(Vector3 from, Vector3 point, float radius)

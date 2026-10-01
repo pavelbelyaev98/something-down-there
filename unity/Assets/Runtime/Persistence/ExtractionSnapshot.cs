@@ -4,20 +4,20 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Route planning, the crane swinging over the hole and lowering its hook down the shaft, the hook
-    // riding the smart rope along the route into the lifting eye and the crane reeling the load in, then
-    // lifting it clear, carrying it to camp and setting it down.
-    public enum ExtractionPhase { Planning, Reaching, Lowering, Deploying, Attaching, Hauling, Retensioning, Lifting, Carrying, SettingDown }
+    // Route planning, the crane swinging over the hole, the hook riding the smart rope down the hole and
+    // along the route into the lifting eye and the crane reeling the load in, then lifting it clear,
+    // carrying it to camp, setting it down and letting it settle where it lands.
+    public enum ExtractionPhase { Planning, Reaching, Deploying, Attaching, Hauling, Retensioning, Lifting, Carrying, SettingDown, Settling }
 
     public sealed class ExtractionSnapshot
     {
         public const int MaximumWaypoints = 8192, MaximumSpots = 16;
         public string FindId;
         public ExtractionPhase Phase;
-        // Find-local: the marked rope attachment and, once the crane holds the load, its grab point.
-        public Vector3 AttachLocal, GrabLocal, Outward;
+        // Find-local: the marked rope attachment, where the lifting eye is bolted on.
+        public Vector3 AttachLocal, Outward;
         public Vector3 LinearVelocity, AngularVelocity;
-        // Site-local route from the attachment up the dug passage to the crane's hook over the mouth (the last point).
+        // Site-local route from the attachment up the dug passage to the crane's park point over the mouth (the last point).
         public Vector3[] Route = Array.Empty<Vector3>();
         public float Progress, PhaseSeconds;
         public bool Attached;
@@ -37,7 +37,7 @@ namespace SomethingDownThere
             WorldSnapshot.Require(!string.IsNullOrEmpty(FindId) && population.TryGetValue(FindId,out var owner)
                 && owner.State==FindState.Extracting && owner.Item.Kind==DiscoveryKind.Unique,"Extraction has no unique owner.");
             WorldSnapshot.Require(Enum.IsDefined(typeof(ExtractionPhase),Phase) && WorldSnapshot.Valid(AttachLocal)
-                && AttachLocal.sqrMagnitude<100 && WorldSnapshot.Valid(GrabLocal) && GrabLocal.sqrMagnitude<100
+                && AttachLocal.sqrMagnitude<100
                 && WorldSnapshot.Valid(Outward) && Outward.sqrMagnitude>.5f && Outward.sqrMagnitude<1.5f
                 && WorldSnapshot.Finite(Progress) && Progress>=0 && WorldSnapshot.Finite(PhaseSeconds) && PhaseSeconds>=0 && PhaseSeconds<=60,
                 "Invalid extraction progress.");
@@ -51,8 +51,6 @@ namespace SomethingDownThere
                 && WorldSnapshot.Valid(AngularVelocity) && AngularVelocity.sqrMagnitude<=400, "Invalid extraction motion.");
             WorldSnapshot.Require(Attached || LinearVelocity==Vector3.zero && AngularVelocity==Vector3.zero,
                 "Unattached extraction has rope motion.");
-            WorldSnapshot.Require(!Craning(Phase) || LinearVelocity==Vector3.zero && AngularVelocity==Vector3.zero,
-                "A load on the crane hook has rope motion.");
             bool hasRoute=Phase!=ExtractionPhase.Planning;
             WorldSnapshot.Require(!hasRoute || Route.Length>=3,"Extraction route is missing.");
             WorldSnapshot.Require(Route.Length==0 || Route.Length>=3,"Extraction route is incomplete.");
@@ -63,7 +61,7 @@ namespace SomethingDownThere
             float haulLength = Route.Length < 3 ? 0 : Length(Route);
             WorldSnapshot.Require(Progress<=haulLength+.001f,"Extraction progress exceeds its route.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Planning || (!Attached && Route.Length == 0 && Progress == 0), "Invalid route planning.");
-            WorldSnapshot.Require(Phase != ExtractionPhase.Reaching && Phase != ExtractionPhase.Lowering || (!Attached && Progress == 0), "Invalid crane approach.");
+            WorldSnapshot.Require(Phase != ExtractionPhase.Reaching || (!Attached && Progress == 0), "Invalid crane approach.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Deploying || !Attached, "Invalid rope deployment.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Attaching || (!Attached && Progress == 0), "Invalid rope attachment.");
             WorldSnapshot.Require(Phase != ExtractionPhase.Hauling && Phase != ExtractionPhase.Retensioning || Attached, "Invalid haul progress.");

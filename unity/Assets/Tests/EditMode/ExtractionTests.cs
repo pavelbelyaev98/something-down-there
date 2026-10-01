@@ -68,7 +68,6 @@ namespace SomethingDownThere.Tests
 
         [TestCase(ExtractionPhase.Planning)]
         [TestCase(ExtractionPhase.Reaching)]
-        [TestCase(ExtractionPhase.Lowering)]
         [TestCase(ExtractionPhase.Deploying)]
         [TestCase(ExtractionPhase.Attaching)]
         [TestCase(ExtractionPhase.Hauling)]
@@ -76,19 +75,19 @@ namespace SomethingDownThere.Tests
         [TestCase(ExtractionPhase.Lifting)]
         [TestCase(ExtractionPhase.Carrying)]
         [TestCase(ExtractionPhase.SettingDown)]
+        [TestCase(ExtractionPhase.Settling)]
         public void JobAndSingleOwnerRoundTripTogether(ExtractionPhase phase)
         {
             var state = Snapshot();
             state.Extraction.Phase = phase;
             state.Extraction.Attached = phase >= ExtractionPhase.Hauling;
             bool craning = ExtractionSnapshot.Craning(phase);
-            if(state.Extraction.Attached && !craning) { state.Extraction.LinearVelocity=Vector3.up*7.5f; state.Extraction.AngularVelocity=Vector3.right*12f; }
+            if(state.Extraction.Attached) { state.Extraction.LinearVelocity=Vector3.up*7.5f; state.Extraction.AngularVelocity=Vector3.right*12f; }
             if (phase == ExtractionPhase.Planning) state.Extraction.Route = Array.Empty<Vector3>();
             if (craning)
             {
-                // The rope's haul is done; the crane holds the load wherever it swings.
+                // The rope's haul is done; the load swings from the crane's hook wherever it goes.
                 state.Extraction.Progress = ExtractionSnapshot.Length(state.Extraction.Route);
-                state.Extraction.GrabLocal = new Vector3(0, .45f, 0);
                 state.Finds[0].Position += new Vector3(4, 3, -2);
             }
             using var bytes = new MemoryStream();
@@ -97,7 +96,6 @@ namespace SomethingDownThere.Tests
             Assert.That(loaded.Extraction.Phase, Is.EqualTo(phase));
             Assert.That(loaded.Extraction.Route, Is.EqualTo(state.Extraction.Route));
             Assert.That(loaded.Extraction.AttachLocal, Is.EqualTo(state.Extraction.AttachLocal));
-            Assert.That(loaded.Extraction.GrabLocal, Is.EqualTo(state.Extraction.GrabLocal));
             Assert.That(loaded.Extraction.LinearVelocity, Is.EqualTo(state.Extraction.LinearVelocity));
             Assert.That(loaded.Extraction.AngularVelocity, Is.EqualTo(state.Extraction.AngularVelocity));
             Assert.That(loaded.Extraction.Spot, Is.EqualTo(2));
@@ -180,7 +178,9 @@ namespace SomethingDownThere.Tests
             state.Extraction.Progress = ExtractionSnapshot.Length(state.Extraction.Route);
             Assert.DoesNotThrow(() => state.Validate());
             state.Extraction.LinearVelocity = Vector3.up;
-            Assert.Throws<InvalidDataException>(() => state.Validate(), "A load on the hook has no rope motion.");
+            Assert.DoesNotThrow(() => state.Validate(), "A load swinging on the hook keeps its motion.");
+            state.Extraction.Attached = false;
+            Assert.Throws<InvalidDataException>(() => state.Validate(), "Only a load the rope brought up hangs on the hook.");
             state = Reaching(); state.Finds[0].State = FindState.Stored; state.Extraction = null;
             Assert.DoesNotThrow(() => state.Validate());
             state.Finds[0].PhysicsReleased = true;
