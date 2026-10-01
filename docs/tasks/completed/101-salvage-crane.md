@@ -388,3 +388,20 @@ down your own route, drags the computer out through the dirt, and the crane sets
 - Rejected: raising the drive 1.5x at every break (up to 3x): breaks come constantly, so after two or
   three it was at full aggression and the load came out almost without resistance (7.2 / 4.2 / 3.0 s;
   user: too fast, it switched to aggressive at once).
+
+## Iteration: destruction effects (user, 2026-10-01)
+
+- Asked for new and better effects for the rope's soil breaks. The old burst (22 billboard crumbs and 7
+  puffs, under a second) used an unlit shader, so underground it glowed at full colour. Now each real
+  break (never brief contact or a knocked lamp: concept 09, the jam tests) throws:
+  - solid clods (a generated faceted mesh, art/soil-debris) that tumble out; each flight is marched
+    through the ground's density to where it first meets soil, and a clod landing on a floor then rests
+    there and sinks away over 1.6-3 s (visual only: no particle collision);
+  - a spray of fine crumbs, a dust cloud that swells, hangs for up to 2.6 s and drifts with the surge, and
+    a trickle of crumbs off the upper broken face for about a second;
+  - colours from the ground at the break (palette from each ground's albedo texture and tint), and
+    `SoilBreak.shader` now lit like the excavation: excavation daylight, sun with shadows, work lamps
+    diffused like on the soil, a rounded-lump normal for billboards; the gravel pour shares it;
+  - about 40% more of everything at full machine drive, and bigger clods.
+- The first palette was saturated orange next to the soil; it now follows the soil texture, a little
+  darker for its ambient occlusion.

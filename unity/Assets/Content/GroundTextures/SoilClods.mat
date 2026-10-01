@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: SoilCrumbs
+  m_Name: SoilClods
   m_Shader: {fileID: 4800000, guid: c3e81f6a075834f4c9c69804f0f0416b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -26,7 +26,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Dust: 0
-    - _Solid: 0
+    - _Solid: 1
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

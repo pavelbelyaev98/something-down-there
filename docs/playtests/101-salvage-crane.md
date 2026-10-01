@@ -25,6 +25,6 @@ lands at camp for good.
 **Tell the agent:**
 - The hook enters your tunnel about 8 s after marking; a recovery takes about 25–30 s. Faster, slower or fine?
 - Do the two cables read as the crane's own, hanging and down your tunnel? Is the hook riding the tunnel by itself OK?
-- After hooking on, does the find still sit stuck too long, or does it now tear out too much dirt?
-- Crane look (weathered paint; the clean paint is a one-line swap), its spot, and anything off: clipping,
-  swinging, where the computers land.
+- After hooking on, does it sit stuck too long or tear out too much dirt? Do the breaks look right
+  (clods landing and sinking away, dust, trickle): too much, too little, wrong colour?
+- Crane look (clean paint is a one-line swap), its spot, anything off: clipping, swinging, landings.

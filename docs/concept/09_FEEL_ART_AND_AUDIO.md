@@ -145,7 +145,7 @@ Ambience and feedback only. **No music. No voice acting**.
 Comfort-safe effects:
 
 - Dust, crumbs, sparkles, smoke from C4, splash from water-adjacent areas.
-- Rope soil breaks eject a brief local burst of dirt crumbs and soft dust at the retaining contact, only when ground is actually removed. Keep the load and nearby excavation readable through the effect.
+- Rope soil breaks, only when ground is actually removed, throw the earth they tear out: tumbling clods that land on the dug floor and sink away, a spray of crumbs, a dust cloud that hangs and drifts with the surge, and a short trickle off the broken face. Debris takes the colour of the ground it came from and is lit like it (dark underground, caught by lamps); harder breaks and a harder-driven machine throw more. Keep the load and nearby excavation readable through the effect.
 - No screen shake, no blood or gore, no full-screen flashes, no chromatic aberration,
  no forced bloom.
 - Particles never collide and never deal damage.

@@ -91,6 +91,7 @@ namespace SomethingDownThere.Editor
                 tuning.ApplyModifiedPropertiesWithoutUndo();
             }
             Set(salvage, "soilChipsMaterial", SoilBreak("SoilCrumbs", false)); Set(salvage, "soilDustMaterial", SoilBreak("SoilDust", true));
+            Set(salvage, "soilClodsMaterial", SoilBreak("SoilClods", false, true));
             SetArray(salvage, "setDownSpots", spots);
             Set(player, "crane", salvage);
             EditorSceneManager.MarkSceneDirty(scene); AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
@@ -353,8 +354,9 @@ namespace SomethingDownThere.Editor
             return material;
         }
 
-        // Rope ruptures and the gravel pour throw the same soil crumbs and dust (GroundTextureSetup wires the pour).
-        private static Material SoilBreak(string name, bool dust)
+        // Rope ruptures and the gravel pour throw the same soil crumbs and dust (GroundTextureSetup wires the
+        // pour); rope ruptures also throw solid clods.
+        private static Material SoilBreak(string name, bool dust, bool solid = false)
         {
             string path = GroundTextureSetup.Folder + name + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -364,7 +366,7 @@ namespace SomethingDownThere.Editor
                 if (shader == null) throw new InvalidOperationException("Missing soil-break shader.");
                 material = new Material(shader); AssetDatabase.CreateAsset(material, path);
             }
-            material.SetFloat("_Dust", dust ? 1 : 0); EditorUtility.SetDirty(material);
+            material.SetFloat("_Dust", dust ? 1 : 0); material.SetFloat("_Solid", solid ? 1 : 0); EditorUtility.SetDirty(material);
             return material;
         }
 

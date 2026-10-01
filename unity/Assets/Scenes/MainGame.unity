@@ -45412,6 +45412,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.SalvageCrane
   soilChipsMaterial: {fileID: 2100000, guid: e2863d070a64ca44195117c0b7bd6446, type: 2}
   soilDustMaterial: {fileID: 2100000, guid: bbcaeb641866eaa46920602a2e659e14, type: 2}
+  soilClodsMaterial: {fileID: 2100000, guid: 25d0f4fcdc75a1d42ba8fd36e4c9bd84, type: 2}
   terrain: {fileID: 486403993}
   discoveries: {fileID: 203558592}
   player: {fileID: 1869448863}
