@@ -52,7 +52,7 @@ namespace SomethingDownThere
             && markMaterial != null && validPreview != null && invalidPreview != null;
         // A round lamp has no visible heading, so only markings offer rotation.
         public string PlacementPrompt => !IsPlacing ? "" : (valid ? $"{Binding(PlayerBinding.Dig)}  Place {SelectionName}" : reason)
-            + (placement > 1 ? $"\n{Binding(PlayerBinding.RotatePlacement)} Rotate  |  " : "\n") + $"{Binding(PlayerBinding.Grab)} Cancel"
+            + (placement > 1 ? $"\n{Binding(PlayerBinding.RotatePlacement)} Rotate  |  " : "\n") + $"{Binding(PlayerBinding.CancelPlacement)} Cancel"
             + (placement > 1 ? $"  |  {Binding(PlayerBinding.Mark)} Next symbol" : "");
         private string SelectionName => placement == 1 ? "work lamp" : MarkName((WorldMarkKind)(placement - 2));
         private string Binding(PlayerBinding binding) => player.InputSettings.Display(binding);
@@ -88,14 +88,13 @@ namespace SomethingDownThere
         {
             if (frame.LampPressed || frame.MarkPressed)
             {
-                if (player.HeldFind != null) { player.ShowFeedback("Put down the find before placing equipment"); return true; }
                 int next = frame.LampPressed ? placement == 1 ? 0 : 1 : placement < 2 ? 2 : placement == 4 ? 2 : placement + 1;
                 Cancel(); placement = next; player.SuppressWorldActions();
                 if (IsPlacing) UpdatePreview();
                 return true;
             }
             if (!IsPlacing) return frame.LampPressed || frame.MarkPressed;
-            if (frame.GrabPressed) { Cancel(); player.SuppressWorldActions(); return true; }
+            if (frame.CancelPlacementPressed) { Cancel(); player.SuppressWorldActions(); return true; }
             if (frame.RotatePlacementPressed) rotation = Mathf.Repeat(rotation + 45, 360);
             UpdatePreview();
             if (frame.DigPressed)

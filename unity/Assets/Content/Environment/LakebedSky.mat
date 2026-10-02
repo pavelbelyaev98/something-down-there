@@ -37,7 +37,7 @@ Material:
     - _StarSize: 0
     - _SunDisk: 2
     - _SunOrbitYaw: 0
-    - _SunSize: 0.05
+    - _SunSize: 0.04
     - _SunSizeConvergence: 4
     - _UseStarRotationMatrix: 0
     m_Colors:

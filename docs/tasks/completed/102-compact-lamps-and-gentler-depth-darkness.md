@@ -215,3 +215,33 @@ first zone; below it lamps are the only light), 03 §7 and 06 §4 (starter lamps
   deep shaft darkens naturally. Rejected: both the original floor fill (0.5-2 m fade) and the wall fill
   above. Deep shafts are darker than the 102 tuning assumed; the daylight curve is unchanged pending
   the user's playtest.
+
+## Iteration: ground bounce in the daylight fill (user, 2026-10-02)
+
+- Feedback (screenshot of a wide 1.6 m pit under the 88° sun): the wall was near-black; "in the real
+  world it would be just light". Measured: the wall's route daylight is ~1.0, SSAO adds little; a
+  vertical wall under the overhead sun gets almost no direct light and the scene's fill was one flat
+  sky value (no light thrown back off the sunlit floor and ground), and the colour grade (ACES plus
+  contrast +46.8) pushes shade toward black (with the grade off the wall reads clearly).
+- The scene's ambient is now a gradient (`SunPresentationSetup.ConfigureAmbient`): sky 0.736 above as
+  before, horizon (1.05, 0.98, 0.9) and ground (0.95, 0.85, 0.72) for sunlit-ground bounce. It depends
+  only on facing, applies to everything, and underground the excavation daylight still scales it.
+  `GroundTextureSetup` now calls the same method instead of writing its own flat ambient.
+- Rejected: softer contrast (+20) and contrast plus bounce; the world around the hole went greyish.
+  The grade stays as approved.
+- Feedback (close-up of a dug wall): dark spots left on the soil. They were the clay loam pack mask's
+  baked occlusion, which full-strength fill light now shows as blotches (strata bands, broad colour
+  variation and SSAO made little difference). The ground shader's soil occlusion is scaled by
+  `_SoilOcclusion`, 0.4 on the dig material (`LakebedSiteSetup.ClayLoamOcclusion`), keeping some depth
+  around pebbles and pores.
+- Feedback (close-up of fresh shovel digging): "why so many blockies". The ground contact shading
+  (URP SSAO, applied after opaques, intensity 1.25) painted a dark band into every crease between
+  shovel bites, sunlit or not; with it off the same surface read as smooth soil (ground bounce made no
+  difference). Intensity went to 0.6, then the user picked 0.3 from the admin steps
+  (`GroundTextureSetup.ContactShadingIntensity`); Developer admin **Contact shading** stays for later
+  tuning and steps it to 0.15/0.45/0.6 for the session (`ContactShading`, reflection on the feature's
+  private settings like the surface performance fixture, restored when the session ends).
+  Intensity, the gradient ambient and the occlusion scale cost no frame time: SSAO's cost is its
+  samples, radius, resolution and blur, and the ambient is the same per-pixel SH lookup.
+- Nothing else in the lighting depends on a hole's shape: the route daylight (darkness with depth and
+  sideways travel) and the lamps' near-brightness cap are the only excavation-specific parts.

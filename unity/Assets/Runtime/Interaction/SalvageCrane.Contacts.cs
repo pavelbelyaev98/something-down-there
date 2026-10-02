@@ -83,7 +83,7 @@ namespace SomethingDownThere
                 var find = other.GetComponentInParent<BuriedFind>();
                 var lamp = other.GetComponentInParent<WorkLamp>();
                 if (find != null && (find == payload || find.Kind != DiscoveryKind.Common
-                    || find.State != FindState.World || find.IsHeld)) continue;
+                    || find.State != FindState.World)) continue;
                 // A released rock can also become pinned between the load and
                 // soil. Give a moving rock time to get out of the way first.
                 float priority = opposition + 1; // Contacted soil before an already loose rock.

@@ -25,7 +25,6 @@
         "required_exposure": 0.6,
         "detector_eligible": true,
         "model_scale": 1.0,
-        "throw_speed": 8,
         "lore": "The restart instructions did not mention draining the reservoir."
       }
     },
@@ -52,7 +51,6 @@
         "required_exposure": 0.6,
         "detector_eligible": true,
         "model_scale": 1.0,
-        "throw_speed": 8,
         "lore": "The last survey was saved under a file called final_final."
       }
     },
@@ -79,7 +77,6 @@
         "required_exposure": 0.6,
         "detector_eligible": true,
         "model_scale": 1.0,
-        "throw_speed": 8,
         "lore": "Its maintenance reminder was set to repeat after the next flood."
       }
     }

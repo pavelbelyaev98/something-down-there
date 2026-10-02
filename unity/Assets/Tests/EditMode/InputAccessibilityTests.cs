@@ -100,7 +100,7 @@ namespace SomethingDownThere.Tests
                 valid.Replace("inventory=<Keyboard>/tab\n", ""),
                 valid.Substring(0, valid.IndexOf("inventory=", StringComparison.Ordinal)),
                 valid.Replace("sprint=<Keyboard>/leftShift", "sprint=<Mouse>/delta"),
-                valid.Replace("grab=<Mouse>/leftButton", "grab=<Mouse>/delta"),
+                valid.Replace("cancelPlacement=<Mouse>/leftButton", "cancelPlacement=<Mouse>/delta"),
                 valid + "dig=<Keyboard>/q\n", valid + "toggleDig=false\n"
             })
             {
@@ -133,7 +133,7 @@ namespace SomethingDownThere.Tests
         public void RecoveredMapStopsDiggingOnReleaseAndReplacesDamagedFileOnlyAfterAnExplicitEdit(bool reset)
         {
             settings.SetToggleDig(true); settings.Bind(PlayerBinding.Dig, "<Keyboard>/q", true); settings.Flush();
-            store.Text = store.Text.Replace("grab=<Mouse>/rightButton", "grab=<Mouse>/delta");
+            store.Text = store.Text.Replace("cancelPlacement=<Mouse>/rightButton", "cancelPlacement=<Mouse>/delta");
             string damaged = store.Text;
             var restored = new InputPreferences(store);
             input.ConfigurePreferences(restored); InputSystem.Update(); input.Read();
@@ -269,22 +269,10 @@ namespace SomethingDownThere.Tests
             Release(keyboard.qKey); input.Read(); Press(keyboard.qKey); Assert.That(input.Read().LampPressed, Is.True);
             Press(keyboard.mKey); Assert.That(input.Read().MarkPressed, Is.True);
             Press(keyboard.rKey); Assert.That(input.Read().RotatePlacementPressed, Is.True);
+            Press(mouse.rightButton); Assert.That(input.Read().CancelPlacementPressed, Is.True);
             input.SuppressHeldActions();
-            Assert.That(input.Read().MarkPressed || input.Read().RotatePlacementPressed, Is.False);
-        }
-
-        [Test]
-        public void GrabAndThrowUseFreshBoundPressesAndClearOnSuppression()
-        {
-            Press(mouse.rightButton); Assert.That(input.Read().GrabPressed, Is.True);
-            input.SuppressHeldActions(); Assert.That(input.Read().GrabPressed, Is.False);
-            Release(mouse.rightButton); input.Read();
-            settings.SetToggleDig(true); InputSystem.Update(); input.Read();
-            Press(mouse.leftButton); Assert.That(input.Read().ThrowPressed, Is.True);
-            Release(mouse.leftButton); input.Read();
-            Press(mouse.leftButton); var stopped = input.Read();
-            Assert.That(stopped.DigHeld, Is.False); Assert.That(stopped.ThrowPressed, Is.True, "Throw is a press even when it would stop toggle digging.");
-            input.SuppressHeldActions(); Assert.That(input.Read().ThrowPressed, Is.False);
+            var suppressed = input.Read();
+            Assert.That(suppressed.MarkPressed || suppressed.RotatePlacementPressed || suppressed.CancelPlacementPressed, Is.False);
         }
 
         [Test]

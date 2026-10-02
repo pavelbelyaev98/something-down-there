@@ -1,6 +1,6 @@
 # 104 — Ground Lab Crane Scenes & Soil Look A/B
 
-**Status:** complete. The development Ground Lab also holds six dug crane scenes around its bays (straight, narrow and rock-lined shafts, an open pit, a deep shaft and a bent tunnel), each with a computer ready to mark; delivered computers clear away from camp and **Restart Ground Lab** reloads straight back in. Developer admin's **Soil look** cycles the dug soil through the authored clay loam, the light clay loam, the brown mud and the user's own soil bakes for the session.
+**Status:** complete. The development Ground Lab also holds six dug crane scenes around its bays (straight, narrow and rock-lined shafts, an open pit, a deep shaft and a bent tunnel), each with a computer ready to mark; delivered computers clear away from camp and **Restart Ground Lab** reloads straight back in. Soil look and sun position A/Bs ended with the authored clay loam and the authored overhead noon sun (its sky disc a touch smaller); both switches are removed.
 
 ## Objective
 
@@ -60,6 +60,16 @@ route to a computer every time; comparing the effects needs the same situations 
 - The user kept clay loam, light clay loam (favourite so far) and brown mud, dropped stony and sandy
   soil (pack rubble layers), and asked for their own custom ground textures: git history holds two soil
   bakes, a muted albedo and two grass turf bakes; the turfs are grass and were left out.
+- Decision (user): normal clay loam wins. The Soil look switch, `SoilLooks`, its asset, setup and the
+  restored textures are removed.
+- The user liked the colouring with the sun at 50° but worried a lower sun would disturb other things,
+  so Developer admin **Sun** (`SunPositions`, session only) cycles the scene sun's direction: overhead
+  88° (authored), high 70°, mid 55°, low 40°, low 40° from the other side, evening 20°. Colour,
+  strength and shadows are unchanged; Restore normal rules returns to the authored sun.
+- Decision (user): "I don't care about sun position so much, maybe we can just make it a tiny bit
+  smaller", meaning the sun disc: the sun stays at 88°, the sky's sun disc goes from 0.05 to 0.04
+  (`SunPresentationSetup.SunDiscSize`), and the Sun switch (`SunPositions`) is removed. Rejected: first
+  read as "lower the sun" and set to 80°; reverted.
 - The open pit was meant to break at the surface, but a straight lift meets no soil; it is the control
   scene ("a clean lift with nothing in the way").
 - Two stepped recordings of the same scene never jam at the same moment (the crane's start depends on

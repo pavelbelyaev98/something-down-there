@@ -16,7 +16,7 @@ namespace SomethingDownThere
         {
             find=null; hit=default;
             if (!player.GameplayActive || player.Crane==null || !player.Crane.Configured || player.Crane.Busy
-                || player.HeldFind!=null || player.WorksiteTools != null && player.WorksiteTools.IsPlacing
+                || player.WorksiteTools != null && player.WorksiteTools.IsPlacing
                 || player.BindingCapture != null && player.BindingCapture.BlocksInput
                 || !player.TryGetTarget(player.Tuning.InteractReach, out hit)) return false;
             find=hit.collider.GetComponentInParent<BuriedFind>();

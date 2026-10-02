@@ -6,10 +6,8 @@ namespace SomethingDownThere
     [DisallowMultipleComponent, RequireComponent(typeof(Rigidbody), typeof(BuriedFind))]
     public sealed class FindPhysics : MonoBehaviour
     {
-        [SerializeField, Range(1f, 12f)] private float throwSpeed = 8f;
         private Rigidbody body;
         private MeshCollider shape;
-        private Collider[] holdOverlaps;
         private float freeSpeedLimit, quietSeconds;
         private bool supported;
         private Vector3 quietPosition;
@@ -21,8 +19,6 @@ namespace SomethingDownThere
         private Vector3 observedPosition, safePosition;
         private Quaternion observedRotation, safeRotation;
         public bool Released { get; private set; }
-        public bool Held { get; private set; }
-        public float ThrowSpeed => Mathf.Clamp(throwSpeed, 1f, 12f);
         public Rigidbody Body => body;
         internal event System.Action<Collision> RecoveryContact;
 
@@ -37,7 +33,6 @@ namespace SomethingDownThere
 
         public void Restore(bool released)
         {
-            Held = false;
             body.maxLinearVelocity = freeSpeedLimit; ResetSettling();
             StopMotion();
             body.position = transform.position; body.rotation = transform.rotation;
@@ -61,7 +56,7 @@ namespace SomethingDownThere
         {
             using var profile = PhysicsMarker.Auto();
             if (find != null && find.State != FindState.World) { enabled = false; return; }
-            if (terrain == null || find.Collected || Held) return;
+            if (terrain == null || find.Collected) return;
             if (terrain.IsRestoring)
             {
                 if (!suspended) { StopMotion(); suspended = true; }
@@ -116,7 +111,7 @@ namespace SomethingDownThere
 
         internal bool TryReleaseFromSoil()
         {
-            if (Held || terrain == null || terrain.IsRestoring || find.State != FindState.World || !find.CanReleaseFromSoil()) return false;
+            if (terrain == null || terrain.IsRestoring || find.State != FindState.World || !find.CanReleaseFromSoil()) return false;
             Released = true; supportDirty = recoveryHeld = false; enabled = true;
             safePosition = observedPosition = body.position; safeRotation = observedRotation = body.rotation;
             ResetSettling();
@@ -139,88 +134,8 @@ namespace SomethingDownThere
             // must not freeze it again when its rotating hull clears another patch of soil.
             transform.SetPositionAndRotation(body.position, body.rotation);
             StopMotion();
-            Held = false; Released = true; enabled = false;
+            Released = true; enabled = false;
             ResetSettling();
-        }
-
-        internal void BeginHold()
-        {
-            enabled = true;
-            Held = Released = true; recoveryHeld = suspended = supportDirty = false;
-            ResetSettling();
-            body.isKinematic = false; body.useGravity = false;
-            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-            body.linearVelocity = body.angularVelocity = Vector3.zero;
-            safePosition = observedPosition = body.position; safeRotation = observedRotation = body.rotation;
-            body.WakeUp(); field?.NotifyMotion();
-        }
-
-        // A held find remains a real rigid body. Contacts stop it at walls/soil;
-        // bounded velocity draws it into view without teleporting through blockers.
-        internal bool MoveHeld(Vector3 target, Quaternion rotation, Vector3 carrierVelocity, float deltaTime)
-        {
-            if (!Held || terrain == null || terrain.IsRestoring) return false;
-            if (!ValidPose())
-            {
-                StopMotion(); body.position = safePosition; body.rotation = safeRotation;
-                transform.SetPositionAndRotation(safePosition, safeRotation);
-                EndHold(Vector3.zero); return false;
-            }
-            safePosition = observedPosition = body.position; safeRotation = observedRotation = body.rotation;
-            target = ClearHoldTarget(target, rotation);
-            // The hand travels with the player, independently of item throw strength.
-            // Feed forward actual controller motion so flight/falling does not build
-            // a speed-dependent gap. Contact response still owns the resulting pose.
-            body.maxLinearVelocity = Mathf.Max(freeSpeedLimit, carrierVelocity.magnitude + 12f);
-            float response = Mathf.Min(20f, 1f / Mathf.Max(.001f, deltaTime));
-            body.linearVelocity = carrierVelocity + Vector3.ClampMagnitude((target - body.position) * response, 12f);
-            Quaternion delta = rotation * Quaternion.Inverse(body.rotation);
-            delta.ToAngleAxis(out float angle, out Vector3 axis);
-            if (angle > 180f) angle -= 360f;
-            body.angularVelocity = angle > -.01f && angle < .01f ? Vector3.zero
-                : Vector3.ClampMagnitude(axis * (angle * Mathf.Deg2Rad * 14f), 8f);
-            find.RefreshExposure(false); field?.NotifyMotion();
-            return true;
-        }
-
-        internal void EndHold(Vector3 velocity)
-        {
-            if (!Held) return;
-            Held = false; Released = true; supportDirty = recoveryHeld = false;
-            body.maxLinearVelocity = freeSpeedLimit; ResetSettling();
-            body.isKinematic = false; body.useGravity = true;
-            body.linearVelocity = velocity; body.angularVelocity = Vector3.zero;
-            UpdateCollisionMode();
-            safePosition = observedPosition = body.position; safeRotation = observedRotation = body.rotation;
-            body.WakeUp(); find.RefreshExposure(false); field?.NotifyMotion();
-        }
-
-        private Vector3 ClearHoldTarget(Vector3 target, Quaternion rotation)
-        {
-            // Keep the desired rotated hull out of soil/props when pitching down.
-            // This only adjusts the goal: the dynamic body still travels through
-            // normal contact solving, never teleports to the far side of a wall.
-            if (holdOverlaps == null) holdOverlaps = new Collider[32];
-            float radius = Vector3.Scale(shape.sharedMesh.bounds.extents, transform.lossyScale).magnitude + .03f;
-            for (int pass = 0; pass < 3; pass++)
-            {
-                Vector3 center = target + rotation * Vector3.Scale(shape.sharedMesh.bounds.center, transform.lossyScale);
-                int count = Physics.OverlapSphereNonAlloc(center, radius, holdOverlaps, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-                if (count == holdOverlaps.Length) return body.position; // Crowded query: retain the known pose.
-                bool adjusted = false;
-                for (int i = 0; i < count; i++)
-                {
-                    var other = holdOverlaps[i];
-                    if (other == shape || other == field?.PlayerCollider
-                        || Physics.GetIgnoreLayerCollision(gameObject.layer, other.gameObject.layer)
-                        || Physics.GetIgnoreCollision(shape, other)) continue;
-                    if (!Physics.ComputePenetration(shape, target, rotation, other, other.transform.position, other.transform.rotation,
-                        out Vector3 direction, out float distance)) continue;
-                    target += direction * (distance + .015f); adjusted = true;
-                }
-                if (!adjusted) break;
-            }
-            return target;
         }
 
         private void OnCollisionEnter(Collision collision) => RecoveryContact?.Invoke(collision);
@@ -230,7 +145,7 @@ namespace SomethingDownThere
             // Unity sends contact callbacks even while normal find motion is
             // disabled for recovery. The crane's rope, not this component, owns the pull.
             RecoveryContact?.Invoke(collision);
-            if (Held || !Released) return;
+            if (!Released) return;
             var supportBody = collision.rigidbody;
             if (supportBody != null && (supportBody.linearVelocity.sqrMagnitude > .0025f
                 || supportBody.angularVelocity.sqrMagnitude > .01f)) return;
@@ -272,7 +187,7 @@ namespace SomethingDownThere
             // sliding/tipping; strict instantaneous speed gates kept some poses rocking.
             // Dampen modest supported contact impulses before the stricter sleep gate.
             // Otherwise a peak just above that gate receives no damping and perpetuates
-            // the next bounce. Airborne, held and fast-moving bodies are unaffected.
+            // the next bounce. Airborne and fast-moving bodies are unaffected.
             if (supported && body.linearVelocity.sqrMagnitude <= .5625f && body.angularVelocity.sqrMagnitude <= 4f)
             {
                 float damping = Mathf.Exp(-30f * Time.fixedDeltaTime);

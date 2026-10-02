@@ -25,7 +25,7 @@ namespace SomethingDownThere
         private bool displayingPreview;
         private VisualElement openDropdown;
         private readonly ToolkitTabs settingsTabs;
-        private readonly Label controlMove, controlCrouch, controlSprint, controlDig, controlDigDescription, controlGrab, controlJump, controlInteract, controlPause;
+        private readonly Label controlMove, controlCrouch, controlSprint, controlDig, controlDigDescription, controlJump, controlInteract, controlPause;
         private PlayerMenu displayed;
         private bool pending = true;
         private WorldSaveController persistence;
@@ -66,7 +66,6 @@ namespace SomethingDownThere
             controlMove = Root.Q<Label>("controlMove"); controlCrouch = Root.Q<Label>("controlCrouch");
             controlSprint = Root.Q<Label>("controlSprint");
             controlDig = Root.Q<Label>("controlDig"); controlDigDescription = Root.Q<Label>("controlDigDescription");
-            controlGrab = Root.Q<Label>("controlGrab");
             controlJump = Root.Q<Label>("controlJump"); controlInteract = Root.Q<Label>("controlInteract"); controlPause = Root.Q<Label>("controlPause");
             Root.RegisterCallback<NavigationSubmitEvent>(e => { if (CapturingInput) e.StopImmediatePropagation(); }, TrickleDown.TrickleDown);
             Root.RegisterCallback<PointerUpEvent>(e => { if (CapturingInput) e.StopImmediatePropagation(); }, TrickleDown.TrickleDown);
@@ -104,8 +103,7 @@ namespace SomethingDownThere
             controlCrouch.text = settings.Display(PlayerBinding.Crouch);
             controlSprint.text = settings.Display(PlayerBinding.Sprint);
             controlDig.text = settings.Display(PlayerBinding.Dig);
-            controlDigDescription.text = settings.ToggleDig ? "Toggle dig / collect / throw" : "Dig / collect / throw";
-            controlGrab.text = settings.Display(PlayerBinding.Grab);
+            controlDigDescription.text = settings.ToggleDig ? "Toggle dig / collect" : "Dig / collect";
             controlJump.text = settings.Display(PlayerBinding.Jump);
             controlInteract.text = settings.Display(PlayerBinding.Interact) + " / " + settings.Display(PlayerBinding.Inventory);
             controlPause.text = settings.Display(PlayerBinding.Pause);
@@ -626,7 +624,7 @@ namespace SomethingDownThere
             Button(grid, "Ground X-ray: " + (player.AdminGroundXray ? "ON" : "OFF"), player.ToggleAdminGroundXray);
             Button(grid, "Detector: " + (player.DetectorShown ? "ON" : "OFF"), player.ToggleAdminDetector);
             Button(grid, "Shaft dust: " + (player.ShaftDust ? "ON" : "OFF"), player.ToggleAdminShaftDust);
-            Button(grid, "Soil look: " + player.AdminSoilLookLabel, player.CycleAdminSoilLook);
+            Button(grid, "Contact shading: " + player.AdminContactShadingLabel, player.CycleAdminContactShading);
             Button(grid, "Add $500", player.GrantAdminMoney);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);
             Button(actions, "Resume digging", player.CloseMenu, true, "primary");

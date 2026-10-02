@@ -49,7 +49,6 @@ namespace SomethingDownThere
         private CharacterController motor;
         private FpsInput input;
         private PlayerCrouch crouch;
-        private FindHandling findHandling;
         public FindDetector Detector { get; private set; }
         [SerializeField] private SalvageCrane crane;
         [SerializeField] private WorksiteTools worksiteTools;
@@ -64,15 +63,12 @@ namespace SomethingDownThere
         }
         private FindProximityCollection proximityCollection;
         private FindPickupPresentation pickupPresentation;
-        public BuriedFind HeldFind => findHandling?.HeldFind;
-        internal Vector3 CarryVelocity => motor != null ? motor.velocity : Vector3.zero;
         private float pitch, verticalSpeed, digCooldown, savedTimeScale, jetpackHoldTime;
         private float scheduledDigInterval;
         private CursorLockMode savedCursorLock;
         private bool savedCursorVisible, ownsPresentation, focused = true;
         private int transitionFrame = -1;
         private float feedbackUntil;
-        private float primaryLockout;
         private float rescueRetryDelay;
         private BuriedFind blockedPickup;
         private readonly RaycastHit[] fullBagDigHits = new RaycastHit[128];
@@ -86,6 +82,8 @@ namespace SomethingDownThere
         private bool adminGroundXray;
         // Crane effect A/B (101): dust lingering in the shaft after rope breaks (on by default).
         private bool adminShaftDustOff;
+        // Ground contact shading (SSAO) strength for the session (0 = authored, then ContactShading.Steps).
+        private int adminContactShading;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -140,7 +138,7 @@ namespace SomethingDownThere
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
             || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray
-            || adminShaftDustOff || (excavationTerrain != null && excavationTerrain.SoilLook != 0));
+            || adminShaftDustOff || adminContactShading != 0);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
@@ -213,7 +211,6 @@ namespace SomethingDownThere
                 ConfigureInputPreferences(new DevicePreferencesFile(System.IO.Path.Combine(Application.persistentDataPath,
                     Application.isEditor ? "EditorPreferences" : "Preferences", "input-v1.ini")));
             input = new FpsInput(InputSettings);
-            findHandling = new FindHandling(this);
             Detector = new FindDetector(this);
             extractionInteraction = new FindExtractionInteraction(this);
             proximityCollection = new FindProximityCollection(this, motor, worldMask);
@@ -301,7 +298,6 @@ namespace SomethingDownThere
             worksiteTools?.Cancel();
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
-            findHandling?.Release(false);
             Physics.SyncTransforms();
             if (!crouch.CanRestore(snapshot.CrouchAmount, snapshot.PlayerPosition, snapshot.PlayerRotation, excavationTerrain))
                 throw new System.IO.InvalidDataException("The saved player stance has no safe clearance. The checkpoint has been kept.");
@@ -337,7 +333,7 @@ namespace SomethingDownThere
             verticalSpeed = snapshot.VerticalSpeed;
             SuccessfulStrokes = snapshot.SuccessfulStrokes;
             ResetJetpackHold();
-            digCooldown = primaryLockout = DigPulse = LastScoopVolume = 0;
+            digCooldown = DigPulse = LastScoopVolume = 0;
             blockedPickup = null;
             motor.enabled = true;
             Physics.SyncTransforms();
@@ -391,11 +387,6 @@ namespace SomethingDownThere
             DigPulse = Mathf.MoveTowards(DigPulse, 0, Time.deltaTime * 5f);
         }
 
-        private void FixedUpdate()
-        {
-            if (GameplayActive) findHandling?.FixedTick(Time.fixedDeltaTime);
-        }
-
         private void LateUpdate()
         {
             if (GameplayActive) pickupPresentation?.Tick(Time.deltaTime);
@@ -403,7 +394,6 @@ namespace SomethingDownThere
 
         internal void AnimateCollection(MeshRenderer source, MeshFilter mesh) => pickupPresentation?.Play(source, mesh);
         internal bool CanCollectNearby(BuriedFind find) => proximityCollection != null && proximityCollection.CanCollect(find);
-        internal void SuppressAutomaticCollection(BuriedFind find) => proximityCollection?.ExcludeUntilDeparture(find);
 
         // Exposed for deterministic simulation checks; device bindings remain in FpsInput.
         public void Tick(FpsInputFrame frame, float deltaTime)
@@ -464,7 +454,6 @@ namespace SomethingDownThere
             // more than one cut or run a burst of terrain rebuilds after a hitch.
             digCooldown = Mathf.Max(-EffectiveDigInterval, digCooldown - deltaTime);
             if (!frame.DigHeld || frame.DigPressed) digCooldown = Mathf.Max(0f, digCooldown);
-            primaryLockout = Mathf.Max(0f, primaryLockout - deltaTime);
             RefreshTargetPrompt();
             if (worksiteTools != null && worksiteTools.HandleInput(frame)) { RefreshTargetPrompt(); return; }
             if (extractionInteraction.Tick(frame, deltaTime)) { RefreshTargetPrompt(); return; }
@@ -474,19 +463,8 @@ namespace SomethingDownThere
                 TryInteract();
                 return;
             }
-            if (frame.GrabPressed)
-            {
-                TryGrabOrDrop();
-                return;
-            }
-
-            if (HeldFind != null)
-            {
-                if (frame.ThrowPressed) TryThrow();
-                return;
-            }
             if (!frame.DigHeld) blockedPickup = null;
-            if (primaryLockout <= 0f && proximityCollection.Tick(previousFeet,
+            if (proximityCollection.Tick(previousFeet,
                 frame.Move.sqrMagnitude > .0001f, frame.DigHeld || frame.DigPressed))
             {
                 RefreshTargetPrompt();
@@ -595,11 +573,6 @@ namespace SomethingDownThere
             TargetPrompt = "";
             if (!IsMenuOpen && worksiteTools != null && worksiteTools.IsPlacing)
             { TargetPrompt = worksiteTools.PlacementPrompt; return; }
-            if (!IsMenuOpen && HeldFind != null)
-            {
-                TargetPrompt = $"{HeldFind.DisplayName}  |  {InputSettings.Display(PlayerBinding.Dig)} to throw  |  {InputSettings.Display(PlayerBinding.Grab)} to drop";
-                return;
-            }
             if (IsMenuOpen || !TryGetTarget(Mathf.Max(EffectiveDigReach, MaximumPickupReach), out var hit)) return;
             var find = Contract<BuriedFind>(hit.collider);
             var interactable = Contract<IInteractionTarget>(hit.collider);
@@ -626,7 +599,7 @@ namespace SomethingDownThere
         internal void SuppressWorldActions()
         {
             input?.SuppressHeldActions(); extractionInteraction?.Reset();
-            blockedPickup = null; digCooldown = primaryLockout = 0;
+            blockedPickup = null; digCooldown = 0;
         }
 
         // Aimed pickup uses the centre ray, independently of shovel radius. A terrain
@@ -637,8 +610,7 @@ namespace SomethingDownThere
 
         private bool TryPrimaryAction(bool continueDiggingAfterPickup)
         {
-            if (IsMenuOpen || !focused || HeldFind != null || primaryLockout > 0f
-                || (Persistence != null && Persistence.BlocksPlay)) return false;
+            if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay)) return false;
             if (TryGetTarget(Mathf.Max(EffectiveDigReach, MaximumPickupReach), out var hit)
                 && Contract<BuriedFind>(hit.collider) is BuriedFind find)
             {
@@ -711,7 +683,7 @@ namespace SomethingDownThere
                 if (candidate.distance >= nearest) continue;
                 var common = candidate.collider.GetComponentInParent<BuriedFind>();
                 if (common != null && common.isActiveAndEnabled && common.Kind == DiscoveryKind.Common
-                    && common.State == FindState.World && !common.IsHeld) continue;
+                    && common.State == FindState.World) continue;
                 hit = candidate; nearest = candidate.distance;
             }
             return hit.collider != null;
@@ -720,7 +692,7 @@ namespace SomethingDownThere
         public bool TryDig()
         {
             scheduledDigInterval = EffectiveDigInterval;
-            if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay) || HeldFind != null
+            if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay)
                 || !TryGetDigTarget(out var hit)) return false;
             var target = Contract<IDigTarget>(hit.collider);
             if (target == null || !target.CanDig)
@@ -750,24 +722,6 @@ namespace SomethingDownThere
             return true;
         }
 
-        public bool TryGrabOrDrop()
-        {
-            if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay)) return false;
-            if (!findHandling.TryLiftOrDrop()) return false;
-            input?.SuppressHeldActions();
-            extractionInteraction?.Reset(); blockedPickup = null;
-            RefreshTargetPrompt(); return true;
-        }
-
-        public bool TryThrow()
-        {
-            if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay) || !findHandling.Release(true)) return false;
-            input?.SuppressHeldActions();
-            extractionInteraction?.Reset(); blockedPickup = null;
-            primaryLockout = .2f;
-            RefreshTargetPrompt(); return true;
-        }
-
         private bool SpendEnergy(float cost) => UnlimitedBattery || Battery.TrySpend(cost);
 
         public void RestoreAdminOverrides()
@@ -780,7 +734,7 @@ namespace SomethingDownThere
             adminHoverOnRelease = false;
             adminGroundXray = false;
             adminShaftDustOff = false;
-            excavationTerrain?.SetSoilLook(0);
+            if (adminContactShading != 0) { adminContactShading = 0; ContactShading.Restore(); }
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
@@ -840,14 +794,14 @@ namespace SomethingDownThere
             MenuChanged?.Invoke();
         }
 
-        // Soil look A/B: the freshly cut soil's texture set, cycled through the authored one and its variants.
-        public string AdminSoilLookLabel => excavationTerrain != null ? excavationTerrain.SoilLookName : "-";
+        public string AdminContactShadingLabel => ContactShading.Current.ToString("0.##");
 
-        public void CycleAdminSoilLook()
+        public void CycleAdminContactShading()
         {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin) || excavationTerrain == null) return;
-            excavationTerrain.SetSoilLook(excavationTerrain.SoilLook + 1);
-            ShowFeedback("Soil look: " + excavationTerrain.SoilLookName);
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminContactShading = (adminContactShading + 1) % (ContactShading.Steps.Length + 1);
+            if (adminContactShading == 0) ContactShading.Restore(); else ContactShading.Set(ContactShading.Steps[adminContactShading - 1]);
+            ShowFeedback("Contact shading " + AdminContactShadingLabel);
             MenuChanged?.Invoke();
         }
 
@@ -1094,7 +1048,6 @@ namespace SomethingDownThere
         {
             worksiteTools?.Cancel();
             pickupPresentation?.Clear();
-            findHandling?.Release(false);
             motor.enabled = false;
             transform.SetPositionAndRotation(surfaceReturn.position, surfaceReturn.rotation);
             crouch.Restore(0f);
@@ -1103,7 +1056,7 @@ namespace SomethingDownThere
             verticalSpeed = 0;
             jetpackReadyInAir = false;
             ResetJetpackHold();
-            digCooldown = primaryLockout = DigPulse = 0;
+            digCooldown = DigPulse = 0;
             blockedPickup = null;
             motor.enabled = true;
             Physics.SyncTransforms();
@@ -1225,7 +1178,6 @@ namespace SomethingDownThere
         {
             if (menu == PlayerMenu.None || IsMenuOpen) return;
             if ((menu == PlayerMenu.DeveloperAdmin || menu == PlayerMenu.ConfirmTerrainReset) && !AdminAvailable) return;
-            findHandling?.Suspend();
             savedTimeScale = Time.timeScale;
             Menu = menu;
             Time.timeScale = 0f;
@@ -1315,7 +1267,6 @@ namespace SomethingDownThere
 
         public void SetApplicationFocus(bool hasFocus)
         {
-            findHandling?.Suspend();
             if (!hasFocus) { CameraSettings?.Flush(); BindingCapture?.Cancel(); InputSettings?.Flush(); }
             GameSettings?.SetFocus(hasFocus);
             focused = hasFocus;
@@ -1347,7 +1298,6 @@ namespace SomethingDownThere
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
             GameSettings?.RevertDisplay();
-            findHandling?.Release(false);
             Rescue?.Cancel();
             BindingCapture?.Cancel();
             jetpackReadyInAir = false;
@@ -1370,6 +1320,8 @@ namespace SomethingDownThere
 
         private void OnDestroy()
         {
+            // The shading switch writes the shared renderer asset: never leave an admin value behind.
+            ContactShading.Restore();
             pickupPresentation?.Dispose();
             input?.Dispose();
             if (CameraSettings != null) CameraSettings.Changed -= ApplyCameraPreferences;

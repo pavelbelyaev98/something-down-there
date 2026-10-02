@@ -16,7 +16,6 @@
   "slots": 1,
   "required_exposure": 0.6,
   "mass_kg": 12,
-  "throw_speed": 4,
   "host_grounds": [
     "soil"
   ],

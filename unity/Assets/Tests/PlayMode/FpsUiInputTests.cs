@@ -500,8 +500,7 @@ namespace SomethingDownThere.Tests
             player.BackFromInputSettings(); yield return null; yield return null;
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Settings"));
             Assert.That(MenuTestUI.Text(player, "controlDig"), Is.EqualTo(player.InputSettings.Display(PlayerBinding.Dig)));
-            Assert.That(MenuTestUI.Text(player, "controlDigDescription"), Is.EqualTo("Toggle dig / collect / throw"));
-            Assert.That(MenuTestUI.Text(player, "controlGrab"), Is.EqualTo(player.InputSettings.Display(PlayerBinding.Grab)));
+            Assert.That(MenuTestUI.Text(player, "controlDigDescription"), Is.EqualTo("Toggle dig / collect"));
             Assert.That(new InputPreferences(inputPreferences).ToggleDig, Is.True);
             player.CloseMenu(); yield return null; yield return null;
             yield return new WaitForSecondsRealtime(0.4f); Assert.That(dig.HitsRemaining, Is.EqualTo(3));

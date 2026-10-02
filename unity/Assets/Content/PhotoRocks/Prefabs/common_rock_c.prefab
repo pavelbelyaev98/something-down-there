@@ -433,4 +433,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 706455c16cb2ca84ca1861a61aef59da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.FindPhysics
-  throwSpeed: 4

@@ -28,7 +28,7 @@ namespace SomethingDownThere.Editor
         private const int DigEdgeResolution = 256;
         // Freshly cut topsoil: the Mountains mud as clay loam, tinted away from the orange surface.
         public static readonly Color ClayLoamTint = new Color(.62f, .98f, 1.25f, 1);
-        public const float ClayLoamTileMetres = 4;
+        public const float ClayLoamTileMetres = 4, ClayLoamOcclusion = .4f;
 
         private static TerrainLayer CanyonMud()
         {
@@ -119,6 +119,8 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_SoilTileMetres", ClayLoamTileMetres);
             material.SetFloat("_NormalStrength", layer.normalScale);
             material.SetFloat("_StoneNormalStrength", layer.normalScale);
+            // The pack mask's baked occlusion at full strength blotches dug walls under the daylight fill.
+            material.SetFloat("_SoilOcclusion", ClayLoamOcclusion);
         }
 
         // Binds the plot's surface cap and the damp band to a dig ground material. Before the lakebed

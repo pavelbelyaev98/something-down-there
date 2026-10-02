@@ -113,14 +113,14 @@ unseen. Interesting finds remain after wide cuts, support cleanup and C4; exposu
 collectible without requiring full cleaning or waiting for the player to name them.
 For ordinary bag finds, holding the digging action collects an eligible aimed find as soon as it becomes available,
 including while it falls and between digging strokes. Loose finds have a more generous pickup
-reach than anchored finds or physical lifting; clear aim, exposure and bag capacity still apply.
+reach than anchored finds; clear aim, exposure and bag capacity still apply.
 Collection and its visual feedback never delay the next terrain cut. Held digging can collect
 and make its normally scheduled cut in the same frame, without adding a second cut or fuel charge.
 Automatic collection also reaches nearby, clearly uncovered ordinary finds in front of the player while
 walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
-Soil, walls and partial burial still block it; a full bag stops all pickup (see §9). Deliberately dropped/thrown finds wait
-until the player leaves and returns, or deliberately aims to collect them.
+Soil, walls and partial burial still block it; a full bag stops all pickup (see §9).
+There is no picking up, carrying or throwing finds by hand: a find is dug out, bagged or craned.
 Nearly excavated rocks break loose when only shallow surface contacts remain; substantial inner
 burial keeps them anchored. Their real colliders and gravity determine the resulting motion.
 
@@ -140,7 +140,7 @@ Extensions of the cluster system where discoveries physically connect through th
 **Whole-object crane recovery (mark underground, haul automatically)**:
 The first proof is the unique buried retro computer; later oversized discoveries reuse the same mechanism.
 The yard's small tower crane (the purchased pack's rig and motion) does it with its own rope and hook, the way riggers do: a lifting eye goes on the load and the crane's hook takes it. The crane's cable is one hoist rope, reeved in two falls from the trolley's sheaves to the hook block as on the pack's model, at all times: hanging, both run straight down; on a recovery the same cable is the smart rope: the hole draws both falls together and they bend down it and along the tunnel as one doubled cable, spreading again into the hook's block, with the tunnel's edges doing the work of a pulley at each corner. The idle crane rests with its hook over the set-down spots beside the camp, so the swing out to a hole is part of the show.
-- **Deliberate exposure:** Excavate enough to meet the object's authored exposure requirement. Unique finds require manually aiming at the dirt around them: digging directly at the exposed object never redirects a stroke to its remaining covering soil. Ordinary finds retain that uncover assist. Full cleaning is unnecessary. Crane targets remain in the world; digging, proximity pickup and physical grabbing cannot collect them.
+- **Deliberate exposure:** Excavate enough to meet the object's authored exposure requirement. Unique finds require manually aiming at the dirt around them: digging directly at the exposed object never redirects a stroke to its remaining covering soil. Ordinary finds retain that uncover assist. Full cleaning is unnecessary. Crane targets remain in the world; digging and proximity pickup cannot collect them.
 - **Mark anywhere on the visible object:** Aim at any unobstructed part within interaction reach and hold Interact (E by default). A surface marker previews the chosen point and fills during the hold; releasing or losing the target cancels the unfinished hold. Completing the hold bolts a lifting eye (a swivel hoist ring, sized for the crane's hook) on at that point; it stays through deployment and hauling, including after saving/loading, turns so the crane's hook threads through its ring, and swivels toward the hook once hooked. It is hidden by soil and objects, never a through-ground locator, and disappears when recovery finishes or planning fails. No special attachment hotspot.
 - **Automatic deployment:** Marking finds the rope's way through connected space in the player's excavation and calls the crane; it starts moving only once the mark is placed. It swings over the hole mouth (as near as its jib reaches for a mouth beyond it) with its hook at its resting height. The crane's cable and hook are the smart rope: the moment the crane is aligned with the hole, the hook goes straight down from wherever it hangs, even mid-swing, into the hole and along the dug route to the object in one run, never waiting for the swing to settle, and visibly hooks into the lifting eye. From marking to the hook entering the tunnel takes several seconds, not tens. No surface-button trip or continued button hold is required.
 - **Crane motion:** The pack's own levers (slew, trolley, hoist, hook turn), worked briskly by an automatic operator (the pack's overall speed knob raised). The long hoist rope trails the trolley's starts and stops like a pendulum, but an anti-sway assist settles it instead of letting it swing on, so the hook comes to rest within moments and loads touch down gently.

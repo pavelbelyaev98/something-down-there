@@ -76,7 +76,7 @@ namespace SomethingDownThere
             if (player == null || model == null) return;
             int level = player.EffectiveShovelLevel;
             if (level != shownLevel) ShowLevel(level);
-            bool hide = !player.isActiveAndEnabled || player.IsMenuOpen || player.HeldFind != null
+            bool hide = !player.isActiveAndEnabled || player.IsMenuOpen
                 || (player.WorksiteTools != null && player.WorksiteTools.IsPlacing) || player.ExtractionMarkProgress > 0f;
             lowered = Mathf.MoveTowards(lowered, hide ? 1f : 0f, Time.unscaledDeltaTime / LowerSeconds);
             foreach (var renderer in renderers) renderer.enabled = lowered < 1f;

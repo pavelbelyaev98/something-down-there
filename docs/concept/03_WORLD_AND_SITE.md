@@ -43,7 +43,9 @@ The lakebed excavation is a single contained worksite.
   a permanent soil bank, so a pit edge is a solid soil wall, never a thin roof over a hollow. The
   saved rectangular subsurface grid remains accessible below the bank for lateral digging.
 - **Lighting:** solar-noon presentation with the sun almost directly overhead and short shadows.
-  Use the Highlands demo's sky, ambient colour, sun colour and baked canyon reflections; custom
+  Use the Highlands demo's sky, sun colour and baked canyon reflections, with daylight fill that
+  comes from the sky above and from the sunlit ground at the sides and below, as real daylight does,
+  so walls facing sideways (a pit's walls, cliffs) are lit even under the high sun; custom
   sun/cloud artwork is retired. The sky's sun reads as a clear disc with a soft glow, not the
   demo's pinpoint.
   Concentrate soft real-time shadows around the playable ground; distant scenery may omit them.
@@ -323,8 +325,9 @@ Sealed rooms keep that moment without cave networks.
 - **Sky light reaches down open shafts** and fades with depth.
 - **Daylight reach:** daylight fades from the first metres, as it would down a real shaft:
   noticeably dimmer by 5 m, dim but readable at 10 m, lamps wanted from about 12-15 m, dark by
-  about 20 m. Only the sun and the sky light the dug ground, the same as the surface, so a hole
-  reads as the same ground as the field around it; there is no added fill light inside holes.
+  about 20 m. The dug ground is lit like the surface (sun, sky and the light the sunlit ground
+  throws back), so a hole reads as the same ground as the field around it; there is no extra fill
+  inside holes.
   A walked ramp darkens almost like a shaft; the first underground work area never needs a lamp.
 - **Sideways travel loses daylight at once.** Brightness follows the open route from the
   surface: going down costs little until the dark depth, but every metre dug sideways (or back

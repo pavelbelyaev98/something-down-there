@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SomethingDownThere
@@ -10,7 +9,6 @@ namespace SomethingDownThere
         private readonly CharacterController motor;
         private readonly int worldMask;
         private Collider[] overlaps = new Collider[128];
-        private readonly List<BuriedFind> released = new List<BuriedFind>();
         private bool active;
         private const float Radius = 2.25f;
         private Vector3 Probe => player.ViewCamera.transform.position;
@@ -18,20 +16,14 @@ namespace SomethingDownThere
         public FindProximityCollection(FpsPlayer player, CharacterController motor, int mask)
         { this.player = player; this.motor = motor; worldMask = mask; }
 
-        public void ExcludeUntilDeparture(BuriedFind find)
-        { if (find != null && !released.Contains(find)) released.Add(find); }
-
-        public void Clear() { released.Clear(); active = false; }
+        public void Clear() => active = false;
 
         public bool Tick(Vector3 previousFeet, bool movementRequested, bool diggingHeld)
         {
-            for (int i = released.Count - 1; i >= 0; i--)
-                if (released[i] == null || released[i].Collected || !released[i].isActiveAndEnabled
-                    || HasDeparted(released[i])) released.RemoveAt(i);
             Vector3 travel = player.FeetPosition - previousFeet; travel.y = 0;
             active = diggingHeld || (movementRequested && travel.sqrMagnitude > .000001f
                 && motor.isGrounded && !player.IsJetpackActive);
-            if (!active || player.Inventory.IsFull || player.HeldFind != null) return false;
+            if (!active || player.Inventory.IsFull) return false;
             int count;
             do
             {
@@ -53,8 +45,8 @@ namespace SomethingDownThere
 
         public bool CanCollect(BuriedFind find)
         {
-            if (!active || find == null || !find.isActiveAndEnabled || released.Contains(find)
-                || player.IsMenuOpen || !player.HasGameplayFocus || player.HeldFind != null
+            if (!active || find == null || !find.isActiveAndEnabled
+                || player.IsMenuOpen || !player.HasGameplayFocus
                 || (player.Persistence != null && player.Persistence.BlocksPlay)) return false;
             var terrain = player.ExcavationTerrain;
             if (terrain == null || terrain.IsRestoring || terrain.IsSolid(Probe)) return false;
@@ -65,11 +57,6 @@ namespace SomethingDownThere
             if (length < .001f) return true;
             return Physics.Raycast(Probe, delta / length, out var hit, length + .015f,
                 worldMask, QueryTriggerInteraction.Ignore) && hit.collider == find.HitCollider;
-        }
-
-        private bool HasDeparted(BuriedFind find)
-        {
-            return find.WorldBounds.SqrDistance(Probe) > (Radius + .5f) * (Radius + .5f);
         }
     }
 }

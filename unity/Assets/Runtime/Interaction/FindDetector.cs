@@ -26,7 +26,7 @@ namespace SomethingDownThere
         }
 
         public static bool Eligible(BuriedFind find) => find != null && find.isActiveAndEnabled
-            && find.DetectorEligible && find.Item != null && find.State == FindState.World && !find.IsHeld
+            && find.DetectorEligible && find.Item != null && find.State == FindState.World
             && find.Exposure <= 0 && !find.DepthRecorded;
 
         public void Tick()

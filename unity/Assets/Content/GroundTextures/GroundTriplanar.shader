@@ -66,6 +66,7 @@ Shader "Something Down There/Ground Triplanar"
         _SoilTileMetres("Soil tile metres", Float) = 2
         _NormalStrength("Soil relief", Range(0, 2)) = 0.8
         _StoneNormalStrength("Embedded stone relief", Range(0, 2)) = 0.85
+        _SoilOcclusion("Soil texture occlusion", Range(0, 1)) = 1
         _TurfNormalStrength("Turf relief", Range(0, 2)) = 0.45
         _SurfaceHeight("Original surface height", Float) = 0
         _TurfDepth("Turf transition depth", Range(0.001, 0.1)) = 0.045
@@ -86,6 +87,7 @@ Shader "Something Down There/Ground Triplanar"
             float _SoilTileMetres;
             float _NormalStrength;
             float _StoneNormalStrength;
+            float _SoilOcclusion;
             float _TurfNormalStrength;
             float _SurfaceHeight;
             float _TurfDepth;
@@ -253,7 +255,9 @@ Shader "Something Down There/Ground Triplanar"
             normal = ProjectGroundNormal(n, weights, axisSign, nx, ny, nz);
             half2 soilMask = maskX.rg * weights.x + maskY.rg * weights.y + maskZ.rg * weights.z;
             roughness = soilMask.r;
-            occlusion = soilMask.g;
+            // The texture's baked occlusion, scaled: under the daylight fill a full-strength pack map
+            // reads as dark blotches across a dug wall.
+            occlusion = lerp(1, soilMask.g, _SoilOcclusion);
             // Soil variation stays below the continuous surface cap.
             float2 macroUV = (position.xz + position.y * float2(0.37, 0.23)) * 0.073;
             float2 macroDx = (positionDx.xz + positionDx.y * float2(0.37, 0.23)) * 0.073;

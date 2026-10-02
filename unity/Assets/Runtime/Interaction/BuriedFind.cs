@@ -42,9 +42,8 @@ namespace SomethingDownThere
         public bool Collected => State == FindState.Collected || State == FindState.Stored;
         // Visibility/range are checked against the actual collider when collecting.
         public float RequiredExposure => Mathf.Clamp(collectionThreshold, 0.1f, 1f);
-        public bool IsHeld => physical != null && physical.Held;
         public bool IsReleased => physical != null && physical.Released;
-        public bool ExposureReady => Item != null && State == FindState.World && !IsHeld && Exposure >= RequiredExposure;
+        public bool ExposureReady => Item != null && State == FindState.World && Exposure >= RequiredExposure;
         public bool Collectible => !RopeTarget && ExposureReady;
         public bool CanMark => RopeTarget && ExposureReady;
         public Bounds LocalHull => hitCollider.sharedMesh.bounds;
@@ -191,7 +190,7 @@ namespace SomethingDownThere
         }
 
         private void RefreshVisibility() => visual.enabled = State != FindState.Collected
-            && (State != FindState.World || xrayVisible || Exposure > 0 || IsHeld || terrain.MayExpose(SoilVisibilityBounds));
+            && (State != FindState.World || xrayVisible || Exposure > 0 || terrain.MayExpose(SoilVisibilityBounds));
 
         internal bool HasSoilAttachment(float surfaceTolerance = .005f)
         {
@@ -226,8 +225,7 @@ namespace SomethingDownThere
             if (RopeTarget) return $"{DisplayName}  |  Hold {player.InputSettings.Display(PlayerBinding.Interact)} to mark for excavation";
             string collect = player.Inventory.IsFull ? "Inventory full"
                 : $"{(player.InputSettings.ToggleDig ? "Toggle" : "Hold")} {player.InputSettings.Display(PlayerBinding.Dig)} to collect";
-            string lift = CanLift(player) ? $"  |  {player.InputSettings.Display(PlayerBinding.Grab)} to lift" : "";
-            return $"{Item.DisplayName}  |  {collect}{lift}";
+            return $"{Item.DisplayName}  |  {collect}";
         }
 
         internal bool TryGetCoveringSoil(FpsPlayer player, int worldMask, out RaycastHit soil)
@@ -235,7 +233,7 @@ namespace SomethingDownThere
             soil = default;
             // Uniques must be excavated by aiming at their surrounding dirt.
             // A visible fragment must never redirect a stroke around the whole object.
-            if (kind == DiscoveryKind.Unique || Collectible || State != FindState.World || IsHeld || terrain == null || !terrain.CanDig) return false;
+            if (kind == DiscoveryKind.Unique || Collectible || State != FindState.World || terrain == null || !terrain.CanDig) return false;
             Vector3 eye = player.ViewCamera.transform.position;
             if (terrain.IsSolid(eye)) return false;
             float nearest = float.PositiveInfinity;
@@ -285,7 +283,7 @@ namespace SomethingDownThere
 
         private bool CanCollect(FpsPlayer player) => player != null && !player.IsMenuOpen && player.HasGameplayFocus
             && (player.Persistence == null || !player.Persistence.BlocksPlay)
-            && player.HeldFind == null && isActiveAndEnabled && Collectible && terrain != null && !terrain.IsRestoring;
+            && isActiveAndEnabled && Collectible && terrain != null && !terrain.IsRestoring;
 
         private bool CommitCollection(FpsPlayer player)
         {
@@ -303,10 +301,6 @@ namespace SomethingDownThere
             gameObject.SetActive(false);
             return true;
         }
-
-        internal bool CanLift(FpsPlayer player) => physical != null && player != null && !player.IsMenuOpen
-            && isActiveAndEnabled && Collectible && !terrain.IsSolid(player.ViewCamera.transform.position)
-            && player.TryGetTarget(player.Tuning.InteractReach, out var hit) && hit.collider == hitCollider;
 
         internal void ObserveDiscovery()
         {

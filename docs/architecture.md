@@ -1,7 +1,7 @@
 # Architecture
 
 - `unity/Assets/Runtime/Player` — input, movement, camera, battery, preferences, player state, wallet/trade/rescue, save control and session-only developer controls.
-- `unity/Assets/Runtime/Interaction` — targeting, inventory identities, discovery placement, reveal/collection, find handling/physics and crane salvage.
+- `unity/Assets/Runtime/Interaction` — targeting, inventory identities, discovery placement, reveal/collection, find physics and crane salvage.
 - `unity/Assets/Runtime/Terrain` — finite signed density and immutable material fields, smooth surface-net meshes, adaptive dig adapter, boundaries and derived surface grass/daylight.
 - `unity/Assets/Runtime/UI` — HUD and menu behavior (UI Toolkit under `UI/Toolkit`).
 - `unity/Assets/Runtime/Persistence` — versioned whole-world snapshots, atomic disk storage, recovery and autosave.

@@ -22,8 +22,8 @@ chunk of the hole; the first part of the dig is lit by daylight and the dark sta
 **Tell the agent:**
 - Darkness: does it feel natural now? Lamps from ~12-15 m right, or too early/late? Does a side
   tunnel darken fast enough, too fast, or should its first metres already be darker?
-- Holes are now lit only by sun and sky, like the ground around them (no extra fill): does a hole
-  read as the same ground? Shafts darken sooner than before: are lamps needed too early now?
+- Holes are lit like the ground around them, and walls now get light bounced off the sunlit ground:
+  do pit walls look natural? Shafts darken sooner than before: are lamps needed too early now?
 - Lamp look and size; does one lamp light enough? Does the $20 price feel right?
 - Anywhere a lamp still refused, floated oddly, or dropped somewhere unexpected.
 - With many lamps: did far lamps switching off (glowing only) bother you?

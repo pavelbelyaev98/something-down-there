@@ -18,6 +18,9 @@ namespace SomethingDownThere.Editor
         public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
         // The original soil art's own mapping and relief.
         public const float OriginalSoilTileMetres = 2, OriginalSoilRelief = .55f, OriginalStoneRelief = .9f;
+        // Applied after opaques it also darkens sunlit creases; at 1.25 every crease between shovel bites
+        // turned dug soil into dark-edged blocks. The user chose 0.3 from the admin steps (2026-10-02).
+        public const float ContactShadingIntensity = .3f;
 
         [MenuItem("Tools/Something Down There/Configure Pack Lakebed Ground")]
         public static void ConfigurePackGround()
@@ -262,11 +265,9 @@ namespace SomethingDownThere.Editor
 
         private static void ConfigureLighting(Transform root)
         {
-            // Flat sky fill matches the approved valley demo; the sun keeps soft
+            // MainGame's sky and ground-bounce fill belong to SunPresentationSetup; the sun keeps soft
             // shadows so the excavated shape still shades itself.
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.622f, 0.639f, 0.657f);
-            RenderSettings.ambientIntensity = 1.2f;
+            SunPresentationSetup.ConfigureAmbient();
             var sun = root.Find("Sun").GetComponent<Light>();
             Undo.RecordObject(sun, "Restore ground depth lighting");
             sun.shadows = LightShadows.Soft;
@@ -306,7 +307,7 @@ namespace SomethingDownThere.Editor
             ao.FindProperty("m_Settings.Source").enumValueIndex = 0; // Reconstruct from depth; no normals prepass.
             ao.FindProperty("m_Settings.NormalSamples").enumValueIndex = 2;
             ao.FindProperty("m_Settings.AOMethod").enumValueIndex = 1;
-            ao.FindProperty("m_Settings.Intensity").floatValue = 1.25f;
+            ao.FindProperty("m_Settings.Intensity").floatValue = ContactShadingIntensity;
             ao.FindProperty("m_Settings.Radius").floatValue = 0.18f;
             ao.FindProperty("m_Settings.DirectLightingStrength").floatValue = 0.28f;
             ao.FindProperty("m_Settings.Falloff").floatValue = 16;

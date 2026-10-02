@@ -64,7 +64,7 @@ $map = @(
     # Anything can break under a new package, assembly layout or Unity version.
     @{ Pattern = '^unity/Packages/(manifest|packages-lock)\.json$|\.asmdef$|^unity/ProjectSettings/ProjectVersion\.txt$'; Play = @(); Broad = $true },
     # Partial/helper test files: the suites that actually compile or use them.
-    @{ Pattern = '^unity/Assets/Tests/PlayMode/(FindCollectionFlowTests|FindHandlingStabilityTests)\.cs$'; Play = @('FindPhysicsIntegrationTests') },
+    @{ Pattern = '^unity/Assets/Tests/PlayMode/FindCollectionFlowTests\.cs$'; Play = @('FindPhysicsIntegrationTests') },
     @{ Pattern = '^unity/Assets/Tests/PlayMode/CrouchTerrainFixture\.cs$'; Play = @('CrouchTests', 'TerrainIntegrationTests') },
     @{ Pattern = '^unity/Assets/Tests/PlayMode/TestInputPreferences\.cs$'; Play = @('FindPhysicsIntegrationTests', 'StationIntegrationTests', 'WorksiteToolsIntegrationTests') },
     @{ Pattern = '^unity/Assets/Tests/PlayMode/MenuTestUI\.cs$'; Play = @('FpsUiInputTests', 'StartupMenuTests') },
@@ -82,7 +82,7 @@ $map = @(
     @{ Pattern = '^art/.*catalog\.json$|^unity/Assets/Content/Discoveries/DiscoveryCatalog\.asset$'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests'); Population = $true },
     @{ Pattern = '^unity/Assets/Content/(Discoveries|PhotoRocks|Minerals)/'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests') },
     @{ Pattern = '^unity/Assets/Content/'; Play = @() },
-    # Player: settings, find handling, crouch and fuel each have their own suite.
+    # Player: settings, finds, crouch and fuel each have their own suite.
     @{ Pattern = '^unity/Assets/Runtime/Player/(GamePreferences|UnityGameSettingsPlatform|GraphicsQuality|GraphicsAutoTuner|DesktopWindow|DesktopInstance|DevicePreferencesFile|CameraPreferences|InputPreferences|InputBindingCapture|FpsInput)\.cs$'; Play = @('FpsUiInputTests') },
     @{ Pattern = '^unity/Assets/Runtime/Player/Find\w*\.cs$'; Play = @('FindPhysicsIntegrationTests') },
     @{ Pattern = '^unity/Assets/Runtime/Player/PlayerCrouch\.cs$'; Play = @('CrouchTests') },

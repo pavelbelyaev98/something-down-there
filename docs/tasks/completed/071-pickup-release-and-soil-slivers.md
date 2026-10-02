@@ -35,3 +35,9 @@ Falling/elevated finds, off-centre pickup while digging, full bag then freed cap
 - Reviewed connected excavation cuts and both warning banners in MainGame. The banners do not overlap; freeing capacity clears the inventory warning and menus hide the HUD. Review changes were discarded.
 - C# compiled cleanly and Odin returned 14,490 valid checks with no issues. Windows build succeeded and launched without startup errors; its only build warning is the intentionally disabled Pipeline player bridge.
 - Test preflight now replaces even an untitled scene directly with an empty scene, avoiding Unity's save prompt under the disposable-scene policy. Recovery and vendor assets remain untouched.
+
+## Iteration — hand handling removed (2026-10-02)
+- The user found lifting, dropping and throwing finds by hand useless; it is gone (`FindHandling`, the hold/throw
+  members of `FindPhysics`, the throw speed in the find catalogs, and with them the throw/drop exclusion here).
+  Right mouse only cancels a lamp/mark placement now (binding "Cancel placement"). Settling, release and the
+  crane's use of `FindPhysics` are unchanged.

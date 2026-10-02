@@ -245,8 +245,6 @@ namespace SomethingDownThere.Tests
             find.GetComponent<FindPhysics>().Restore(true);
             player.RefreshTargetPrompt();
             StringAssert.Contains(find.DisplayName, player.TargetPrompt);
-            StringAssert.DoesNotContain("to lift", player.TargetPrompt, "Distant pickup must not advertise an out-of-range physical grab.");
-            Assert.That(player.TryGrabOrDrop(), Is.False);
             Assert.That(player.TryPrimaryAction(), Is.True, "An exposed released find should be collectable from the rim.");
             Assert.That(find.Collected, Is.True);
         }

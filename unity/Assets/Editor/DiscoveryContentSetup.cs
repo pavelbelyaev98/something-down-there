@@ -25,7 +25,6 @@ namespace SomethingDownThere.Editor
             public int instances, shallow_instances, sale_value, slots;
             public bool detector_eligible, lay_on_side;
             public float required_exposure;
-            public float throw_speed;
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
@@ -265,11 +264,7 @@ namespace SomethingDownThere.Editor
                 body.maxLinearVelocity = 12; body.maxAngularVelocity = 8; body.maxDepenetrationVelocity = 1.5f;
                 body.solverIterations = 8; body.solverVelocityIterations = 2;
                 var find = GetOrAdd<BuriedFind>(root);
-                var handling = new SerializedObject(GetOrAdd<FindPhysics>(root));
-                if (!float.IsFinite(entry.throw_speed) || entry.throw_speed < 1 || entry.throw_speed > 12)
-                    throw new InvalidDataException("Find throw speed must be between 1 and 12 m/s.");
-                handling.FindProperty("throwSpeed").floatValue = entry.throw_speed;
-                handling.ApplyModifiedPropertiesWithoutUndo();
+                GetOrAdd<FindPhysics>(root);
                 var data = new SerializedObject(find);
                 data.FindProperty("saveContentId").stringValue = entry.content_id; data.FindProperty("displayName").stringValue = entry.display_name;
                 data.FindProperty("saleValue").intValue = entry.sale_value;

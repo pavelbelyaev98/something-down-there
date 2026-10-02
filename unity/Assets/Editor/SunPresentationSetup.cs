@@ -28,7 +28,7 @@ namespace SomethingDownThere.Editor
             var camera = root.GetComponentInChildren<Camera>();
             var sun = root.transform.Find("Sun").GetComponent<Light>();
             Undo.RecordObjects(new UnityEngine.Object[] { sun, sun.transform }, "Set approved midday site sunlight");
-            sun.transform.rotation = Quaternion.Euler(88, 45, 0);
+            sun.transform.rotation = SunRotation;
             // Highlands demo sun colour and strength; the site keeps its near-overhead noon angle.
             sun.color = new Color(1, .964f, .836f);
             sun.intensity = 1;
@@ -37,9 +37,7 @@ namespace SomethingDownThere.Editor
             ConfigureShadowBudget(sun);
             EditorUtility.SetDirty(sun);
             RenderSettings.sun = sun;
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(.736f, .736f, .736f);
-            RenderSettings.ambientIntensity = 1;
+            ConfigureAmbient();
             // The Highlands demo's aerial haze carries the lakebed canyon and distant peaks.
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
@@ -48,7 +46,7 @@ namespace SomethingDownThere.Editor
             var sky = SkyMaterial();
             // The demo's pinpoint sun reads as a star overhead; keep a clear disc with a soft glow.
             Undo.RecordObject(sky, "Size the midday sun disc");
-            sky.SetFloat("_SunSize", .05f);
+            sky.SetFloat("_SunSize", SunDiscSize);
             sky.SetFloat("_SunSizeConvergence", 4);
             EditorUtility.SetDirty(sky);
             RenderSettings.skybox = sky;
@@ -64,6 +62,26 @@ namespace SomethingDownThere.Editor
             ConfigureReflections();
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
+        }
+
+        // Near-overhead noon; its sky disc a touch smaller than the first clear disc (user, 2026-10-02).
+        public static readonly Quaternion SunRotation = Quaternion.Euler(88, 45, 0);
+        public const float SunDiscSize = .04f;
+
+        // Daylight fill: the sky from above as before, and sunlight thrown back off the sunlit ground from
+        // the horizon and below. Surfaces facing sideways (a pit's walls, cliffs) are lit like real walls
+        // under a high sun instead of by the sky alone; it depends only on which way a surface faces, and
+        // underground the excavation daylight still scales it.
+        public static readonly Color AmbientSky = new Color(.736f, .736f, .736f), AmbientHorizon = new Color(1.05f, .98f, .9f),
+            AmbientGround = new Color(.95f, .85f, .72f);
+
+        public static void ConfigureAmbient()
+        {
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = AmbientSky;
+            RenderSettings.ambientEquatorColor = AmbientHorizon;
+            RenderSettings.ambientGroundColor = AmbientGround;
+            RenderSettings.ambientIntensity = 1;
         }
 
         public static void ConfigureShadowBudget(Light sun)

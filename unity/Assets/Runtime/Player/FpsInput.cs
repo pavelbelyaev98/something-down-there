@@ -11,8 +11,6 @@ namespace SomethingDownThere
         public Vector2 Look;
         public bool DigHeld;
         public bool DigPressed;
-        public bool GrabPressed;
-        public bool ThrowPressed;
         public bool JumpPressed;
         public bool JetpackHeld;
         public bool CrouchHeld;
@@ -26,19 +24,19 @@ namespace SomethingDownThere
         public bool RefillPressed;
         public bool ReturnPressed;
         public bool XrayPressed;
-        public bool LampPressed, MarkPressed, RotatePlacementPressed;
+        public bool LampPressed, MarkPressed, RotatePlacementPressed, CancelPlacementPressed;
     }
 
     public sealed class FpsInput : IDisposable
     {
         private readonly InputActionMap actions = new InputActionMap("FPS");
-        private readonly InputAction move, look, dig, grab, jetpack, crouch, sprint, interact, inventory, back, escape;
+        private readonly InputAction move, look, dig, jetpack, crouch, sprint, interact, inventory, back, escape;
         private readonly InputAction refill, returnToSurface, adminMenu, adminCtrl, adminShift, xray;
-        private readonly InputAction lamp, mark, rotatePlacement;
-        private bool lampArmed, markArmed, rotateArmed;
+        private readonly InputAction lamp, mark, rotatePlacement, cancelPlacement;
+        private bool lampArmed, markArmed, rotateArmed, cancelArmed;
         // Ctrl+Shift+1..9 pick levels 1-9; 0 picks the last level.
         private readonly InputAction[] adminLevels = new InputAction[10];
-        private bool digArmed, grabArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
+        private bool digArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
         private InputPreferences preferences;
         private int preferenceRevision = -1;
         private uint lastToggleUpdate = uint.MaxValue;
@@ -51,7 +49,6 @@ namespace SomethingDownThere
                 .With("Left", "<Keyboard>/a").With("Right", "<Keyboard>/d");
             look = actions.AddAction("Look", InputActionType.Value, "<Mouse>/delta");
             dig = actions.AddAction("Dig", InputActionType.Button, "<Mouse>/leftButton");
-            grab = actions.AddAction("Grab", InputActionType.Button, "<Mouse>/rightButton");
             jetpack = actions.AddAction("JumpAndJetpack", InputActionType.Button, "<Keyboard>/space");
             crouch = actions.AddAction("Crouch", InputActionType.Button, "<Keyboard>/leftCtrl");
             crouch.wantsInitialStateCheck = true;
@@ -61,6 +58,7 @@ namespace SomethingDownThere
             lamp = actions.AddAction("Lamp", InputActionType.Button, "<Keyboard>/l");
             mark = actions.AddAction("Mark", InputActionType.Button, "<Keyboard>/m");
             rotatePlacement = actions.AddAction("RotatePlacement", InputActionType.Button, "<Keyboard>/r");
+            cancelPlacement = actions.AddAction("CancelPlacement", InputActionType.Button, "<Mouse>/rightButton");
             inventory = actions.AddAction("Inventory", InputActionType.Button, "<Keyboard>/tab");
             back = actions.AddAction("Back", InputActionType.Button, "<Keyboard>/escape");
             escape = actions.AddAction("MenuEscape", InputActionType.Button, "<Keyboard>/escape");
@@ -95,7 +93,6 @@ namespace SomethingDownThere
             actions.Disable();
             for (int i = 0; i < 4; i++) move.ApplyBindingOverride(i + 1, preferences.Path((PlayerBinding)i));
             dig.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Dig));
-            grab.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Grab));
             jetpack.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Jump));
             crouch.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Crouch));
             sprint.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Sprint));
@@ -105,6 +102,7 @@ namespace SomethingDownThere
             lamp.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Lamp));
             mark.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Mark));
             rotatePlacement.ApplyBindingOverride(0, preferences.Path(PlayerBinding.RotatePlacement));
+            cancelPlacement.ApplyBindingOverride(0, preferences.Path(PlayerBinding.CancelPlacement));
             preferenceRevision = preferences.Revision;
             SuppressHeldActions();
             if (enabled) actions.Enable();
@@ -121,8 +119,8 @@ namespace SomethingDownThere
         public void SuppressHeldActions()
         {
             SuppressDig();
-            grabArmed = jetpackArmed = interactArmed = false;
-            lampArmed = markArmed = rotateArmed = false;
+            jetpackArmed = interactArmed = false;
+            lampArmed = markArmed = rotateArmed = cancelArmed = false;
             inventoryArmed = !inventory.IsPressed();
             backArmed = !back.IsPressed();
             escapeArmed = !escape.IsPressed();
@@ -140,7 +138,6 @@ namespace SomethingDownThere
             bool jetpackHeld = jetpack.IsPressed();
             bool interactHeld = interact.IsPressed();
             if (!digHeld) digArmed = true;
-            if (!grab.IsPressed()) grabArmed = true;
             if (!jetpackHeld) jetpackArmed = true;
             if (!interactHeld) interactArmed = true;
             if (!inventory.IsPressed()) inventoryArmed = true;
@@ -149,6 +146,7 @@ namespace SomethingDownThere
             if (!lamp.IsPressed()) lampArmed = true;
             if (!mark.IsPressed()) markArmed = true;
             if (!rotatePlacement.IsPressed()) rotateArmed = true;
+            if (!cancelPlacement.IsPressed()) cancelArmed = true;
             bool toggle = preferences != null && preferences.ToggleDig;
             bool digPressed = digArmed && dig.WasPressedThisFrame();
             if (!gameplayActive) toggleIntent = false;
@@ -167,8 +165,6 @@ namespace SomethingDownThere
                 Look = look.ReadValue<Vector2>(),
                 DigHeld = gameplayActive && (toggle ? toggleIntent : digArmed && digHeld),
                 DigPressed = gameplayActive && digPressed && (!toggle || toggleIntent),
-                GrabPressed = gameplayActive && grabArmed && grab.WasPressedThisFrame(),
-                ThrowPressed = gameplayActive && digPressed,
                 JumpPressed = jetpackArmed && jetpack.WasPressedThisFrame(),
                 JetpackHeld = jetpackArmed && jetpackHeld,
                 CrouchHeld = crouch.IsPressed(),
@@ -185,7 +181,8 @@ namespace SomethingDownThere
                 XrayPressed = adminChord && xray.WasPressedThisFrame(),
                 LampPressed = gameplayActive && !adminChord && lampArmed && lamp.WasPressedThisFrame(),
                 MarkPressed = gameplayActive && !adminChord && markArmed && mark.WasPressedThisFrame(),
-                RotatePlacementPressed = gameplayActive && !adminChord && rotateArmed && rotatePlacement.WasPressedThisFrame()
+                RotatePlacementPressed = gameplayActive && !adminChord && rotateArmed && rotatePlacement.WasPressedThisFrame(),
+                CancelPlacementPressed = gameplayActive && cancelArmed && cancelPlacement.WasPressedThisFrame()
             };
         }
 

@@ -541,31 +541,6 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Inventory.Items.Single().InstanceId, Is.EqualTo(rocks[0].Item.Id));
         }
 
-        [UnityTest]
-        public IEnumerator CheckpointWhileLiftingRestoresOneReleasedWorldFindWithoutInventoryDuplication()
-        {
-            yield return Until(() => save.CompletedSequence > 0 && save.State == WorldSaveState.Ready);
-            player.CloseMenu(); yield return null;
-            var find = discoveries.Finds.First();
-            find.transform.position = terrain.transform.TransformPoint(new Vector3(12, terrain.Dimensions.y * terrain.CellSize + .7f, 12));
-            find.GetComponent<FindPhysics>().Restore(false); Physics.SyncTransforms(); find.RefreshExposure();
-            player.ViewCamera.transform.position = find.transform.position + new Vector3(0, 1, -1);
-            player.ViewCamera.transform.LookAt(find.transform.position);
-            Assert.That(player.TryGrabOrDrop(), Is.True);
-            var snapshot = save.Capture(save.CompletedSequence + 1);
-            var expected = snapshot.Finds.Single(f => f.Item.Id == find.Item.InstanceId);
-            Assert.That(expected.PhysicsReleased, Is.True); Assert.That(expected.Collected, Is.False);
-            Assert.That(snapshot.Inventory.Any(i => i.Id == expected.Item.Id), Is.False);
-            yield return SceneManager.UnloadSceneAsync(scene);
-            using (var stream = File.Create(Path.Combine(directory, "world.sav"))) WorldSaveCodec.Write(stream, snapshot);
-            yield return Open();
-            var restored = discoveries.Finds.Single(f => f.Item.InstanceId == expected.Item.Id);
-            Assert.That(player.HeldFind, Is.Null); Assert.That(restored.GetComponent<FindPhysics>().Released, Is.True);
-            Assert.That(restored.Capture().Position, Is.EqualTo(expected.Position));
-            Assert.That(restored.SaveContentId, Is.EqualTo(expected.ContentId)); Assert.That(restored.Collected, Is.False);
-            Assert.That(player.Inventory.Items.Any(i => i.InstanceId == expected.Item.Id), Is.False);
-        }
-
         [Explicit("Slow end-to-end check; runs with tools/test-changed.ps1 -Full.")]
         [UnityTest]
         public IEnumerator EveryDepthMineralCanBeUncoveredCollectedSoldAndCheckpointed()

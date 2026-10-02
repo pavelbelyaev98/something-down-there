@@ -278,18 +278,6 @@ namespace SomethingDownThere.Tests
             WalkTo(find); Assert.That(find.Collected, Is.True);
         }
 
-        [UnityTest]
-        public IEnumerator ExplicitDropRequiresLeavingAndReturningBeforeWalkPickup()
-        {
-            var find = field.Finds[0]; Place(find,.65f); yield return WaitForSimulation(1.5f);
-            player.Tuning.Gravity = 0; AimRock(find);
-            Assert.That(player.TryGrabOrDrop(), Is.True);
-            Assert.That(player.TryGrabOrDrop(), Is.True);
-            player.Tuning.Gravity = -20;
-            WalkTo(find, .55f); Assert.That(find.Collected, Is.False, "Walking over the just-dropped find must not undo handling.");
-            WalkTo(find, 4.5f); Assert.That(find.Collected, Is.True, "Leaving automatic range and returning re-enables pickup.");
-        }
-
         [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)]
         public void HeldDigCollectsNearbyOffCentreFindAtEyeHeightUnlessOccluded(bool blocked, bool beyondRange)
         {
