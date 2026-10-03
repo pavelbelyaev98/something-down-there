@@ -12,8 +12,8 @@ namespace SomethingDownThere
     // the session ends; in the Editor a play session would otherwise leave the change in the asset.
     public static class ContactShading
     {
-        // Admin steps around the authored strength (GroundTextureSetup.ContactShadingIntensity, 0.3).
-        public static readonly float[] Steps = { .15f, .45f, .6f };
+        // The Developer admin slider's range; the authored strength is GroundTextureSetup.ContactShadingIntensity.
+        public const float Maximum = 1.5f, Step = .05f;
         private static float? authored;
 
         private static object Settings(out FieldInfo intensity)

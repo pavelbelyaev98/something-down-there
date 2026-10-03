@@ -43,6 +43,45 @@ namespace SomethingDownThere.Editor
             public bool Wet;
         }
 
+        // Grass around the plot (user, 2026-10-02): none on the worked ground just past the tape, patches
+        // from about GreenStart metres beyond the outline thinning out toward the open lakebed, sparser on
+        // the camp's side and never by the water. The turf and its green blades share it.
+        private const float GreenStart = 4.5f, GreenEnd = 17f;
+
+        private static float GreenPatch(Vector2 local, float aboveWater, float channel)
+        {
+            float beyond = SiteLayout.BeyondOpening(local);
+            float ring = Smooth((beyond - GreenStart) / 2.5f) * (1 - Smooth((beyond - GreenEnd) / 5));
+            float camp = Smooth((Mathf.Abs(Mathf.DeltaAngle(SiteLayout.Compass(local), SiteLayout.CampCompass)) - SiteLayout.CampHalfArc) / 20);
+            float patch = Smooth((Noise(local, 5.5f, 8.1f) - .46f) / .1f);
+            return ring * Mathf.Lerp(.35f, 1, camp) * patch * Smooth((aboveWater - .35f) / .3f) * Smooth((channel - 1.2f) / .8f);
+        }
+
+        // Knee-high meadow grass round every tree's foot hides its root flare, whose pack grass layer stays
+        // lime (user, 2026-10-02): full cover out to RootTuftRadius (times the tree's width), fading over
+        // RootTuftFade.
+        private const float RootTuftRadius = 1.5f, RootTuftFade = .8f;
+
+        private static void TuftTreeBases(TerrainData data, int first)
+        {
+            int cells = data.detailWidth, layer = first + (int)LakebedDetail.GreenGrass;
+            var map = data.GetDetailLayer(0, 0, cells, cells, layer);
+            float cell = data.size.x / cells;
+            foreach (var tree in data.treeInstances)
+            {
+                float cx = tree.position.x * cells, cz = tree.position.z * cells, radius = RootTuftRadius * Mathf.Max(tree.widthScale, .5f);
+                int reach = Mathf.CeilToInt((radius + RootTuftFade) / cell);
+                for (int v = Mathf.Max(0, (int)cz - reach); v <= Mathf.Min(cells - 1, (int)cz + reach); v++)
+                for (int u = Mathf.Max(0, (int)cx - reach); u <= Mathf.Min(cells - 1, (int)cx + reach); u++)
+                {
+                    float distance = new Vector2(u + .5f - cx, v + .5f - cz).magnitude * cell;
+                    int cover = Mathf.RoundToInt(255 * (1 - Smooth((distance - radius) / RootTuftFade)));
+                    if (cover > map[v, u]) map[v, u] = cover;
+                }
+            }
+            data.SetDetailLayer(0, 0, layer, map);
+        }
+
         private static float Band(float value, float low, float high, float soft = .15f) =>
             Smooth((value - low) / soft) * Smooth((high - value) / soft);
 
@@ -317,6 +356,10 @@ namespace SomethingDownThere.Editor
             if (reedPrefab == null) throw new InvalidOperationException("Missing approved Mountains reeds.");
             var reeds = From("GrassMountain2", DryVariant(reedPrefab, ReedMaterialPath, new Color(.72f, .74f, .6f), new Color(.62f, .66f, .52f)));
             reeds.minWidth = .8f; reeds.maxWidth = 1.3f; reeds.minHeight = .9f; reeds.maxHeight = 1.6f; reeds.noiseSpread = 2;
+            // The vendor reeds barely move (wind 0.1); they sway with the grass, a little less as they are taller.
+            var reedMaterial = AssetDatabase.LoadAssetAtPath<Material>(ReedMaterialPath);
+            reedMaterial.SetFloat("_WindMultiplier", .5f);
+            EditorUtility.SetDirty(reedMaterial);
             // The canyon's own grass, sun-dried to muted olive on the exposed bed, and dusty rushes and reeds.
             var dryGrass = From("Grass_3", DryVariant(Plant(canyon, "Grass_3"), DryGrassMaterialPath, new Color(.4f, .44f, .25f), new Color(.32f, .37f, .2f)), canyon);
             var dryTall = From("Grass_4", DryVariant(Plant(canyon, "Grass_4"), DryGrassMaterialPath, new Color(.4f, .44f, .25f), new Color(.32f, .37f, .2f)), canyon);
@@ -324,11 +367,14 @@ namespace SomethingDownThere.Editor
             // Knee-high tufts, not the canyon's tall meadow cards.
             dryTall.minWidth = .9f; dryTall.maxWidth = 1.5f; dryTall.minHeight = .6f; dryTall.maxHeight = 1.25f;
             dryGrass.minHeight = .5f; dryGrass.maxHeight = 1;
+            // The canyon's grass in its meadow colours, for the patches around the plot.
+            var green = From("Grass_3", MeadowVariant(Plant(canyon, "Grass_3")), canyon);
+            green.minHeight = .45f; green.maxHeight = .9f; green.density = 3;
             // Order is the detail layer order after the demo's prototypes; see LakebedDetail.
-            return new[] { reeds, rushes, From("GrassMountain4"), From("Pebble1"), From("Pebble2"), From("Pebble3"), From("Branchs"), dryGrass, dryTall };
+            return new[] { reeds, rushes, From("GrassMountain4", MeadowVariant(Plant(mountain, "GrassMountain4"))), From("Pebble1"), From("Pebble2"), From("Pebble3"), From("Branchs"), dryGrass, dryTall, green };
         }
 
-        private enum LakebedDetail { Reeds, Rushes, Feather, Pebble1, Pebble2, Pebble3, Twigs, DryGrass, DryTall }
+        private enum LakebedDetail { Reeds, Rushes, Feather, Pebble1, Pebble2, Pebble3, Twigs, DryGrass, DryTall, GreenGrass }
 
         // Coverage for the lakebed plant/pebble layers appended after the demo's detail layers.
         private static void DressDetails(Section s, TerrainData data, int scale, int first, Rect[] stations)
@@ -356,6 +402,7 @@ namespace SomethingDownThere.Editor
                 // Shorter dry grass rings the clumps and scatters thinly across the higher flats.
                 float flats = .35f * Smooth((a - 1.2f) / .4f) * Smooth((Noise(local, 14, 5.3f) - .7f) / .06f) * Smooth((tuft - .45f) / .1f);
                 maps[(int)LakebedDetail.DryGrass][v, u] = Mathf.RoundToInt(130 * Mathf.Max(habitat * Smooth((tuft - .5f) / .06f), flats));
+                maps[(int)LakebedDetail.GreenGrass][v, u] = Mathf.RoundToInt(255 * GreenPatch(local, a, c) * Smooth((tuft - .25f) / .12f));
                 float clump = Noise(local, 3.5f, 11.3f), clump2 = Noise(local, 6, 4.4f), scatter = Noise(local, 2.3f, 9.7f);
                 float shore = Band(a, -.2f, .25f), bank = Band(c, -.25f, .8f, .25f), damp = Band(c, .3f, 3.2f, .4f);
                 // Reeds grow in a few dense stands right at the water; rushes clump along damp banks.
@@ -402,6 +449,7 @@ namespace SomethingDownThere.Editor
                 // The player walks over small stones instead of snagging on them.
                 if (bounds.size.magnitude < 1.6f) foreach (var collider in item.GetComponentsInChildren<Collider>()) UnityEngine.Object.DestroyImmediate(collider);
                 if (stranded) Bare(item);
+                else foreach (var renderer in item.GetComponentsInChildren<Renderer>()) UseMeadowRock(renderer);
             }
             Quaternion Yaw() => Quaternion.Euler(0, Range(0, 360), 0);
             Quaternion Tumble() => Quaternion.Euler(Range(-25, 25), Range(0, 360), Range(-25, 25));
@@ -452,9 +500,42 @@ namespace SomethingDownThere.Editor
         public const string RushMaterialPath = Folder + "/DryRushes.mat";
         public const string ReedMaterialPath = Folder + "/DryReeds.mat";
 
-        // Project prefab variant of a pack plant drawn with a muted, sun-dried copy of its
-        // material. Terrain details ignore prototype colours with the pack's grass shader.
-        private static GameObject DryVariant(GameObject source, string materialPath, Color light, Color dark)
+        // The canyon's living plants in warm, muted meadow colours: the packs paint them a vivid cool
+        // green that read bluish against the warm mud (user, 2026-10-02). One project copy per pack
+        // material, so each keeps its own texture.
+        private static readonly Dictionary<string, string> MeadowMaterials = new Dictionary<string, string>
+        {
+            { "_Grass", Folder + "/MeadowGrass.mat" }, { "SwirlyFern", Folder + "/MeadowFern.mat" },
+            { "SwirlyShrub", Folder + "/MeadowShrub.mat" }, { "GrassMountainShrub", Folder + "/MeadowFeather.mat" },
+        };
+        public static readonly Color MeadowLight = new Color(.5f, .48f, .28f), MeadowDark = new Color(.4f, .39f, .22f);
+
+        private static GameObject MeadowVariant(GameObject source)
+        {
+            string material = source.GetComponentInChildren<Renderer>().sharedMaterial.name;
+            return MeadowMaterials.TryGetValue(material, out string path) ? DryVariant(source, path, MeadowLight, MeadowDark, "Meadow") : source;
+        }
+
+        // The canyon's own detail prototypes with its green plants swapped for their meadow variants, no
+        // taller than knee to hip height: the pack's 3.5x meadow cards swayed far more than everything
+        // around them, since its wind grows with a plant's height (user, 2026-10-02).
+        private const float MeadowMinHeight = .6f, MeadowMaxHeight = 1.2f;
+
+        private static DetailPrototype[] CanyonDetails(DetailPrototype[] source) => source.Select(p =>
+        {
+            if (p.prototype == null) return p;
+            var variant = MeadowVariant(p.prototype);
+            if (variant == p.prototype) return p;
+            return new DetailPrototype(p)
+            {
+                prototype = variant, minHeight = Mathf.Min(p.minHeight, MeadowMinHeight), maxHeight = Mathf.Min(p.maxHeight, MeadowMaxHeight)
+            };
+        }).ToArray();
+
+        // Project prefab variant of a pack plant drawn with a recoloured copy of its material (muted and
+        // sun-dried, or meadow). Terrain details ignore prototype colours with the pack's grass shader.
+        // An existing material keeps its Inspector tuning.
+        private static GameObject DryVariant(GameObject source, string materialPath, Color light, Color dark, string suffix = "Dry")
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if (material == null)
@@ -467,7 +548,7 @@ namespace SomethingDownThere.Editor
                 material.SetFloat("_Smoothness", .1f);
                 AssetDatabase.CreateAsset(material, materialPath);
             }
-            string path = TreesFolder + "/" + source.name + " Dry.prefab";
+            string path = TreesFolder + "/" + source.name + " " + suffix + ".prefab";
             if (!AssetDatabase.IsValidFolder(TreesFolder)) AssetDatabase.CreateFolder(Folder, "Trees");
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
             try

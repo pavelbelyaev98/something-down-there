@@ -14,18 +14,26 @@ The lakebed excavation is a single contained worksite.
   cliff foot, wind around the dig plot and run into the lake, with stony beds, damp banks, reeds,
   rushes and tufts of muted, sun-dried grass (never bright lime); one dry gully joins them. Stranded stones, rubble and twigs lie
   along channels and waterlines; boulders on the old bed are bare, water-worn rock. Low sand islands with grassy tops and the odd boulder stand in
-  the remaining lake. All lakebed dressing stays clear of the camp and the dig plot.
+  the remaining lake. All lakebed dressing stays clear of the camp and the dig plot. A few metres
+  beyond the plot's tape, patches of the canyon's green grass ring it (fewer on the camp's side),
+  so the worked ground sits in a little green.
 - **Dig area:** one wide, irregular plot of bare ground inside the drained section, wider
   east-west than north-south and never a circle, with no tall fence. It reads as a construction or
-  excavation site: survey stakes with red-and-white barrier tape on the permanent ground outline it,
+  excavation site: red-and-white barrier tape tied at two heights round timber posts on the permanent
+  ground outlines it. It should feel solid, a built structure rather than flimsy sticks pushed into the
+  ground (sturdier post builds are being compared),
   so where digging starts and stops reads at a glance. Its edge bumps in and out every few metres, so
   cuts along it never follow one clean curve, and no step or line marks the edge before digging. The
-  whole plot is the darkest ground on site, evenly; the lightening starts on the permanent ground
-  just beyond the edge, through a dark damp band with no visible texture line, and fades gradually
-  into the lighter lakebed. No grass grows on the plot; cuts expose lighter clay loam coloured apart
+  whole plot is evenly a light mud, only a touch darker than the ground around it, never a deep dark;
+  the lightening starts on the permanent ground just beyond the edge, through a damp band with no
+  visible texture line, and reaches the lighter lakebed within about ten metres. No grass grows on the plot; cuts expose lighter clay loam coloured apart
   from the cracked surface mud, with no stone shapes that could pass for finds. The canyon beyond the
-  old lakebed keeps the demo's ground, with one grass everywhere: a turf in the same green as the
-  grass blades growing on it, so ground and blades read as one from every angle. The stations stand on its south side, looking north up
+  old lakebed keeps the demo's ground, with one grass everywhere: a muted, warm olive-yellow turf in the same colour as
+  the grass blades growing on it, so ground and blades read as one from every angle and sit close to
+  the warm mud (a muddy vibe, never a vivid or cool green). Every plant around the site shares that
+  one style: grass, ferns, bushes and the grass painted on rock tops wear the same muted olive, nothing
+  stands much above hip height, and all of it sways gently together in the wind; nothing is frozen
+  beside something waving. The stations stand on its south side, looking north up
   the canyon.
 - **Play area:** the player stays on the drained section: invisible walls follow its edge at the
   water line and a flight ceiling stops the jetpack about 16 m above the ground. Scenery that can

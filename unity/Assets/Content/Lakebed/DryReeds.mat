@@ -122,7 +122,7 @@ Material:
     - _TransShadow: 0
     - _Translucency: 1
     - _UVSec: 0
-    - _WindMultiplier: 0.1
+    - _WindMultiplier: 0.5
     - _ZWrite: 1
     - __dirty: 1
     m_Colors:

@@ -172,7 +172,7 @@ Material:
     - _BackfillTint: {r: 0.62, g: 0.5, b: 0.4, a: 1}
     - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
-    - _BandTint: {r: 0.8322835, g: 0.8094681, b: 0.78577685, a: 1}
+    - _BandTint: {r: 0.8962438, g: 0.8703449, b: 0.8488705, a: 1}
     - _ClayDeepTint: {r: 0.86, g: 0.6, b: 0.5, a: 1}
     - _ClayTint: {r: 1.1, g: 0.66, b: 0.4, a: 1}
     - _ConcreteTint: {r: 0.8, g: 0.79, b: 0.76, a: 1}
@@ -183,7 +183,7 @@ Material:
     - _RockColdTint: {r: 0.9, g: 0.95, b: 1.02, a: 1}
     - _RockTint: {r: 0.4, g: 0.4, b: 0.4, a: 1}
     - _SoilTint: {r: 0.8094681, g: 0.9911565, b: 1.1067512, a: 1}
-    - _TurfTint: {r: 0.6799757, g: 0.65762764, b: 0.64216644, a: 1}
+    - _TurfTint: {r: 0.8860039, g: 0.8596959, b: 0.83786047, a: 1}
     - _ZoneDepths: {r: 75, g: 112.5, b: 3, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

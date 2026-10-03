@@ -83,7 +83,7 @@ namespace SomethingDownThere.Editor
             Set(salvage, "terrain", terrain); Set(salvage, "discoveries", field); Set(salvage, "player", player);
             Set(salvage, "rig", crane.GetComponent<TowerCraneRig>()); Set(salvage, "markMaterial", RecoveryMark());
             Set(salvage, "settings", settings); Set(salvage, "ropeView", view);
-            Set(salvage, "liftingEye", LiftingEye());
+            Set(salvage, "liftingEye", ConfigureLiftingEye());
             using (var tuning = new SerializedObject(salvage))
             {
                 // The idle hook rests over the set-down spots.
@@ -259,29 +259,60 @@ namespace SomethingDownThere.Editor
             return (lowest + Vector3.up * HookThickness / swivel.lossyScale.y, new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)));
         }
 
-        // The lifting eye's model (art/lifting-eye): a mesh only, its material slots remapped to project
-        // URP materials and no collider, so it blocks neither targeting nor the rope.
-        private static GameObject LiftingEye()
+        // The lifting eye's model (art/lifting-eye): a "Base" that stays bolted flat on the load and the
+        // "Swivel" that turns toward the hook, sharing one baked material (worn powder coat, steel and
+        // soil). Meshes only, no collider, so it blocks neither targeting nor the rope.
+        public static GameObject ConfigureLiftingEye()
         {
             if (!(AssetImporter.GetAtPath(LiftingEyePath) is ModelImporter importer)) throw new InvalidOperationException("Missing the lifting eye model " + LiftingEyePath);
             importer.importAnimation = false; importer.importCameras = false; importer.importLights = false; importer.importBlendShapes = false;
             importer.animationType = ModelImporterAnimationType.None; importer.addCollider = false;
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
             importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
-            importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), "LiftingEyePaint"), EyeMaterial("LiftingEyePaint", new Color(.85f, .6f, .08f), 0, .4f));
-            importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), "LiftingEyeSteel"), EyeMaterial("LiftingEyeSteel", new Color(.5f, .51f, .53f), .8f, .45f));
+            foreach (var remap in importer.GetExternalObjectMap().Keys.ToArray()) importer.RemoveRemap(remap);
+            importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), "LiftingEye"), EyeMaterial());
             importer.SaveAndReimport();
-            return AssetDatabase.LoadAssetAtPath<GameObject>(LiftingEyePath);
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(LiftingEyePath);
+            if (model.transform.Find("Base") == null || model.transform.Find("Swivel") == null)
+                throw new InvalidOperationException("The lifting eye model needs its Base and Swivel parts (art/lifting-eye).");
+            return model;
         }
 
-        private static Material EyeMaterial(string name, Color color, float metallic, float smoothness)
+        private static Material EyeMaterial()
         {
-            string path = Folder + "/" + name + ".mat";
+            const string path = Folder + "/LiftingEye.mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material != null) return material;
-            material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = name };
-            material.SetColor("_BaseColor", color); material.SetFloat("_Metallic", metallic); material.SetFloat("_Smoothness", smoothness);
-            AssetDatabase.CreateAsset(material, path); return material;
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "LiftingEye" };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetTexture("_BaseMap", EyeTexture("LiftingEye_Albedo", TextureImporterType.Default, true));
+            material.SetColor("_BaseColor", Color.white);
+            material.SetTexture("_BumpMap", EyeTexture("LiftingEye_Normal", TextureImporterType.NormalMap, false));
+            material.SetFloat("_BumpScale", 1);
+            material.EnableKeyword("_NORMALMAP");
+            // One mask: metallic in R, occlusion in G, smoothness in A.
+            var mask = EyeTexture("LiftingEye_Mask", TextureImporterType.Default, false);
+            material.SetTexture("_MetallicGlossMap", mask);
+            material.SetFloat("_Smoothness", 1);
+            material.SetFloat("_SmoothnessTextureChannel", 0);
+            material.EnableKeyword("_METALLICSPECGLOSSMAP");
+            material.SetTexture("_OcclusionMap", mask);
+            material.SetFloat("_OcclusionStrength", 1);
+            material.EnableKeyword("_OCCLUSIONMAP");
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        private static Texture2D EyeTexture(string name, TextureImporterType type, bool colour)
+        {
+            string path = Folder + "/Textures/" + name + ".png";
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer)) throw new InvalidOperationException("Missing the lifting eye texture " + path);
+            importer.textureType = type; importer.sRGBTexture = colour; importer.mipmapEnabled = true;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput; importer.maxTextureSize = 1024;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         private static Rigidbody Body(SerializedObject vendorRig, string field)

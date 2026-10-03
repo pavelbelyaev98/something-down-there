@@ -90,9 +90,11 @@ namespace SomethingDownThere.Editor
                     Undo.RecordObject(renderer, "Omit backdrop shadow casters");
                     renderer.shadowCastingMode = footprint.Intersects(renderer.bounds) ? source.shadowCastingMode : ShadowCastingMode.Off;
                     UseProjectFoliage(renderer);
+                    UseMeadowRock(renderer);
                     PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
                 }
             }
+            ConfigureBushFoliage();
             foreach (var lod in environment.GetComponentsInChildren<LODGroup>(true))
             {
                 var source = PrefabUtility.GetCorrespondingObjectFromSource(lod);
@@ -212,6 +214,61 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_HidePower", 8);
             AssetDatabase.CreateAsset(material, path);
             return material;
+        }
+
+        // The pack paints a lime grass layer onto its rock tops; project copies tint that layer to the
+        // canyon plants' meadow olive, so rock-top grass reads as the same grass as the turf and blades
+        // beside it (user, 2026-10-02). Bare lakebed rock keeps its own copy. Tree roots carry the same
+        // layer but keep the pack material: grass round their feet hides them (TuftTreeBases).
+        public static readonly Color MeadowRockTint = new Color(1.3f, .9f, .42f, 1);
+        private const string RockFolder = Folder + "/Rocks";
+
+        private static void UseMeadowRock(Renderer renderer)
+        {
+            var materials = renderer.sharedMaterials;
+            var meadow = materials.Select(MeadowRock).ToArray();
+            if (!meadow.SequenceEqual(materials)) renderer.sharedMaterials = meadow;
+        }
+
+        private static Material MeadowRock(Material vendor)
+        {
+            if (vendor == null || !vendor.HasProperty("_2ndColor") || !vendor.HasProperty("_DetailAlbedo") || vendor.GetTexture("_DetailAlbedo") == null
+                || vendor.GetTexture("_DetailAlbedo").name != "Grass_a"
+                || !AssetDatabase.GetAssetPath(vendor).StartsWith("Assets/BK/", StringComparison.Ordinal))
+                return vendor;
+            string path = RockFolder + "/" + vendor.name + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null) return material; // Retain Inspector tuning.
+            if (!AssetDatabase.IsValidFolder(RockFolder)) AssetDatabase.CreateFolder(Folder, "Rocks");
+            material = new Material(vendor) { name = vendor.name };
+            material.SetColor("_2ndColor", MeadowRockTint);
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
+        // The pack's bushes stand still (no base wind, almost no leaf wind) in a cool sage green. Here they
+        // sway gently like the grass around them and wear its meadow olive; their impostors get the same
+        // shift so the far bushes match (user, 2026-10-02).
+        public static readonly Color BushLeafColour = new Color(.36f, .34f, .16f, 1), BushLeafVariation = new Color(.44f, .4f, .17f, 1);
+        public static readonly Color BushImpostorColour = new Color(.45f, .4f, .11f, 1);
+        public const float BushWind = .2f, BushLeafWind = .8f;
+
+        private static void ConfigureBushFoliage()
+        {
+            var leaves = AssetDatabase.LoadAssetAtPath<Material>(FoliageFolder + "/BushLeaves.mat");
+            if (leaves == null) return;
+            leaves.SetColor("_MainColor", BushLeafColour);
+            leaves.SetColor("_ColorVariation", BushLeafVariation);
+            leaves.SetFloat("_WindMultiplier", BushWind);
+            leaves.SetFloat("_MicroWindMultiplier", BushLeafWind);
+            EditorUtility.SetDirty(leaves);
+            foreach (string name in new[] { "Bush1_imp", "Bush2_imp", "Bush3_imp" })
+            {
+                var impostor = AssetDatabase.LoadAssetAtPath<Material>(FoliageFolder + "/" + name + ".mat");
+                if (impostor == null) continue;
+                impostor.SetColor("_MainColor", BushImpostorColour);
+                EditorUtility.SetDirty(impostor);
+            }
         }
 
         private static GameObject TreeVariant(GameObject source, bool backdrop)

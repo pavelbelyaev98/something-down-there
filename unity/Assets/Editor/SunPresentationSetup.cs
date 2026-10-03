@@ -142,7 +142,14 @@ namespace SomethingDownThere.Editor
                 AssetDatabase.AddObjectToAsset(curves, profile);
             }
             curves.active = true;
-            // Hue (0 red, 1/6 yellow, 1/3 green) -> saturation scale / 2 (0.5 keeps it).
+            // Hue (0 red, 1/6 yellow, 1/3 green) -> hue shift + 0.5: greens lean toward yellow, so the
+            // packs' lime painted into rock and terrain reads warm beside the mud, not cool.
+            curves.hueVsHue.Override(new TextureCurve(new[]
+            {
+                new Keyframe(.1f, .5f), new Keyframe(.2f, .48f), new Keyframe(.27f, .455f),
+                new Keyframe(.33f, .44f), new Keyframe(.42f, .47f), new Keyframe(.5f, .5f),
+            }, .5f, true, new Vector2(0, 1)));
+            // Hue -> saturation scale / 2 (0.5 keeps it).
             curves.hueVsSat.Override(new TextureCurve(new[]
             {
                 new Keyframe(.1f, .5f), new Keyframe(.18f, .42f), new Keyframe(.25f, .33f),

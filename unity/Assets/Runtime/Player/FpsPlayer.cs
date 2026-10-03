@@ -62,6 +62,7 @@ namespace SomethingDownThere
             return extractionInteraction!=null && extractionInteraction.TryGetTarget(out find, out hit);
         }
         private FindProximityCollection proximityCollection;
+        private LoadRide loadRide;
         private FindPickupPresentation pickupPresentation;
         private float pitch, verticalSpeed, digCooldown, savedTimeScale, jetpackHoldTime;
         private float scheduledDigInterval;
@@ -82,8 +83,11 @@ namespace SomethingDownThere
         private bool adminGroundXray;
         // Crane effect A/B (101): dust lingering in the shaft after rope breaks (on by default).
         private bool adminShaftDustOff;
-        // Ground contact shading (SSAO) strength for the session (0 = authored, then ContactShading.Steps).
-        private int adminContactShading;
+        // Ground contact shading (SSAO) strength set from the admin slider for the session.
+        private bool adminContactShading;
+        // Dig boundary style A/B (089): the first authored style (double tape) by default.
+        private int adminBoundaryStyle;
+        private DigBoundaryStyles boundaryStyles;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -138,7 +142,7 @@ namespace SomethingDownThere
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
             || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray
-            || adminShaftDustOff || adminContactShading != 0);
+            || adminShaftDustOff || adminContactShading || adminBoundaryStyle != 0);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
@@ -214,6 +218,7 @@ namespace SomethingDownThere
             Detector = new FindDetector(this);
             extractionInteraction = new FindExtractionInteraction(this);
             proximityCollection = new FindProximityCollection(this, motor, worldMask);
+            loadRide = new LoadRide(motor, worldMask);
             pickupPresentation = new FindPickupPresentation(transform, viewCamera);
             crouch = new PlayerCrouch(motor, viewCamera, tuning, worldMask);
             if (CameraSettings == null)
@@ -298,6 +303,7 @@ namespace SomethingDownThere
             worksiteTools?.Cancel();
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
+            loadRide?.Clear();
             Physics.SyncTransforms();
             if (!crouch.CanRestore(snapshot.CrouchAmount, snapshot.PlayerPosition, snapshot.PlayerRotation, excavationTerrain))
                 throw new System.IO.InvalidDataException("The saved player stance has no safe clearance. The checkpoint has been kept.");
@@ -497,7 +503,9 @@ namespace SomethingDownThere
             direction = Vector2.ClampMagnitude(direction, 1f);
             // Resizing a CharacterController refreshes its native shape. Retain
             // the preceding Move's contact state for this frame's jump/flight logic.
-            bool grounded = motor.isGrounded;
+            // A load the player stands on carries them (LoadRide) and counts as ground.
+            bool riding = loadRide.Standing && verticalSpeed <= 0f;
+            bool grounded = motor.isGrounded || riding;
             if (crouch.Tick(crouchHeld, deltaTime)) ShowFeedback("Low ceiling");
             if (grounded && verticalSpeed <= 0f) jetpackReadyInAir = false;
             if (grounded && verticalSpeed < 0f) verticalSpeed = -2f;
@@ -543,9 +551,14 @@ namespace SomethingDownThere
             float speedMultiplier = crouch.IsPrecision ? crouch.SpeedMultiplier
                 : sprintHeld ? Mathf.Clamp(tuning.SprintSpeedMultiplier, 1f, 1.5f) : 1f;
             var planar = (transform.right * direction.x + transform.forward * direction.y) * (tuning.WalkSpeed * speedMultiplier);
-            var collisions = motor.Move((planar + Vector3.up * verticalSpeed) * deltaTime);
+            loadRide.Carry(deltaTime);
+            // No push down onto a carrying load: its collider runs up to a physics step ahead of the drawn load,
+            // so the rider would drop in steps after it.
+            float fall = riding && verticalSpeed < 0f ? 0f : verticalSpeed;
+            var collisions = motor.Move((planar + Vector3.up * fall) * deltaTime);
             if ((collisions & CollisionFlags.Above) != 0 && verticalSpeed > 0f) verticalSpeed = 0f;
             if ((collisions & CollisionFlags.Below) != 0 && verticalSpeed < 0f) verticalSpeed = -2f;
+            loadRide.Track();
         }
 
         private bool NearGroundBelow()
@@ -734,7 +747,8 @@ namespace SomethingDownThere
             adminHoverOnRelease = false;
             adminGroundXray = false;
             adminShaftDustOff = false;
-            if (adminContactShading != 0) { adminContactShading = 0; ContactShading.Restore(); }
+            if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
+            if (adminBoundaryStyle != 0) { adminBoundaryStyle = 0; BoundaryStyles?.Show(0); }
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
@@ -794,15 +808,25 @@ namespace SomethingDownThere
             MenuChanged?.Invoke();
         }
 
-        public string AdminContactShadingLabel => ContactShading.Current.ToString("0.##");
+        private DigBoundaryStyles BoundaryStyles => boundaryStyles != null ? boundaryStyles : boundaryStyles = FindAnyObjectByType<DigBoundaryStyles>();
+        public string AdminBoundaryLabel => BoundaryStyles != null ? BoundaryStyles.CurrentName : "none";
 
-        public void CycleAdminContactShading()
+        public void CycleAdminBoundary()
         {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminContactShading = (adminContactShading + 1) % (ContactShading.Steps.Length + 1);
-            if (adminContactShading == 0) ContactShading.Restore(); else ContactShading.Set(ContactShading.Steps[adminContactShading - 1]);
-            ShowFeedback("Contact shading " + AdminContactShadingLabel);
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin) || BoundaryStyles == null) return;
+            adminBoundaryStyle = (adminBoundaryStyle + 1) % BoundaryStyles.Count;
+            BoundaryStyles.Show(adminBoundaryStyle);
+            ShowFeedback("Boundary: " + BoundaryStyles.CurrentName);
             MenuChanged?.Invoke();
+        }
+
+        public float AdminContactShading => ContactShading.Current;
+
+        public void SetAdminContactShading(float value)
+        {
+            if (!AdminAvailable) return;
+            adminContactShading = true;
+            ContactShading.Set(Mathf.Clamp(value, 0, ContactShading.Maximum));
         }
 
         public void ToggleAdminXray()
@@ -1047,6 +1071,7 @@ namespace SomethingDownThere
         private void ReturnToSurface()
         {
             worksiteTools?.Cancel();
+            loadRide?.Clear();
             pickupPresentation?.Clear();
             motor.enabled = false;
             transform.SetPositionAndRotation(surfaceReturn.position, surfaceReturn.rotation);
@@ -1297,6 +1322,7 @@ namespace SomethingDownThere
             discoveries?.SetXray(false, null);
             pickupPresentation?.Clear();
             proximityCollection?.Clear();
+            loadRide?.Clear();
             GameSettings?.RevertDisplay();
             Rescue?.Cancel();
             BindingCapture?.Cancel();
@@ -1320,7 +1346,7 @@ namespace SomethingDownThere
 
         private void OnDestroy()
         {
-            // The shading switch writes the shared renderer asset: never leave an admin value behind.
+            // The shading slider writes the shared renderer asset: never leave an admin value behind.
             ContactShading.Restore();
             pickupPresentation?.Dispose();
             input?.Dispose();

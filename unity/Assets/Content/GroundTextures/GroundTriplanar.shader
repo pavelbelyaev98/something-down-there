@@ -279,7 +279,7 @@ Shader "Something Down There/Ground Triplanar"
                 half2 turfMask;
                 [branch] if (_BandBlend > 0.5)
                 {
-                    // The cap is the terrain's own mud: the plot keeps the dark cap tint, and beyond the
+                    // The cap is the terrain's own mud: the plot keeps the cap tint, and beyond the
                     // outline the permanent collar lightens toward the damp band with the share the
                     // terrain paint uses (LakebedSiteSetup.DigBandShare). Same texture, relief, mask
                     // remap and world mapping as the terrain layers, so collar and terrain join

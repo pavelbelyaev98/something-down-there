@@ -292,13 +292,23 @@ namespace SomethingDownThere
             descentLength = Vector3.Distance(descentStart, RouteStart);
         }
 
-        // As the hook comes for it the lifting eye turns so the hook's wire runs through its ring; once
-        // hooked on it also swivels toward the hook.
+        // The lifting eye stands still while the hook is on its way and turns only in the last moments
+        // before it arrives (seconds before arrival), so the hook's wire runs through its bow; once hooked
+        // on it also swivels toward the hook.
+        private const float EyeTurnStart = .7f, EyeTurnEnd = .1f;
+
         private void AimEye()
         {
             if (mark == null || job == null || payload == null || job.Phase < ExtractionPhase.Deploying || job.Phase == ExtractionPhase.Settling) return;
+            float weight = 1;
+            if (job.Phase == ExtractionPhase.Deploying)
+            {
+                float remaining = descended < descentLength ? float.PositiveInfinity : ExtractionSnapshot.Length(job.Route) - job.Progress;
+                float t = Mathf.Clamp01((EyeTurnStart - remaining / Mathf.Max(rideSpeed, .1f)) / (EyeTurnStart - EyeTurnEnd));
+                weight = t * t * (3 - 2 * t);
+            }
             Vector3 pull = !job.Attached ? Vector3.zero : ExtractionSnapshot.Craning(job.Phase) ? rig.Seat - AttachWorld : ropeView.HookDirection;
-            mark.Aim(pull, rig.SeatWire);
+            mark.Aim(pull, rig.SeatWire, weight);
         }
 
         // At the top of the route the load hangs in the hook: the hook goes back on the hoist and the
@@ -392,7 +402,12 @@ namespace SomethingDownThere
             if (markMaterial == null) return;
             if (terrain == null || terrain.IsRestoring) { mark?.Hide(); return; }
             mark ??= new RecoveryMarkView(transform, markMaterial, liftingEye, terrain.GetComponent<ExcavationDaylight>());
-            if (job != null && payload != null) mark.Show(payload, job.AttachLocal, Vector3.zero, 1, true);
+            // The eye comes off the moment the crane lets go of the load.
+            if (job != null && payload != null)
+            {
+                if (job.Phase == ExtractionPhase.Settling) mark.Hide();
+                else mark.Show(payload, job.AttachLocal, Vector3.zero, 1, true);
+            }
             else if (player != null && player.TryGetRecoveryMark(out var find, out var hit))
                 mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.ExtractionMarkProgress, false);
             else mark.Hide();

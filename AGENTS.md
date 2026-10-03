@@ -64,6 +64,12 @@ When the user playtests a build and modifies or redesigns a feature (a deleted p
 - **CLI & Pipeline:** Use the official Unity CLI directly (`unity status`, `unity command`) with `com.unity.pipeline` for live editor inspection. See `unity/readme.md`.
 - **Agent Skill:** Load the `unity-cli` skill before Unity CLI work; it is installed for Codex and opencode via `unity skill install codex` (`~/.agents/skills/unity-cli`) — refresh with `--yes` after CLI updates.
 - **3D Modeling:** Use Blender MCP (`127.0.0.1:9876`) for generating and modifying 3D assets, storing recipes and `.blend` files under `art/`.
+- **Avoid the generated look:** script-made art (Blender MCP, editor-generated meshes, painted textures) shows the same tells as AI-generated models. Check every new model for them:
+  - Albedo carries only colour, wear and dirt, never a light direction, shadows or highlights. Form shading comes from normal and occlusion maps and the scene's lights.
+  - UVs follow the shape: even texel density, seams where they are hidden, no texture stretched or projected across faces at grazing angles.
+  - Build it like the real object: real-world dimensions, every part held by something (nothing floating or interpenetrating), symmetry where the real thing has it, wear and dirt where use and weather put them.
+  - The polygon budget suits the object's size on screen. Use clean quad topology with edge loops and bevels instead of razor edges, never dense triangle soup or remesher output; add LODs for anything seen from afar.
+  - Before handing off, inspect the wireframe and a close-up in a game screenshot under the game's lighting.
 - **Windows Builds:**
   - **If Unity Editor is open:** `unity command menu --path 'Tools/Something Down There/Build Windows Player' --timeout 300 --project-path "$projectPath" --format json`
   - **If Unity Editor is closed:** `./tools/build-windows.ps1`

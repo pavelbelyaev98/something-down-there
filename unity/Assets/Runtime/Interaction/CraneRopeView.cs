@@ -12,13 +12,14 @@ namespace SomethingDownThere
     {
         // Sides of a strand's cross-section, as on the pack's cable.
         private const int Sides = 6;
-        // Underground the falls run almost touching (their centres this many strand radii from the
-        // rope's), and they fan out to the block's rope entries over this last length (metres); along the
-        // rope their spacing changes at most this fast (metres per metre).
-        private const float TogetherRadii = 1.5f, FanLength = .6f, SpacingSlope = .4f;
-        // Rope points closer than this (metres) are one point; the hook block eases its turn about the
-        // rope at this rate (1/s).
-        private const float MergeDistance = .03f, BlockTurnRate = 12f;
+        // Where the cable is pulled off the straight line from the trolley to the hook (by the hole's rim or
+        // a tunnel's corner) the falls draw together, almost touching (their centres this many strand radii
+        // from the rope's), fully once it is DeflectionTogether metres off that line; they fan out to the
+        // block's rope entries over this last length (metres), and along the rope their spacing changes at
+        // most this fast (metres per metre).
+        private const float TogetherRadii = 1.5f, DeflectionTogether = .5f, FanLength = .6f, SpacingSlope = .4f;
+        // Rope points closer than this (metres) are one point.
+        private const float MergeDistance = .03f;
         [SerializeField] private MeshFilter strands;
         [SerializeField] private TowerCraneRig rig;
         // The pack's cable texture strip: u from the sheave to the hook block, v around a strand.
@@ -176,12 +177,9 @@ namespace SomethingDownThere
             // shaft): a near-zero last span has no direction, so the entry replaces that point.
             if (centre.Count > 1 && (rig.RopeEntry - centre[centre.Count - 1]).sqrMagnitude < MergeDistance * MergeDistance) centre[centre.Count - 1] = rig.RopeEntry;
             else centre.Add(rig.RopeEntry);
-            // The block turns about its rope, smoothly, so its entries meet the falls where they arrive.
-            // Its two entries are alike, so it never turns more than a quarter turn: a frame that flips
-            // round would otherwise leave it half a turn behind with the falls crossed into it.
-            Vector3 frame = Frame();
-            if (Vector3.Dot(frame, across) < 0) frame = -frame;
-            across = Vector3.Slerp(across, frame, 1 - Mathf.Exp(-BlockTurnRate * Time.deltaTime));
+            // The two falls never twist round each other, so the block stays square to the trolley's sheaves.
+            Frame();
+            across = Square(rig.SheaveSpread, direction, across);
             rig.PlaceHook(tip, direction, across);
             centre[centre.Count - 1] = rig.RopeEntry;
             Build();
@@ -193,31 +191,34 @@ namespace SomethingDownThere
             if ((point - centre[centre.Count - 1]).sqrMagnitude > 1e-6f) centre.Add(point);
         }
 
-        // The falls' side-by-side direction at each point of the cable's centre line, carried down from
-        // the trolley's sheaves without twisting. Returns the direction where they reach the block.
-        private Vector3 Frame()
+        // The falls' side-by-side direction at each point of the cable's centre line: the trolley's sheave
+        // spread squared to the cable there. It never flips from frame to frame, so the falls never cross.
+        private void Frame()
         {
             sides.Clear();
-            Vector3 tangent = Tangent(centre, 0, Vector3.down);
-            Vector3 side = Vector3.ProjectOnPlane(rig.SheaveSpread, tangent);
-            side = side.sqrMagnitude > 1e-8f ? side.normalized : Perpendicular(tangent);
-            sides.Add(side);
-            for (int i = 1; i < centre.Count; i++)
+            Vector3 side = rig.SheaveSpread, tangent = Vector3.down;
+            for (int i = 0; i < centre.Count; i++)
             {
-                Vector3 next = Tangent(centre, i, tangent);
-                if ((centre[i] - centre[i - 1]).sqrMagnitude < 1e-6f) next = tangent;
-                // A cable doubling back has no one rotation between its directions: keep the side as is.
-                side = Vector3.ProjectOnPlane(Vector3.Dot(tangent, next) > -.5f ? Quaternion.FromToRotation(tangent, next) * side : side, next);
-                side = side.sqrMagnitude > 1e-8f ? side.normalized : Perpendicular(next);
+                tangent = Tangent(centre, i, tangent);
+                side = Square(rig.SheaveSpread, tangent, side);
                 sides.Add(side);
-                tangent = next;
             }
-            return side;
+        }
+
+        // `spread` made square to `axis` (unit), always on the spread's own side; where the two run alongside
+        // each other there is no clear square direction, so the previous side carries on.
+        private static Vector3 Square(Vector3 spread, Vector3 axis, Vector3 previous)
+        {
+            Vector3 side = Vector3.ProjectOnPlane(spread, axis);
+            if (side.sqrMagnitude < .05f * spread.sqrMagnitude) side = Vector3.ProjectOnPlane(previous, axis);
+            return side.sqrMagnitude > 1e-10f ? side.normalized : Perpendicular(axis);
         }
 
         // Both falls as the pack's hexagonal strands, their spacing narrowing from the trolley's sheaves to
-        // the block's. Through the hole they are drawn together, as the ground funnels them, so the pair
-        // runs along the dug route like one doubled cable and spreads again into the block.
+        // the block's. A straight drop keeps them apart, as when hanging. Where the cable is pulled off the
+        // straight line from the trolley to the block (the hole's rim, a tunnel's corner) they draw together
+        // smoothly with how far it is pulled, run on like one doubled cable and spread again into the block.
+        // Snapping them together past a bend angle flickered as the simulated rope wobbled.
         private void Build()
         {
             if (mesh == null)
@@ -234,12 +235,15 @@ namespace SomethingDownThere
             Vector3 top = rig.SheaveSpread, bottom = rig.EntrySpread;
             // Each fall enters the block on its own side: a block turned the other way round swaps entries.
             if (count > 2 && Vector3.Dot(sides[count - 2], bottom) < 0) bottom = -bottom;
-            float radius = rig.StrandRadius;
-            float ground = terrain != null ? terrain.SurfaceHeight : float.NegativeInfinity;
+            float radius = rig.StrandRadius, together = radius * TogetherRadii;
+            Vector3 start = centre[0], end = centre[count - 1];
             spacings.Clear();
             for (int i = 0; i < count; i++)
             {
-                float spacing = centre[i].y < ground ? radius * TogetherRadii : Mathf.Lerp(top.magnitude, bottom.magnitude, lengths[i] / total);
+                float hanging = Mathf.Lerp(top.magnitude, bottom.magnitude, lengths[i] / total);
+                Vector3 nearest = start + Vector3.Project(centre[i] - start, end - start);
+                float pulled = Mathf.Clamp01(Vector3.Distance(centre[i], nearest) / DeflectionTogether);
+                float spacing = Mathf.Lerp(hanging, together, pulled * pulled * (3 - 2 * pulled));
                 spacings.Add(Mathf.Lerp(bottom.magnitude, spacing, Mathf.Clamp01((total - lengths[i]) / FanLength)));
             }
             for (int i = 2; i < count - 1; i++) spacings[i] = Mathf.Min(spacings[i], spacings[i - 1] + SpacingSlope * (lengths[i] - lengths[i - 1]));

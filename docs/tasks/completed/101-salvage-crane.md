@@ -461,3 +461,52 @@ down your own route, drags the computer out through the dirt, and the crane sets
   `SalvageCrane.Feedback`, the admin switch) is removed; concept 09's rule stands (debris only when
   ground is actually removed). If it returns, it needs jams long enough to be seen (or a bolder cue):
   measured jams here last 0.1-0.3 s.
+
+## Iteration: a real lifting point (2026-10-02)
+- Request: better shape, textures, shading and dirt for the lifting eye (it was a flat-coloured cylinder,
+  hex and torus that tilted as one piece, base plate included).
+- New model (`art/lifting-eye/create_assets.py`): `Base` (flange, low cup, three bolts) stays flat on the
+  load; `Swivel` (a ball centred on the mark and a forged bow) turns about that centre, so the hook's seat
+  stays `HookReach` from the mark and the crane's physics, rope view and seat math are unchanged.
+  The ball turns without cutting the cup. One URP Lit material with maps baked in Blender (Cycles):
+  worn amber powder coat chipped to steel, scratches, dust on upward faces, caked mud low down and in
+  crevices, zinc with rust at the bolts; metallic/occlusion/smoothness packed in one mask.
+- Rejected on the way: a tall neck above the ball (cut into the base when tilted); strong metallic
+  chips and zinc (read navy-black, mirroring the sky).
+- A real hoist ring keeps its body upright and only pivots the bail, but then the bail cannot both
+  follow the pull and keep its hole on the hook's wire, so the hook would misalign. The swivel keeps
+  the old orientation rule. On a sideways pull one bow leg can still dip into the load, as before.
+
+## Iteration: eye timing, release and straight falls (2026-10-02)
+- The eye turned toward the arriving hook from the moment deployment began, long before the hook was
+  near. It now stands upright until the hook is ~0.6 s out (`SalvageCrane.EyeTurnStart/End`, by the
+  hook's ride speed) and turns smoothly into place (`RecoveryMarkView.Aim` weight).
+- The eye comes off the moment the crane lets go (Settling), not when the load has come to rest.
+- Falls glitching in a straight shaft (screenshot): they were drawn together wherever the cable was
+  below ground level, so a straight drop pinched them mid-shaft with a kink in each before spreading
+  into the block. They now hang apart until the cable's first bend of more than 12 degrees from its run
+  off the trolley (`CraneRopeView.FirstBend`), tapering together into that bend.
+
+## Iteration: simpler falls (2026-10-02)
+- Feedback: the cables still tangled for a second and untangled, again and again ("overcomplicating?").
+  Causes: the falls snapped together past a 12 degree bend, which the wobbling simulated rope crossed back and
+  forth; their sides were carried down the cable by parallel transport and the block eased its turn toward
+  that frame, so the entry-side check flipped while the two disagreed.
+- Now `CraneRopeView` squares the trolley's sheave spread to the cable at each point (the falls keep the
+  trolley's side; a two-fall reeving does not twist), the block stays square to the sheaves the same way, and
+  the falls draw together smoothly with how far the cable is pulled off the straight trolley-to-hook line
+  (fully at 0.5 m). Checked frame by frame in slow motion down the straight shaft and the bent tunnel.
+
+## Iteration: solid uniques and riding the load (2026-10-03)
+- Feedback: when extracting uniques, give them physics against the player; standing on one, the player is
+  dragged along, never passed through. `FindPhysics` now ignores the player only for commons. `LoadRide`
+  (player folder, run by `FpsPlayer.Move`) finds a unique under or against the capsule after each move and,
+  next frame, moves the player by that unique's rigid motion at the player's feet: all of it when standing on
+  it, otherwise only the part pushing into the player. The crane ignores the player as soil (`Contacts`).
+- Pushing the rider down onto the load (gravity) made them drop in steps after a descending load: the
+  collider sits at the physics pose, up to a step ahead of the drawn, interpolated load. A carried rider gets
+  no push down and counts as grounded; a jolt that lifts them more than 5 cm off the drawn surface (the haul's
+  first yank) settles back at 1.5 m/s, and settling all the way to the skin pressed them onto the collider and
+  jittered again. Measured in the Ground Lab shafts: rider and load vertical speed within about 0.1 m/s while
+  lifting, carrying and setting down; a 5 t load driven into a standing player pushes them at a constant gap
+  without slowing. On the lab computer the rider stands next to the hook, which bumps them when it swings.

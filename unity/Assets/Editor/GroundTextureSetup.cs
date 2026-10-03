@@ -19,8 +19,9 @@ namespace SomethingDownThere.Editor
         // The original soil art's own mapping and relief.
         public const float OriginalSoilTileMetres = 2, OriginalSoilRelief = .55f, OriginalStoneRelief = .9f;
         // Applied after opaques it also darkens sunlit creases; at 1.25 every crease between shovel bites
-        // turned dug soil into dark-edged blocks. The user chose 0.3 from the admin steps (2026-10-02).
-        public const float ContactShadingIntensity = .3f;
+        // turned dug soil into dark-edged blocks. The user settled on 0.45: 0.3 too little, 0.6 too much
+        // (2026-10-03). The Developer admin's Contact shading slider tries other values for the session.
+        public const float ContactShadingIntensity = .45f;
 
         [MenuItem("Tools/Something Down There/Configure Pack Lakebed Ground")]
         public static void ConfigurePackGround()
@@ -102,8 +103,8 @@ namespace SomethingDownThere.Editor
         // Dry ground never turns glossy; the damp band's terrain layer shares this ceiling.
         public const float MaxGroundSmoothness = .15f;
 
-        // The dig surface cap follows the authored dig ground treatment: the darkest ground on site,
-        // blending into the terrain's damp band at the plot outline.
+        // The dig surface cap follows the authored dig ground treatment: a little darker than the ground
+        // around it, blending into the terrain's damp band at the plot outline.
         private static void ConfigureSurfaceCap(Material material, float surfaceHeight)
         {
             LakebedSiteSetup.ConfigureDigGround(material);

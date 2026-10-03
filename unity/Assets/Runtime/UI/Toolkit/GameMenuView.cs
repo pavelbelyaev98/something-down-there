@@ -616,6 +616,13 @@ namespace SomethingDownThere
             Button(groundTools, "Print ground tuning", player.PrintAdminGroundTuning);
             Button(groundTools, "Reset ground tuning", player.ResetAdminGroundTuning, player.HasAdminGroundTuning);
             groundTable = Text(scroll, "Ground tuning table", FpsPlayer.GroundTable(), "body");
+            var lightRows = new ToolkitSettingsRows(scroll, scroll);
+            int shadingSteps = Mathf.RoundToInt(ContactShading.Maximum / ContactShading.Step);
+            navigation.Add(lightRows.Slider("adminContactShading", "Contact shading", 0, shadingSteps,
+                () => Mathf.RoundToInt(player.AdminContactShading / ContactShading.Step),
+                value => { player.SetAdminContactShading(value * ContactShading.Step); lightRows.Refresh(); },
+                value => (value * ContactShading.Step).ToString("0.00"), valueName: "adminContactShadingValue"));
+            lightRows.Refresh();
             Button(grid, "Refill battery", player.RefillAdminBattery);
             Button(grid, "Return to surface", player.AdminReturnToSurface);
             Button(grid, "Reset ground...", player.RequestTerrainReset);
@@ -624,7 +631,7 @@ namespace SomethingDownThere
             Button(grid, "Ground X-ray: " + (player.AdminGroundXray ? "ON" : "OFF"), player.ToggleAdminGroundXray);
             Button(grid, "Detector: " + (player.DetectorShown ? "ON" : "OFF"), player.ToggleAdminDetector);
             Button(grid, "Shaft dust: " + (player.ShaftDust ? "ON" : "OFF"), player.ToggleAdminShaftDust);
-            Button(grid, "Contact shading: " + player.AdminContactShadingLabel, player.CycleAdminContactShading);
+            Button(grid, "Boundary: " + player.AdminBoundaryLabel, player.CycleAdminBoundary);
             Button(grid, "Add $500", player.GrantAdminMoney);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);
             Button(actions, "Resume digging", player.CloseMenu, true, "primary");

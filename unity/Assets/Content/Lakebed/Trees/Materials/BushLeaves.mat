@@ -177,7 +177,7 @@ Material:
     - _MicroSpeed: 2
     - _MicroWind: 0
     - _MicroWindChannel: 2
-    - _MicroWindMultiplier: 0.01
+    - _MicroWindMultiplier: 0.8
     - _Mode: 0
     - _NoiseScale: 0.01
     - _NormalAttenuation: 1
@@ -221,7 +221,7 @@ Material:
     - _WindBurstsScale: 1
     - _WindBurstsSpeed: 50
     - _WindDebugView: 0
-    - _WindMultiplier: 0
+    - _WindMultiplier: 0.2
     - _WindMultiplier2: 1
     - _WindPower: 0.01
     - _WindSpeed: 1
@@ -234,10 +234,10 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color0: {r: 1, g: 1, b: 1, a: 0}
-    - _ColorVariation: {r: 0.31547105, g: 0.38679248, b: 0.11555118, a: 1}
+    - _ColorVariation: {r: 0.44, g: 0.4, b: 0.17, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GradientColor: {r: 1, g: 1, b: 1, a: 1}
-    - _MainColor: {r: 0.2140738, g: 0.38679248, b: 0.2287645, a: 1}
+    - _MainColor: {r: 0.36, g: 0.34, b: 0.16, a: 1}
     - _ScatteringColor: {r: 0.56218994, g: 1, b: 0, a: 0}
     - _SpecularColor: {r: 0.39215687, g: 0.39215687, b: 0.39215687, a: 1}
     - _Tiling: {r: 4, g: 4, b: 0, a: 0}

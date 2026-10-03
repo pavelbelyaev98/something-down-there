@@ -56,6 +56,68 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator BreakawayMomentumSmashesNextDirtBeforeAnotherWindup() => ContactRecovery(false, false, false, true);
 
+        // A unique is solid: a player standing on one rides it as a crane hauls it, and one dragged into a
+        // standing player shoves them aside without being stopped. Commons let the player through.
+        [UnityTest]
+        public IEnumerator PlayerRidesAMovingUniqueAndIsShovedByOne()
+        {
+            devices = new InputTestFixture(); devices.Setup();
+            InputSystem.AddDevice<Keyboard>(); InputSystem.AddDevice<Mouse>();
+            SceneManager.sceneLoaded += TestInputPreferences.Configure;
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/MainGame.unity", new LoadSceneParameters(LoadSceneMode.Additive));
+            SceneManager.sceneLoaded -= TestInputPreferences.Configure;
+            scene = SceneManager.GetSceneByPath("Assets/Scenes/MainGame.unity");
+            var player = scene.GetRootGameObjects()[0].GetComponentInChildren<FpsPlayer>();
+            player.Crane.enabled = false;
+            yield return null;
+            player.SetApplicationFocus(true); player.CloseMenu();
+            yield return null;
+            var find = player.Discoveries.Finds.Single(f => f.SaveContentId == "unique_reservoir_computer");
+            var motor = player.GetComponent<CharacterController>();
+            var shape = find.GetComponent<MeshCollider>();
+            Assert.That(Physics.GetIgnoreCollision(shape, motor), Is.False);
+            Assert.That(Physics.GetIgnoreCollision(player.Discoveries.Finds.First(f => f.Kind == DiscoveryKind.Common).GetComponent<MeshCollider>(), motor), Is.True);
+            // A heavy dynamic load held in the air above the plot, the player standing on it.
+            var body = find.GetComponent<Rigidbody>();
+            float ground = player.ExcavationTerrain.SurfaceHeight;
+            void Hold(Vector3 position, RigidbodyConstraints constraints)
+            {
+                body.isKinematic = false; body.useGravity = false; body.mass = 5000; body.linearDamping = 0;
+                body.constraints = constraints; body.linearVelocity = Vector3.zero;
+                body.position = position; body.rotation = Quaternion.identity;
+                find.transform.SetPositionAndRotation(position, Quaternion.identity);
+            }
+            void Stand(Vector3 feet)
+            {
+                motor.enabled = false; player.transform.position = feet; motor.enabled = true;
+                Physics.SyncTransforms();
+            }
+            Hold(new Vector3(0, ground + 2, 0), RigidbodyConstraints.FreezeRotation);
+            Stand(new Vector3(0, shape.bounds.max.y + .2f, 0));
+            yield return new WaitForSeconds(.5f);
+            player.SetApplicationFocus(true);
+            Vector3 load = body.position, rider = player.transform.position;
+            body.linearVelocity = new Vector3(.4f, 1, 0);
+            yield return new WaitForSeconds(1.5f);
+            Vector3 lifted = body.position - load, carried = player.transform.position - rider;
+            Assert.That(lifted.y, Is.GreaterThan(1.2f), "The rider must not hold the load down.");
+            Assert.That(carried.y, Is.EqualTo(lifted.y).Within(.15f), "A rider rises with the load.");
+            Assert.That(carried.x, Is.EqualTo(lifted.x).Within(.15f), "A rider moves sideways with the load.");
+            // Dragged into a player standing on the plot, the load shoves them along and keeps going.
+            Hold(new Vector3(-1.6f, ground + shape.bounds.extents.y + .1f, 0),
+                RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY);
+            Stand(new Vector3(0, ground + .1f, 0));
+            yield return new WaitForSeconds(.3f);
+            player.SetApplicationFocus(true);
+            float start = player.transform.position.x;
+            body.linearVelocity = Vector3.right * .8f;
+            yield return new WaitForSeconds(2);
+            Assert.That(player.transform.position.x - start, Is.GreaterThan(.5f), "The load shoves the player aside.");
+            Assert.That(body.linearVelocity.x, Is.GreaterThan(.6f), "The player does not stop the load.");
+            Assert.That(player.transform.position.x - body.position.x, Is.GreaterThan(shape.bounds.extents.x + motor.radius - .05f),
+                "The player is never inside the load.");
+        }
+
         private IEnumerator ContactRecovery(bool pullFree, bool persistentJam = false, bool lampObstacle = false, bool chain = false)
         {
             devices = new InputTestFixture(); devices.Setup();

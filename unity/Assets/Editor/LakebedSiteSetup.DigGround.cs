@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace SomethingDownThere.Editor
 {
-    // The whole dig plot reads darkest: its surface cap is the canyon mud darkened. Beyond the outline
-    // the permanent ground lightens from that dark mud through the terrain's damp band into the light
-    // lakebed, so where digging ends reads clearly. The collar and the terrain share one band share
+    // The whole dig plot reads a little darker than the ground around it: its surface cap is the canyon
+    // mud, darkened only slightly more than the damp band. Beyond the outline the permanent ground
+    // lightens from the cap through the terrain's damp band into the light lakebed. The collar and the terrain share one band share
     // (DigBandShare) and the same mud texture, relief and world mapping, so they join without a
     // texture line. Freshly cut topsoil below is clay loam, with no stone shapes that could pass for finds.
     public static partial class LakebedSiteSetup
@@ -17,12 +17,15 @@ namespace SomethingDownThere.Editor
         public const string DampMudName = "DampMud", DigCapName = "DigCap";
         private const string CanyonMudLayerPath = "Assets/BK/PureNature_Highlands/Textures/Surfaces/TerrainLayers/Mud.terrainlayer";
         private const string MountainMudLayerPath = "Assets/BK/PureNature_Mountains/Textures/Surfaces/Layers/Mud01.terrainlayer";
-        // Linear multipliers on the canyon mud: the damp band and the plot's dark cap.
-        private static readonly Color DampMudTint = new Color(.66f, .62f, .58f, 1);
-        public static readonly Color DigCapTint = new Color(.42f, .39f, .37f, 1);
-        // Metres beyond the outline over which the dark cap lightens into the damp band; the band
-        // then fades into the lakebed over about BandWidth.
-        public const float CapFade = 3.5f, BandStart = CapFade, BandWidth = 16;
+        // Linear multipliers on the canyon mud: the damp band and the plot's cap. The user asked twice
+        // for a lighter plot (2026-10-02); the band lightened with it so it never rings the plot darker,
+        // which also lightens the damp silt by the water.
+        private static readonly Color DampMudTint = new Color(.78f, .73f, .69f, 1);
+        public static readonly Color DigCapTint = new Color(.76f, .71f, .67f, 1);
+        // Metres beyond the outline over which the cap lightens into the damp band; the band
+        // then fades into the lakebed over about BandWidth. The user wanted the lighter ground to start
+        // sooner (2026-10-02; it was 3.5 and 16).
+        public const float CapFade = 1.5f, BandStart = CapFade, BandWidth = 9;
         // The share map covers the grid and its collar around the site origin.
         private const float DigEdgeHalfSpan = 20;
         private const int DigEdgeResolution = 256;
@@ -46,7 +49,7 @@ namespace SomethingDownThere.Editor
             return 1 - t * t * (3 - 2 * t);
         }
 
-        // How far the dark cap has lightened toward the damp band: none inside the plot, all of it
+        // How far the cap has lightened toward the damp band: none inside the plot, all of it
         // CapFade beyond the outline (a little sooner or later along it). The collar shader and the
         // terrain paint both use this.
         public static float DigBandShare(Vector2 local)
@@ -57,7 +60,7 @@ namespace SomethingDownThere.Editor
         }
 
         // The canyon mud darkened: as damp silt for the lakebed's band around the plot and the wet
-        // ground by the water, or as the plot's own dark cap just beyond its outline. World-aligned,
+        // ground by the water, or as the plot's own cap just beyond its outline. World-aligned,
         // dry and non-metallic, exactly as the dig ground's shader renders it; the demo's own Mud
         // layer stays untouched.
         private static TerrainLayer DampMudLayer(Vector3 terrainPosition) => MudLayer(DampMudLayerPath, DampMudName, DampMudTint, terrainPosition);

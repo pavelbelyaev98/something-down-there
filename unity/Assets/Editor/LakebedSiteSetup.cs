@@ -339,11 +339,12 @@ namespace SomethingDownThere.Editor
             data.SetDetailScatterMode(from.detailScatterMode);
             int detailScale = (from.heightmapResolution - 1) / from.detailResolution;
             data.SetDetailResolution(WindowCells / detailScale, from.detailResolutionPerPatch);
-            data.detailPrototypes = from.detailPrototypes.Concat(lakebedDetails).ToArray();
+            data.detailPrototypes = CanyonDetails(from.detailPrototypes).Concat(lakebedDetails).ToArray();
             CopyDetails(from, s, data, detailScale, stations);
             DressDetails(s, data, detailScale, from.detailPrototypes.Length, stations);
             data.treePrototypes = from.treePrototypes;
             data.SetTreeInstances(Trees(from, source.transform.position, s), false);
+            TuftTreeBases(data, from.detailPrototypes.Length);
             data.SetHoles(0, 0, Holes(s));
             EditorUtility.SetDirty(data);
             AssetDatabase.SaveAssetIfDirty(data);
@@ -385,11 +386,13 @@ namespace SomethingDownThere.Editor
             return layer;
         }
 
-        // The one ground grass everywhere: the Mountains pack's natural grass, nudged toward the green
-        // of the canyon's grass blades so blades and ground read as one colour from every angle
-        // (an olive turf under them looked dark and yellow from above). The Highlands lime is too
+        // The one ground grass everywhere: the Mountains pack's natural grass, warmed toward the canyon
+        // plants' meadow colours (LakebedSiteSetup.MeadowLight) so blades and ground read as one muted,
+        // yellowish green close to the warm mud. The old cool tint (1, 1.22, 1.2) read bluish against
+        // it; (1.08, 1.02, .74) and (1.5, 1, .5) still read green in the blades' shade, and a warmer
+        // (1.9, .78, .24) turned the whole canyon mustard (user, 2026-10-02). The Highlands lime is too
         // saturated to tint.
-        public static readonly Vector4 TurfTint = new Vector4(1, 1.22f, 1.2f, 1);
+        public static readonly Vector4 TurfTint = new Vector4(1.8f, .92f, .38f, 1);
 
         private static TerrainLayer DryTurfLayer()
         {
@@ -490,6 +493,8 @@ namespace SomethingDownThere.Editor
                     target[silt] += camp * .35f * Smooth((patches - .45f) / .2f);
                     target[rubble] += camp * .45f * Smooth((growth - .55f) / .15f);
                 }
+                // Green patches around the plot: the canyon's turf, with its blades from DressDetails.
+                target[grassy] += 1.6f * GreenPatch(local, a, s.Channel[z, x]);
                 float total = target.Sum(), mixed = 0;
                 for (int l = 0; l < layers; l++) { alpha[z, x, l] = Mathf.Lerp(alpha[z, x, l], target[l] / total, weight); mixed += alpha[z, x, l]; }
                 for (int l = 0; l < layers; l++) alpha[z, x, l] /= mixed;
@@ -505,7 +510,7 @@ namespace SomethingDownThere.Editor
                 if (band <= 0) continue;
                 for (int l = 0; l < layers; l++) alpha[z, x, l] = alpha[z, x, l] * (1 - band) + (l == silt ? band : 0);
             }
-            // The plot's dark cap continues just beyond the outline and lightens into the band, with
+            // The plot's cap continues just beyond the outline and lightens into the band, with
             // the share the collar shader uses, so the ground lightens where digging stops.
             for (int z = 0; z < WindowCells; z++)
             for (int x = 0; x < WindowCells; x++)
@@ -556,6 +561,38 @@ namespace SomethingDownThere.Editor
                 }
                 data.SetDetailLayer(0, 0, layer, map);
             }
+        }
+
+        // The pack's ash trees paint its lime grass up their root flare (about 1.4 m). A tree whose foot shows
+        // wherever its trunk can be seen from the ground in the play area stands this much deeper (times its
+        // height scale) so the flare is buried, and grass round its feet hides the rest (TuftTreeBases). Trees
+        // half behind rocks keep their height: lowered, they sank into the rocks (user, 2026-10-02). Only trees
+        // whose bark carries that root layer move; bushes have none and, lowered, grew out of the rock.
+        private const float TreeSink = 1.1f, FootShare = .6f;
+
+        private static bool PaintedRoots(GameObject prefab) => prefab != null && prefab.GetComponentsInChildren<Renderer>(true)
+            .SelectMany(r => r.sharedMaterials).Any(m => m != null && m.HasProperty("_LayerAlbedoMap")
+                && m.GetTexture("_LayerAlbedoMap") != null && m.GetTexture("_LayerAlbedoMap").name == "Grass_a");
+
+        private static bool FootShows(Vector3 foot, float height, List<Vector3> eyes)
+        {
+            bool Clear(Vector3 eye, Vector3 target)
+            {
+                var line = target - eye;
+                float distance = line.magnitude;
+                // Hitting the tree's own trunk or the ground right at the target still counts as seeing it.
+                return !Physics.Raycast(eye, line / distance, out var hit, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                    || hit.distance > distance - 1.2f;
+            }
+            int trunk = 0, feet = 0;
+            // Ground-level eyes only (every other viewpoint): from the flight ceiling a foot behind rocks shows too.
+            for (int i = 0; i < eyes.Count; i += 2)
+            {
+                if (!Clear(eyes[i], foot + Vector3.up * 2 * height)) continue;
+                trunk++;
+                if (Clear(eyes[i], foot)) feet++;
+            }
+            return trunk > 0 && feet >= FootShare * trunk;
         }
 
         private static TreeInstance[] Trees(TerrainData from, Vector3 sourcePosition, Section s)
@@ -963,7 +1000,18 @@ namespace SomethingDownThere.Editor
                 }
                 return false;
             }).ToArray();
+            // Setting terrain holes snaps trees to the heightmap, so the sink comes after the terrain is built.
+            int sunk = 0;
+            for (int i = 0; i < kept.Length; i++)
+            {
+                if (!PaintedRoots(data.treePrototypes[kept[i].prototypeIndex].prefab)) continue;
+                var foot = terrain.transform.position + Vector3.Scale(kept[i].position, data.size) + Vector3.up * .6f * kept[i].heightScale;
+                if (!FootShows(foot, kept[i].heightScale, eyes)) continue;
+                kept[i].position.y -= TreeSink * kept[i].heightScale / data.size.y;
+                sunk++;
+            }
             data.SetTreeInstances(kept, false);
+            Debug.Log($"Lakebed trees: {sunk} of {kept.Length} show their foot from the play area and stand deeper.");
             EditorUtility.SetDirty(data);
             AssetDatabase.SaveAssetIfDirty(data);
             Debug.Log($"Lakebed visibility: removed {removed} of {candidates.Count} scenery objects and {trees.Length - kept.Length} of {trees.Length} trees unseen from {eyes.Count} viewpoints.");

@@ -126,6 +126,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BackfillChunkMetres: 0.4
     - _BandBlend: 1
     - _BandInnerFade: 8
     - _BandNormalStrength: 1
@@ -139,6 +140,9 @@ Material:
     - _ConcreteNormalStrength: 0.35
     - _ConcreteTileMetres: 2
     - _DstBlend: 0
+    - _FractureLift: 0.35
+    - _FractureShardMetres: 0.16
+    - _FractureTileMetres: 0.9
     - _GravelNormalStrength: 0.5
     - _GravelTileMetres: 2
     - _GroundOpacity: 1
@@ -146,13 +150,18 @@ Material:
     - _MaskLayout: 0
     - _MaxSmoothness: 0.15
     - _NormalStrength: 0.55
+    - _PondClayNormalStrength: 0.12
+    - _PondClayTileMetres: 3.5
     - _RockNormalStrength: 0.65
     - _RockTileMetres: 3
     - _SoilComparison: 0
+    - _SoilOcclusion: 1
     - _SoilSplitX: 0
     - _SoilTileMetres: 2
     - _SrcBlend: 1
     - _StoneNormalStrength: 0.9
+    - _StrataCool: 0
+    - _StrataStrength: 0
     - _SurfaceHeight: 0
     - _TileMetres: 20
     - _TurfDepth: 0.045
@@ -160,15 +169,21 @@ Material:
     - _TurfNormalStrength: 0.8
     - _ZWrite: 1
     m_Colors:
+    - _BackfillTint: {r: 0.62, g: 0.5, b: 0.39999998, a: 1}
     - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
-    - _BandTint: {r: 0.8322835, g: 0.8094681, b: 0.78577685, a: 1}
+    - _BandTint: {r: 0.8962438, g: 0.8703449, b: 0.8488705, a: 1}
+    - _ClayDeepTint: {r: 1, g: 1, b: 1, a: 1}
     - _ClayTint: {r: 1, g: 1, b: 1, a: 1}
     - _ConcreteTint: {r: 1, g: 1, b: 1, a: 1}
+    - _CrackColour: {r: 0.86, g: 0.8399999, b: 0.78, a: 1}
     - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
     - _GravelTint: {r: 1, g: 1, b: 1, a: 1}
+    - _PondClayTint: {r: 0.6, g: 0.65999997, b: 0.72, a: 1}
+    - _RockColdTint: {r: 1, g: 1, b: 1, a: 1}
     - _RockTint: {r: 0.39999998, g: 0.39999998, b: 0.39999998, a: 1}
     - _SoilTint: {r: 1, g: 1, b: 1, a: 1}
-    - _TurfTint: {r: 0.6799757, g: 0.65762764, b: 0.64216644, a: 1}
+    - _TurfTint: {r: 0.8860039, g: 0.8596959, b: 0.83786047, a: 1}
+    - _ZoneDepths: {r: 75, g: 112.5, b: 3, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

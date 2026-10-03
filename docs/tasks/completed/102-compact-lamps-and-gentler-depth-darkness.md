@@ -245,3 +245,8 @@ first zone; below it lamps are the only light), 03 §7 and 06 §4 (starter lamps
   samples, radius, resolution and blur, and the ambient is the same per-pixel SH lookup.
 - Nothing else in the lighting depends on a hole's shape: the route daylight (darkness with depth and
   sideways travel) and the lamps' near-brightness cap are the only excavation-specific parts.
+
+## Iteration: contact shading 0.45 (2026-10-03)
+- Verdict: 0.45 (`GroundTextureSetup.ContactShadingIntensity`); 0.3 was too little, 0.6 too much. The user
+  wants to keep trying values: the Developer admin **Contact shading** is now a slider (0-1.5 in 0.05 steps,
+  session-only, `ContactShading`) instead of three fixed steps.

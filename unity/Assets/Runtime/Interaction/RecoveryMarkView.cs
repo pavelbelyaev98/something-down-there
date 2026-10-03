@@ -12,7 +12,7 @@ namespace SomethingDownThere
         public const float HookReach = .21f;
         private const float GlyphSize = .14f;
         private readonly GameObject root;
-        private readonly Transform eye;
+        private readonly Transform eye, swivel;
         private readonly Mesh mesh;
         private readonly MeshRenderer renderer;
         private readonly MaterialPropertyBlock properties = new MaterialPropertyBlock();
@@ -40,6 +40,8 @@ namespace SomethingDownThere
             renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
             eye = Object.Instantiate(liftingEye, root.transform, false).transform;
             eye.name = "Lifting eye";
+            // The base stays bolted flat on the load; the swivel turns toward the hook about its centre.
+            swivel = eye.Find("Swivel");
             foreach (var part in eye.GetComponentsInChildren<Transform>(true)) part.gameObject.hideFlags = HideFlags.DontSave;
             eye.localScale = Vector3.one / GlyphSize;
             eye.localPosition = Vector3.back * (.012f / GlyphSize);
@@ -68,21 +70,24 @@ namespace SomethingDownThere
             renderer.enabled = !placed;
             eye.gameObject.SetActive(placed);
             eye.localRotation = Quaternion.FromToRotation(Vector3.up, Vector3.forward);
+            swivel.localRotation = Quaternion.identity;
             root.SetActive(true);
         }
 
-        // The eye swivels toward the hook pulling on it (never into the load; a zero pull stands it
-        // upright) and turns about that so the hook's wire runs through its ring: the ring's hole runs
-        // along the eye's local Z (art/lifting-eye).
-        public void Aim(Vector3 direction, Vector3 wire)
+        // The swivel turns toward the hook pulling on it about the base's centre, so the hook's seat stays
+        // HookReach from the mark (never into the load; a zero pull stands it upright), and about that so
+        // the hook's wire runs through its bow: the bow's hole runs along the swivel's local Z
+        // (art/lifting-eye). `weight` blends from standing upright (0) to that pose (1).
+        public void Aim(Vector3 direction, Vector3 wire, float weight)
         {
             Vector3 normal = root.transform.forward;
             if (Vector3.Dot(direction, normal) < 0) direction = Vector3.ProjectOnPlane(direction, normal);
             if (direction.sqrMagnitude < .000001f) direction = normal;
             direction.Normalize();
             Vector3 across = Vector3.ProjectOnPlane(wire, direction);
-            eye.rotation = across.sqrMagnitude > .01f ? Quaternion.LookRotation(across, direction)
-                : Quaternion.FromToRotation(eye.up, direction) * eye.rotation;
+            var aimed = across.sqrMagnitude > .01f ? Quaternion.LookRotation(across, direction)
+                : Quaternion.FromToRotation(swivel.up, direction) * swivel.rotation;
+            swivel.rotation = Quaternion.Slerp(swivel.rotation, aimed, Mathf.Clamp01(weight));
         }
 
         private static Vector3 RestoreNormal(BuriedFind find, Vector3 attachment)

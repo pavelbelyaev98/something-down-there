@@ -71,7 +71,8 @@ namespace SomethingDownThere.Tests
                 yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
                 Assert.That(physical.Released, Is.False, "60% collection exposure must not release retained soil attachment.");
                 Assert.That(physical.Body.position, Is.EqualTo(anchored));
-                Assert.That(Physics.GetIgnoreCollision(find.GetComponent<MeshCollider>(), player.GetComponent<CharacterController>()), Is.True);
+                Assert.That(Physics.GetIgnoreCollision(find.GetComponent<MeshCollider>(), player.GetComponent<CharacterController>()), Is.EqualTo(find.Kind == DiscoveryKind.Common),
+                    "The player walks through commons and stands on uniques.");
             }
         }
 

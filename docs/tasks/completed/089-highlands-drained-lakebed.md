@@ -1,6 +1,6 @@
 # 089 — Highlands Drained Lakebed Site
 
-**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of dark mud outlined by a low collider-free marker on its collar (options compared in Developer admin), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
+**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by a low collider-free marker on its collar (options compared in Developer admin), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
 
 ## Objective
 Replace the plain round gravel yard with the river section of the approved **Pure Nature 2: Highlands** demo, kept as close to the demo's terrain composition and asset placement as practical, and adapted to the game:
@@ -221,3 +221,99 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
 - One grass: the demo's darker lawn and lighter meadow are merged into `DryTurf` everywhere, and the two demo layers are dropped (8 terrain layers). Before, they mixed into dark blotches with hard edges.
 - Playtest follow-up: undercutting the edge left the thin collar and terrain as a roof over a hollow. Beyond the physical edge, the top 1.2 m is now a permanent bank. `ExcavationGrid` keeps each sample at least at the bank's signed distance, so the wall follows the outline smoothly; lateral digging starts below it. Find centres stay `SiteLayout.FindInset` (0.5 m, the largest find radius) inside the edge, so no find is embedded in the bank. The winch load sweep is exempt.
 - Grass follow-up: from above, the canyon blades looked light over a dark, yellow-olive turf. The turf tint moved from dried olive `(1, .85, .62)` to the blades' green `(1, 1.22, 1.2)`. Measured at one slope: ground (88, 83, 35) became (90, 96, 48) against blades of (67, 102, 51).
+
+## Iteration: lighter dig plot (2026-10-02)
+- Playtest (screenshot across the plot edge): the plot's dark cap looked wrong; the shade where it fades
+  out beyond the outline looked right. Wanted: that shade on the whole plot, lightening around it as the
+  band does; the old dark used nowhere.
+- `DigCapTint` went from .42/.39/.37 to .62/.58/.55 (band .66/.62/.58). The collar, the `DigCap`
+  terrain layer and the dig surface take it; the share map and the lakebed paint are unchanged. A mid
+  value (.57) still read too dark next to the band.
+- "Even lighter": cap .76/.71/.67 and the damp band .78/.73/.69 with it. A cap lighter than the band
+  would ring the plot with darker ground (rejected in iteration 13), and the band shares the `DampMud`
+  layer with the damp silt by the water, so that silt is lighter too. Pairs at .72/.74 were a smaller
+  step than asked for.
+
+## Iteration: lighter sooner, green around the plot (2026-10-02)
+- Feedback: the plot shade is right; start the lighter ground sooner and add greenery around the area.
+- `CapFade` 3.5 -> 1.5 m and `BandWidth` 16 -> 9 m: the cap reaches the damp band within the collar's
+  reach and the band fades into the lakebed within about ten metres.
+- `GreenPatch`: green turf (the `DryTurf` layer, tinted to the canyon blades) in noise patches from 4.5 m
+  beyond the outline thinning out by about 20 m, at a third on the camp arc, never by water or channels;
+  the canyon's own `Grass_3` (green, density 3, knee-high) grows on them at full coverage as a new
+  lakebed detail layer. At 170/255 coverage and the prototype's density the patches read as bare moss.
+- Full site setup reruns the paint (and clears baked occlusion; rebaked after).
+
+## Iteration: warm, muted grass (2026-10-02)
+- Feedback: the grass read cool and bluish against the warm brown ground; wanted less vibrant, more yellow,
+  little contrast with the mud.
+- The canyon's living plants (pack `_Grass`, `SwirlyFern`, `SwirlyShrub`, the Mountains feather grass) now
+  render project meadow copies (`MeadowGrass/Fern/Shrub/Feather.mat`, prefab variants `Trees/* Meadow`) at
+  `MeadowLight/Dark` (.5,.48,.28)/(.4,.39,.22); the plot patches use the same grass. `TurfTint` went from
+  (1, 1.22, 1.2), which boosted blue, to (1.08, 1.02, .74), which still showed green under the blades
+  (feedback), then to (1.5, 1, .5): the turf now has the blades' hue (about 49 degrees). The grade adds a hue-vs-hue curve leaning
+  greens toward yellow (-.06 of a turn at green).
+- Rejected: the grade alone (more desaturation plus a hue shift) left the blades pale grey-sage, still
+  cool and brighter than the mud; (.55,.53,.25) blades read mustard. Lime painted into the pack's rock
+  textures only gets the grade.
+
+## Iteration: one vegetation style (2026-10-02)
+- Feedback (screenshot by the canyon foot): some grass waved a lot, some was static, and the styles differed:
+  yellow meadow blades beside a sage-green bush and green grass painted on a rock top.
+- Causes: the pack's bush leaves have no base wind and 0.01 leaf wind; its reeds 0.1; the canyon's
+  meadow cards scale up to 3.5x and the grass wind grows with height; rock materials paint a lime grass
+  layer (`Grass_a`) on their tops; the turf still read green in the blades' shade.
+- Now: `BushLeaves` wears the meadow olive (`BushLeafColour/Variation`, impostors `BushImpostorColour`)
+  and sways (base 0.2, leaf 0.8: about as much pixel motion as the grass); reeds 0.5; canyon meadow
+  plants capped at 0.6-1.2x (`CanyonDetails`); vendor rock materials with a `Grass_a` layer get project
+  copies in `Content/Lakebed/Rocks` with `_2ndColor` (1.3, 0.9, 0.42) (`UseMeadowRock`, also on the
+  island boulders); `TurfTint` (1.8, 0.92, 0.38) keeps shaded turf olive (hue about 60 degrees).
+- Rejected: tinting the reeds (their dark leaf texture barely changes; waterside green reads natural);
+  a darker rock tint (0.82 green) read green again.
+
+## Iteration: survey tape styles and warmer turf (2026-10-02)
+- Request: a higher-quality boundary with variations to switch in admin; the turf under the blades still read
+  green.
+- Rejected after a playtest look: a Blender boundary kit (pink-topped stakes with diagonal-stripe tape, orange
+  safety netting on T-posts, barrier boards with lamps, plastic chain). The user preferred the original tape;
+  the kit, its art folder and assets are removed.
+- Now: the original survey tape stays the default and four richer tape styles are compared through
+  `DigBoundaryStyles` (Developer admin **Boundary**): Tape HQ (chamfered bark stakes with pale sawn tops,
+  creased banded tape tied once round each stake, sag and twist between), Double tape (0.48 m and 0.95 m),
+  Round posts (peeled, slightly tapered round posts with chamfered pale tops). The tape texture comes from
+  `art/survey-tape`; tape materials are plain URP Lit.
+- Also rejected (user: no text, no animation): printed KEEP OUT / DIG SITE tape, rebar stakes with safety caps,
+  and a tape flutter shader (URP Lit passes with a vertex sway weighted by uv3).
+- `TurfTint` (1.9, .78, .24): shaded turf hue about 53 against the blades' 51 (was 58).
+- Not changed: the green on some bare boulders is painted into the pack's base rock texture, not a grass layer.
+
+## Iteration: tree roots and a yellow revert (2026-10-02)
+- Feedback: tree roots read bright green. The ash trunk paints the pack's lime grass (`Grass_a`) up its root
+  flare (about 1.4 m, the mesh's blue vertex channel); it matched the old green grass and stood out once the
+  plants went olive.
+- Rejected: tinting the trunk's grass layer olive like the rock tops. Together with `TurfTint` (1.9, .78, .24)
+  the user found everything "super yellow"; both are reverted (`TurfTint` back to (1.8, .92, .38), the last
+  state the user called much better; trunks use the pack material).
+- Now the roots are hidden instead: `TuftTreeBases` grows the meadow grass detail at full cover within 1.5 m
+  (times width) of each tree, fading over 0.8 m, and some trees stand `TreeSink` 1.1 m deeper (times height
+  scale). Setting terrain holes snaps trees back to the heightmap, so the sink runs in `CullHidden`, after it.
+- Sinking every tree buried those standing behind or among rocks (user: only a couple needed it). A rock within
+  2.5 m as the test kept trees with a cliff behind them, whose roots show. Now a tree sinks only when its foot
+  (0.6 m up) is visible from at least 60% of the ground-level viewpoints that see its trunk 2 m higher
+  (`FootShows`; about 240 of 1335 trees).
+
+- Bushes are terrain trees too: about 200 of the lowered ones were bushes, which have no painted roots and,
+  lowered, seemed to grow out of the rock. Only prototypes whose bark carries the `Grass_a` root layer
+  (`PaintedRoots`, the ash trees) are lowered now (about 40).
+
+## Iteration: solid fence styles (2026-10-03)
+- Feedback: of the four tape styles, keep the double tape; the rest go. More variations that feel solid, an
+  actual structure, not weak sticks in the ground. Original tape, Tape HQ and Round posts (and their meshes and
+  red/white materials) are removed.
+- Double tape stays as it was and the default. Three builds on 10 cm sawn posts (plumb, square to the line),
+  all with the same double tape: Heavy posts (each cast into a round concrete footing; `BoundaryConcrete` uses
+  the Highlands rock detail texture greyed down), Post and rail (one continuous top rail swept over the post
+  tops, mitred over each post, tapes lowered to 0.45/0.8 m), Braced posts (a raking brace from 0.75 m up each
+  post down to the collar 0.45 m out, its heel held by a short stake). 9 cm posts still read thin; 10 cm.
+- Braces first followed the outline's normal; where the edge wobbles that put their stakes past the collar
+  (1.4 m out). They now run straight out from the plot centre, which keeps the collar's width.

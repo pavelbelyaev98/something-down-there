@@ -26,8 +26,9 @@ namespace SomethingDownThere
         {
             terrain = owner; field = population; find = GetComponent<BuriedFind>(); body = GetComponent<Rigidbody>();
             shape = GetComponent<MeshCollider>(); freeSpeedLimit = body.maxLinearVelocity;
+            // The player walks through commons but stands on, and is pushed by, uniques (LoadRide).
             if (field != null && field.PlayerCollider != null)
-                Physics.IgnoreCollision(shape, field.PlayerCollider, true);
+                Physics.IgnoreCollision(shape, field.PlayerCollider, find.Kind == DiscoveryKind.Common);
             Restore(false);
         }
 

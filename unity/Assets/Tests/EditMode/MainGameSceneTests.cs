@@ -137,14 +137,14 @@ namespace SomethingDownThere.Tests
                         Assert.That(ground.GetTexture("_TurfRoughness"), Is.SameAs(ground.GetTexture("_BandMask")), "A vendor cap mask is the band's own.");
                     Assert.That(mask.alphaSource, Is.EqualTo(TextureImporterAlphaSource.FromInput), "Preserve smoothness alpha.");
                 }
-                // No texture line at the collar join: the whole plot keeps the dark cap, and beyond the
+                // No texture line at the collar join: the whole plot keeps its cap, and beyond the
                 // outline the collar and the terrain lighten it into the damp band with one shared
                 // share map, rendering the same texture, tiling and world alignment.
                 var lakebed = root.Find("Environment").GetComponentInChildren<Terrain>();
                 int bandLayer = System.Array.FindIndex(lakebed.terrainData.terrainLayers, l => l != null && l.name == LakebedSiteSetup.DampMudName);
                 int capLayer = System.Array.FindIndex(lakebed.terrainData.terrainLayers, l => l != null && l.name == LakebedSiteSetup.DigCapName);
                 Assert.That(bandLayer, Is.GreaterThanOrEqualTo(0), "The lakebed has the damp band layer.");
-                Assert.That(capLayer, Is.GreaterThanOrEqualTo(0), "The lakebed continues the plot's dark cap beyond the outline.");
+                Assert.That(capLayer, Is.GreaterThanOrEqualTo(0), "The lakebed continues the plot's cap beyond the outline.");
                 var band = lakebed.terrainData.terrainLayers[bandLayer];
                 var capMud = lakebed.terrainData.terrainLayers[capLayer];
                 Assert.That(capMud.diffuseTexture, Is.SameAs(band.diffuseTexture));
@@ -273,9 +273,13 @@ namespace SomethingDownThere.Tests
                 Assert.That(environment.GetComponentsInChildren<Transform>(true)
                     .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
                     "Runtime static batching of the vendor scenery exhausts memory on every scene load.");
-                // Survey tape outlines the plot on its permanent collar, without colliders.
+                // Barrier tape on timber posts outlines the plot on its permanent collar, without colliders: the
+                // double tape shows, the sturdier builds wait for the Developer admin to compare them.
                 var boundary = environment.Find("Dig boundary");
-                Assert.That(boundary.Cast<Transform>().Select(m => m.name), Is.EqualTo(new[] { "Survey tape" }));
+                Assert.That(boundary.Cast<Transform>().Select(m => m.name), Is.EqualTo(LakebedSiteSetup.BoundaryStyleNames));
+                Assert.That(boundary.Cast<Transform>().Select(m => m.gameObject.activeSelf),
+                    Is.EqualTo(LakebedSiteSetup.BoundaryStyleNames.Select((_, i) => i == 0)));
+                Assert.That(boundary.GetComponent<DigBoundaryStyles>().Count, Is.EqualTo(LakebedSiteSetup.BoundaryStyleNames.Length));
                 Assert.That(boundary.GetComponentsInChildren<Collider>(true), Is.Empty, "Digging and aiming pass the boundary.");
                 foreach (var marker in boundary.GetComponentsInChildren<MeshFilter>(true))
                 {
