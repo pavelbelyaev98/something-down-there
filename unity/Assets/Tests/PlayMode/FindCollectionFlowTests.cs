@@ -61,6 +61,8 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0;
+            // Cadence on its own: the cut lands on the press here (TerrainIntegrationTests covers the scoop).
+            player.Tuning.CutAtScoop = false;
             // Level 6 reaches the ground behind the find even after the first bite deepens it.
             player.SelectAdminLevel(6);
             if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
@@ -87,6 +89,8 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0;
+            // Cadence on its own: the cut lands on the press here (TerrainIntegrationTests covers the scoop).
+            player.Tuning.CutAtScoop = false;
             player.SelectAdminLevel(4);
             if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
             PlacePickupCutFixture(find, false);

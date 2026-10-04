@@ -1,16 +1,13 @@
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using UnityEditor;
-using UnityEngine;
+using SomethingDownThere.Editor;
 
 namespace SomethingDownThere.Tests
 {
     public sealed class ToolRigTests
     {
-        [TestCase("L01_Shaft__Wood", 1, EquipmentProgression.LevelCount)]
-        [TestCase("L01-02_Blade__Steel", 1, 2)]
-        [TestCase("L07-08_SpinBit__Steel", 7, 8)]
+        [TestCase("L01-06_Blade__Western", 1, 6)]
+        [TestCase("L07-12_Drill", 7, EquipmentProgression.LevelCount)]
         [TestCase("L10_Nozzle__Paint", 10, EquipmentProgression.LevelCount)]
         public void StageNamesGiveTheirLevelRange(string name, int from, int to)
         {
@@ -23,25 +20,21 @@ namespace SomethingDownThere.Tests
             Assert.That(ToolRigPresenter.TryParseStage(name, out _, out _), Is.False);
 
         [Test]
-        public void EveryLevelShowsADifferentMachineWithOneHeadAndTheDrillFromLevelSeven()
+        public void ShovelLevelsShowTheShovelAndDrillLevelsTheDrill()
         {
-            var model = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Content/ToolRig/Models/ToolRig.fbx");
-            Assert.That(model, Is.Not.Null, "Run art/tool-rig/create_assets.py through Blender MCP.");
-            var parts = model.GetComponentsInChildren<Transform>(true).Where(t => ToolRigPresenter.TryParseStage(t.name, out _, out _))
-                .Select(t => { ToolRigPresenter.TryParseStage(t.name, out int from, out int to); return (t.name, from, to); }).ToArray();
-            Assert.That(model.GetComponentsInChildren<MeshRenderer>(true).All(r => ToolRigPresenter.TryParseStage(r.name, out _, out _)), Is.True,
-                "Every rig mesh follows the stage naming.");
-            // Levels past the last authored stage keep that stage until the rig gains parts for them.
-            int lastStage = parts.Max(p => p.from);
-            HashSet<string> previous = null;
+            var parts = ToolRigSetup.PartNames.Select(name =>
+            {
+                Assert.That(ToolRigPresenter.TryParseStage(name, out int from, out int to), Is.True, name + " follows the stage naming.");
+                return (name, from, to);
+            }).ToArray();
             for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
             {
-                var shown = new HashSet<string>(parts.Where(p => level >= p.from && level <= p.to).Select(p => p.name));
-                Assert.That(shown.Count(n => n.Contains("Blade") || n.Contains("HeadScoop")), Is.EqualTo(1), $"Level {level} has one head.");
-                Assert.That(shown.Any(n => n.Contains("Spin")), Is.EqualTo(EquipmentProgression.UsesDrill(level)), $"Level {level} drill bit.");
-                if (previous != null && level <= lastStage) Assert.That(shown.SetEquals(previous), Is.False, $"Level {level} looks like level {level - 1}.");
-                previous = shown;
+                var shown = parts.Where(p => level >= p.from && level <= p.to).Select(p => p.name).ToArray();
+                Assert.That(shown, EquipmentProgression.UsesDrill(level)
+                    ? Is.EquivalentTo(new[] { ToolRigSetup.Drill, ToolRigSetup.DrillHead })
+                    : Is.EquivalentTo(new[] { ToolRigSetup.ShovelBlade }), $"Level {level}.");
             }
+            Assert.That(ToolRigSetup.DrillHead, Does.Contain("Spin"), "The drill's head turns.");
         }
     }
 }

@@ -303,8 +303,10 @@ namespace SomethingDownThere
             // The grid expands this region to include any detached components, even
             // beyond the brush/chunk. Rebuild visible surfaces and collision together.
             // Two cells cover vertex topology plus finite-difference normals at seams.
-            Vector3Int first = Vector3Int.Max(Vector3Int.zero, changed.min - Vector3Int.one * 2);
-            Vector3Int last = Vector3Int.Min(dimensions - Vector3Int.one, changed.max + Vector3Int.one * 2);
+            // A hole's rounded mouth (TerrainChunkMesh.ShapeMouths) reaches a few cells further across the surface.
+            int margin = 2 + TerrainChunkMesh.MouthReachCells(cellSize);
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, changed.min - Vector3Int.one * margin);
+            Vector3Int last = Vector3Int.Min(dimensions - Vector3Int.one, changed.max + Vector3Int.one * margin);
             for (int z = first.z / chunkSize; z <= last.z / chunkSize; z++)
             for (int y = first.y / chunkSize; y <= last.y / chunkSize; y++)
             for (int x = first.x / chunkSize; x <= last.x / chunkSize; x++)

@@ -6,10 +6,13 @@ There is exactly one excavation tool. It starts as an ordinary shovel and ends a
 absurdity. The player never switches tools; upgrades bolt onto the same object.
 
 - **Ordinary baseline:** Begin with recognizable shovel scoops. Improvements strengthen the same shovel through level six; level seven adds continuous drill-like cutting, retained through level twelve. This is automatic progression, not a tool swap or a mode selection. Digging retains the shared battery budget throughout the progression.
-- **Visible body:** The tool only — no hands visible. The player watches the machine evolve for the whole game.
-- **Visual escalation:** Motors, battery packs, wider heads, pipes, reinforcement, a late nozzle,
- welded plates and cables. The silhouette grows ridiculous while staying recognizably the same
- machine.
+- **Visible body:** The tool only — no hands visible.
+- **Visual escalation (on hold):** For now the tool looks the same at every level of a stage: one shovel for
+ levels one to six and one drill for seven to twelve, nothing bolted on per level. The shovel is a stylized
+ western round-point shovel (strapped, riveted socket and a T-handle) at three quarters of its first size on
+ screen; each stroke pries the soil loose (push in, lever the handle down) and then scoops it, the blade
+ lifting clear, and the dirt disappears at the scoop. The drill is a hand mining drill (a jackhammer body with a
+ spinning screw head). Per-level visual upgrades wait for the user, and are not added in the meantime.
 - **Power escalation:** The machine grows faster than the ground gets tougher. Small early
  digs become large, fast late excavation. Revisit familiar ground and feel the difference; the
  payoff is what the machine can do, not just how it looks.

@@ -814,14 +814,20 @@ namespace SomethingDownThere.Tests
             Vector3 cameraPosition = player.ViewCamera.transform.position;
             Quaternion cameraRotation = player.ViewCamera.transform.rotation;
             Assert.That(player.TryPrimaryAction(), Is.True);
+            Assert.That(notifications, Is.EqualTo(3), "A pressed shovel stroke cuts at its scoop, not on the press.");
+            // The scoop lands a moment later.
+            float scoop = ToolRigPresenter.ScoopDelay(player.LastDigInterval, player.LastDigMaterial);
+            player.Tick(default, scoop);
+            Assert.That(notifications, Is.EqualTo(4));
             int strokes = player.SuccessfulStrokes;
-            player.Tick(default, player.EffectiveDigInterval * 1.05f);
+            player.Tick(default, player.EffectiveDigInterval * 1.05f - scoop);
             player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
             Assert.That(player.TryPrimaryAction(), Is.False, "Rock's slightly slower stroke outlasts the soil interval.");
             Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
             player.Tick(default, player.EffectiveDigInterval * .2f);
             player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
             Assert.That(player.TryPrimaryAction(), Is.True, "The next rock cut resumes automatically after its interval.");
+            player.Tick(default, ToolRigPresenter.ScoopDelay(player.LastDigInterval, player.LastDigMaterial));
             float paid = player.Battery.Charge;
             player.OpenMenu(PlayerMenu.Pause);
             Assert.That(player.TryDig(), Is.False);

@@ -105,6 +105,8 @@ namespace SomethingDownThere
             w.Prepare(span.x * span.y * span.z, samples);
             grid.CopySamples(sampleOrigin, sampleSpan, w.Samples);
             if (cache != null && cache.Matches(w.Samples, samples, grid.MaterialField)) return false;
+            cache?.Store(w.Samples, samples, grid.MaterialField);
+            ShapeMouths(grid, sampleOrigin, sampleSpan, w.Samples);
             grid.CopyMaterials(sampleOrigin, sampleSpan, w.Materials);
             NativeArray<float>.Copy(w.Samples, 0, w.NativeSamples, 0, samples);
             NativeArray<byte>.Copy(w.Materials, 0, w.NativeMaterials, 0, samples);
@@ -129,7 +131,6 @@ namespace SomethingDownThere
             mesh.SetUVs(3, w.MaterialWeights2.AsArray());
             mesh.SetIndices(w.Triangles.AsArray(), MeshTopology.Triangles, 0, false);
             mesh.RecalculateBounds();
-            cache?.Store(w.Samples, samples, grid.MaterialField);
             return true;
         }
 

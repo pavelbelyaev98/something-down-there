@@ -273,13 +273,9 @@ namespace SomethingDownThere.Tests
                 Assert.That(environment.GetComponentsInChildren<Transform>(true)
                     .Any(t => GameObjectUtility.AreStaticEditorFlagsSet(t.gameObject, StaticEditorFlags.BatchingStatic)), Is.False,
                     "Runtime static batching of the vendor scenery exhausts memory on every scene load.");
-                // Barrier tape on timber posts outlines the plot on its permanent collar, without colliders: the
-                // double tape shows, the sturdier builds wait for the Developer admin to compare them.
+                // Barrier tape on posts in square footings outlines the plot on its permanent collar, without colliders.
                 var boundary = environment.Find("Dig boundary");
-                Assert.That(boundary.Cast<Transform>().Select(m => m.name), Is.EqualTo(LakebedSiteSetup.BoundaryStyleNames));
-                Assert.That(boundary.Cast<Transform>().Select(m => m.gameObject.activeSelf),
-                    Is.EqualTo(LakebedSiteSetup.BoundaryStyleNames.Select((_, i) => i == 0)));
-                Assert.That(boundary.GetComponent<DigBoundaryStyles>().Count, Is.EqualTo(LakebedSiteSetup.BoundaryStyleNames.Length));
+                Assert.That(boundary.GetComponent<MeshFilter>().sharedMesh, Is.Not.Null);
                 Assert.That(boundary.GetComponentsInChildren<Collider>(true), Is.Empty, "Digging and aiming pass the boundary.");
                 foreach (var marker in boundary.GetComponentsInChildren<MeshFilter>(true))
                 {

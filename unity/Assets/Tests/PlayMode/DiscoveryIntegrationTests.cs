@@ -347,7 +347,8 @@ namespace SomethingDownThere.Tests
             int revision = terrain.Revision; float energy = player.Battery.Charge;
             PrepareDeviceView(find);
             LookAt(new Vector3(find.transform.position.x, 0, find.transform.position.z - 1.5f));
-            yield return new WaitForSeconds(player.ScoopDigInterval + .05f);
+            // The next stroke starts after one interval and cuts at its scoop.
+            yield return new WaitForSeconds(player.ScoopDigInterval + ToolRigPresenter.ScoopDelay(player.ScoopDigInterval, TerrainMaterialId.Soil) + .1f);
             Assert.That(terrain.Revision, Is.GreaterThan(revision), "The same hold/toggle continues after pickup recovery.");
             Assert.That(player.Battery.Charge, Is.LessThan(energy));
             Assert.That(player.Inventory.Count, Is.EqualTo(1), "Continuing cannot duplicate the find.");

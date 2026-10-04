@@ -19,15 +19,18 @@ The lakebed excavation is a single contained worksite.
   so the worked ground sits in a little green.
 - **Dig area:** one wide, irregular plot of bare ground inside the drained section, wider
   east-west than north-south and never a circle, with no tall fence. It reads as a construction or
-  excavation site: red-and-white barrier tape tied at two heights round timber posts on the permanent
-  ground outlines it. It should feel solid, a built structure rather than flimsy sticks pushed into the
-  ground (sturdier post builds are being compared),
+  excavation site: one red-and-white barrier tape tied round heavy timber posts, each cast into a square
+  concrete footing, on the permanent ground outlines it. It should feel solid, a built structure rather than
+  flimsy sticks pushed into the ground,
   so where digging starts and stops reads at a glance. Its edge bumps in and out every few metres, so
   cuts along it never follow one clean curve, and no step or line marks the edge before digging. The
   whole plot is evenly a light mud, only a touch darker than the ground around it, never a deep dark;
   the lightening starts on the permanent ground just beyond the edge, through a damp band with no
   visible texture line, and reaches the lighter lakebed within about ten metres. No grass grows on the plot; cuts expose lighter clay loam coloured apart
-  from the cracked surface mud, with no stone shapes that could pass for finds. The canyon beyond the
+  from the cracked surface mud, with no stone shapes that could pass for finds. Where a hole meets the
+  untouched ground its mouth is softly rounded, about a hand's width, the light top fading into the dug soil
+  across the round: never a straight vertical cut at the surface. Up close the top reads as dry soil with
+  grain, not a blurry smear. The canyon beyond the
   old lakebed keeps the demo's ground, with one grass everywhere: a muted, warm olive-yellow turf in the same colour as
   the grass blades growing on it, so ground and blades read as one from every angle and sit close to
   the warm mud (a muddy vibe, never a vivid or cool green). Every plant around the site shares that

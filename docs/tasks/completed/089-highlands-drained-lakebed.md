@@ -1,6 +1,6 @@
 # 089 — Highlands Drained Lakebed Site
 
-**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by a low collider-free marker on its collar (options compared in Developer admin), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
+**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
 
 ## Objective
 Replace the plain round gravel yard with the river section of the approved **Pure Nature 2: Highlands** demo, kept as close to the demo's terrain composition and asset placement as practical, and adapted to the game:
@@ -317,3 +317,22 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
   post down to the collar 0.45 m out, its heel held by a short stake). 9 cm posts still read thin; 10 cm.
 - Braces first followed the outline's normal; where the edge wobbles that put their stakes past the collar
   (1.4 m out). They now run straight out from the plot centre, which keeps the collar's width.
+
+## Iteration: footings and one tape (2026-10-03)
+- Verdict: Heavy posts ("the heavy boundary with the stone at the bottom"); Double tape, Post and rail and Braced
+  posts are removed (their `Sweep` beams too). Next round: footing variations with one tape (0.9 m): Round
+  footing (the chosen one, default), Square footing (a block tapering to 80%, `Prism` gained a taper), Tall pier
+  (a 0.35 m round column), Stone base (six fist-sized rough stones packed round each post, `SiteMesh.Lump`,
+  `BoundaryStone` from the rock detail texture warmed).
+
+- Verdict: round and square footings; Tall pier and Stone base removed. Next round, "more quality variations":
+  Round cast and Square cast (28-spoke hand-cast round with a troweled dome and a slightly uneven outline;
+  square block tapering to a bevelled top), and each with a galvanized steel post base (plate, four anchor nuts,
+  two bolted flanges; the post stands on it). Concrete from `art/fence-footing` (sides: a strip mapped by height
+  with soil at the ground line; tops: a clean tiling texture mapped flat). Mapping the strip over the tops pinched
+  it into a starburst on the round dome and stretched its clamped soil edge across the square top.
+
+## Iteration: square footings chosen (2026-10-03)
+
+- Verdict: square cast footings without the steel post base. The round and steel-shoe styles, the
+  `DigBoundaryStyles` switcher and the admin **Boundary** button were removed; the boundary is one static mesh.

@@ -8,6 +8,7 @@ namespace SomethingDownThere
 {
     public static partial class TerrainChunkMesh
     {
+
         // The existing surface-net algorithm runs as compiled native math. Run()
         // completes before mesh/collider publication: no stale collision frame.
         [BurstCompile(CompileSynchronously=true,FloatMode=FloatMode.Strict)]

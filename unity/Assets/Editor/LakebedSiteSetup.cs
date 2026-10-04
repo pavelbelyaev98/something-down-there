@@ -779,7 +779,7 @@ namespace SomethingDownThere.Editor
             return mesh;
         }
 
-        private static Mesh SaveMesh(Mesh mesh, string path)
+        internal static Mesh SaveMesh(Mesh mesh, string path)
         {
             var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (saved == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }

@@ -1,0 +1,6 @@
+# Asset: Hand Mining Drill
+- **Purpose:** The drill in first person at tool levels 7-12; its head spins while cutting.
+- **Source/License:** User-purchased [CGTrader model](https://www.cgtrader.com/3d-models/industrial/tool/hand-mining-drill) (2026-10-04) under CGTrader's Royalty Free License (no AI): modifying and shipping it inside the game are allowed; redistributing the model file and using it to train AI are not; keep source access restricted.
+- **Unity Path:** `unity/Assets/HandMiningDrill/` (vendor FBX, untouched); the vendor's 4K PBR maps sit outside Unity in `source/` (the unused height maps are dropped) and the game uses 2K project copies in `Content/ToolRig/MiningDrill`.
+- **Integration:** `make_textures.py` writes 2K copies of both texture sets (Body, Parts): colour, OpenGL normal and a URP mask (metallic R, occlusion G, smoothness A from roughness). Configure Tool Rig copies the model's meshes into the rig (the head on its own spin pivot along the drill's axis) with URP Lit `MiningDrillBody.mat` and `MiningDrillParts.mat`.
+- **Status/workflow:** Vendor files in private Git, binaries in LFS. After changing a source map, rerun `make_textures.py` and Configure Tool Rig.

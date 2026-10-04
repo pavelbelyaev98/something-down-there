@@ -20,6 +20,8 @@ namespace SomethingDownThere
         [Min(0.01f)] public float BatteryCapacity = 100f;
         [Min(0f)] public float DigEnergy = 1f;
         [Min(0.01f)] public float DigInterval = 0.35f;
+        // A shovel stroke into the ground cuts at its scoop, a moment after the press (off: on the press, as the drill).
+        public bool CutAtScoop = true;
         [Min(0.01f)] public float DigReach = 3f;
         [Min(0.01f)] public float InteractReach = 3f;
         [Min(0.01f)] public float LooseFindReach = 6f;
@@ -83,11 +85,15 @@ namespace SomethingDownThere
         private bool adminGroundXray;
         // Crane effect A/B (101): dust lingering in the shaft after rope breaks (on by default).
         private bool adminShaftDustOff;
+        // Drill size comparison (playtest 001): the drill's size in first person, picked from AdminDrillSizes.
+        private int adminDrillSize;
         // Ground contact shading (SSAO) strength set from the admin slider for the session.
         private bool adminContactShading;
-        // Dig boundary style A/B (089): the first authored style (double tape) by default.
-        private int adminBoundaryStyle;
-        private DigBoundaryStyles boundaryStyles;
+        // A shovel stroke starts on the press and its cut waits for the scoop (pendingScoop counts down to it; below
+        // zero nothing is pending), lifting the dirt where the stroke went in (scoopAim) wherever the player looks by then.
+        private float pendingScoop = -1f;
+        private Ray scoopAim;
+        private Ray? aimOverride;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -142,10 +148,14 @@ namespace SomethingDownThere
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
             || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray
-            || adminShaftDustOff || adminContactShading || adminBoundaryStyle != 0);
+            || adminShaftDustOff || adminContactShading);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
+        // The drill's scale in the tool rig (1 = the purchased model's size); the first is the default.
+        public static readonly float[] AdminDrillSizes = { .9f, 1f, 1.15f, 1.3f, 1.5f, 1.75f, 2f };
+        public float DrillSize => AdminDrillSizes[AdminAvailable ? adminDrillSize : 0];
+        public string AdminDrillSizeLabel => $"{DrillSize * 100f:0}%";
         public bool ShaftDust => !(AdminAvailable && adminShaftDustOff);
         public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
             ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
@@ -177,6 +187,8 @@ namespace SomethingDownThere
         public float LastDigInterval { get; private set; }
         public float DigPulse { get; private set; }
         public int SuccessfulStrokes { get; private set; }
+        // Tool strokes as they start (the tool rig animates each): on the press for the shovel, with every cut for the drill.
+        public int StrokesStarted { get; private set; }
         public float LastScoopVolume { get; private set; }
         public float ExcavatedVolume => excavationTerrain != null ? excavationTerrain.RemovedVolume : 0;
         public float Depth => excavationTerrain == null ? 0 : Mathf.Max(0, excavationTerrain.SurfaceHeight - transform.position.y);
@@ -443,6 +455,7 @@ namespace SomethingDownThere
             }
             if (IsMenuOpen)
             {
+                pendingScoop = -1f;
                 // Admin actions are available in their panel; other menus remain barriers.
                 if (Menu == PlayerMenu.DeveloperAdmin) HandleAdminShortcuts(frame);
                 return;
@@ -475,6 +488,7 @@ namespace SomethingDownThere
             {
                 RefreshTargetPrompt();
             }
+            if (pendingScoop >= 0f && (pendingScoop -= deltaTime) <= 0f) CompletePendingScoop();
             if (frame.DigPressed || frame.DigHeld) TryPrimaryAction(frame.DigHeld);
         }
 
@@ -570,9 +584,12 @@ namespace SomethingDownThere
 
         public bool TryGetTarget(float reach, out RaycastHit hit)
         {
-            return Physics.Raycast(viewCamera.transform.position, viewCamera.transform.forward,
-                out hit, reach, worldMask, QueryTriggerInteraction.Ignore);
+            var aim = AimRay;
+            return Physics.Raycast(aim.origin, aim.direction, out hit, reach, worldMask, QueryTriggerInteraction.Ignore);
         }
+
+        // The view's ray, or the press's while a shovel stroke's scoop cuts.
+        private Ray AimRay => aimOverride ?? new Ray(viewCamera.transform.position, viewCamera.transform.forward);
 
         private static T Contract<T>(Collider collider) where T : class
         {
@@ -612,7 +629,7 @@ namespace SomethingDownThere
         internal void SuppressWorldActions()
         {
             input?.SuppressHeldActions(); extractionInteraction?.Reset();
-            blockedPickup = null; digCooldown = 0;
+            blockedPickup = null; digCooldown = 0; pendingScoop = -1f;
         }
 
         // Aimed pickup uses the centre ray, independently of shovel radius. A terrain
@@ -662,7 +679,26 @@ namespace SomethingDownThere
                 return collected;
             }
             blockedPickup = null;
-            if (digCooldown > 0) return false;
+            if (digCooldown > 0 || pendingScoop >= 0f) return false;
+            if (!ShavingEnabled && tuning.CutAtScoop)
+            {
+                // A shovel stroke into the ground starts now; its cut waits for the scoop, when the blade lifts and the
+                // dirt goes (CompletePendingScoop). Other dig targets, which show no dirt, are struck at once below.
+                bool ready = PrepareDig(out _, out var aimed, out var ground, out _);
+                if (!ready || aimed is TerrainVolume)
+                {
+                    if (ready)
+                    {
+                        LastDigMaterial = ground;
+                        LastDigInterval = scheduledDigInterval;
+                        StrokesStarted++;
+                        pendingScoop = ToolRigPresenter.ScoopDelay(scheduledDigInterval, ground);
+                        scoopAim = AimRay;
+                    }
+                    ScheduleNextDig();
+                    return ready;
+                }
+            }
             bool dug = TryDig();
             ScheduleNextDig();
             // The cut can reveal a different find on the same ray. Resolve it now,
@@ -685,8 +721,9 @@ namespace SomethingDownThere
 
             // Bag capacity must never make common finds a barrier to excavation.
             // Only this cutting ray ignores them; physical bodies and pickup stay intact.
-            int count = Physics.RaycastNonAlloc(viewCamera.transform.position, viewCamera.transform.forward,
-                fullBagDigHits, EffectiveDigReach, worldMask, QueryTriggerInteraction.Ignore);
+            var aim = AimRay;
+            int count = Physics.RaycastNonAlloc(aim.origin, aim.direction, fullBagDigHits, EffectiveDigReach, worldMask,
+                QueryTriggerInteraction.Ignore);
             hit = default;
             if (count == fullBagDigHits.Length) return false;
             float nearest = float.PositiveInfinity;
@@ -702,12 +739,31 @@ namespace SomethingDownThere
             return hit.collider != null;
         }
 
-        public bool TryDig()
+        public bool TryDig() => TryDig(true);
+
+        // The cut a shovel stroke started earlier, at its scoop, where the stroke went in; a find it reveals is collected
+        // as on a press.
+        private void CompletePendingScoop()
+        {
+            pendingScoop = -1f;
+            aimOverride = scoopAim;
+            try
+            {
+                if (!TryDig(false)) return;
+                if (TryGetTarget(MaximumPickupReach, out var exposed) && Contract<BuriedFind>(exposed.collider) is BuriedFind revealed)
+                    revealed.TryCollect(this);
+            }
+            finally { aimOverride = null; }
+        }
+
+        // What a cut here would hit, in what ground, and its cost; false (with feedback) when nothing can be dug.
+        private bool PrepareDig(out RaycastHit hit, out IDigTarget target, out TerrainMaterialId material, out float cost)
         {
             scheduledDigInterval = EffectiveDigInterval;
+            hit = default; target = null; material = TerrainMaterialId.Soil; cost = 0f;
             if (IsMenuOpen || !focused || (Persistence != null && Persistence.BlocksPlay)
-                || !TryGetDigTarget(out var hit)) return false;
-            var target = Contract<IDigTarget>(hit.collider);
+                || !TryGetDigTarget(out hit)) return false;
+            target = Contract<IDigTarget>(hit.collider);
             if (target == null || !target.CanDig)
             {
                 var find = hit.collider.GetComponent<BuriedFind>();
@@ -715,11 +771,19 @@ namespace SomethingDownThere
                 return false;
             }
             var terrain = target as TerrainVolume;
-            var material = terrain != null ? terrain.ToolMaterialAt(hit) : TerrainMaterialId.Soil;
+            material = terrain != null ? terrain.ToolMaterialAt(hit) : TerrainMaterialId.Soil;
             float intervalScale = EquipmentProgression.MaterialResponse(material).Interval;
             scheduledDigInterval *= intervalScale;
-            float cost = EffectiveDigEnergy * intervalScale;
+            cost = EffectiveDigEnergy * intervalScale;
             if (!UnlimitedBattery && !Battery.CanSpend(cost)) { ShowFeedback("Not enough charge to dig - return to recharge"); return false; }
+            return true;
+        }
+
+        // `startsStroke`: this cut also starts a tool stroke (false for a shovel's scoop, whose stroke started earlier).
+        private bool TryDig(bool startsStroke)
+        {
+            if (!PrepareDig(out var hit, out var target, out var material, out float cost)) return false;
+            var terrain = target as TerrainVolume;
             bool accepted = terrain != null
                 ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled)
                 : target.TryDig(hit);
@@ -728,6 +792,7 @@ namespace SomethingDownThere
             LastDigInterval = scheduledDigInterval;
             SpendEnergy(cost);
             SuccessfulStrokes++;
+            if (startsStroke) StrokesStarted++;
             LastScoopVolume = target is TerrainVolume volume ? volume.LastCutVolume : 0;
             DigPulse = 1;
             RefreshTargetPrompt();
@@ -748,7 +813,7 @@ namespace SomethingDownThere
             adminGroundXray = false;
             adminShaftDustOff = false;
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
-            if (adminBoundaryStyle != 0) { adminBoundaryStyle = 0; BoundaryStyles?.Show(0); }
+            pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             adminShavingOverride = null;
@@ -777,7 +842,7 @@ namespace SomethingDownThere
 
         private void ResetDigComparisonInput()
         {
-            digCooldown = DigPulse = 0;
+            digCooldown = DigPulse = 0; pendingScoop = -1f;
             blockedPickup = null;
             input?.SuppressDig();
             extractionInteraction?.Reset();
@@ -788,6 +853,14 @@ namespace SomethingDownThere
             if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
             adminHoverOnRelease = !adminHoverOnRelease;
             ShowFeedback("Hover " + AdminHoverLabel + (HoverOnRelease ? "; hold crouch to drop" : ""));
+            MenuChanged?.Invoke();
+        }
+
+        public void CycleAdminDrillSize()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminDrillSize = (adminDrillSize + 1) % AdminDrillSizes.Length;
+            ShowFeedback("Drill size " + AdminDrillSizeLabel);
             MenuChanged?.Invoke();
         }
 
@@ -805,18 +878,6 @@ namespace SomethingDownThere
             if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
             adminShaftDustOff = !adminShaftDustOff;
             ShowFeedback(ShaftDust ? "Shaft dust on" : "Shaft dust off for this session");
-            MenuChanged?.Invoke();
-        }
-
-        private DigBoundaryStyles BoundaryStyles => boundaryStyles != null ? boundaryStyles : boundaryStyles = FindAnyObjectByType<DigBoundaryStyles>();
-        public string AdminBoundaryLabel => BoundaryStyles != null ? BoundaryStyles.CurrentName : "none";
-
-        public void CycleAdminBoundary()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin) || BoundaryStyles == null) return;
-            adminBoundaryStyle = (adminBoundaryStyle + 1) % BoundaryStyles.Count;
-            BoundaryStyles.Show(adminBoundaryStyle);
-            ShowFeedback("Boundary: " + BoundaryStyles.CurrentName);
             MenuChanged?.Invoke();
         }
 
@@ -1081,7 +1142,7 @@ namespace SomethingDownThere
             verticalSpeed = 0;
             jetpackReadyInAir = false;
             ResetJetpackHold();
-            digCooldown = DigPulse = 0;
+            digCooldown = DigPulse = 0; pendingScoop = -1f;
             blockedPickup = null;
             motor.enabled = true;
             Physics.SyncTransforms();

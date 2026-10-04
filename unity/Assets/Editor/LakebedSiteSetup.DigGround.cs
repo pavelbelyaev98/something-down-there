@@ -32,6 +32,9 @@ namespace SomethingDownThere.Editor
         // Freshly cut topsoil: the Mountains mud as clay loam, tinted away from the orange surface.
         public static readonly Color ClayLoamTint = new Color(.62f, .98f, 1.25f, 1);
         public const float ClayLoamTileMetres = 4, ClayLoamOcclusion = .4f;
+        // Up close the cap borrows the clay loam's grain (strength, tile metres), so it reads as the top of
+        // the soil dug out of it rather than a blurry smear beside it (user, 2026-10-03).
+        public const float CapGrain = .8f, CapGrainMetres = 2;
 
         private static TerrainLayer CanyonMud()
         {
@@ -137,6 +140,9 @@ namespace SomethingDownThere.Editor
             material.SetTexture("_TurfRoughness", mud.maskMapTexture);
             material.SetColor("_TurfTint", DigCapTint.gamma);
             material.SetFloat("_TileMetres", mud.tileSize.x);
+            material.SetFloat("_CapGrain", CapGrain);
+            material.SetFloat("_CapGrainMetres", CapGrainMetres);
+            material.SetFloat("_RimMix", TerrainChunkMesh.MouthRound);
             var band = AssetDatabase.LoadAssetAtPath<TerrainLayer>(DampMudLayerPath);
             material.SetFloat("_BandBlend", band != null ? 1 : 0);
             if (band == null) return;

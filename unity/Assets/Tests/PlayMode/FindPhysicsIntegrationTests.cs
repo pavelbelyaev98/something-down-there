@@ -164,6 +164,8 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds.First(f => !TestInputPreferences.IsCoalFixture(f) == rock);
             player.Tuning.Gravity = 0;
+            // Cadence on its own: the cut lands on the press here (TerrainIntegrationTests covers the scoop).
+            player.Tuning.CutAtScoop = false;
             Place(find, .65f);
             var motor = player.GetComponent<CharacterController>(); motor.enabled = false;
             player.transform.SetPositionAndRotation(find.transform.position + new Vector3(0, -.60f, -1.2f), Quaternion.identity);

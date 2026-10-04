@@ -561,6 +561,7 @@ namespace SomethingDownThere
             var grid = Element(scroll, "admin-actions");
             Button(grid, "Motion: " + player.AdminMotionLabel, player.ToggleAdminShaving);
             Button(grid, "Hover: " + player.AdminHoverLabel, player.ToggleAdminHover);
+            Button(grid, "Drill size: " + player.AdminDrillSizeLabel, player.CycleAdminDrillSize);
             for (int i = 1; i <= player.Shovel.LevelCount; i++)
             {
                 int level = i;
@@ -631,7 +632,6 @@ namespace SomethingDownThere
             Button(grid, "Ground X-ray: " + (player.AdminGroundXray ? "ON" : "OFF"), player.ToggleAdminGroundXray);
             Button(grid, "Detector: " + (player.DetectorShown ? "ON" : "OFF"), player.ToggleAdminDetector);
             Button(grid, "Shaft dust: " + (player.ShaftDust ? "ON" : "OFF"), player.ToggleAdminShaftDust);
-            Button(grid, "Boundary: " + player.AdminBoundaryLabel, player.CycleAdminBoundary);
             Button(grid, "Add $500", player.GrantAdminMoney);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);
             Button(actions, "Resume digging", player.CloseMenu, true, "primary");

@@ -82,6 +82,7 @@ $map = @(
     @{ Pattern = '^art/.*catalog\.json$|^unity/Assets/Content/Discoveries/DiscoveryCatalog\.asset$'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests'); Population = $true },
     @{ Pattern = '^unity/Assets/Content/(Discoveries|PhotoRocks|Minerals)/'; Play = @('DiscoveryIntegrationTests', 'FindPhysicsIntegrationTests') },
     @{ Pattern = '^unity/Assets/Content/'; Play = @() },
+    @{ Pattern = '^unity/Assets/(StylizedShovel|HandMiningDrill)/'; Play = @() },
     # Player: settings, finds, crouch and fuel each have their own suite.
     @{ Pattern = '^unity/Assets/Runtime/Player/(GamePreferences|UnityGameSettingsPlatform|GraphicsQuality|GraphicsAutoTuner|DesktopWindow|DesktopInstance|DevicePreferencesFile|CameraPreferences|InputPreferences|InputBindingCapture|FpsInput)\.cs$'; Play = @('FpsUiInputTests') },
     @{ Pattern = '^unity/Assets/Runtime/Player/Find\w*\.cs$'; Play = @('FindPhysicsIntegrationTests') },

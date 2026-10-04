@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // The one machine in first person (concept 04 section 1): model parts are named
-    // L<from>[-<to>]_<Part>__<Material> and show while the owned tool level is in range. The rig
+    // The one machine in first person (concept 04 section 1): model parts are named L<from>[-<to>]_<Part>__<Material>
+    // and show while the owned tool level is in range (art/stylized-western-shovel, art/hand-mining-drill, task 105). The rig
     // sits small and close, inside the player's capsule, so it can never poke through a wall; its
     // width and height follow the field of view so it keeps its place on screen. Only the tool
     // moves, never the camera: scoops per stroke up to level 6, a spinning bit from the drill on,
@@ -17,15 +17,22 @@ namespace SomethingDownThere
         public const float ReferenceFov = 75f;
         private const float LowerSeconds = .15f, CutWindow = .15f, MaxSpinStep = 70f;
         private static readonly Regex StageName = new Regex(@"^L(\d{2})(?:-(\d{2}))?_");
+        // A shovel stroke pries and then scoops; the drill only pushes. The shovel's stroke takes ScoopLength times a
+        // plain push and turns about the blade's tip; the drill's turns about the socket (model metres). The scoop
+        // lifts the blade from ScoopAt of the stroke, where the dirt is removed.
+        private const float ScoopLength = 2.2f, ScoopPivot = 1.2f, DrillPivot = .9f, ScoopAt = .6f;
 
         [SerializeField] private FpsPlayer player;
         [SerializeField] private Transform model;
         // Rising from the bottom edge right of centre with the blade face turned to the view; only the head
         // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
         private static readonly Vector3 RestPosition = new Vector3(.14f, -.26f, -.05f), RestEuler = new Vector3(-36f, -11f, 4f);
-        private const float ModelScale = .3f;
-        // Strokes turn the tool about its socket, so the head dips instead of the whole shaft swinging.
-        private static readonly Vector3 Pivot = new Vector3(0f, 0f, .9f);
+        // The shovel at 75% of its first size and the drill at the player's DrillSize (admin), scaled about the socket
+        // (Socket, model metres), which keeps its place on screen.
+        private const float ModelScale = .3f, ShovelScale = .75f, Socket = .9f;
+        // The drill (the purchased jackhammer) sits further forward along the tool (model metres) so its body shows in
+        // the lower right, and tips down so its head points below the crosshair.
+        private static readonly Vector3 DrillTilt = new Vector3(10f, 0f, 0f), DrillShift = new Vector3(0f, 0f, .3f);
 
         private readonly List<(GameObject part, int from, int to)> parts = new List<(GameObject, int, int)>();
         private readonly List<(Transform part, Quaternion rest)> spinners = new List<(Transform, Quaternion)>();
@@ -81,10 +88,10 @@ namespace SomethingDownThere
             lowered = Mathf.MoveTowards(lowered, hide ? 1f : 0f, Time.unscaledDeltaTime / LowerSeconds);
             foreach (var renderer in renderers) renderer.enabled = lowered < 1f;
 
-            if (player.SuccessfulStrokes != seenStrokes)
+            if (player.StrokesStarted != seenStrokes)
             {
-                if (seenStrokes >= 0 && player.SuccessfulStrokes > seenStrokes) BeginStroke(level);
-                seenStrokes = player.SuccessfulStrokes;
+                if (seenStrokes >= 0 && player.StrokesStarted > seenStrokes) BeginStroke(level);
+                seenStrokes = player.StrokesStarted;
             }
             float dt = Time.deltaTime;
             sinceCut += dt;
@@ -96,19 +103,18 @@ namespace SomethingDownThere
             foreach (var (part, rest) in spinners) part.localRotation = rest * Quaternion.AngleAxis(spinAngle, Vector3.forward);
 
             Vector3 offset = Vector3.zero, turn = Vector3.zero;
+            bool drill = EquipmentProgression.UsesDrill(level);
+            Vector3 restEuler = drill ? RestEuler + DrillTilt : RestEuler;
             float power = 1f + .05f * (level - 1);
             if (stroke < 1f)
             {
                 stroke = Mathf.Min(1f, stroke + dt / strokeSeconds);
-                // A quick push (first 30%) and an eased return, not a symmetric swing.
-                float jab = stroke < .3f ? 1f - (1f - stroke / .3f) * (1f - stroke / .3f) : 1f - Mathf.SmoothStep(0f, 1f, (stroke - .3f) / .7f);
+                // Soft ground takes a longer push, hard ground a shorter one with a little shudder.
                 float reach = (sink ? 1.5f : 1f) * (crisp ? 1.1f : 1f) * power;
-                // A small thrust along the tool, never a swing: soft ground takes a longer push, hard
-                // ground a short jab with a little shudder.
-                Vector3 along = Quaternion.Euler(RestEuler) * Vector3.forward;
-                float thrust = family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f;
-                offset = along * (thrust * reach * strokeDepth * jab) + new Vector3(.003f * strokeSide, 0f, 0f) * jab;
-                turn = new Vector3(1.2f * strokeSide, 0f, 2.5f * strokeRoll) * jab;
+                float amount = (family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f) * reach * strokeDepth;
+                var (move, angles) = drill ? DrillPush(stroke, amount) : PryScoop(stroke, amount);
+                offset = Quaternion.Euler(restEuler) * move;
+                turn = angles;
                 if (family == MotionFamily.Hard)
                 {
                     float shudder = Mathf.Sin(stroke * 38f) * (1f - stroke);
@@ -124,12 +130,15 @@ namespace SomethingDownThere
             offset += new Vector3(.03f, -.2f, -.02f) * away;
             turn.x += 20f * away;
 
-            var restPose = Quaternion.Euler(RestEuler);
-            var pose = Quaternion.Euler(RestEuler + turn);
-            var pivot = Pivot * ModelScale;
-            model.localPosition = RestPosition + restPose * pivot - pose * pivot + offset;
+            float scale = ModelScale * (drill ? player.DrillSize : ShovelScale);
+            var restPose = Quaternion.Euler(restEuler);
+            var pose = Quaternion.Euler(restEuler + turn);
+            // A stroke turns the tool about its own pivot along it.
+            var anchor = Vector3.forward * (Socket * (ModelScale - scale)) + (drill ? DrillShift * scale : Vector3.zero);
+            var pivot = Vector3.forward * ((drill ? DrillPivot : ScoopPivot) * scale);
+            model.localPosition = RestPosition + restPose * anchor + restPose * pivot - pose * pivot + offset;
             model.localRotation = pose;
-            model.localScale = Vector3.one * ModelScale;
+            model.localScale = Vector3.one * scale;
             var view = player.ViewCamera;
             float k = view == null ? 1f : Mathf.Tan(view.fieldOfView * .5f * Mathf.Deg2Rad) / Mathf.Tan(ReferenceFov * .5f * Mathf.Deg2Rad);
             transform.localScale = new Vector3(k, k, 1f);
@@ -144,10 +153,43 @@ namespace SomethingDownThere
             sink = material == TerrainMaterialId.Backfill;
             if (player.ShavingEnabled) return;
             stroke = 0f;
-            strokeSeconds = Mathf.Clamp(player.LastDigInterval * .35f, .12f, .26f)
-                * (crisp ? .8f : 1f) * (family == MotionFamily.Bite ? .9f : 1f);
+            strokeSeconds = StrokeSeconds(player.LastDigInterval, material);
             strokeDepth = Random.Range(.8f, 1.2f); strokeSide = Random.Range(-1f, 1f); strokeRoll = Random.Range(-1f, 1f);
         }
+
+        // Seconds from a shovel stroke's start to its scoop, when its dirt is removed, for a dig of this cadence and ground.
+        public static float ScoopDelay(float digInterval, TerrainMaterialId material) => StrokeSeconds(digInterval, material) * ScoopAt;
+
+        private static float StrokeSeconds(float digInterval, TerrainMaterialId material)
+        {
+            bool crisp = material is TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack or TerrainMaterialId.FracturedConcrete;
+            return Mathf.Clamp(digInterval * .35f, .12f, .26f) * (crisp ? .8f : 1f) * (Family(material) == MotionFamily.Bite ? .9f : 1f)
+                * ScoopLength;
+        }
+
+        // One stroke at progress t (0..1): the move in the tool's own axes (x side, y off its face, z along it, metres)
+        // and the turn (degrees: x tips the blade down, y swings it right, z rolls it); `amount` is how far the
+        // ground lets it push.
+        private (Vector3 move, Vector3 turn) PryScoop(float t, float amount)
+        {
+            // Push in and lever on the blade's tip, then, as the lever eases, lift the blade clear with its face
+            // tipping up: a scoop of what it levered loose, held a moment before the return.
+            float push = Rise(t, 0f, .2f) * (1f - Rise(t, .8f, 1f)), lever = Pulse(t, .2f, .42f, .7f);
+            float scoop = Rise(t, .45f, .68f) * (1f - Rise(t, .84f, 1f));
+            float side = strokeSide, roll = strokeRoll;
+            return (new Vector3(.003f * side * push, .032f * scoop, 1.2f * amount * push - .6f * amount * scoop),
+                    new Vector3(-14f * lever - 13f * scoop, 1f * side * lever, 3f * roll * lever + 3f * roll * scoop));
+        }
+
+        // A quick push (first 30%) and an eased return along the tool, never a swing.
+        private (Vector3 move, Vector3 turn) DrillPush(float t, float amount)
+        {
+            float jab = t < .3f ? 1f - (1f - t / .3f) * (1f - t / .3f) : 1f - Mathf.SmoothStep(0f, 1f, (t - .3f) / .7f);
+            return (new Vector3(.003f * strokeSide * jab, 0f, amount * jab), new Vector3(1.2f * strokeSide, 0f, 2.5f * strokeRoll) * jab);
+        }
+
+        private static float Rise(float t, float a, float b) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(a, b, t));
+        private static float Pulse(float t, float a, float peak, float b) => t < peak ? Rise(t, a, peak) : 1f - Rise(t, peak, b);
 
         private void ShowLevel(int level)
         {

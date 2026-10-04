@@ -59,6 +59,9 @@ Shader "Something Down There/Ground Triplanar"
         _DigEdge("Band share beyond the dig plot outline", 2D) = "black" {}
         _DigEdgeRect("Edge map origin (xy) and inverse size (zw)", Vector) = (0,0,1,1)
         [Toggle] _BandBlend("Blend the cap into the surrounding band", Float) = 0
+        _CapGrain("Cap close-up grain from the soil", Range(0, 1)) = 0
+        _RimMix("Depth the cap fades over across a hole's rounded mouth", Float) = 0
+        _CapGrainMetres("Cap grain tile metres", Float) = 2
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _MaskLayout("Mask layout", Float) = 0
         [Enum(RoughnessContactStone,0,MetallicOcclusionSmoothness,1)] _TurfMaskLayout("Turf mask layout", Float) = 0
         _MaxSmoothness("Dry ground maximum smoothness", Range(0, 1)) = 0.15
@@ -98,7 +101,7 @@ Shader "Something Down There/Ground Triplanar"
             float _GroundOpacity;
             float4 _ClayTint, _RockTint, _TurfTint, _SoilTint;
             float4 _BandTint, _BandMaskMin, _BandMaskMax, _DigEdgeRect;
-            float _BandTileMetres, _BandNormalStrength, _BandBlend;
+            float _BandTileMetres, _BandNormalStrength, _BandBlend, _CapGrain, _CapGrainMetres, _RimMix;
             float _ClayTileMetres, _RockTileMetres;
             float _ClayNormalStrength, _RockNormalStrength;
             float4 _GravelTint, _ConcreteTint;
@@ -273,7 +276,7 @@ Shader "Something Down There/Ground Triplanar"
             // Switching to a wall projection near tilted mesh normals produced
             // unrelated dark polygonal patches on the otherwise intact surface.
             float edgeWidth = max(_TurfDepth * 0.45, (abs(positionDx.y) + abs(positionDy.y)) * 0.65);
-            if (depth < _TurfDepth * 1.5 + 0.02)
+            if (depth < max(_TurfDepth * 1.5, _RimMix) + 0.02)
             {
                 half3 grass, gy;
                 half2 turfMask;
@@ -291,6 +294,23 @@ Shader "Something Down There/Ground Triplanar"
                     gy = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BandNormal, sampler_BandAlbedo, bandUV, bandDx, bandDy), _BandNormalStrength);
                     half4 bandMask = SAMPLE_TEXTURE2D_GRAD(_BandMask, sampler_BandAlbedo, bandUV, bandDx, bandDy) * (_BandMaskMax - _BandMaskMin) + _BandMaskMin;
                     turfMask = half2(1 - bandMask.a, bandMask.g);
+                    // The terrain layer is soft painted mud mapped over 20 m: up close it was a blurry
+                    // smear beside the crisp dug soil (user, 2026-10-03). The soil's own grain, as a
+                    // brightness ratio (its average is 1, so the cap keeps its colour and from afar
+                    // nothing changes), makes the cap read as the top of that soil; it fades out
+                    // across the collar to meet the terrain unchanged.
+                    [branch] if (_CapGrain > 0)
+                    {
+                        float grainScale = 1 / max(_CapGrainMetres, 0.05);
+                        float2 grainUV = position.zx * grainScale, grainDx = positionDx.zx * grainScale, grainDy = positionDy.zx * grainScale;
+                        half3 luminance = half3(0.3, 0.59, 0.11);
+                        half mean = dot(SAMPLE_TEXTURE2D_LOD(_SoilAlbedo, sampler_SoilAlbedo, float2(0.5, 0.5), 16).rgb, luminance);
+                        half fine = dot(SOIL_SAMPLE(Albedo, grainUV, grainDx, grainDy).rgb, luminance);
+                        half grain = _CapGrain * (1 - band);
+                        grass *= lerp(1, fine / max(mean, 0.01), grain);
+                        half3 grainNormal = UnpackNormalScale(SOIL_SAMPLE(Normal, grainUV, grainDx, grainDy), _NormalStrength);
+                        gy = normalize(half3(gy.xy + grainNormal.yx * grain, gy.z));
+                    }
                 }
                 else
                 {
@@ -306,8 +326,14 @@ Shader "Something Down There/Ground Triplanar"
                 // Texture variation stays within the blend so it breaks up the
                 // contour without punching holes in the untouched flat surface.
                 float edge = depth - fringeDepth;
-                half turf = (1 - smoothstep(-edgeWidth, edgeWidth, edge))
-                    * smoothstep(-0.2, -0.05, n.y);
+                // The cap is the top face only: projected from above onto a rim's steep step
+                // face it smeared down it and read as a thick slab (user, 2026-10-03). A hole's
+                // rounded mouth passes, and the cap fades into the soil across it.
+                half flat = smoothstep(0.35, 0.65, n.y);
+                half turf = _RimMix > 0
+                    ? 1 - smoothstep(_RimMix * 0.2, max(_RimMix, fringeDepth), depth + (drift - 0.5) * 0.05)
+                    : 1 - smoothstep(-edgeWidth, edgeWidth, edge);
+                turf *= flat;
                 // The thin cap fringe shares the surface lighting. Following the
                 // steep soil normal here draws a dark polygonal outline on each cut.
                 half3 turfNormal = half3(0, 1, 0);

@@ -131,6 +131,8 @@ Material:
     - _BandInnerFade: 8
     - _BandNormalStrength: 1
     - _BandTileMetres: 20
+    - _CapGrain: 0.8
+    - _CapGrainMetres: 2
     - _ClayNormalStrength: 0.25
     - _ClayTileMetres: 3
     - _ComparisonMaskLayout: 0
@@ -152,6 +154,7 @@ Material:
     - _NormalStrength: 0.55
     - _PondClayNormalStrength: 0.12
     - _PondClayTileMetres: 3.5
+    - _RimMix: 0.12
     - _RockNormalStrength: 0.65
     - _RockTileMetres: 3
     - _SoilComparison: 0
