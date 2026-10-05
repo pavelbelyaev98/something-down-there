@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fa2637e65e59473b8e8be52324bcd6db
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 381938
+  packageName: 'Pure Nature 2 : Crystal Caverns'
+  packageVersion: 1.0
+  assetPath: Assets/BK/PureNature_CrystalCaverns/Models/CaveWall/Textures/Materials/CaveWall_0.mat
+  uploadId: 964520

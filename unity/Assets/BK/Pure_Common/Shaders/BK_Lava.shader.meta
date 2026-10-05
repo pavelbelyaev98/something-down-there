@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a9486c0162e8502479ba2b8744df3cdd
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 381938
+  packageName: 'Pure Nature 2 : Crystal Caverns'
+  packageVersion: 1.0
+  assetPath: Assets/BK/Pure_Common/Shaders/BK_Lava.shader
+  uploadId: 964520

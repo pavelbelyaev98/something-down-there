@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 37be962960862784f8dbabed2d3972ec
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 381938
+  packageName: 'Pure Nature 2 : Crystal Caverns'
+  packageVersion: 1.0
+  assetPath: Assets/BK/Pure_Common/Shaders/BK_StandardLayer_Emissive.shader
+  uploadId: 964520

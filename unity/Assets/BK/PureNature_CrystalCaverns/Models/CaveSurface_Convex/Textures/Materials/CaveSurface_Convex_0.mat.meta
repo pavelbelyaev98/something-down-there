@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4bc48ac37b044ce2bf5764cbd75b42ae
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 381938
+  packageName: 'Pure Nature 2 : Crystal Caverns'
+  packageVersion: 1.0
+  assetPath: Assets/BK/PureNature_CrystalCaverns/Models/CaveSurface_Convex/Textures/Materials/CaveSurface_Convex_0.mat
+  uploadId: 964520

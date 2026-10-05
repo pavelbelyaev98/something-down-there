@@ -1,0 +1,14 @@
+# Asset: Pure Nature 2: Crystal Caverns
+- **Item:** BK Pure Nature 2: Crystal Caverns. It contains:
+  - crystals and minerals: quartz, pyrite, fluorite, beryl, cobalt, ruby, gemstones, prisms and big hexagons;
+  - cave rocks, walls, pillars, arches and cave-surface patches;
+  - rubble, lava and water;
+  - tiling `_RockDetail1/2` and `GroundDirt` surface maps;
+  - crystal, layered-emissive and lava shaders.
+- **Purpose:** Geodes (`108`): hard rock shells around crystal-lined hollows, and their mineral finds. Its lava and water are not used.
+- **Source/License:** User-purchased BK Asset Store pack (2026-10-05), Unity Asset Store EULA (Extension Asset, single entity); keep source access restricted.
+- **Unity Path:** `unity/Assets/BK/PureNature_CrystalCaverns/`, plus `BK_Crystal`, `BK_Lava` and `BK_StandardLayer_Emissive` in the shared `Pure_Common/Shaders`.
+- **Status/workflow:**
+  - Approved, imported and not yet used in the game.
+  - The import overwrites the shared `Pure_Common` files with older copies (pre-6.1 URP API). Keep the committed Highlands versions: restore them with `git checkout HEAD -- unity/Assets/BK/Pure_Common` after any reimport.
+  - Its three new shaders still use the deprecated `_FORWARD_PLUS` and `UnityGBuffer.hlsl`, so they warn when compiled. Patch any shader the game uses to the current macros first.

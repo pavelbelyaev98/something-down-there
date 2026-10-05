@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 20011eb2bce152047aa72106b270f23b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 381938
+  packageName: 'Pure Nature 2 : Crystal Caverns'
+  packageVersion: 1.0
+  assetPath: Assets/BK/PureNature_CrystalCaverns/Settings/CrystalCaverns_PostProcess.asset
+  uploadId: 964520
