@@ -1,30 +1,38 @@
-# 107 — Asset-Only Grounds: Soil and Rubble Backfill, the Chest by Hand
+# 107 — Asset-Only Grounds: Remove the Invented Grounds
 
-**Status:** plan; waiting for the user's go. Steps 1–3 are this task, and each step ships its own build
-and playtest note. The work stops after each step so the user can test it. Steps 4–6 are the queue
-tasks `108`–`110`, each specified when it starts.
+**Status:** ready; waiting for the user's go. This spec also holds the overview and research for the
+whole ground plan (`107`–`112`). Each ticket ships its own build and playtest note, and work stops
+after each one for the user's test.
 
-## Objective
+## The ground plan (107–112)
 
-Keep only grounds built from real, owned assets: **soil** (Mountains Mud01) and **backfill** (soil
-turned over with Highlands Mud_rubble). Remove every other ground with its code, data, textures,
-Ground Lab bays, tools, tests and docs. Make backfill a harder rubble fill. Open the old chest by
-holding Interact, and clear away emptied chests. Then bring grounds back one at a time, each tested
-on its own.
+| Ticket | What the player gets | Spec |
+| --- | --- | --- |
+| `107` Remove the invented grounds | The same site, no collapses, a clean Ground Lab | this file |
+| `108` Rubble backfill | Pits that dig at about half soil's speed and show their stones | [108](108-rubble-backfill.md) |
+| `109` The chest by hand | Hold E to force the lock; an emptied chest goes away | [109](109-chest-by-hand.md) |
+| `110` Geodes | Hard rock balls with crystal-lined hollows to break into | [110](110-geodes.md) |
+| `026` Sticky C4 | C4, whose natural target is a geode shell | queue |
+| `111` Zone main grounds | A new main ground per zone, one per playtest | [111](111-zone-main-grounds.md) |
+| `112` Secret areas | A distinct ground around each unique | [112](112-secret-areas-around-uniques.md) |
+
+Specs `108`–`112` were written ahead at the user's request (2026-10-05). Each is re-checked against
+the code when it starts.
 
 ## User direction (chat, 2026-10-05)
 
-- Grounds return one at a time, each with a reason and a base in the owned assets.
+- Grounds return one at a time, each with a reason and a base in the owned assets ("Bought Before
+  Made", `AGENTS.md`).
 - One main soil, then areas of a different ground with secrets or uniques inside.
-- Backfill is **harder** than soil: about half soil's dig rate (confirmed).
+- Backfill is harder than soil: about half soil's dig rate.
 - Remove the releases (backfill slump included), rock and clay, and every texture and Ground Lab bay
   the dig ground does not use.
-- The chest opens by holding E and plays its opening animation. Once emptied it can despawn ("maybe,
-  for now"), so this first version is meant to change after a playtest.
-- Later: a harder ground, cave-like spots, things so hard to drill that C4 is the better tool, main
-  grounds per zone or more variety deeper down.
-- Uniques stay collectibles at camp ("collecting them is satisfying"); no sale, no depth payout.
-- One plan in testable steps, not one big change.
+- The chest opens by holding E and plays its animation; once emptied it can despawn (first version,
+  open to change).
+- Wanted later: a harder ground, cave-like spots, things so hard to drill that C4 is the better tool,
+  main grounds per zone or more variety deeper down.
+- Uniques stay collectibles at camp; no sale, no depth payout.
+- One plan in testable steps. Pure Nature 2: Crystal Caverns is bought for the geodes.
 
 ## Research: what to take, what to avoid
 
@@ -32,184 +40,256 @@ Sources: the four `.research` review analyses and a survey of Deep Rock Galactic
 Hydroneer, Minecraft, Valheim, SteamWorld Dig 1–2, Motherload, Dome Keeper, Terraria, Spelunky and
 Mr. Driller (chat, 2026-10-05).
 
-| Idea | Seen in | Used for |
+| Idea | Seen in | Used in |
 | --- | --- | --- |
-| A tougher, distinct ground around a prize says "something is in here"; paying the toll is the player's choice | Dome Keeper (gadgets under tougher patterned tiles), Mr. Driller (hard blocks around air capsules), Minecraft geodes, DRG Ebonuts | Rubble backfill; geodes (`108`) |
-| Hardness is read before it is felt: its own look and grain on the cut face | Dome Keeper, Astroneer, Hydroneer | Stones you can see in backfill |
-| Hard ground is slow, never closed; seconds, not minutes | DRG granite ("x0.5 holes", tedious), Dome Keeper's deep layers ("mind-numbing"; the developer doubled the drill) | Half soil's rate; thin geode shells |
-| Hold Interact to open a container | DRG cargo crate | The chest's lock |
-| Explosives buy speed and reach, never act as keys; finds survive the blast | Terraria, SteamWorld Dig 2, Spelunky, Minecraft (blast-proof ore) | Geodes and `026` |
-| Zone grounds blend over a few metres instead of a flat line | Minecraft deepslate | `109` |
-| Each depth band has its own find family and container style | Terraria biome chests, DRG biome minerals | `109`, `014` |
-| Deep secret finds are worth far more than the ground around them | Motherload artifacts, Astroneer samples | Geode contents |
-| Pockets look natural, not like a puzzle someone laid out | Super Motherload (criticised) | Geode shape |
-| Sparkle and glowing crystal in the dark are what players remember | Meltopia ("I very much enjoy the sparkles") | Geode interiors |
+| A tougher, distinct ground around a prize says "something is in here"; paying the toll is the player's choice | Dome Keeper (gadgets under tougher patterned tiles), Mr. Driller (hard blocks around air capsules), Minecraft geodes, DRG Ebonuts | `108`, `110` |
+| Hardness is read before it is felt: its own look and grain on the cut face | Dome Keeper, Astroneer, Hydroneer | `108`, `110`, `111` |
+| Hard ground is slow, never closed; seconds, not minutes | DRG granite ("x0.5 holes", tedious), Dome Keeper's deep layers ("mind-numbing"; the developer doubled the drill) | `108`, `110` |
+| Hold Interact to open a container | DRG cargo crate | `109` |
+| Explosives buy speed and reach, never act as keys; finds survive the blast | Terraria, SteamWorld Dig 2, Spelunky, Minecraft (blast-proof ore) | `110`, `026` |
+| Zone grounds blend over a few metres instead of a flat line | Minecraft deepslate | `111` |
+| Each depth band has its own find family and container style | Terraria biome chests, DRG biome minerals | `111`, `014` |
+| Deep secret finds are worth far more than the ground around them | Motherload artifacts, Astroneer samples | `110` |
+| Pockets look natural, not like a puzzle someone laid out | Super Motherload (criticised) | `110` |
+| Sparkle and glowing crystal in the dark are what players remember | Meltopia ("I very much enjoy the sparkles") | `110` |
 
-Avoided: tier gates on the way down (One Man's Trash's 20 m blocker, Terraria's Lihzahrd bricks,
-Meltopia's Tesla-only snow); maze-like pockets and identical tunnels (Meltopia, Astroneer caves,
-DRG Dense Biozone); explosives that destroy loot or bounce (Motherload, A Game About Digging a Hole);
-empty or underwhelming chests (AGADH's empty finale chest, One Man's Trash's partial car); finds that
-are reachable only through the wiki (Hydroneer relics). Not taken now: a proximity ping near secrets
-(the detector stays frozen until `099`), opening chests at camp (the user rejected crane trips for
-chests), keys, and a surface dip over each settled pit (a later candidate).
+**Avoided:**
+- tier gates on the way down (One Man's Trash's 20 m blocker, Terraria's Lihzahrd bricks, Meltopia's
+  Tesla-only snow);
+- maze-like pockets and identical tunnels (Meltopia, Astroneer caves, DRG Dense Biozone);
+- explosives that destroy loot or bounce (Motherload, A Game About Digging a Hole);
+- empty or underwhelming chests (AGADH's empty finale chest, One Man's Trash's partial car);
+- finds reachable only through the wiki (Hydroneer relics).
 
-## Live codebase analysis
+**Not taken now:**
+- a proximity ping near secrets (the detector stays frozen until `099`);
+- opening chests at camp (the user rejected crane trips for chests);
+- keys;
+- a surface dip over each settled pit (a later candidate).
 
-- `TerrainMaterialId` holds Soil, Clay, Rock, Gravel, Concrete, PondClay, FracturedRock,
-  FracturedConcrete, Crack and Backfill. Only Soil and Backfill reach the site (`SiteLayout.Ground` is
-  pits). None of the others was designed as a ground from an owned asset:
-  - Clay and PondClay are the Mountains gravel texture, tinted.
-  - Rock is the packs' rock detail.
-  - Gravel and Concrete are generated by editor code (`DepositTextures`).
-  - Fractured and Crack are procedural shards and lines in the shader.
-- Code serving them:
-  - `TerrainGround`: zone grounds, edge bands, veins, lenses, cracks, places, channels, odd-spot lenses.
-  - `ExcavationGrid`/`TerrainVolume`: sealed rooms, break-ins, the three releases (`*.Release.cs`) and their debris.
-  - `EquipmentProgression`: eight responses, `HardnessOrder` and `GroundEffect`.
-  - `GroundTriplanar.shader`, `GroundTextureSetup` and `DepositTextures`.
-  - `TerrainChunkMesh.Job`: UV2/UV3 weights.
-  - `GroundLab`: per-ground bays and mixes; the lab ground below the bays is rock.
-  - `TerrainVolume.Xray`.
-  - Per-material cut shapes and timings in `ToolRigPresenter` (`crisp`, `sink`), `SalvageCrane.Feedback` and `FpsPlayer`.
-  - Catalog host grounds.
-  - Tests: `TerrainGroundTests`, `TerrainMaterialTests`, `GroundReleaseTests`, and parts of the discovery, find-physics and terrain suites.
-- Backfill today bites bigger than soil (`EquipmentProgression.Backfill`) and the tool rig "sinks" in it
-  (`ToolRigPresenter.BeginStroke`). Its texture is `make_backfill.py` (Mud01 plus Mud_rubble).
-- `BuriedChest` opens on a dig strike (`IDigTarget.TryDig`) once its lid has room. It has no removal.
-  Nothing at runtime records which finds are its contents; they lie in its hollow.
-- Hold-Interact already exists for one target: `FindExtractionInteraction` marks a unique for the
-  crane (prompt percentage, tool lowered via `ExtractionMarkProgress`).
+## 107 Objective
 
-## Step 1 — Remove the invented grounds
+Only **Soil** (Mountains Mud01) and **Backfill** (soil turned over with Highlands Mud_rubble) remain.
+Every other ground goes, with every feature built on it and every texture, tool, test and doc that
+serves it. The site plays as before, because it is already soil with backfill pits. Undercutting a
+pit no longer collapses it, and the Ground Lab shows only what exists.
 
-1. `TerrainMaterialId` becomes **Soil, Backfill** (saves break: New Game).
-2. What stays in `TerrainGround`: depth zones as plain depth bands, pits, stashes and the unique-space
-   avoidance. Everything else goes, and `Features` shrinks to what remains.
-3. Sealed rooms, places, channels, odd-spot lenses, cracks and veins are removed from:
-   - the grid, the volume and the mesher;
-   - the X-ray;
-   - the Ground Lab;
-   - the catalog (room seats and keep-outs).
-4. All three releases go (gravel pour, crack break, backfill slump), with their debris particles and
-   `Released` events.
-5. Shader: only soil (with its cap and band) and backfill remain. The other branches, zone tints and
-   clay strata go, and `GroundTextureSetup` and `DepositTextures` lose them. Delete the textures nothing
-   else uses (check `.meta` references first), with their art cards and scripts:
-   - the generated gravel and concrete textures;
-   - the clay, pond-clay, rock-detail and gravel copies used only by the dig ground (the lakebed
-     terrain keeps its own layers);
-   - the unused original soil art (`Content/GroundTextures/Soil_*`, `art/ground-textures`).
-6. `EquipmentProgression`: Soil and Backfill responses only; `HardnessOrder` is Soil, Backfill.
-7. Ground Lab: bays for soil, backfill, a backfill pit in soil and the thin soil roof. The lab ground
-   below the bays becomes soil; the crane scenes stay.
-8. Catalogs: drop host grounds that name removed grounds. The mechanism stays for later grounds.
-9. Tool and crane presentation lose the removed families: `crisp` and the extra feedback colours.
-10. **Docs:**
-    - `03` §3–5 become the asset-only roster. The tell rule becomes "different ground means you are
-      on to something": the tell is a change in look, grain and feel, harder or softer, never a wall.
-    - `01`, `02`, `05`, `09`, `13`, `15` lose the removed tells, releases, sealed rooms and the
-      drowned workshop(s).
-    - Queue entries are rewritten:
-      - `026`: blast in soil and backfill now, geode shells with `108`, and a preview of the carve
-        volume (DRG).
-      - `099`: odd spots wait for `110`. A detector-off pass no longer auto-removes the detector; the
-        user decides.
-      - `012`: host grounds that exist.
-      - `013`: trail types.
-      - `023`, `028`, `030`, `031`, `039`, `077`, `080`, `081`, `088`: removed grounds, rooms and
-        pours dropped.
-    - Baseline, architecture and readme follow.
-- **Test:** New Game, dig the plot and a stash pit: the site plays as before, with no slump. The Ground
-  Lab shows only the soil and backfill bays and the crane scenes.
+## Concept reference (rules this ticket changes)
 
-## Step 2 — Rubble backfill
+- **`03` §3–5 (zones, materials, tells, places, sealed rooms):**
+  - zones keep their depths but lose their main grounds, edge bands and places;
+  - the tell rule "easier ground means you are on to something" becomes "different ground means you
+    are on to something" (look, grain and feel; harder or softer; never a wall);
+  - cracks, gravel channels, the pour, odd-spot lenses, places and sealed rooms leave the concept
+    until their tickets bring grounds back.
+- **`03` §1 "No caves":** the only pre-existing air is the chests' hollows, until `110` adds geodes.
+- **`03` §6 and §9:** no releases. **§8:** layout validation keeps only what exists.
+- **`04` §8 (C4) and `05` §1 "Where finds sit":** they lose the removed reactions and hosts.
+- **`02` §3–5:** the arc and anti-straight-down rules lose cracks, channels and places, and keep
+  pits, stashes and (later) geodes as the sideways reasons.
+- **`01`:** "drowned workshops" goes (the user rejected the drowned village).
+- **`09`, `13`, `14`, `15`:** they lose the removed looks, sounds, closed ideas and anti-patterns,
+  where those name removed grounds.
 
-- **Why:**
-  - A pit refilled with broken stone and rubble is stonier than the soil around it. The player sees
-    stones in the wall and the tool takes small bites, so look and feel agree.
-  - It is the classic "tough shell around a prize" (Dome Keeper, Mr. Driller): the pit says
-    *something is down here*, and digging it is a toll the player chooses.
-- **Feel:** about **half soil's dig rate**, from smaller, shallower bites and a slightly slower stroke
-  (values in `EquipmentProgression`). A shaft through a whole pit costs seconds, not minutes.
-- **Risk:** players may dig around the pit instead of through it. That still leads to its bottom (the
-  pit is about 2 m across), so it is accepted.
-- **Look:** more and clearer stones (`make_backfill.py`: higher rubble share, stone contrast from the
-  owned rubble). The albedo carries no light direction. It reads by grain, never by colour alone.
-- **Tool:** the "sink" presentation goes. Backfill strokes use the ordinary presentation of a harder
-  ground.
-- **Texts:** `GroundEffect` becomes "Rubble fill: stony and hard; never collapses". The Ground Lab hint
-  changes to match.
-- **Test:** dig soil into a pit with the first shovel and with the drill. The change is felt at once and
-  the stones read under a lamp. Clearing the chest's lid space is not a chore.
+## Live codebase analysis (sweep of HEAD `566009e`)
 
-## Step 3 — The chest by hand
+- **The site:** `SiteLayout.Ground = Features.Pits`, so the site already holds only soil, backfill
+  pits and stash hollows. Everything below is generated only for the Ground Lab and the tests.
+- **The enum is the risky part:**
+  - `TerrainMaterialSnapshot.TerrainMaterialId` is stored as bytes in saves.
+  - It also appears in `DiscoveryCatalog.asset` (`HostGrounds`): the minerals list Rock,
+    FracturedRock, Crack and Gravel (`art/minerals/catalog.json`).
+  - `DiscoveryCatalog.Validate` rejects ids above `Last`.
+- **Break-in:** sealed-room break-in (`TerrainVolume.Rooms.cs` `CheckBreakIn`/`EmitBreakIn`) is generic
+  in method but typed on `TerrainGround.Room`. Its dust uses the release particle pool in
+  `TerrainVolume.Release.cs`. Its opened state is session-only.
+- **Seeded air:** `CarveHollow`, `LabCarve` and `MaterializeSeededAir`/`MaterializeAround` serve the
+  stash hollows and the lab, and stay.
+- **Mesher and shader:** `TerrainChunkMesh(.Job)` sends two `Vector4` weight streams (UV2/UV3) for
+  eight families. `GroundTriplanar.shader` blends them, plus zone tints, strata
+  (`_StrataStrength` .13 on `ReservoirSediment.mat`, which also tints soil) and fracture and crack
+  lines.
+- **Ground X-ray:** still used on the site to find pits (playtest `106`).
+- **Original soil art:** the `Soil_*` textures, `LICENSE.txt` and `art/ground-textures` are referenced
+  only by `GardenGround.mat`. That material is used by:
+  - the "Configure Original Soil" menu (`GroundTextureSetup` 57-61, 222-281);
+  - two tests (`MainGameSceneTests` 125-135, `ExcavationDaylightIntegrationTests` 68);
+  - the protected recovery scene `_Recovery/0.unity`.
+- **Catalog tests:** `DiscoveryCatalogTests` helpers build `Features.All`, not the site ground.
 
-- **Shared hold:**
-  - `FindExtractionInteraction` becomes a general **`HoldInteraction`** over a small contract,
-    `IHoldTarget`, in `WorldActionContracts`. It has three members: can this player hold on it now,
-    how many seconds it takes, and what completes.
-  - `BuriedFind` implements it with the existing crane mark (unchanged timing and visuals).
-    `BuriedChest` implements it with its lock.
-  - `FpsPlayer.ExtractionMarkProgress` becomes `HoldProgress`. The prompt percentage and the lowered
-    tool apply to both targets.
-- **Prompts:**
-  - closed, lid space blocked: `Old chest | Clear the soil above its lid`
-  - closed, room to open: `Old chest | Hold E to force the rusted lock`, with a percentage while held
-  - opened: the plain name
-- **Opening:** the hold takes a little longer than the crane mark (a rusted lock). Completion plays
-  `ChestAnim`: the lock drops and the lid swings up on the contents. A dig strike no longer opens it.
-- **Despawn (first version):** once nothing is left in its hollow, the chest despawns the next time it
-  is out of the player's view and the player is not touching it, so it never pops away in front of
-  them.
-  - "Empty" means no uncollected find lies within the hollow (checked in the chest's own frame, so a
-    fallen chest works too). A closed chest never despawns; contents are never lost.
-- **Saves:**
-  - `ChestSnapshot` gains `Gone`; a gone chest is not spawned on load.
-  - The save codec version goes up (old saves refused: New Game).
-  - Validation keeps bounding chest records.
-- **Later:** if the playtest wants it, the empty chest could instead stay until the tool breaks it
-  (Terraria). That change is local to `BuriedChest`.
-- **Test:** hold E on the chest; the animation reads. Take everything, look away: it is gone. Save and
-  load: it stays gone, and an opened chest that still holds something stays open.
+## Design
 
-## Uniques
+### 1. Materials and saves
 
-They stay unsellable collectibles at camp; nothing changes. Depth reward comes from what later grounds
-hold (geode contents, the catalog's depth bands), not from uniques.
+- **Enum and save version:**
+  - `TerrainMaterialId` becomes `{ Soil, Backfill }` and `Last = Backfill`.
+  - `WorldSaveCodec.Version` goes from 17 to 18; old saves are refused cleanly, so play New Game.
+  - No gap-tolerant ids.
+- **Catalog:**
+  - `art/minerals/catalog.json` loses its removed `host_grounds`/`host_weights`; Sync Discovery Models
+    rewrites `DiscoveryCatalog.asset`.
+  - The host-ground mechanism (fields, `HostWeight` centre lookup, validation) stays for `111`/`112`.
+  - The concrete-wall probe in `HostWeight` (285-291) and `Axis` go.
+- **`EquipmentProgression`:**
+  - Soil and Backfill responses only; `HardnessOrder` stays `{ Backfill, Soil }` (`108` flips it).
+  - `GroundEffect` keeps the two arms. Backfill reads "Disturbed ground: loose fill" until `108`.
+  - The Crack remap goes.
+  - The override and admin tuning machinery stays.
+  - `FpsPlayer.TunableGrounds` becomes `{ Soil, Backfill }`.
 
-## Steps 4–6 (queue tasks, specified when they start)
+### 2. Generation (`TerrainGround`, `ExcavationGrid`, `TerrainVolume`)
 
-- **`108` Geodes** (recommended next; gives `026` C4 its reason):
-  - **What it is:** a geode is a ball of hard rock, hollow inside and lined with crystals. Real ones
-    are dug out of river and lake sediments (for example the Keokuk geodes along the Mississippi).
-  - **In the game:** a small one sits off the way down in zone 2 and deeper. Its hard rock shell shows
-    in the tunnel wall. The drill crawls through it in seconds; C4 cracks it fast.
-  - **Inside:** dark, crystal-lined and holding a few valuable minerals or finds, worth far more than
-    the ground around them and more the deeper the geode is. It is never connected to another one and
-    never in the way; every placement is checked as reachable.
-  - **Assets:** *Pure Nature 2: Crystal Caverns* (bought 2026-10-05) supplies the crystal and mineral
-    models. Its tiling rock is limited to `_RockDetail1/2`, so the shell may instead use its
-    cave-surface rock models' maps; that is decided in `108`.
-- **`109` Zone main grounds:**
-  - **Grounds:** zone 2 from the packs (candidates: Mountains Mud02 or Highlands Mud, grey-brown
-    silt), then zone 3 (Sand, Sand_rubble or Mountains Gravel).
-  - **Rules:** grounds blend over a few metres; each zone gets its own find family and container
-    style; a zone is never slower than the previous one near its end.
-- **`110` Secret areas around uniques:**
-  - **What:** a patch of a distinct owned ground around each unique, where the odd one out is the clue.
-  - **Trail:** a trail leading to it (Dome Keeper's wires) is considered there.
-  - **Detector test:** `099`'s detector-off test follows.
+- **`Features` becomes `{ None, Pits }`** (All = Pits). `SiteLayout.Ground` and `GroundFor` stay.
+- **Stays in `TerrainGround`:**
+  - `ZoneBorders` and `ZoneAt` (plain depth bands);
+  - `SurfaceSoil`, the pit top and bottom margins (named constants replace `PlaceTop`/`EdgeBand`);
+  - `Pits`, `PitSeats`, `Stashes`/`Stash` and `Inside`;
+  - `OddSpot` as the unique space (Centre, Half, Min, Max; its `Ground` field goes);
+  - `GroundLayout`;
+  - `GroundJob` with Size, CellSize, Offsets, Pits and Output (`Material` returns Backfill in a pit,
+    else Soil).
+- **Deleted from `TerrainGround`:**
+  - `PlaceKind`, `Place`, `Room`, `Rooms()`, the `Room` overload of `Seats()`, `Quotas` and `Places`;
+  - the channels;
+  - cracks, veins and gravel lenses;
+  - `InPlace`, `InChannel`, `Cracked`, `GravelLens` and `Vein`;
+  - `BorderWarp`;
+  - the room seat constants (`SeatSink` stays: pit seats use it).
+- **`GroundLayout`:** keeps `Pits` and `Stashes`. It also keeps `KeepOut()` as the reservation hook
+  (empty until `110`) and `Seats()` for pits.
+- **`ExcavationGrid`:**
+  - delete `Rooms`, the `CarveRoom` loop and the method;
+  - delete the per-material bore and shovel shapes (rock facets, concrete squares, gravel `Grain`);
+  - keep the superellipse soil profile, `CarveHollow`, `LabCarve`, `Carve` and `LabBounds`;
+  - delete `ExcavationGrid.Release.cs`.
+- **`TerrainVolume`:**
+  - delete `TerrainVolume.Release.cs` and `ReleaseGround`;
+  - delete the room parts of `TerrainVolume.Rooms.cs` (`BrokeIntoRoom`, `Rooms`, `roomsOpened`,
+    `CheckBreakIn`, `EmitBreakIn`);
+  - keep `GroundLayout`, `MaterializeSeededAir` (minus rooms) and `MaterializeAround`; rename the
+    file to fit (`TerrainVolume.SeededAir.cs`);
+  - collapse `LastCutVolume` into `LastRemovedVolume`;
+  - remove the pour particle fields from the scene (`MainGame.unity` 63660-63661) and
+    `GroundTextureSetup.ConfigurePourFeedback`;
+  - the shared `SoilCrumbs`/`SoilDust` materials stay (crane).
+- **Break-in is deleted, not kept dormant.** `110` rebuilds it for geodes from this commit's
+  `TerrainVolume.Rooms.cs` (`CheckBreakIn`, `EmitBreakIn`) and the particle pool in
+  `TerrainVolume.Release.cs`. It generalizes them to a pocket record and saves the opened state.
+
+### 3. Mesher and shader
+
+- **One weight stream:** `TerrainChunkMesh(.Job)` carries one `Vector4` stream of up to four non-soil
+  ground weights, with soil as the remainder.
+  - `107` uses one slot (backfill); `110` and `111` take the next slots.
+  - Keep the trilinear halo weights and the `DensityCache` material identity.
+- **`GroundTriplanar.shader`:**
+  - Keep: soil (with its cap and the plot band), backfill, `DepositSurface` (generic) and the X-ray.
+  - Delete: the clay, rock, concrete, gravel and pond-clay branches, zone tints, `_ZoneDepths`,
+    strata, and the fracture and crack lines.
+  - Removing strata changes soil's colour slightly with depth; the playtest note says so.
+- **`GroundTextureSetup`:** keep the soil and backfill binding and `PackTexture` (lakebed). Delete the
+  rest and `RockDetail`.
+- **Delete:** `DepositTextures.cs` and `art/deposit-textures/`.
+- **Clean stale slots** from `ReservoirSediment.mat` (sweep list: textures 51-59, 75-83, 91-99,
+  103-111; floats and colours 141-204).
+
+### 4. Assets
+
+- **Delete** (references checked against `.meta` GUIDs):
+  - `Content/GroundTextures/Concrete_*` and `Gravel_*` (generated);
+  - `Content/Nature/GroundTextures/_RockDetail_*` (copies; the vendor original stays).
+- **Keep:** `Content/Nature/GroundTextures/Gravel_{a,m,n}`, which the lakebed's
+  `PackedSediment.terrainlayer` uses.
+- **Original soil art:** this is the one question for this ticket. Deleting `Soil_*`, `LICENSE.txt`,
+  `GardenGround.mat`, the "Configure Original Soil" menu and `art/ground-textures` means the two tests
+  switch to the dig ground's material, and the protected recovery scene `_Recovery/0.unity` then
+  shows a missing material. **Recommended:** delete; the recovery scene file itself is not touched.
+- **Art cards:** edit `art/pure-nature-mountains/README.md` (clay deposit) and `art/soil-debris/README.md`
+  (gravel pour).
+
+### 5. Tools
+
+- **Ground Lab:**
+  - Bays: Soil, Backfill, Backfill pit (in soil) and Thin soil roof.
+  - The lab ground below the bays becomes soil.
+  - The crane scenes stay.
+  - Delete the `Crack` helper.
+- **Ground X-ray:** marks Backfill only (legend, colours, class; context clearance goes).
+- **Tool and crane presentation:**
+  - `ToolRigPresenter` loses `crisp`, and `Family` drops removed ids (keep `MotionFamily.Hard` for
+    `110`);
+  - `SalvageCrane.Feedback` debris colours lose the removed arms;
+  - `sink` stays until `108`.
+
+### 6. Tests
+
+- **Delete:**
+  - `GroundReleaseTests.cs`.
+  - `TerrainGroundTests`: zones, soft path, cracks, channels, sealed rooms (two tests) and places.
+  - `TerrainMaterialTests`: `OneLevelOutpacesTheNextZonesMainGround` and
+    `HeldDrillRetainsDistinctContours`.
+  - `DiscoveryCatalogTests.HostGroundHoldsMoreOfItsTypes`.
+  - `FindPhysicsIntegrationTests.PouredGravelDropsItsFinds`.
+  - `TerrainIntegrationTests.BreakingThroughASealedRoomWallOpensItOnce` (`110` re-creates it for
+    geodes from history).
+- **Edit** to Soil/Backfill (sweep list):
+  - `TerrainGroundTests`: pit tests and the site test;
+  - `TerrainMaterialTests`: test cases, weight layout, material-only restore, motion cases,
+    mixed-boundary cuts;
+  - `DiscoveryCatalogTests`: helpers use `SiteLayout.Ground`; room seats and odd-spot ground parts
+    are dropped, the keep-out parts kept;
+  - `TerrainIntegrationTests`: detached column without `Released`, fresh scene, tool contact ids;
+  - `DiscoveryIntegrationTests.InSealedRoom` and its uses;
+  - the two `GardenGround` tests, if the soil art goes.
+
+### 7. Docs
+
+- **Concept:** rewrite as listed in the concept reference. In `05` §2, drop "drowned workshop". In
+  `03` §1, drop the waterworks and drowned theming.
+- **Snapshot docs:** baseline, architecture and `unity/readme.md`:
+  - rewrite the ground, Ground Lab and X-ray parts;
+  - fix the stale "v16" save note in the baseline.
+- **Completed specs** `006`, `095`, `096`, `097`, `098` and `100`: each header gains one line:
+  "Removed by 107 (asset-only grounds); the body is kept as history so it is not re-run."
+- **Playtests:**
+  - Delete the notes for removed features: `006`, `095`, `096`, `097`, `098` and `100-ground-lab`.
+    These features no longer exist, so the notes are not "played", just obsolete.
+  - Edit `001` (line 7), `104` (line 15) and `106` (X-ray still marks backfill; no slump).
+  - `099` waits for `112`.
+- **Queue:**
+  - The standing decision changes to "the site holds soil plus backfill pits; grounds return through
+    108–112".
+  - `026`: a blast in soil and backfill; geode shells after `110`; a preview of the carve volume
+    (DRG).
+  - `099`: the odd-spot part waits for `112`; a detector-off pass no longer auto-removes the detector,
+    the user decides.
+  - `012`: hosts that exist.
+  - `013`: trail types to be re-decided per zone in `111`.
+  - `088`, `011` and `077`: drop sealed rooms, pours and soft paths.
+  - `028`, `030`, `031`, `081`, `039`, `080` and `023`: drop removed grounds, rooms and pours.
+  - The pending spec `docs/tasks/099-*.md` is rewritten the same way.
+
+## Edge cases
+
+- Lab and test grids that passed `Features.All` now mean Pits; uniques are still computed for pit
+  avoidance.
+- Seeded air (stash hollows, lab carves) still counts as modified for chunk rebuilds, and
+  `RemovedVolume` stays 0 for it.
+- A Ground Lab session still restores the site exactly afterwards (`UseGroundLab`).
+- Catalog validation never meets an id above `Last` after the sync.
 
 ## Acceptance criteria
 
-1. Only Soil and Backfill exist in code, data, shader, tools, tests and docs. No unused ground
-   texture, art card or generator script remains. New Game works, and saves of the old format are
-   refused cleanly.
-2. Backfill digs clearly slower than soil at every tool level, and its stones read in a lamp-lit wall.
-   No release happens anywhere.
-3. The chest opens only by holding Interact once its lid has room. An emptied chest despawns only out
-   of view and untouched, and stays gone after save and load. Its contents are never lost.
-4. Crane marking works as before through the shared hold.
-5. The Ground Lab shows the soil and backfill bays and the crane scenes.
-6. Each step ends with tests passing, a fresh build and its playtest note (the `106` note is updated,
-   not duplicated).
+1. `TerrainMaterialId` is `{ Soil, Backfill }`. No code, test, shader branch, texture, art card or
+   doc names a removed ground except completed spec bodies.
+2. New Game works and the site plays as before; a v17 save is refused cleanly.
+3. Undercutting a pit removes only what was cut; no release exists.
+4. The Ground Lab shows four bays over soil plus the crane scenes, and the X-ray marks backfill.
+5. Compiles warning-free; `tools/test-changed.ps1` passes. The build is delivered and the playtest
+   note is updated.
+
+## Playtest (`106` note, updated)
+
+New Game, dig the plot centre down to the first chest, then undercut a pit's wall: nothing lets go.
+The soil looks the same with depth, or flatter, which is expected without the old strata. The Ground
+Lab shows soil, backfill, the pit and the thin roof.
