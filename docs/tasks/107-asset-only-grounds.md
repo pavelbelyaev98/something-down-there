@@ -210,7 +210,7 @@ pit no longer collapses it, and the Ground Lab shows only what exists.
 ### 5. Tools
 
 - **Ground Lab:**
-  - Bays: Soil, Backfill, Backfill pit (in soil) and Thin soil roof.
+  - Bays: Soil, Backfill and Backfill pit (in soil). The thin-roof bays and the bay `Cavity` flag go: with no collapses left there is nothing for them to show (`LabCarve` stays for the crane scenes).
   - The lab ground below the bays becomes soil.
   - The crane scenes stay.
   - Delete the `Crack` helper.
@@ -284,7 +284,7 @@ pit no longer collapses it, and the Ground Lab shows only what exists.
    doc names a removed ground except completed spec bodies.
 2. New Game works and the site plays as before; a v17 save is refused cleanly.
 3. Undercutting a pit removes only what was cut; no release exists.
-4. The Ground Lab shows four bays over soil plus the crane scenes, and the X-ray marks backfill.
+4. The Ground Lab shows three bays over soil plus the crane scenes, and the X-ray marks backfill.
 5. Compiles warning-free; `tools/test-changed.ps1` passes. The build is delivered and the playtest
    note is updated.
 
@@ -292,4 +292,4 @@ pit no longer collapses it, and the Ground Lab shows only what exists.
 
 New Game, dig the plot centre down to the first chest, then undercut a pit's wall: nothing lets go.
 The soil looks the same with depth, or flatter, which is expected without the old strata. The Ground
-Lab shows soil, backfill, the pit and the thin roof.
+Lab shows soil, backfill and the pit, plus the crane scenes.
