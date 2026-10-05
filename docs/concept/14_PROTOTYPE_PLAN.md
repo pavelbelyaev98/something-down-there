@@ -23,7 +23,7 @@ build curiosity about what they add up to.
 | Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and crane recovery |
 | Crane recovery | Hold Interact on the exposed computer; the crane parks over the hole, its rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks, and the crane sets it down at camp, preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
-| Ground places | One concrete structure with cracks and a sealed cellar, diggable by the current tool; cracks, upgrades or C4 are much faster |
+| Ground places | One concrete structure with cracks and a sealed room, diggable by the current tool; cracks, upgrades or C4 are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
 | Economy | Shared sell/upgrade computer, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
 | Display | Recovered uniques stand at camp where the crane set them, rereadable; no inventory screen |

@@ -32,6 +32,9 @@ namespace SomethingDownThere
         [Tooltip("Keep the user-requested simple review shapes out of release gameplay until final-art acceptance.")]
         [SerializeField] private bool developmentContent = true;
         private readonly List<BuriedFind> finds = new List<BuriedFind>();
+        // The stash pits' old chests (106); what they hold is part of finds.
+        private readonly List<BuriedChest> chests = new List<BuriedChest>();
+        public const int MaximumChests = 64;
         private bool initialized;
         private bool generationDeferred;
         // Ground Lab: computers set down at camp clear away after this long, keeping the crane's spots free.
@@ -41,6 +44,7 @@ namespace SomethingDownThere
         private Camera xrayCamera;
         private readonly Collider[] changedFinds = new Collider[256];
         public IReadOnlyList<BuriedFind> Finds => finds;
+        public IReadOnlyList<BuriedChest> Chests => chests;
         public int Seed => seed;
         public long MotionRevision { get; private set; }
         public long PopulationRevision { get; private set; }
@@ -75,8 +79,17 @@ namespace SomethingDownThere
             return states;
         }
 
-        public void ValidateRestore(FindSnapshot[] states)
+        public ChestSnapshot[] CaptureChests()
         {
+            var states = new ChestSnapshot[chests.Count];
+            for (int i = 0; i < states.Length; i++) states[i] = chests[i].Capture();
+            return states;
+        }
+
+        public void ValidateRestore(FindSnapshot[] states, ChestSnapshot[] chestStates = null)
+        {
+            if (chestStates != null && chestStates.Length > 0 && catalog?.Chest == null)
+                throw new System.IO.InvalidDataException("This save needs discovery content missing from this game version.");
             if (catalog != null)
             {
                 catalog.Validate();
@@ -98,11 +111,17 @@ namespace SomethingDownThere
                     throw new System.IO.InvalidDataException("This save needs discovery content missing from this game version.");
         }
 
-        public void Restore(FindSnapshot[] states, int savedSeed)
+        // chestStates null keeps the current chests.
+        public void Restore(FindSnapshot[] states, int savedSeed, ChestSnapshot[] chestStates = null)
         {
-            ValidateRestore(states);
+            ValidateRestore(states, chestStates);
             foreach (var find in finds) { find.gameObject.SetActive(false); Destroy(find.gameObject); }
             finds.Clear();
+            if (chestStates != null)
+            {
+                ClearChests();
+                foreach (var state in chestStates) SpawnChest(Vector3.zero, Quaternion.identity).Restore(state);
+            }
             seed = savedSeed;
             foreach (var state in states)
             {
@@ -149,6 +168,7 @@ namespace SomethingDownThere
         {
             foreach (var find in finds) { find.gameObject.SetActive(false); Destroy(find.gameObject); }
             finds.Clear();
+            ClearChests();
             var computers = Array.FindAll(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Unique);
             var rock = Array.Find(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Common);
             int computer = 0;
@@ -218,8 +238,26 @@ namespace SomethingDownThere
                 find.name = find.Item.DisplayName + " " + i;
                 finds.Add(find);
             }
+            if (catalog != null && catalog.Chest != null)
+                foreach (var stash in terrain.GroundLayout.Stashes)
+                    SpawnChest(terrain.transform.TransformPoint((Vector3)stash.Centre), terrain.transform.rotation * stash.Rotation);
             initialized = true;
             PopulationRevision++;
+        }
+
+        private BuriedChest SpawnChest(Vector3 position, Quaternion rotation)
+        {
+            var chest = Instantiate(catalog.Chest, position, rotation, transform);
+            chest.name = chest.DisplayName + " " + chests.Count;
+            chest.Initialize(terrain, this);
+            chests.Add(chest);
+            return chest;
+        }
+
+        private void ClearChests()
+        {
+            foreach (var chest in chests) { chest.gameObject.SetActive(false); Destroy(chest.gameObject); }
+            chests.Clear();
         }
 
         private void HandleExcavationChanged(Bounds changed)
@@ -255,6 +293,9 @@ namespace SomethingDownThere
         // fit within 0.5 m of their centers in every rotation, with soil between them.
         public const float MinimumSpacing = 1.15f;
         public const float MaximumFindRadius = 0.5f;
+        // A few larger finds (the rubbish pits' bigger TVs, 106) reach up to this; the placement grid keeps them in its
+        // short list of large reservations instead of its buckets.
+        public const float MaximumLargeFindRadius = 1f;
         public const float SoilClearance = 0.10f;
         // Denser buried layers retain a gap between full-size enclosing spheres.
         // The accepted turf layout keeps its original clearance and random stream.
@@ -291,7 +332,7 @@ namespace SomethingDownThere
                 || extent.x < 8 || extent.y < 4 || extent.z < 8 || total < 1 || total > MaximumPopulation
                 || shallowCount < 0 || shallowCount > total)
                 throw new ArgumentOutOfRangeException(nameof(total), "Use a site at least 8 x 4 x 8 m and a supported discovery population.");
-            if (radii != null && (radii.Length != total || Array.Exists(radii, r => !ExcavationGrid.Finite(r) || r <= 0 || r > MaximumFindRadius)))
+            if (radii != null && (radii.Length != total || Array.Exists(radii, r => !ExcavationGrid.Finite(r) || r <= 0 || r > MaximumLargeFindRadius)))
                 throw new ArgumentOutOfRangeException(nameof(radii));
             if (depthBands != null && (depthBands.Length != total || Array.Exists(depthBands, b =>
                 !ExcavationGrid.Finite(b.x) || !ExcavationGrid.Finite(b.y) || b.x < 0 || b.y < 0
@@ -310,12 +351,15 @@ namespace SomethingDownThere
             // best-candidate spread metric from the closest occupied shell around them.
             var grid = new PlacementGrid(extent, MinimumSpacing + .001f, total + (reserved?.Length ?? 0));
             if (reserved != null) for (int r = 0; r < reserved.Length; r++) grid.Add(total + r, reserved[r].Position, reserved[r].Radius);
+            // Seats are claimed before any other find is placed, so none lands where a seat waits.
+            if (seats != null)
+                for (int i = 0; i < total; i++)
+                    if (!float.IsNaN(seats[i].x)) grid.Add(i, seats[i], radii == null ? MaximumFindRadius : radii[i]);
             float Range(float min, float max) => Mathf.Lerp(min, max, (float)random.NextDouble());
             for (int i = 0; i < total; i++)
             {
                 if (seats != null && !float.IsNaN(seats[i].x))
                 {
-                    grid.Add(i, seats[i], radii == null ? MaximumFindRadius : radii[i]);
                     result[i] = new DiscoveryPlacement(seats[i], Quaternion.Euler(Range(0, 360), Range(0, 360), Range(0, 360)), i % 3);
                     continue;
                 }

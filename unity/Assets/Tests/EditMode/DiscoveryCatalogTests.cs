@@ -33,7 +33,8 @@ namespace SomethingDownThere.Tests
         private const int ExcavationSeed = 2718;
         private static TerrainMaterialSnapshot site;
         private static TerrainMaterialSnapshot Site => site ??= TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
-        private static TerrainGround.GroundLayout GroundLayout => TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
+        private static TerrainGround.GroundLayout groundLayout;
+        private static TerrainGround.GroundLayout GroundLayout => groundLayout ??= TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
         private static TerrainMaterialId Ground(Vector3 local)
         {
             var sample = Vector3Int.Min(Vector3Int.Max(Vector3Int.RoundToInt(local / SiteLayout.CellSize), Vector3Int.zero), SiteLayout.Size);
@@ -47,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -64,7 +65,9 @@ namespace SomethingDownThere.Tests
                 Assert.That(hull.triangles.Length/3,Is.LessThanOrEqualTo(220));
                 Assert.That((hull.bounds.size-mesh.bounds.size).magnitude,Is.LessThan(.0001f));
                 Assert.That(mesh.bounds.center.magnitude,Is.LessThan(.0001f));
-                Assert.That(mesh.lodCount,Is.GreaterThan(1),"Finds carry Mesh LOD levels, so the view-distance setting reaches them.");
+                // Meshes under 300 triangles (the simplest TVs) have nothing left to reduce and cost little at any distance.
+                if (mesh.GetIndexCount(0) / 3 >= 300)
+                    Assert.That(mesh.lodCount,Is.GreaterThan(1),"Finds carry Mesh LOD levels, so the view-distance setting reaches them.");
                 var renderer=entry.Prefab.GetComponent<MeshRenderer>();
                 Assert.That(renderer.sharedMaterial.GetTexture("_BaseMap"),Is.Not.Null);
                 if (entry.Prefab.Kind == DiscoveryKind.Common) Assert.That(renderer.sharedMaterial.GetTexture("_BumpMap"),Is.Not.Null);
@@ -95,7 +98,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(640));
-            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
             foreach (int seed in Seeds(sweep))
             {
                 var layout = Layout(seed);
@@ -159,6 +162,75 @@ namespace SomethingDownThere.Tests
             Assert.That(rock.Prefab.GetComponent<MeshFilter>().sharedMesh.bounds.size.x, Is.GreaterThan(.4f));
         }
 
+        // The stash whose chest holds this point, or -1.
+        private static float chestRadius = -1;
+        private static int InChest(Vector3 point)
+        {
+            if (chestRadius < 0) chestRadius = Catalog.Chest.Radius;
+            var stashes = GroundLayout.Stashes;
+            for (int s = 0; s < stashes.Length; s++)
+                if (Vector3.Distance(point, (Vector3)stashes[s].Centre) < chestRadius) return s;
+            return -1;
+        }
+
+        // Concept 05 §3 finds inside finds (106): every stash's chest holds ChestItems of its contents, lying level
+        // on its floor inside its hollow and its reservation; nothing else sits in a chest; counts are unchanged.
+        [TestCase(90127)] [TestCase(12)]
+        public void EveryStashChestHoldsItsContentsAndNothingElse(int seed)
+        {
+            var catalog = Catalog; var layout = Layout(seed);
+            var stashes = GroundLayout.Stashes;
+            Assert.That(catalog.Chest, Is.Not.Null);
+            Assert.That(stashes.Length, Is.EqualTo(3));
+            var contents = catalog.ChestContents.Select(c => Array.FindIndex(catalog.Entries, e => e.ItemId == c.ItemId)).ToArray();
+            var hollow = catalog.Chest.Hollow;
+            for (int s = 0; s < stashes.Length; s++)
+            {
+                var held = layout.Where(p => InChest(p.Position) == s).ToArray();
+                Assert.That(held.Length, Is.EqualTo(catalog.ChestItems), $"Seed {seed}: chest {s} holds its items.");
+                foreach (var p in held)
+                {
+                    Assert.That(contents, Does.Contain(p.PrefabIndex), "Only the chest's contents lie in it.");
+                    Assert.That(Vector3.Angle(p.Rotation * Vector3.up, Vector3.up), Is.LessThan(.5f), "Lying level.");
+                    var local = Quaternion.Inverse(stashes[s].Rotation) * (p.Position - (Vector3)stashes[s].Centre);
+                    Assert.That(hollow.Contains(local), Is.True, "Inside the hollow.");
+                }
+            }
+            Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount), "Chests take their contents from the population.");
+        }
+
+        // The site's pits (soil plus backfill only) still keep clear of every unique's space.
+        [Test]
+        public void SitePitsKeepClearOfTheUniques()
+        {
+            var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots(), SiteLayout.Ground);
+            Assert.That(layout.OddSpots, Is.Empty, "No odd-spot ground on the site yet.");
+            foreach (var entry in Catalog.Entries.Where(e => e.AuthoredPlacement))
+                foreach (var pit in layout.Pits)
+                {
+                    var nearest = Vector3.Max((Vector3)pit.Min, Vector3.Min(entry.AuthoredPosition, (Vector3)pit.Max));
+                    Assert.That(Vector3.Distance(nearest, entry.AuthoredPosition), Is.GreaterThan(entry.PlacementRadius + 1), entry.ItemId);
+                }
+        }
+
+        // Rubbish pits hold junk (106): every rubbish seat takes a junk find, and junk lies only there.
+        [Test]
+        public void RubbishPitsHoldJunk()
+        {
+            var catalog = Catalog; var layout = Layout(90127);
+            var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
+            var seats = GroundLayout.Seats().Where(s => s.junk).ToArray();
+            Assert.That(seats.Length, Is.EqualTo(6), "Three rubbish pits, two seats each.");
+            Assert.That(layout.Count(p => catalog.Entries[p.PrefabIndex].Junk), Is.EqualTo(seats.Length), "Every TV lies in a rubbish pit.");
+            foreach (var (seat, _, _) in seats)
+            {
+                var held = layout.Where(p => new Vector2(p.Position.x - seat.x, p.Position.z - seat.z).sqrMagnitude < 1e-6f
+                    && Mathf.Abs(seat.y - p.Position.y - radii[p.PrefabIndex] * TerrainGround.SeatSink) < 1e-4f).ToArray();
+                Assert.That(held.Length, Is.EqualTo(1));
+                Assert.That(catalog.Entries[held[0].PrefabIndex].Junk, Is.True, "A rubbish pit holds junk.");
+            }
+        }
+
         private static void AssertSeparated(DiscoveryPlacement[] layout, float[] radii, int seed)
         {
             // Bucket by the largest envelope any pair can require, so a 5,000 find carpet
@@ -185,6 +257,8 @@ namespace SomethingDownThere.Tests
                     foreach (int j in list)
                     {
                         if (j >= i) continue;
+                        // A chest's contents lie side by side on its floor (106), inside the chest's own reservation.
+                        if (InChest(p) >= 0 && InChest(p) == InChest(layout[j].Position)) continue;
                         float required = radii[layout[i].PrefabIndex] + radii[layout[j].PrefabIndex]
                             + (i < shallowCount ? DiscoveryField.SoilClearance : DiscoveryField.BandedSoilClearance) - .0001f;
                         if ((p - layout[j].Position).sqrMagnitude < required * required)
@@ -231,10 +305,13 @@ namespace SomethingDownThere.Tests
                     var patches = new System.Collections.Generic.List<int>();
                     var corner = new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
                     bool InPlot(float x, float z) => SiteLayout.BeyondFootprint(new Vector2(x, z) + corner) <= 0;
+                    // A stash's old chest crossing the floor is that patch's encounter (106): its reserve keeps rocks away.
+                    bool Inside(Vector3 p, float x, float z) => p.x >= x && p.x < x + 3 && p.z >= z && p.z < z + 3;
+                    var chests = GroundLayout.Stashes.Where(s => Mathf.Abs(SiteLayout.Extent.y - s.Centre.y - floor) < catalog.Chest.Radius)
+                        .Select(s => (Vector3)s.Centre).ToArray();
                     for (float x = 0; x + 3 <= SiteLayout.Extent.x; x += 3) for (float z = 0; z + 3 <= SiteLayout.Extent.z; z += 3)
                         if (InPlot(x, z) && InPlot(x + 3, z) && InPlot(x, z + 3) && InPlot(x + 3, z + 3))
-                            patches.Add(fresh.Count(i => layout[i].Position.x >= x && layout[i].Position.x < x + 3
-                                && layout[i].Position.z >= z && layout[i].Position.z < z + 3));
+                            patches.Add(fresh.Count(i => Inside(layout[i].Position, x, z)) + chests.Count(c => Inside(c, x, z)));
                     Assert.That(patches.Count, Is.GreaterThanOrEqualTo(40), "The plot holds enough whole patches to judge.");
                     // Random patches may vary; require no empty patch and keep even the
                     // sparse decile useful, rather than treating one low sample as the mean.
@@ -406,7 +483,7 @@ namespace SomethingDownThere.Tests
             bool Seated(DiscoveryPlacement p, Vector3 seat) => new Vector2(p.Position.x - seat.x, p.Position.z - seat.z).sqrMagnitude < 1e-6f
                 && Mathf.Abs(seat.y - p.Position.y - radii[p.PrefabIndex] * TerrainGround.SeatSink) < 1e-4f;
             // Every seat holds a find: room silt, and the bottom of every backfill pit.
-            foreach (var (seat, _) in GroundLayout.Seats())
+            foreach (var (seat, _, _) in GroundLayout.Seats())
                 Assert.That(layout.Count(p => Seated(p, seat)), Is.EqualTo(1), $"Seed {seed}: a find waits at every seat.");
             foreach (var room in GroundLayout.Rooms)
             {

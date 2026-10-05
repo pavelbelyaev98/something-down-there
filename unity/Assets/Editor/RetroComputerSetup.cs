@@ -86,14 +86,14 @@ namespace SomethingDownThere.Editor
             if(AssetDatabase.IsValidFolder(path)) return;
             int split=path.LastIndexOf('/'); EnsureFolder(path.Substring(0,split)); AssetDatabase.CreateFolder(path.Substring(0,split),path.Substring(split+1));
         }
-        private static Mesh Save(Mesh source,string path)
+        internal static Mesh Save(Mesh source,string path)
         {
             source.name=Path.GetFileNameWithoutExtension(path);
             var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if(existing==null) { AssetDatabase.CreateAsset(source,path); return source; }
             EditorUtility.CopySerialized(source,existing); UnityEngine.Object.DestroyImmediate(source); EditorUtility.SetDirty(existing); return existing;
         }
-        private static Mesh BoxHull(Bounds bounds)
+        internal static Mesh BoxHull(Bounds bounds)
         {
             var vertices=new Vector3[8];
             for(int i=0;i<8;i++) vertices[i]=bounds.center+Vector3.Scale(bounds.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));

@@ -20,6 +20,9 @@ namespace SomethingDownThere
         // Unique odd spots (099): grid-local centre and envelope radius, copied from the discovery
         // catalog by the discovery sync; the seeded ground shapes unlike-zone lenses around them.
         [SerializeField] private Vector4[] oddSpots = Array.Empty<Vector4>();
+        // The stash chest's hollow in its own frame (centre, half size), copied from the chest prefab by the
+        // discovery sync; the seeded ground carves it in every stash pit (106).
+        [SerializeField] private Vector3 stashHollowCentre, stashHollowHalf;
         [SerializeField] private Material soilMaterial;
         [SerializeField] private GameObject untouchedPreview;
 
@@ -109,7 +112,8 @@ namespace SomethingDownThere
             if (grid != null) return;
             if ((transform.lossyScale - Vector3.one).sqrMagnitude > 0.0001f)
                 throw new InvalidOperationException("TerrainVolume requires unit scale; configure its dimensions instead.");
-            grid = new ExcavationGrid(dimensions, cellSize, SiteLayout.LayeredGround ? excavationSeed : (int?)null, oddSpots);
+            grid = new ExcavationGrid(dimensions, cellSize, excavationSeed, oddSpots, SiteLayout.GroundFor(dimensions, cellSize),
+                new Bounds(stashHollowCentre, stashHollowHalf * 2));
             grid.SetBank(SiteLayout.BankColumns(dimensions, cellSize), SiteLayout.BankDepth);
             if (untouchedPreview != null) untouchedPreview.SetActive(false);
             chunkRoot = new GameObject("Chunks").transform;

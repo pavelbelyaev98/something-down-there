@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 16;
+        public const int Version = 17;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
@@ -72,6 +72,9 @@ namespace SomethingDownThere
                 w.Write(s.Worksite.Marks.Length);
                 foreach (var mark in s.Worksite.Marks)
                 { w.Write((byte)mark.Kind); Write(w, mark.Position); Write(w, mark.Rotation); }
+                w.Write(s.Chests.Length);
+                foreach (var chest in s.Chests)
+                { Write(w, chest.Position); Write(w, chest.Rotation); w.Write(chest.Released); w.Write(chest.Opened); }
             }
             using var hash = SHA256.Create();
             byte[] payload = packed.ToArray();
@@ -148,6 +151,9 @@ namespace SomethingDownThere
             s.Worksite.Marks = new MarkSnapshot[Count(r, WorksiteTools.MaximumMarks)];
             for (int i = 0; i < s.Worksite.Marks.Length; i++)
                 s.Worksite.Marks[i] = new MarkSnapshot { Kind = (WorldMarkKind)r.ReadByte(), Position = ReadVector(r), Rotation = ReadRotation(r) };
+            s.Chests = new ChestSnapshot[Count(r, DiscoveryField.MaximumChests)];
+            for (int i = 0; i < s.Chests.Length; i++)
+                s.Chests[i] = new ChestSnapshot { Position = ReadVector(r), Rotation = ReadRotation(r), Released = r.ReadBoolean(), Opened = r.ReadBoolean() };
             WorldSnapshot.Require(zip.ReadByte() == -1, "Unexpected checkpoint fields.");
             s.Validate();
             return s;

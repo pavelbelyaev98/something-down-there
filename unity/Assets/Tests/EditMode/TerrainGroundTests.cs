@@ -175,14 +175,14 @@ namespace SomethingDownThere.Tests
             Assert.That(ids[Index(sample.x, sample.y, sample.z)], Is.EqualTo((byte)TerrainMaterialId.Gravel));
         }
 
-        // Concept 03 §5 sealed rooms: one or two per zone inside concrete structures, roofed, with a
-        // silt floor, and a shell of at least 0.4 m everywhere.
+        // Concept 03 §5 sealed rooms: one or two inside the stone zone's concrete structures, roofed,
+        // with a silt floor, and a shell of at least 0.4 m everywhere.
         [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]
-        public void SealedRoomsSitInsideTheirStructuresInTheSedimentAndStone(int seed)
+        public void SealedRoomsSitInsideTheirStructuresInTheStone(int seed)
         {
             var rooms = TerrainGround.Rooms(SiteLayout.Size, SiteLayout.CellSize, seed);
-            foreach (int zone in new[] { 1, 2 })
-                Assert.That(rooms.Count(r => r.Zone == zone), Is.InRange(1, 2), $"Seed {seed}: rooms in zone {zone + 1}");
+            Assert.That(rooms.Length, Is.InRange(1, 2), $"Seed {seed}: rooms");
+            Assert.That(rooms.All(r => r.Zone == 2), Is.True, $"Seed {seed}: rooms only in zone 3");
             foreach (var room in rooms)
             {
                 var air = (Vector3)(room.AirCentre) ;
@@ -210,8 +210,8 @@ namespace SomethingDownThere.Tests
         [Test]
         public void SeededGridCarvesClosedRoomsWithSiltFloors()
         {
-            // A narrow deep fixture: zone-2 structures fit, rooms land anywhere on a non-shipped grid.
-            var size = new Vector3Int(112, 600, 112);
+            // A narrow fixture deep enough for the stone zone's structures; rooms land anywhere on a non-shipped grid.
+            var size = new Vector3Int(112, 900, 112);
             var grid = new ExcavationGrid(size, .125f, 77);
             Assert.That(grid.Rooms.Length, Is.GreaterThan(0));
             foreach (var room in grid.Rooms)
@@ -245,17 +245,23 @@ namespace SomethingDownThere.Tests
             Assert.That(grid.IsSolid(grid.Rooms[0].ToGrid(new Unity.Mathematics.float3(grid.Rooms[0].AirHalf.x + grid.Rooms[0].Wall * .5f, grid.Rooms[0].AirCentre.y, 0))), Is.True);
         }
 
-        // Concept 03 §4 disturbed ground: pits and columns of backfill cutting across the layers,
-        // most in the recent fill, clear of places and rooms, each with its seats at the bottom.
+        // Concept 03 §4 disturbed ground (106): pits of backfill only in the recent fill, clear of places, stash and
+        // rubbish alternating; the first a stash a few metres under the plot centre; rubbish pits have seats, stash pits
+        // a chest each.
         [TestCase(2718)] [TestCase(12)] [TestCase(991)]
-        public void BackfillPitsCutAcrossTheLayersAboveTheirFinds(int seed)
+        public void BackfillPitsHoldStashesAndRubbishInTheRecentFill(int seed)
         {
             var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, seed);
             var pits = layout.Pits;
-            Assert.That(pits.Count(p => p.Zone == 0), Is.GreaterThanOrEqualTo(4), $"Seed {seed}: rubbish pits in the recent fill.");
-            Assert.That(pits.Count(p => p.Zone == 1), Is.GreaterThanOrEqualTo(2));
-            Assert.That(pits.Count(p => p.Zone == 2), Is.GreaterThanOrEqualTo(1));
-            Assert.That(pits.Count(p => p.Zone == 0), Is.GreaterThanOrEqualTo(pits.Count(p => p.Zone == 2)));
+            Assert.That(pits.Length, Is.EqualTo(6), $"Seed {seed}: six pits.");
+            Assert.That(pits.All(p => p.Zone == 0), Is.True, "Only the recent fill.");
+            Assert.That(pits.Select(p => p.Kind), Is.EqualTo(new[] { TerrainGround.PitKind.Stash, TerrainGround.PitKind.Rubbish,
+                TerrainGround.PitKind.Stash, TerrainGround.PitKind.Rubbish, TerrainGround.PitKind.Stash, TerrainGround.PitKind.Rubbish }));
+            var first = pits[0];
+            Assert.That(SiteLayout.Extent.y - first.Bottom.y, Is.InRange(4f, 6f), "The first stash lies a few metres down.");
+            Assert.That(new Vector2(first.Bottom.x - SiteLayout.Extent.x * .5f, first.Bottom.z - SiteLayout.Extent.z * .5f).magnitude,
+                Is.LessThanOrEqualTo(3 * Mathf.Sqrt(2) + .01f), "Under the plot centre.");
+            Assert.That(layout.Stashes.Length, Is.EqualTo(3));
             var places = TerrainGround.Places(SiteLayout.Size, SiteLayout.CellSize, seed);
             var ids = Site(seed);
             foreach (var pit in pits)
@@ -264,11 +270,67 @@ namespace SomethingDownThere.Tests
                 Assert.That(pit.Top.y, Is.GreaterThan(pit.Bottom.y), "Dug from above.");
                 foreach (var place in places)
                     Assert.That(Unity.Mathematics.math.any(pit.Min > place.Max) || Unity.Mathematics.math.any(place.Min > pit.Max), Is.True, "Never in a place.");
-                var seats = TerrainGround.PitSeats(pit);
-                Assert.That(seats.Length, Is.InRange(1, 2));
+                Assert.That(TerrainGround.PitSeats(pit).Length, pit.Kind == TerrainGround.PitKind.Stash ? Is.EqualTo(0) : Is.EqualTo(2));
+                if (pit.Kind == TerrainGround.PitKind.Rubbish)
+                    Assert.That(SiteLayout.Extent.y - pit.Bottom.y, Is.GreaterThanOrEqualTo(TerrainGround.RubbishTop - .001f), "Rubbish lies below the entry layer.");
                 var middle = Vector3Int.RoundToInt((Vector3)((pit.Top + pit.Bottom) * .5f) / SiteLayout.CellSize);
                 Assert.That(ids[Index(middle.x, middle.y, middle.z)], Is.EqualTo((byte)TerrainMaterialId.Backfill), "The pit is backfill.");
             }
+        }
+
+        // The site admits grounds one at a time (106): today soil with backfill pits, nothing else.
+        [Test]
+        public void TheSiteIsSoilWithBackfillPits()
+        {
+            Assert.That(SiteLayout.GroundFor(SiteLayout.Size, SiteLayout.CellSize), Is.EqualTo(SiteLayout.Ground));
+            Assert.That(SiteLayout.GroundFor(new Vector3Int(64, 64, 64), SiteLayout.CellSize), Is.EqualTo(TerrainGround.Features.None), "Fixtures stay plain soil.");
+            var ids = TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground).ToArray();
+            Assert.That(ids.Distinct().OrderBy(v => v), Is.EqualTo(new[] { (byte)TerrainMaterialId.Soil, (byte)TerrainMaterialId.Backfill }));
+            var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground);
+            Assert.That(layout.Rooms, Is.Empty); Assert.That(layout.OddSpots, Is.Empty);
+            Assert.That(layout.Pits.Length, Is.EqualTo(6));
+            Assert.That(layout.Pits.All(p => SiteLayout.Extent.y - p.Bottom.y < TerrainGround.ZoneBorders[0]), Is.True);
+        }
+
+        // A stash chest's hollow is seeded air, closed on every side, with soil under it.
+        [Test]
+        public void StashHollowsAreClosedSeededAir()
+        {
+            var hollow = new Bounds(new Vector3(0, .023f, 0), new Vector3(.81f, .56f, 1.4f));
+            var grid = new ExcavationGrid(new Vector3Int(112, 320, 112), .125f, 77, null, TerrainGround.Features.Pits, hollow);
+            var stashes = grid.Layout.Stashes;
+            Assert.That(stashes.Length, Is.GreaterThan(0));
+            Assert.That(grid.RemovedVolume, Is.Zero, "Seeded air is not a cut.");
+            foreach (var stash in stashes)
+            {
+                Assert.That(stash.Hollow, Is.True);
+                var centre = (Vector3)stash.Centre + (Quaternion)stash.Rotation * hollow.center;
+                Assert.That(grid.IsSolid(centre), Is.False, "The chest's hollow holds air.");
+                Assert.That(grid.IsSolid(centre - Vector3.up * (hollow.extents.y + .1f)), Is.True, "Soil under the chest.");
+                var start = Vector3Int.RoundToInt(centre / .125f);
+                var seen = new HashSet<Vector3Int> { start };
+                var queue = new Queue<Vector3Int>(); queue.Enqueue(start);
+                var low = Vector3Int.FloorToInt((Vector3)stash.Min / .125f) - Vector3Int.one * 2;
+                var high = Vector3Int.CeilToInt((Vector3)stash.Max / .125f) + Vector3Int.one * 2;
+                while (queue.Count > 0)
+                {
+                    var s = queue.Dequeue();
+                    Assert.That(s.x > low.x && s.y > low.y && s.z > low.z && s.x < high.x && s.y < high.y && s.z < high.z, Is.True, "The hollow leaks.");
+                    foreach (var step in new[] { Vector3Int.right, Vector3Int.left, Vector3Int.up, Vector3Int.down, new Vector3Int(0, 0, 1), new Vector3Int(0, 0, -1) })
+                    {
+                        var n = s + step;
+                        if (seen.Contains(n) || grid.Sample(n.x, n.y, n.z) > 0) continue;
+                        seen.Add(n); queue.Enqueue(n);
+                    }
+                }
+                Assert.That(seen.Count, Is.GreaterThan(100), "A chest's worth of air.");
+            }
+            var above = (Vector3)stashes[0].Centre + Vector3.up * (hollow.max.y + .3f);
+            grid.RemoveSphere(above, .3f, out _);
+            Assert.That(grid.IsSolid(above), Is.False);
+            grid.Reset();
+            Assert.That(grid.IsSolid(above), Is.True, "Reset refills above the chest.");
+            Assert.That(grid.IsSolid((Vector3)stashes[0].Centre + (Quaternion)stashes[0].Rotation * hollow.center), Is.False, "Reset carves the hollow again.");
         }
 
         [TestCase(2718)] [TestCase(12)] [TestCase(991)] [TestCase(5)]
@@ -292,7 +354,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(Unity.Mathematics.math.any(places[i].Min > places[j].Max) || Unity.Mathematics.math.any(places[j].Min > places[i].Max), Is.True);
             int Count(int zone, TerrainGround.PlaceKind kind) => places.Count(p => p.Zone == zone && p.Kind == kind);
             Assert.That(Count(0, TerrainGround.PlaceKind.Rubble), Is.GreaterThanOrEqualTo(5));
-            Assert.That(Count(1, TerrainGround.PlaceKind.Structure), Is.GreaterThanOrEqualTo(1));
+            Assert.That(Count(1, TerrainGround.PlaceKind.Structure), Is.EqualTo(0));
             Assert.That(Count(1, TerrainGround.PlaceKind.RockMass), Is.GreaterThanOrEqualTo(1));
             Assert.That(Count(1, TerrainGround.PlaceKind.Basin), Is.GreaterThanOrEqualTo(2));
             Assert.That(Count(2, TerrainGround.PlaceKind.Structure), Is.GreaterThanOrEqualTo(1));

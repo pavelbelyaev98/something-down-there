@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "prefab": "Assets/Content/BuriedProps/OldChest/OldChest.prefab",
+  "display_name": "Old chest",
+  "items": 3,
+  "contents": [
+    { "content_id": "mineral_silver", "weight": 2 },
+    { "content_id": "mineral_gold", "weight": 1 }
+  ]
+}

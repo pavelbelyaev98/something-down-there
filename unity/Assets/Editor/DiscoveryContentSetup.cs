@@ -24,6 +24,8 @@ namespace SomethingDownThere.Editor
             public float[] dimensions_m;
             public int instances, shallow_instances, sale_value, slots;
             public bool detector_eligible, lay_on_side;
+            // Rubbish someone dumped: rubbish pits' seats take only junk (106).
+            public bool junk;
             public float required_exposure;
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;
@@ -40,7 +42,7 @@ namespace SomethingDownThere.Editor
 
         // Concept 03 §4 host ground. Every roster names it: rubbish and plain rocks soil; coins,
         // tokens, beads and marbles gravel; bones and organics clay (and pond clay); ore rock;
-        // waterworks and village items concrete. No names means an unbiased type.
+        // waterworks items concrete. No names means an unbiased type.
         internal static TerrainMaterialId[] HostGrounds(string[] names, float[] weights)
         {
             if (names == null || names.Length == 0) return Array.Empty<TerrainMaterialId>();
@@ -66,7 +68,9 @@ namespace SomethingDownThere.Editor
             PhotoRockSetup.AppendToCatalog(entries);
             MineralSetup.AppendToCatalog(entries);
             RetroComputerSetup.AppendToCatalog(entries);
+            JunkSetup.AppendToCatalog(entries);
             catalog.Entries = entries.ToArray();
+            ChestSetup.Configure(catalog);
             catalog.Validate(); EditorUtility.SetDirty(catalog);
             ConfigureScene(catalog);
             AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
@@ -144,6 +148,10 @@ namespace SomethingDownThere.Editor
             var ground = new SerializedObject(terrain);
             var spots = catalog.OddSpots(); var list = ground.FindProperty("oddSpots"); list.arraySize = spots.Length;
             for (int i = 0; i < spots.Length; i++) list.GetArrayElementAtIndex(i).vector4Value = spots[i];
+            // The stash chest's hollow, carved in every stash pit (106).
+            var hollow = catalog.Chest != null ? catalog.Chest.Hollow : default;
+            ground.FindProperty("stashHollowCentre").vector3Value = hollow.center;
+            ground.FindProperty("stashHollowHalf").vector3Value = hollow.extents;
             ground.ApplyModifiedPropertiesWithoutUndo();
             var settings = new SerializedObject(player);settings.FindProperty("discoveries").objectReferenceValue = field;
             settings.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(scene);

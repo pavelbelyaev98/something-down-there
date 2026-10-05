@@ -117,8 +117,8 @@ names are placeholders; final naming is content work.
 
 | #   | Zone                    | Main ground                          | Places and purposeful mixed spots                                                                                              | Typical finds                                        | Mood                             |
 | --- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | -------------------------------- |
-| 1   | **Recent fill**         | Soil, with gravel lenses             | Rubbish pits (disturbed ground), the first gravel channels, stray concrete rubble                                              | Bottles, scrap, household junk, coins, coal, copper  | Bright, familiar, hopeful        |
-| 2   | **Old sediment**        | Clay                                 | Clay basins, winding gravel channels (old riverbeds), drowned-village concrete structures, the first sealed cellars            | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
+| 1   | **Recent fill**         | Soil, with gravel lenses             | Buried stashes and rubbish pits (disturbed ground), the first gravel channels, stray concrete rubble                            | Bottles, scrap, household junk, coins, coal, copper  | Bright, familiar, hopeful        |
+| 2   | **Old sediment**        | Clay                                 | Clay basins, winding gravel channels (old riverbeds)                                                                           | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
 | 3   | **Deep clay / stone**   | Rock, veined with clay               | Rock masses with crack networks and ore veins, soft clay/gravel paths through the rock, waterworks concrete, deep sealed rooms | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
 | 4   | **Ancient constructed** | Its own ancient material (defined with the zone-4 work) | Constructed architecture, an ancient sealed chamber                                                         | Impossibilities, final components, the final object  | Cold, quiet, wrong in a good way |
 
@@ -164,7 +164,7 @@ rock sees the bites shrink instead of feeling the machine stall.
 | Gravel   | Loose grainy cuts; trickles; pours when undercut | Channels: winding old riverbeds      | Heavy things: coins, tokens, metal, nuggets         |
 | Clay     | Steady, narrow smooth shavings                 | Disturbed ground; basins               | Bones, wood, leather, fossils, organic things       |
 | Rock     | Small faceted chips                            | Cracks and veins                       | Ore                                                 |
-| Concrete | Smallest square chips and sparks, but the starting tool always makes visible progress | Cracks from old damage | Waterworks and village items; rooms behind it |
+| Concrete | Smallest square chips and sparks, but the starting tool always makes visible progress | Cracks from old damage | Waterworks items; rooms behind it |
 | Backfill | Loose and mixed; digs fast; slumps when undercut | It *is* the tell                       | Whatever someone buried                             |
 
 The ancient zone adds its own material with its contact signature
@@ -232,8 +232,16 @@ Shared rules for all tells:
   layers.
 - It reads in the wall as a messy, chunky patch breaking the clean banding, and the tool suddenly
   sinks in faster. Follow it down or sideways and something waits at the bottom.
-- Only some finds get one, so ordinary digging keeps its own surprises. Every pit holds something,
-  even if only a rubbish pit of bottles; it is never an empty decoy.
+- Only what was buried on purpose leaves a pit: a **stash** (an old chest, opened where it lies; see
+  [finds inside finds](05_DISCOVERIES.md#3-the-reveal-and-recognition-loop)) or **rubbish** (junk
+  such as old TVs, found only in rubbish pits). Things that sank or were lost leave none and lie
+  scattered, so ordinary digging keeps its own surprises. Every pit holds something, never an empty
+  decoy, and pays well for following it: a rock-priced find at the bottom would be a letdown.
+- It reads by grain, not a colour jump: the same soil turned over, lumpier and a little darker, with
+  stones churned in, drawn from its own texture made from the site's soil and rubble.
+- Pits stay in the recent fill for now: a refilled hole far down in clay or rock needs a story
+  first. The first one lies a few metres under the plot centre, where an early shaft meets it in
+  daylight.
 - *Feel:* "why did it just get easy? Someone dug here before me."
 
 #### Odd spots for special finds
@@ -269,7 +277,7 @@ list: a concrete structure or a rock mass *is* the hard pocket, now with a reaso
 | Place              | Where       | What it is for                                                                                                         |
 | ------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Rock mass          | Mostly zone 3 | A block several metres across, criss-crossed by cracks and veins: read the cracks, pick a branch, or blast it        |
-| Concrete structure | Zones 2–3   | A buried foundation, cellar or waterworks section: concrete walls and floor, soil inside, cracks marking the weak spots; sometimes a sealed room |
+| Concrete structure | Zone 3      | A buried waterworks section: concrete walls and floor, soil inside, cracks marking the weak spots; sometimes a sealed room |
 | Clay basin         | Zone 2      | A thick bowl of old pond clay: clean, calm digging around bones and organic finds; softer and greyer than the clay around it, so it is clay's tell |
 | Gravel channel     | Zones 1–2   | See §4                                                                                                                 |
 
@@ -288,8 +296,8 @@ Rules:
 The thrill of a cave is the break-through: dig, the wall gives, and there is darkness behind it.
 Sealed rooms keep that moment without cave networks.
 
-- Small and rare: start with one or two per zone. Examples: a drowned-village cellar, a section of
-  old waterworks tunnel, and in the ancient zone a constructed chamber.
+- Small and rare: one or two in the stone zone, each a section of old waterworks tunnel, and in the
+  ancient zone a constructed chamber.
 - Always sealed: the player always breaks in. Inside it is dark until the player's opening or a lamp
   lights it.
 - The floor is settled silt with finds half-sunk in it, so the reveal-by-silhouette loop survives:

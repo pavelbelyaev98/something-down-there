@@ -1,6 +1,6 @@
 # 098 — Sealed Break-Through Rooms
 
-**Status:** complete. The first concrete structure in zones 2 and 3 (sometimes a second) is a sealed room with ~1.9 m of dark air above a settled silt floor, carved into the seeded density; ordinary finds keep out and 2–5 finds sit half-sunk in the silt; the first tool cut through its cracked wall lets dust drift in.
+**Status:** complete. The first concrete structure in zone 3 (sometimes a second) is a sealed room with ~1.9 m of dark air above a settled silt floor, carved into the seeded density; ordinary finds keep out and 2–5 finds sit half-sunk in the silt; the first tool cut through its cracked wall lets dust drift in.
 
 ## Objective
 
@@ -93,3 +93,8 @@ the first lamp shows shapes in the silt.
   top layer plus exactly the rooms' chunks.
 - The room seat takes the next find whose band covers its depth, so the type is whatever the depth
   holds (ore today; village and waterworks items with `012`/`011`).
+
+## Iteration (user, 2026-10-05)
+
+- The drowned village was dropped from the design, so zone 2 holds no concrete structures and the
+  sealed rooms sit only in the zone-3 waterworks.

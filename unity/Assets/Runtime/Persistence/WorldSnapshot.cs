@@ -16,6 +16,7 @@ namespace SomethingDownThere
         public Quaternion TerrainRotation;
         public int ExcavationSeed, DiscoverySeed;
         public FindSnapshot[] Finds;
+        public ChestSnapshot[] Chests = Array.Empty<ChestSnapshot>();
         public ExtractionSnapshot Extraction;
         public WorksiteSnapshot Worksite = new WorksiteSnapshot();
         public ItemSnapshot[] Inventory;
@@ -83,6 +84,9 @@ namespace SomethingDownThere
                     "Ordinary find has unique state.");
             }
             Require(extracting==(Extraction==null?0:1),"Extraction ownership is inconsistent.");
+            Require(Chests != null && Chests.Length <= DiscoveryField.MaximumChests, "Invalid chests.");
+            foreach (var chest in Chests)
+                Require(chest != null && Valid(chest.Position) && Valid(chest.Rotation), "Invalid chest placement.");
             Extraction?.Validate(population,Terrain);
             var carried = new HashSet<string>(StringComparer.Ordinal);
             foreach (var item in Inventory)

@@ -33,7 +33,18 @@ namespace SomethingDownThere
             // depth bands and prices never change.
             public TerrainMaterialId[] HostGrounds = Array.Empty<TerrainMaterialId>();
             public float[] HostWeights = Array.Empty<float>();
+            // Rubbish someone dumped (106): rubbish pits' seats take only junk.
+            public bool Junk;
             public int AppearanceCount => 1 + (AppearanceVariants?.Length ?? 0);
+            // Half the find's height lying level: it rests that far above a chest's floor seat.
+            public float RestingHalfHeight
+            {
+                get
+                {
+                    var filter = Prefab.GetComponent<MeshFilter>();
+                    return filter.sharedMesh.bounds.extents.y * Mathf.Abs(filter.transform.localScale.y);
+                }
+            }
             public BuriedFind Appearance(int index) => index == 0 ? Prefab : AppearanceVariants[index - 1];
             public float PlacementRadius
             {
@@ -60,6 +71,11 @@ namespace SomethingDownThere
             }
         }
         public Entry[] Entries = Array.Empty<Entry>();
+        // The stash pits' old chest (106) and what it holds: ChestItems finds per chest, each drawn by weight.
+        [Serializable] public sealed class ChestContent { public string ItemId; public int Weight = 1; }
+        public BuriedChest Chest;
+        public int ChestItems;
+        public ChestContent[] ChestContents = Array.Empty<ChestContent>();
         public int TotalCount { get { int total = 0; foreach (var e in Entries) total += e.Count; return total; } }
         public int ShallowCount { get { int total = 0; foreach (var e in Entries) total += e.ShallowCount; return total; } }
 
@@ -109,8 +125,13 @@ namespace SomethingDownThere
                 }
             }
             if (TotalCount > DiscoveryField.MaximumPopulation || shallow < 1) throw new InvalidDataException("Starter allocation requires shallow finds and a supported total.");
-
+            if (Chest != null && (ChestItems < 1 || ChestItems > Chest.ContentSeats.Length || ChestContents == null || ChestContents.Length == 0
+                || Array.Exists(ChestContents, c => c == null || c.Weight < 1 || ContentIndex(c.ItemId) < 0
+                    || Entries[ContentIndex(c.ItemId)].Prefab.Kind != DiscoveryKind.Common)))
+                throw new InvalidDataException("Invalid chest contents.");
         }
+
+        private int ContentIndex(string itemId) => Array.FindIndex(Entries, e => e.ItemId == itemId);
 
         public BuriedFind Resolve(string id)
         {
@@ -171,21 +192,26 @@ namespace SomethingDownThere
             }
             // Each seat takes the next find whose depth band covers it and that fits, sunk a third of
             // its size below the seat: counts and bands are unchanged. Room seats lie on the silt
-            // (concept 03 §5); pit seats wait at the bottom of disturbed ground (03 §4: every pit
-            // holds something).
+            // (concept 03 §5); rubbish pit seats wait at the bottom of disturbed ground and take junk
+            // (03 §4: every pit holds something). Ordinary finds keep out of every stash's chest.
             Vector3[] seats = null;
+            var stashes = groundLayout != null && Chest != null ? groundLayout.Stashes : Array.Empty<TerrainGround.Stash>();
+            var chestTurns = new Dictionary<int, Quaternion>();
             if (groundLayout != null)
             {
                 seats = new Vector3[radii.Length];
                 for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
                 reserved.AddRange(groundLayout.KeepOut());
-                foreach (var (seat, fits) in groundLayout.Seats())
+                foreach (var stash in stashes) reserved.Add(new DiscoveryReservation((Vector3)stash.Centre, Chest.Radius + DiscoveryField.SoilClearance));
+                foreach (var (seat, fits, junk) in groundLayout.Seats())
                 {
                     float depth = extent.y - seat.y;
                     for (int i = ShallowCount; i < seats.Length; i++)
-                        if (float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y && radii[i] <= fits)
+                        if (float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y && radii[i] <= fits
+                            && (!junk || Entries[shallow[i]].Junk))
                         { seats[i] = seat + Vector3.down * radii[i] * TerrainGround.SeatSink; break; }
                 }
+                SeatChests(stashes, extent, seed, shallow, bands, seats, chestTurns);
             }
             Func<int, Vector3, float> weight = null;
             if (ground != null)
@@ -212,9 +238,41 @@ namespace SomethingDownThere
                     rotation = new Quaternion((float)(Math.Sqrt(1-u)*Math.Sin(v)), (float)(Math.Sqrt(1-u)*Math.Cos(v)),
                         (float)(Math.Sqrt(u)*Math.Sin(w)), (float)(Math.Sqrt(u)*Math.Cos(w)));
                 }
+                if (chestTurns.TryGetValue(i, out var turn)) rotation = turn;
                 layout[i] = new DiscoveryPlacement(layout[i].Position, rotation, index, appearances.Next(Entries[index].AppearanceCount));
             }
             var result = new List<DiscoveryPlacement>(layout); result.AddRange(authored); return result.ToArray();
+        }
+
+        // What each stash's chest holds (106): its floor seats take ChestItems finds of a type drawn by weight, like any
+        // seat the next of that type whose depth band covers the chest (another content type when none does), so counts
+        // never change. They lie level at a little seeded turn in the chest's seeded hollow, loose from New Game.
+        private void SeatChests(TerrainGround.Stash[] stashes, Vector3 extent, int seed, List<int> order, Vector2[] bands,
+            Vector3[] seats, Dictionary<int, Quaternion> turns)
+        {
+            var random = new System.Random(unchecked(seed ^ 0x5C4E5713));
+            int total = 0; foreach (var content in ChestContents) total += content.Weight;
+            foreach (var stash in stashes)
+            {
+                Quaternion chest = stash.Rotation;
+                float depth = extent.y - stash.Centre.y;
+                for (int k = 0; k < ChestItems; k++)
+                {
+                    int pick = random.Next(total), choice = 0;
+                    while (pick >= ChestContents[choice].Weight) pick -= ChestContents[choice++].Weight;
+                    var turn = chest * Quaternion.Euler(0, (float)(random.NextDouble() - .5) * 40, 0);
+                    for (int attempt = 0; attempt < ChestContents.Length; attempt++)
+                    {
+                        int entry = ContentIndex(ChestContents[(choice + attempt) % ChestContents.Length].ItemId), seated = -1;
+                        for (int i = ShallowCount; i < seats.Length && seated < 0; i++)
+                            if (order[i] == entry && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y) seated = i;
+                        if (seated < 0) continue;
+                        seats[seated] = (Vector3)stash.Centre + chest * Chest.ContentSeats[k] + Vector3.up * (Entries[entry].RestingHalfHeight + .01f);
+                        turns[seated] = turn;
+                        break;
+                    }
+                }
+            }
         }
 
         // The ground at the find's centre decides, except that concrete also counts right beside

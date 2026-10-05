@@ -132,7 +132,7 @@ namespace SomethingDownThere
                 try
                 {
                     snapshot.ValidateTerrain(terrain.Dimensions, terrain.CellSize, terrain.transform.position, terrain.transform.rotation);
-                    discoveries.ValidateRestore(snapshot.Finds);
+                    discoveries.ValidateRestore(snapshot.Finds, snapshot.Chests);
                     player.Crane?.ValidateRestore(snapshot);
                 }
                 catch (Exception error) { validation = error; }
@@ -148,7 +148,7 @@ namespace SomethingDownThere
                 }
                 if (validation == null)
                 {
-                    try { discoveries.Restore(snapshot.Finds, snapshot.DiscoverySeed); player.Restore(snapshot); player.Crane?.Restore(snapshot.Extraction); }
+                    try { discoveries.Restore(snapshot.Finds, snapshot.DiscoverySeed, snapshot.Chests); player.Restore(snapshot); player.Crane?.Restore(snapshot.Extraction); }
                     catch (Exception error) { validation = error; }
                 }
                 if (validation != null) { Fail(validation, true); yield break; }
@@ -234,7 +234,8 @@ namespace SomethingDownThere
             }
             var snapshot = new WorldSnapshot { Sequence = sequence, UtcTicks = DateTime.UtcNow.Ticks, Terrain = cachedTerrain,
                 TerrainPosition = terrain.transform.position, TerrainRotation = terrain.transform.rotation,
-                ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = discoveries.Seed, Finds = discoveries.CaptureCheckpoint(), Extraction = player.Crane?.Capture() };
+                ExcavationSeed = terrain.ExcavationSeed, DiscoverySeed = discoveries.Seed, Finds = discoveries.CaptureCheckpoint(),
+                Chests = discoveries.CaptureChests(), Extraction = player.Crane?.Capture() };
             player.Capture(snapshot);
             LastCaptureMilliseconds = timer.Elapsed.TotalMilliseconds;
             long allocationDelta = GC.GetAllocatedBytesForCurrentThread() - allocated;

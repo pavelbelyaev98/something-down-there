@@ -172,3 +172,5 @@ list; noise is `Unity.Mathematics` simplex. Target: full 150 m grid well under 1
   a little stroke time again, each stroke throws its ground's debris, and the tool ladder follows the
   user's level 1/10 dials; the zone rule is checked two purchases later at the working levels. See
   [100](100-ground-lab-and-ground-releases.md).
+- Design change (user, 2026-10-05): the drowned village was dropped; zone 2's places are rock
+  masses and clay basins, and concrete structures stay in zone 3 only.

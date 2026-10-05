@@ -46,22 +46,28 @@ namespace SomethingDownThere.Tests
         // ~12k finds. Tests that measure the deep layout restore the generated population.
         private static FindSnapshot[] layerPopulation;
         public static FindSnapshot[] GeneratedPopulation { get; private set; }
+        // The stash chests (106) and, in the layer, everything they hold.
+        public static ChestSnapshot[] GeneratedChests { get; private set; }
         public static void RestoreLayerFixture(DiscoveryField field)
         {
             if (layerPopulation == null)
             {
                 if (field.Finds.Count == 0) field.InitializePopulation();
                 GeneratedPopulation = field.Capture();
+                GeneratedChests = field.CaptureChests();
                 compactSeed = field.Seed;
                 int shallow = field.Catalog.ShallowCount;
                 var uniques = field.Catalog.Entries.Where(e => e.Prefab.Kind == DiscoveryKind.Unique).Select(e => e.Prefab.SaveContentId).ToArray();
+                float reach = field.Catalog.Chest != null ? field.Catalog.Chest.Radius : 0;
+                bool held(FindSnapshot s) => GeneratedChests.Any(c => UnityEngine.Vector3.Distance(c.Position, s.Position) < reach);
                 layerPopulation = GeneratedPopulation.Take(shallow).Concat(GeneratedPopulation.Skip(shallow).Where(s => !uniques.Contains(s.ContentId))
-                    .GroupBy(s => s.ContentId).SelectMany(g => g.Take(3))).Concat(GeneratedPopulation.Where(s => uniques.Contains(s.ContentId))).ToArray();
+                    .GroupBy(s => s.ContentId).SelectMany(g => g.Take(3))).Concat(GeneratedPopulation.Where(s => uniques.Contains(s.ContentId)))
+                    .Concat(GeneratedPopulation.Where(held)).GroupBy(s => s.Item.Id).Select(g => g.First()).ToArray();
             }
-            field.Restore(layerPopulation, compactSeed);
+            field.Restore(layerPopulation, compactSeed, GeneratedChests);
         }
 
-        public static void RestoreGeneratedPopulation(DiscoveryField field) => field.Restore(GeneratedPopulation, compactSeed);
+        public static void RestoreGeneratedPopulation(DiscoveryField field) => field.Restore(GeneratedPopulation, compactSeed, GeneratedChests);
 
         public static void ConfigureLayerFinds(Scene scene, LoadSceneMode mode)
         {

@@ -170,10 +170,26 @@ namespace SomethingDownThere.Editor
             material.SetFloat("_FractureShardMetres", .16f);
             material.SetFloat("_FractureLift", .35f);
             material.SetColor("_CrackColour", new Color(.86f, .84f, .78f));
-            // Backfill (099): dark loose stones with blocky clay chunks.
-            material.SetColor("_BackfillTint", new Color(.62f, .5f, .4f));
-            material.SetFloat("_BackfillChunkMetres", .4f);
+            // Backfill (106): the soil turned over with stones churned in, one texture set built from the packs' own
+            // ground textures by art/pure-nature-highlands/make_backfill.py. Its soil repeats about as the dig ground's
+            // does (the set holds 2 x 2 soil tiles); a stronger relief turned the lamp-lit clods' creases black.
+            material.SetTexture("_BackfillAlbedo", Backfill("Albedo"));
+            material.SetTexture("_BackfillNormal", Backfill("Normal"));
+            material.SetTexture("_BackfillMask", Backfill("Roughness"));
+            material.SetColor("_BackfillTint", Color.white);
+            material.SetFloat("_BackfillTileMetres", 7f);
+            material.SetFloat("_BackfillNormalStrength", 1f);
             EditorUtility.SetDirty(material);
+        }
+
+        // Backfill's one texture set, written by art/pure-nature-highlands/make_backfill.py.
+        private static Texture2D Backfill(string channel)
+        {
+            string path = Folder + "Backfill_" + (channel == "Roughness" ? "Mask" : channel) + ".png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null)
+                throw new InvalidOperationException("Missing " + path + " (run art/pure-nature-highlands/make_backfill.py).");
+            ConfigureImport(path, channel);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         private static Texture2D RockDetail(string channel)

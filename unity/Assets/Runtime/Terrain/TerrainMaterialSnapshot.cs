@@ -59,10 +59,11 @@ namespace SomethingDownThere
 
         // Zones, edge bands, veins and places: see TerrainGround.
         // Odd spots: grid-local unique centres (xyz) and envelope radii (w) the ground shapes around.
-        public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null)
+        public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null,
+            TerrainGround.Features features = TerrainGround.Features.All)
         {
             ExcavationGrid.ValidateDimensions(size, cellSize);
-            return new TerrainMaterialSnapshot(TerrainGround.Generate(size, cellSize, seed, oddSpots));
+            return new TerrainMaterialSnapshot(TerrainGround.Generate(size, cellSize, seed, oddSpots, features));
         }
 
         // Seeded unit float from a hash state; never touches UnityEngine.Random.

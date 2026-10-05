@@ -14,11 +14,12 @@ namespace SomethingDownThere
         public TerrainGround.GroundLayout GroundLayout => grid?.Layout ?? TerrainGround.GroundLayout.Empty;
         private bool[] roomsOpened;
 
-        // Seeded air (sealed rooms, a lab's hollows and dug scenes) below the surface layer has no cut to
-        // create its chunks, so they are built up front.
+        // Seeded air (sealed rooms, stash chests' hollows, a lab's hollows and dug scenes) below the surface layer
+        // has no cut to create its chunks, so they are built up front.
         private void MaterializeSeededAir()
         {
             foreach (var room in grid.Rooms) MaterializeAround(room.Min, room.Max);
+            foreach (var stash in grid.Layout.Stashes) if (stash.Hollow) MaterializeAround(stash.Min, stash.Max);
             foreach (var (min, max) in grid.LabBounds()) MaterializeAround(min, max);
         }
 

@@ -25,6 +25,9 @@ namespace SomethingDownThere.Tests
             state.InventoryLevel = 3; state.InventoryCapacity = 20;
             state.FuelLevel = 4; state.BatteryCapacity = 300;
             state.Terrain = grid.Capture();
+            // Stash chests keep their pose, fall and opened lid (106).
+            state.Chests = new[] { new ChestSnapshot { Position = new Vector3(1.5f, 2.2f, 1.1f), Rotation = Quaternion.Euler(0, 37, 0) },
+                new ChestSnapshot { Position = new Vector3(2.5f, 1.9f, 3.1f), Rotation = Quaternion.Euler(4, 210, -2), Released = true, Opened = true } };
             using var memory = new MemoryStream();
             WorldSaveCodec.Write(memory, state);
             memory.Position = 0;
@@ -376,6 +379,19 @@ namespace SomethingDownThere.Tests
             Assert.That(actual.Inventory.Select(i => (i.Id, i.Name, i.Value)), Is.EqualTo(expected.Inventory.Select(i => (i.Id, i.Name, i.Value))));
             Assert.That(actual.Finds.Select(f => (f.ContentId, f.Item.Id, f.Collected, f.Position, f.Rotation, f.Scale, f.PhysicsReleased)),
                 Is.EqualTo(expected.Finds.Select(f => (f.ContentId, f.Item.Id, f.Collected, f.Position, f.Rotation, f.Scale, f.PhysicsReleased))));
+            Assert.That(actual.Chests.Select(c => (c.Position, c.Rotation, c.Released, c.Opened)),
+                Is.EqualTo(expected.Chests.Select(c => (c.Position, c.Rotation, c.Released, c.Opened))));
+        }
+
+        [Test]
+        public void ChestRecordsAreBoundedAndPlaced()
+        {
+            var state = Snapshot(1);
+            state.Chests = new[] { new ChestSnapshot { Position = new Vector3(float.NaN, 0, 0), Rotation = Quaternion.identity } };
+            Assert.Throws<InvalidDataException>(() => WorldSaveCodec.Write(new MemoryStream(), state));
+            state.Chests = Enumerable.Range(0, DiscoveryField.MaximumChests + 1)
+                .Select(i => new ChestSnapshot { Position = Vector3.one * i, Rotation = Quaternion.identity }).ToArray();
+            Assert.Throws<InvalidDataException>(() => WorldSaveCodec.Write(new MemoryStream(), state));
         }
 
         [TestCase(float.NaN)]

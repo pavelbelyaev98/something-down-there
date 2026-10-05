@@ -9,9 +9,13 @@ namespace SomethingDownThere
     public static class SiteLayout
     {
         public const float CellSize = 0.125f;
-        // The site currently holds one plain ground (soil) while the user redesigns the grounds one
-        // by one in the Ground Lab; the layered generator (TerrainGround) stays for their return.
-        public static bool LayeredGround => false;
+        // Grounds return to the site one at a time as the user redesigns them in the Ground Lab: soil
+        // everywhere, plus backfill pits in the recent fill (106). The rest of the layered generator
+        // (TerrainGround) waits for its turn.
+        public const TerrainGround.Features Ground = TerrainGround.Features.Pits;
+        // Other grids (fixtures, benchmarks, test scenes) stay plain soil.
+        public static TerrainGround.Features GroundFor(Vector3Int size, float cellSize)
+            => size == Size && Mathf.Approximately(cellSize, CellSize) ? Ground : TerrainGround.Features.None;
         public const int DepthCells = 1200;
         // East-west is wider than north-south; the grid stays inside the save sample budget.
         public const int WidthCells = 288;

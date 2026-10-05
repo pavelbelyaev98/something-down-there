@@ -84,7 +84,10 @@ namespace SomethingDownThere
                 throw new ArgumentOutOfRangeException(nameof(size), "Terrain exceeds the supported sample budget.");
         }
 
-        public ExcavationGrid(Vector3Int size, float cellSize, int? materialSeed = null, Vector4[] oddSpots = null)
+        // features: what the seeded ground holds (TerrainGround.Features); stashHollow: the chest's hollow in its
+        // own frame, carved as seeded air in every stash (size zero carves none).
+        public ExcavationGrid(Vector3Int size, float cellSize, int? materialSeed = null, Vector4[] oddSpots = null,
+            TerrainGround.Features features = TerrainGround.Features.All, Bounds stashHollow = default)
         {
             ValidateDimensions(size, cellSize);
             Size = size;
@@ -93,9 +96,10 @@ namespace SomethingDownThere
             strideY = size.x + 1;
             strideZ = strideY * (size.y + 1);
             density = new PagedDensity(strideZ * (size.z + 1));
-            materials = materialSeed.HasValue ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value, oddSpots)
+            bool seeded = materialSeed.HasValue && features != TerrainGround.Features.None;
+            materials = seeded ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value, oddSpots, features)
                 : TerrainMaterialSnapshot.Uniform(density.Length);
-            if (materialSeed.HasValue) Layout = TerrainGround.Layout(size, cellSize, materialSeed.Value, oddSpots);
+            if (seeded) Layout = TerrainGround.Layout(size, cellSize, materialSeed.Value, oddSpots, features, stashHollow);
             // Reserve the support-search workspace during loading, not on the
             // first live cut (the full-depth site's buffer is tens of megabytes).
             supportState = new byte[density.Length];
@@ -126,6 +130,7 @@ namespace SomethingDownThere
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
             foreach (var room in Layout.Rooms) CarveRoom(room);
+            foreach (var stash in Layout.Stashes) if (stash.Hollow) CarveHollow(stash);
             if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
@@ -199,6 +204,26 @@ namespace SomethingDownThere
             {
                 var local = Unity.Mathematics.math.mul(room.ToLocal, new Unity.Mathematics.float3(x, y, z) * CellSize - room.Centre) - room.AirCentre;
                 var d = Unity.Mathematics.math.abs(local) - room.AirHalf;
+                float outside = Unity.Mathematics.math.length(Unity.Mathematics.math.max(d, 0))
+                    + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                if (outside >= band) continue;
+                int index = x + y * strideY + z * strideZ;
+                density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
+            }
+        }
+
+        // A stash chest's hollow: a smooth signed-distance box in the chest's frame. It reaches into the chest's
+        // walls, floor and lid, so its soil faces stay hidden inside the wood.
+        private void CarveHollow(TerrainGround.Stash stash)
+        {
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)stash.Min / CellSize) - Vector3Int.one);
+            Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)stash.Max / CellSize) + Vector3Int.one);
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+            {
+                var local = Unity.Mathematics.math.mul(stash.ToLocal, new Unity.Mathematics.float3(x, y, z) * CellSize - stash.Centre) - stash.HollowCentre;
+                var d = Unity.Mathematics.math.abs(local) - stash.HollowHalf;
                 float outside = Unity.Mathematics.math.length(Unity.Mathematics.math.max(d, 0))
                     + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
                 if (outside >= band) continue;

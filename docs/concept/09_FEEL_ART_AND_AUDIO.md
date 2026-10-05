@@ -161,4 +161,4 @@ the way.
 
 The game should naturally produce absurd, striking screenshots: a ridiculous machine silhouetted in
 a deep hole, a gramophone half-buried in pale sediment, a car mid-yank on a cable, a warm lamp pool
-in a dim ancient zone, the first lamp in a sealed cellar, a freshly cleaned unique on its shelf. Photo mode (pause-only, HUD hidden) exists for exactly these moments.
+in a dim ancient zone, the first lamp in a sealed room, a freshly cleaned unique on its shelf. Photo mode (pause-only, HUD hidden) exists for exactly these moments.

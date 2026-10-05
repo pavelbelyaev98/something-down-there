@@ -161,12 +161,13 @@ namespace SomethingDownThere.Tests
         {
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
-            // A deep volume only materializes the top layer that owns the ground plane, plus the
-            // sealed rooms' chunks (when the layered ground is on) so their far walls exist the
-            // moment the player breaks in.
+            // A deep volume only materializes the top layer that owns the ground plane, plus seeded air's
+            // chunks (sealed rooms when the site holds places, stash chests' hollows) so it exists the
+            // moment the player reaches it.
             var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
             Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
-            Assert.That(terrain.Rooms.Length > 0, Is.EqualTo(SiteLayout.LayeredGround));
+            Assert.That(terrain.Rooms.Length > 0, Is.EqualTo((SiteLayout.Ground & TerrainGround.Features.Places) != 0));
+            var hollows = terrain.GroundLayout.Stashes.Where(s => s.Hollow).ToArray();
             int surfaceLayer = (terrain.Dimensions.y - 1) / 16, deep = 0;
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
             {
@@ -174,10 +175,11 @@ namespace SomethingDownThere.Tests
                 if (key[1] == surfaceLayer) continue;
                 deep++;
                 var centre = (new Vector3(key[0], key[1], key[2]) + Vector3.one * .5f) * SiteLayout.ChunkSize * SiteLayout.CellSize;
-                Assert.That(terrain.Rooms.Any(room => Vector3.Distance(centre, room.ToGrid(room.AirCentre)) < 8), Is.True,
-                    "Below the surface only sealed rooms are materialized.");
+                Assert.That(terrain.Rooms.Any(room => Vector3.Distance(centre, room.ToGrid(room.AirCentre)) < 8)
+                    || hollows.Any(stash => Vector3.Distance(centre, (Vector3)stash.Centre) < 4), Is.True,
+                    "Below the surface only seeded air is materialized.");
             }
-            Assert.That(deep > 0, Is.EqualTo(terrain.Rooms.Length > 0));
+            Assert.That(deep > 0, Is.EqualTo(terrain.Rooms.Length > 0 || hollows.Length > 0));
             Assert.That(terrain.ChunkCount, Is.EqualTo(chunks.x * chunks.z + deep));
             Assert.That(terrain.Revision, Is.Zero);
             foreach (Vector3 origin in new[] { new Vector3(-7, 2, -7), new Vector3(0, 2, 0), new Vector3(7, 2, 7) })
@@ -843,11 +845,11 @@ namespace SomethingDownThere.Tests
 
         // Concept 03 §5 / 09 §4: the seeded room is closed and dark; digging through its wall opens it
         // once, and dust drifts in.
-        [Explicit("The site holds one plain ground for now; sealed rooms return with SiteLayout.LayeredGround.")]
+        [Explicit("Sealed rooms return to the site with its places (SiteLayout.Ground).")]
         [UnityTest]
         public IEnumerator BreakingThroughASealedRoomWallOpensItOnce()
         {
-            if (!SiteLayout.LayeredGround) Assert.Ignore("Sealed rooms return with the layered ground.");
+            if ((SiteLayout.Ground & TerrainGround.Features.Places) == 0) Assert.Ignore("Sealed rooms return with the site's places.");
             var room = terrain.Rooms[0];
             var grid = (ExcavationGrid)typeof(TerrainVolume).GetField("grid",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(terrain);

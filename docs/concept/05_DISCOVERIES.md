@@ -22,7 +22,7 @@ unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get thei
 ### Where finds sit
 
 - **Host ground:** each find type prefers the ground it belongs in: heavy coins, tokens and metal in
-  gravel, bones and organic things in clay, ore in rock veins, waterworks and village items in and
+  gravel, bones and organic things in clay, ore in rock veins, waterworks items in and
   around concrete, rubbish in soil. It is a soft bias with scatter, and prices stay fixed per type
   ([host ground](03_WORLD_AND_SITE.md#host-ground-each-ground-holds-its-own-kind-of-find)).
 - **Tells point toward finds:** cracks, gravel channels and backfill pits lead somewhere, though not
@@ -31,6 +31,9 @@ unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get thei
   with their own eyes ([odd spots](03_WORLD_AND_SITE.md#odd-spots-for-special-finds)).
 - **Sealed rooms** hold finds half-sunk in their silt floor, never lying fully exposed
   ([sealed rooms](03_WORLD_AND_SITE.md#sealed-rooms)).
+- **Buried on purpose:** a backfill pit holds what someone buried, a stash in a chest or rubbish
+  (junk such as old TVs, found only there and priced as a reward for following the pit); what sank
+  or was lost lies scattered ([disturbed ground](03_WORLD_AND_SITE.md#disturbed-ground-backfill)).
 
 **Constant rate, rising value.** A metre of descent keeps meeting finds at a roughly constant rate
 to the bottom — depth changes *what* you meet, never whether digging pays. Each find type has a
@@ -152,12 +155,17 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 
 **Moving discoveries**: objects, including uniques waiting for the crane, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
 
-**Finds inside finds**: occasional authored containers hold another discovery. Dig out a
-suitcase, expose and open it with the existing tool, then see coins or an odd keepsake inside.
+**Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
+pit to the old chest at its bottom, clear the space its lid swings through, strike its rusted lock
+with the tool, and the lid opens on what it holds (a prospector's few pieces of silver and gold).
 The outside gives a clue; the contents deliver a second reveal and a small piece of buried history.
 
 - Use a few selected objects, not every box or appliance. Contents fit the container and its scene.
-- Opening happens in the world with the same tool; no lockpicking, extra keys or inventory search.
+- Opening happens in the world with the same tool; no lockpicking, extra keys or inventory search: a
+  lock buried for decades is rusted shut, and it breaks. A key far from its lock is a blind search,
+  and one beside it adds nothing.
+- A container too big for the bag opens where it lies and stays there, solid, after it is emptied;
+  it is never craned or sold.
 - Contents become visible before normal collection. Ordinary valuables sell; special exhibits keep
  their existing display/story role. The container's own collection must not hide or lose its contents.
 - Contents belong to the save's finite find population; opening or reloading never rerolls or

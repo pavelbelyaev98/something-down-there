@@ -40,8 +40,8 @@ return is as valid as pushing for one more find.
 
 | Phase | Zone | Experience |
 |---|---|---|
-| Hour 1 | **Recent fill** (soil) | Slow shovel, believable finds, first purchases, the first rubbish pit and gravel channel teach that easier ground means something |
-| Hours 2–3 | **Old sediment** (clay) | Real capability jumps, clusters, bones in clay basins, a drowned-village structure and its sealed cellar, first "too modern for this depth" oddity |
+| Hour 1 | **Recent fill** (soil) | Slow shovel, believable finds, first purchases, the first buried stash (a chest a few metres under the plot centre) and gravel channel teach that easier ground means something |
+| Hours 2–3 | **Old sediment** (clay) | Real capability jumps, clusters, bones in clay basins, first "too modern for this depth" oddity |
 | Hours 3–4 | **Deep clay/stone** (rock) | The drill arrives around here; cracks and ore veins, C4 on cracked concrete, lamps, connected major parts; growing power exceeds the tougher ground and the zone never feels like a restart |
 | Hours 4–5 | **Ancient constructed** | Large, fast excavation; the final object reveals what the major finds were for; ending and Continue Playing |
 
