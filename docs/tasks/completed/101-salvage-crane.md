@@ -510,3 +510,8 @@ down your own route, drags the computer out through the dirt, and the crane sets
   jittered again. Measured in the Ground Lab shafts: rider and load vertical speed within about 0.1 m/s while
   lifting, carrying and setting down; a 5 t load driven into a standing player pushes them at a constant gap
   without slowing. On the lab computer the rider stands next to the hook, which bumps them when it swings.
+
+## Iteration: shaft dust kept (user, 2026-10-05)
+
+- Verdict: keep the dust that hangs in the passage after breaks, on by default. The admin **Shaft dust** A/B
+  went (`FpsPlayer.ShaftDust`); the crane always adds breaks to the dust load.

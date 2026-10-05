@@ -155,7 +155,7 @@ have their own surprises"; this is the same pull.
 Six ground types, each different in **how it digs, what it hides and how it points somewhere**.
 Hardness shows mostly as **bite size** and only a little as rhythm: harder ground takes smaller,
 shallower bites at a slightly slower stroke (softer ground and tells take bigger ones). Strokes throw
-no particles (user, 2026-09-30); the ground's own look and the cut's shape carry it. A player who hits
+no particles (user, 2026-09-30, kept for the drill 2026-10-05); the ground's own look and the cut's shape carry it. A player who hits
 rock sees the bites shrink instead of feeling the machine stall.
 
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |

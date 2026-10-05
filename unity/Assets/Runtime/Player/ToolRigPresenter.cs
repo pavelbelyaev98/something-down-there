@@ -27,8 +27,8 @@ namespace SomethingDownThere
         // Rising from the bottom edge right of centre with the blade face turned to the view; only the head
         // and what is bolted behind it show. Visible parts stay about 0.3 m from the eye.
         private static readonly Vector3 RestPosition = new Vector3(.14f, -.26f, -.05f), RestEuler = new Vector3(-36f, -11f, 4f);
-        // The shovel at 75% of its first size and the drill at the player's DrillSize (admin), scaled about the socket
-        // (Socket, model metres), which keeps its place on screen.
+        // The shovel at 75% of its first size and the drill at the player's Size dial (admin), scaled about the socket
+        // (Socket, model metres), which keeps its place on screen; the Position dial then moves the drill along the tool.
         private const float ModelScale = .3f, ShovelScale = .75f, Socket = .9f;
         // The drill (the purchased jackhammer) sits further forward along the tool (model metres) so its body shows in
         // the lower right, and tips down so its head points below the crosshair.
@@ -130,11 +130,12 @@ namespace SomethingDownThere
             offset += new Vector3(.03f, -.2f, -.02f) * away;
             turn.x += 20f * away;
 
-            float scale = ModelScale * (drill ? player.DrillSize : ShovelScale);
+            float scale = ModelScale * (drill ? player.DrillLook(FpsPlayer.DrillDial.Size) : ShovelScale);
             var restPose = Quaternion.Euler(restEuler);
             var pose = Quaternion.Euler(restEuler + turn);
             // A stroke turns the tool about its own pivot along it.
-            var anchor = Vector3.forward * (Socket * (ModelScale - scale)) + (drill ? DrillShift * scale : Vector3.zero);
+            var anchor = Vector3.forward * (Socket * (ModelScale - scale))
+                + (drill ? DrillShift * scale + Vector3.forward * player.DrillLook(FpsPlayer.DrillDial.Position) : Vector3.zero);
             var pivot = Vector3.forward * ((drill ? DrillPivot : ScoopPivot) * scale);
             model.localPosition = RestPosition + restPose * anchor + restPose * pivot - pose * pivot + offset;
             model.localRotation = pose;

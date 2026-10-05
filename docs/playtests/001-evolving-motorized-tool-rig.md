@@ -7,8 +7,12 @@ to preview every level.
 - Dig soil, gravel, clay, rock and concrete with the shovel, then with the drill (level 7+).
 - Hold a find, place a lamp, mark a unique for recovery: the tool should get out of the way.
 - Change the field of view in Settings; crouch into a tight tunnel and dig against its walls.
-- At a drill level, Developer admin (Ctrl+Shift+F10) → **Drill size** cycles the drill from 90% (the
-  current size) to 200%; dig with a few sizes.
+- At a drill level, Developer admin (Ctrl+Shift+F10): **Drill position** starts at -6 cm and goes on to
+  -12 cm a centimetre at a time (then -5 to 0); **Drill size** starts at 100% and steps 105, 110, 115, 120,
+  130, 140, 150, 175, 200, 90 and 95%.
+- Hold the drill on one spot for half a second, then sweep: the hole's middle should come to a deep
+  point while shovel scoops stay flat. Drill at a slant: the hole should go in the way you look, not
+  straight down. Dig into a thin bridge or overhang from below: it should give.
 
 ## Good feels like
 - One shovel at every shovel level and the hand mining drill from level 7, nothing bolted on.
@@ -19,6 +23,6 @@ to preview every level.
   what you are digging, and never sticks through a wall.
 
 ## Tell the agent
-- Which **Drill size** wins, and how the drill sits on screen at it (body visible, head clear of the
-  crosshair).
+- The winning **Drill position** and **Drill size**, and how the drill sits on screen.
+- Is the point pointed enough, too much?
 - Size and placement, motion, and clipping.

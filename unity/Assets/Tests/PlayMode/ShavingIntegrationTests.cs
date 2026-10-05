@@ -70,11 +70,14 @@ namespace SomethingDownThere.Tests
             terrain.Changed += _ => notifications++;
             for (int i = 0; i < 12; i++)
             {
-                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var before), Is.True);
+                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var before), Is.True, $"Target before cut {i} (last at {previousY:F3})");
                 Assert.That(player.TryDig(), Is.True, "Shave " + i);
-                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var after), Is.True);
+                Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var after), Is.True, $"Target after cut {i} (before at {before.point.y:F3})");
                 Assert.That(after.point.y, Is.LessThan(before.point.y - .001f));
-                Assert.That(before.point.y - after.point.y, Is.LessThan(player.EffectiveShovel.Radius * .2f), "Drilling removes shallow layers, not whole scoops.");
+                // A layer and a step of the drill's point (in the softest ground), never a whole scoop (about 0.75 R).
+                Assert.That(before.point.y - after.point.y, Is.LessThan(player.EffectiveShovel.Radius * 1.4f
+                    * (EquipmentProgression.ShavingDepthRatio + EquipmentProgression.DrillPointDepthRatio * EquipmentProgression.DrillPointStep)),
+                    "Drilling removes shallow layers, not whole scoops.");
                 timings.Add(terrain.LastDigMilliseconds);
                 Assert.That(terrain.TryShave(before, player.EffectiveShovel.Radius, .03f), Is.False, "Reject stale contact.");
                 previousY = after.point.y;
@@ -87,7 +90,7 @@ namespace SomethingDownThere.Tests
             var saved = terrain.Capture();
             terrain.ResetExcavation();
             yield return terrain.Restore(saved, terrain.ExcavationSeed);
-            Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var restored), Is.True);
+            Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var restored), Is.True, "Target after restore");
             Assert.That(restored.point.y, Is.EqualTo(previousY).Within(.001f));
             TestContext.WriteLine($"Shaving: mean {timings.Average():F2} ms, max {timings.Max():F2} ms per cut.");
         }
@@ -159,9 +162,25 @@ namespace SomethingDownThere.Tests
             Assert.That(player.HoverOnRelease, Is.False);
         }
 
+        // Ground thinner than the contact search (an overhang about a cell thick) still takes a drill cut (user,
+        // 2026-10-05: a thin bridge could not be dug).
+        [Test]
+        public void DrillCutsThinOverhangs()
+        {
+            player.SelectAdminLevel(EquipmentProgression.DrillLevel);
+            // A cavity under the surface leaves a roof about one cell thick.
+            Assert.That(terrain.ClearLoadSweep(new Vector3(0, -.6f, 0), new Vector3(0, -.6f, .01f), Quaternion.identity, new Vector3(.8f, .45f, .8f)), Is.True);
+            Physics.SyncTransforms();
+            Assert.That(Physics.Raycast(new Vector3(0, -.8f, 0), Vector3.up, out var hit, 1f), Is.True);
+            Assert.That(hit.point.y, Is.GreaterThan(-.25f), "The roof is thin.");
+            Assert.That(terrain.TryToolCut(hit, player.EffectiveShovel.Radius, true, Vector3.up), Is.True);
+        }
+
         [TestCase(1)] [TestCase(7)]
         public void HeldCadenceIsStableAcrossFrameRatesAndDoesNotBankIdleTime(int level)
         {
+            // Cadence alone: a shovel's cut otherwise lands at its scoop, after the press (TerrainIntegrationTests).
+            player.Tuning.CutAtScoop = false;
             int previousCount = -1;
             foreach (int fps in new[] { 30, 60, 144 })
             {

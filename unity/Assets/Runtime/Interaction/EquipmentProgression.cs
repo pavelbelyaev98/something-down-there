@@ -33,6 +33,11 @@ namespace SomethingDownThere
         public const float FuelPerCredit = 100f;
         public const float ShavingIntervalScale = 0.1f;
         public const float ShavingDepthRatio = 0.12f;
+        // A drill bite's pointed middle (user, 2026-10-05; the shovel keeps a flat floor): its floor dips into a cone
+        // DrillPointDepthRatio of the bite radius deep at the axis, DrillPointRadiusRatio of it wide. It bores in
+        // DrillPointStep of its depth a cut, so a held drill points its hole within a few cuts while each cut stays
+        // well short of a scoop.
+        public const float DrillPointDepthRatio = 1.2f, DrillPointRadiusRatio = 0.6f, DrillPointStep = 0.25f;
         // Work lamps are not a track: New Game gives a few, every further lamp is bought once at a flat
         // price and kept for good. The cap bounds saves; only the nearest lamps shine at once.
         public const int StarterLamps = 4, MaximumLamps = 200, LampPrice = 20;

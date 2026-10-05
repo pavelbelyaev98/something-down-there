@@ -266,3 +266,75 @@ pushed the motors off the bottom of the screen and left only the bit.
   The shovel pack's demo scene, prefab and Built-in materials, which nothing referenced, went too; the shovel
   model's material slot had pointed at the demo material (the validator stopped the build), so Configure Tool Rig
   now points it at `WesternShovel.mat`.
+
+## Iteration: drill base, neck and position (2026-10-05)
+
+- Asked for: a larger base where the head attaches, no shaft between base and head, and a forward/back
+  adjustment. Developer admin gained **Drill base**, **Drill neck** and **Drill position** beside **Drill size**
+  (`FpsPlayer.DrillDial`, session-only; each dial's first step is the default until playtest 001 names winners).
+- Neck: the model's shaft (2.4 cm radius, about 12 cm from the body's front face to the head's bell) is split off
+  the body mesh by Configure Tool Rig (`MiningDrillBody.asset`, `MiningDrillNeck.asset`); "none" hides it and
+  moves the head back the measured seat so its bell sits on the body's front face.
+- Base: everything but the head sits in a body group pivoted at that face, so the base grows around the head's
+  seat while the screw head keeps its size; with the shaft kept, the head rides the end of the grown shaft.
+- Rejected: enlarging only a copy of the orange collar (radially, or stretched forward). From the player's eye the
+  joint is seen from behind, so the body's front plate hides the collar at any size, and stretching its 6 mm
+  band forward exposes its dark inner ring as a new neck.
+- Position moves the drill along the tool (-6 to +6 cm); at +6 its back end comes into view.
+
+## Iteration: no neck, drill point and debris (user, 2026-10-05)
+
+- Verdicts: no neck and base 100% won, so those dials went. Configure Tool Rig saves the body without its shaft
+  (`MiningDrillBody.asset`) and seats the head on the body's front face; the presenter no longer shapes the drill.
+  Position liked at -6 cm and asked for -7 and -8: the dial now starts at -6 (then -7, -8, -5, -4, -2, 0).
+- The drill cut gains a pointed middle (`EquipmentProgression.DrillPoint*`: a cone 0.4 of the bite radius deep,
+  0.6 wide; `ExcavationGrid.RemoveShave` `point`). A cone that simply deepens each cut would advance by its
+  apex every tick when the aim settles in it (boring several times faster), so the floor is measured from the
+  ground on a ring around the contact (`GroundAbove`): the point keeps its depth below the floor and a held
+  drill bores at the flat cut's rate (TerrainMaterialTests). The ring lies between the point and the bite's edge
+  in the contact ground's own footprint: a fixed 0.9 R ring fell outside the narrower rock, concrete and clay bites,
+  lifted the floor off the ground and cut nothing. The point bores in a twentieth of its depth a cut
+  (`DrillPointStep`), so every cut stays a shallow layer under 0.2 R even in backfill (ShavingIntegrationTests;
+  a tenth reached 0.21 R there) and a held drill reaches the full point in about twenty cuts.
+- ShavingIntegrationTests' held-cadence test now switches the scoop timing off like the other cadence tests
+  (one 30 s tick cannot land a shovel cut that waits for its scoop).
+- Drill cuts throw crumbs and a thin dust (`TerrainVolume.DrillDebris`), coloured by the ground; the crane's
+  particle setup and colours moved to the shared `GroundDebris`. Shovel strokes still throw nothing.
+
+## Iteration: no particles, a deeper point, size 100% (user, 2026-10-05)
+
+- Verdict: drill particles removed (`TerrainVolume.DrillDebris` and the shared `GroundDebris` went; the crane keeps
+  its own debris code). Strokes throw nothing again.
+- "Nothing pointy": the point (0.4 R deep over 0.6 R, a twentieth a cut) was one or two voxels and took about
+  twenty cuts on one spot, so play never showed it. A 0.65 R by 0.8 R cone read as a smooth bowl from the eye.
+  Now 1 R deep over 0.6 R (59 degrees), a quarter a cut: within four cuts the hole's floor drops ~45 cm to a
+  point (lab cross-section at level 9). The shallow-layer test now allows a layer and a step of the point (still
+  well short of a 0.75 R scoop), and the cut's bounds cover a point deeper than the bite radius.
+- Inside a steep point the hit normal is a cone wall's, so cuts tilted and the hole went lopsided; a contact
+  within a bite of the last drill cut now keeps that cut's axis (`TerrainVolume.drillAxis`).
+- With the deep point, the floor search's 6 bisection steps (3% of the radius) repeated their error every cut: soil
+  bored 14% faster, backfill 9% slower and fell under its 1.3x tell. Twelve steps make each cut after the point's
+  first few remove exactly a flat cut's volume.
+- Placement was unchanged (the -6 cm step is the same offset as before); **Drill size** now starts at 100%, the
+  purchased model's size (90% had been the default since the drill went in).
+
+## Iteration: more drill steps, thin overhangs (user, 2026-10-05)
+
+- Liked the look; asked for -9 cm and more sizes: **Drill position** now runs -6 (default) to -12 a centimetre at
+  a time, then -5 to 0; **Drill size** 100% (default), 105-150% in small steps, 175, 200, 90 and 95%.
+- A thin soil bridge overhead could not be dug: the drill's contact refinement wanted solid ground two cells behind
+  the face, which a bridge under 25 cm has not. It now steps in a quarter cell at a time until solid
+  (`TerrainVolume.RefineContact`; ShavingIntegrationTests.DrillCutsThinOverhangs).
+
+## Iteration: the drill bores along the aim (user, 2026-10-05)
+
+- Feedback: drilling ignored the player's view and always bored straight down (square to the face hit, and the
+  held-axis rule above locked that in). `FpsPlayer` now passes its aim to `TerrainVolume.TryToolCut`, and a drill
+  cut's axis is that aim (zero falls back to the face's normal); the held-axis rule went, the aim being steady.
+- A bite along a slanted axis would sweep up the ground beside it (a slab up to a radius thick), so a drill
+  bite's cap across the axis is one layer instead of a radius. Lab, level 9, 35 degree look: 15 cuts bore 1.66 m
+  along the aim (1.35 m out, 0.95 m down), only 0.69 m straight below the first contact.
+- The sharp point bored a needle of air one sample wide at its tip; its mesh collapsed and a ray straight down it
+  (the aim that bored it) fell through after ~11 held cuts, losing the target (ShavingIntegrationTests). The tip is
+  now rounded over 1.5 cells and the point deepened to 1.2 R to keep its look (lab: 24 straight cuts at three spots,
+  no misses; the floor still drops ~45 cm to the point after six cuts). RemoveShave accepts points up to 2 R.

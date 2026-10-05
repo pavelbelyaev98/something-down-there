@@ -24,6 +24,9 @@ namespace SomethingDownThere.Editor
         // The shovel's model stands on its blade's tip (y = 0) with the grip up: its tip sits at z = ShovelTip in the rig.
         // The drill runs along its model's +x with its head in front: the head's point sits at z = DrillTip.
         private const float ShovelTip = 1.245f, DrillTip = 1.3f;
+        // The drill's shaft runs from the body's front face to the head's bell within NeckRadius of the axis; the bell
+        // reaches beyond BellRadius (model metres).
+        private const float NeckRadius = .03f, BellRadius = .04f;
 
         [MenuItem("Tools/Something Down There/Configure Tool Rig")]
         public static void Configure()
@@ -80,13 +83,22 @@ namespace SomethingDownThere.Editor
 
         // The drill's meshes copied out of its model (so the head can sit on its own pivot) with their placements,
         // its +x (the head's way) along the rig's +z and its axis on the rig's: the head turns about its pivot's forward.
+        // The model's shaft between body and head is dropped and the head sits on the body's front face, its bell against
+        // it (user, 2026-10-05: no neck).
         private static void PlaceDrill(Transform model)
         {
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(DrillVendor + "/Fbx/Fbx.fbx");
             if (source == null) throw new InvalidOperationException("Missing the purchased Hand Mining Drill in " + DrillVendor + ".");
             var filters = source.GetComponentsInChildren<MeshFilter>(true);
             var headFilter = filters.Single(f => f.name.Contains("Head"));
+            var bodyFilter = filters.Single(f => f != headFilter && f.name.Contains("Jackhammer"));
             var head = Bounds(headFilter);
+            var axis = new Vector2(head.center.y, head.center.z);
+            float Radius(Vector3 p) => (new Vector2(p.y, p.z) - axis).magnitude;
+            // The body's front face (everything wider than the shaft ends there) and the head's bell, its wide back.
+            float front = Points(bodyFilter).Where(p => Radius(p) > NeckRadius).Max(p => p.x);
+            float bell = Points(headFilter).Where(p => Radius(p) > BellRadius).Min(p => p.x);
+            var bodyMesh = WithoutNeck(bodyFilter, p => p.x > front - .001f && Radius(p) < NeckRadius);
             // Built at the origin in the model's own space, then placed.
             var drill = new GameObject(Drill).transform;
             var pivot = new GameObject(DrillHead).transform;
@@ -96,18 +108,87 @@ namespace SomethingDownThere.Editor
             var parts = DrillMaterial("Parts");
             foreach (var filter in filters)
             {
-                var part = new GameObject(filter.name.Trim()).transform;
-                part.SetParent(filter == headFilter ? pivot : drill, false);
-                part.SetPositionAndRotation(filter.transform.position, filter.transform.rotation);
-                part.localScale = filter.transform.lossyScale;
-                part.gameObject.AddComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
                 bool isPart = filter.name.Contains("Parts") || filter.name.Contains("fan");
-                part.gameObject.AddComponent<MeshRenderer>().sharedMaterial = isPart ? parts : body;
+                var mesh = filter == bodyFilter ? bodyMesh : filter.sharedMesh;
+                AddPart(filter.name.Trim(), filter == headFilter ? pivot : drill, filter.transform, mesh, isPart ? parts : body);
             }
+            // Back along its axis until the bell meets the body's front.
+            pivot.localPosition += Vector3.right * (front - bell);
             // Its model's (x, y, z) become the rig's (-z, y, x) shifted so the axis runs along z through the origin and
-            // the head's point ends at DrillTip.
+            // the body stays where it was with the shaft (DrillTip placed the head's point there).
             drill.SetParent(model, false);
             drill.SetLocalPositionAndRotation(new Vector3(head.center.z, -head.center.y, DrillTip - head.max.x), Quaternion.Euler(0, -90, 0));
+        }
+
+        // A part at its place in the model (the rig's drill is still at the origin while it is built).
+        private static void AddPart(string name, Transform parent, Transform place, Mesh mesh, Material material)
+        {
+            var part = new GameObject(name).transform;
+            part.SetParent(parent, false);
+            part.SetPositionAndRotation(place.position, place.rotation);
+            part.localScale = place.lossyScale;
+            part.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+            part.gameObject.AddComponent<MeshRenderer>().sharedMaterial = material;
+        }
+
+        // A mesh's vertices in its model's space.
+        private static IEnumerable<Vector3> Points(MeshFilter filter) => filter.sharedMesh.vertices.Select(v => filter.transform.TransformPoint(v));
+
+        // The body without its shaft (the triangles whose corners all lie in it), saved beside the drill's materials.
+        private static Mesh WithoutNeck(MeshFilter body, Func<Vector3, bool> inNeck)
+        {
+            var points = Points(body).ToArray();
+            var triangles = body.sharedMesh.triangles;
+            var kept = new List<int>();
+            for (int t = 0; t < triangles.Length; t += 3)
+                if (!inNeck(points[triangles[t]]) || !inNeck(points[triangles[t + 1]]) || !inNeck(points[triangles[t + 2]]))
+                    kept.AddRange(new[] { triangles[t], triangles[t + 1], triangles[t + 2] });
+            if (kept.Count == triangles.Length) throw new InvalidOperationException("The drill's shaft was not found; check NeckRadius.");
+            return SaveMesh(Subset(body.sharedMesh, kept, "MiningDrillBody"));
+        }
+
+        // The source's vertices that these triangles use, renumbered.
+        private static Mesh Subset(Mesh source, List<int> triangles, string name)
+        {
+            var vertices = source.vertices;
+            var normals = source.normals;
+            var tangents = source.tangents;
+            var uv = source.uv;
+            var index = new Dictionary<int, int>();
+            var v = new List<Vector3>();
+            var n = new List<Vector3>();
+            var tg = new List<Vector4>();
+            var u = new List<Vector2>();
+            var copied = new List<int>(triangles.Count);
+            foreach (int i in triangles)
+            {
+                if (!index.TryGetValue(i, out int j))
+                {
+                    index[i] = j = v.Count;
+                    v.Add(vertices[i]); n.Add(normals[i]); u.Add(uv[i]);
+                    if (tangents.Length > 0) tg.Add(tangents[i]);
+                }
+                copied.Add(j);
+            }
+            var mesh = new Mesh { name = name, indexFormat = v.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
+            mesh.SetVertices(v);
+            mesh.SetNormals(n);
+            mesh.SetUVs(0, u);
+            if (tg.Count > 0) mesh.SetTangents(tg);
+            mesh.SetTriangles(copied, 0);
+            if (tg.Count == 0) mesh.RecalculateTangents();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private static Mesh SaveMesh(Mesh mesh)
+        {
+            string path = DrillFolder + "/" + mesh.name + ".asset";
+            var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (saved == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
+            EditorUtility.CopySerialized(mesh, saved);
+            UnityEngine.Object.DestroyImmediate(mesh);
+            return saved;
         }
 
         // A mesh's bounds in its model's space (the asset's root sits at the origin, unrotated).

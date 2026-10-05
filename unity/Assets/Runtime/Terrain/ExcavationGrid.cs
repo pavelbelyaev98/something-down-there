@@ -339,16 +339,40 @@ namespace SomethingDownThere
             bool adaptMaterials = false)
             => RemoveBrush(center, radius, normal, seed, variation, true, 0, out changed, adaptMaterials);
 
+        // `point`: a drill's pointed middle, that deep at the axis (EquipmentProgression.DrillPoint*); 0 shaves flat.
         public bool RemoveShave(Vector3 surface, float radius, Vector3 normal, float depth, out BoundsInt changed,
-            bool adaptMaterials = false, int seed = 0)
+            bool adaptMaterials = false, int seed = 0, float point = 0)
         {
             changed = default;
-            if (!Finite(depth) || depth <= 0 || depth > radius) return false;
-            return RemoveBrush(surface, radius, normal, seed, 0, false, depth, out changed, adaptMaterials);
+            if (!Finite(depth) || depth <= 0 || depth > radius || !Finite(point) || point < 0 || point > radius * 2) return false;
+            return RemoveBrush(surface, radius, normal, seed, 0, false, depth, out changed, adaptMaterials, point);
+        }
+
+        // How far the ground stands above `center` along `normal` (0 to `reach`), averaged over the ring spanned by the
+        // two axes.
+        private float GroundAbove(Vector3 center, Vector3 normal, Vector3 axisA, Vector3 axisB, float reach)
+        {
+            float sum = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = i * Mathf.PI * .25f;
+                Vector3 at = center + axisA * Mathf.Cos(angle) + axisB * Mathf.Sin(angle);
+                if (Sample(at) <= 0) continue;
+                if (Sample(at + normal * reach) > 0) { sum += reach; continue; }
+                // Fine enough that the floor it finds stays well inside one layer: an error here repeats every cut.
+                float low = 0, high = reach;
+                for (int step = 0; step < 12; step++)
+                {
+                    float middle = (low + high) * .5f;
+                    if (Sample(at + normal * middle) > 0) low = middle; else high = middle;
+                }
+                sum += (low + high) * .5f;
+            }
+            return sum / 8;
         }
 
         private bool RemoveBrush(Vector3 center, float radius, Vector3 normal, int seed, float variation,
-            bool shovel, float shaveDepth, out BoundsInt changed, bool adaptMaterials = false)
+            bool shovel, float shaveDepth, out BoundsInt changed, bool adaptMaterials = false, float pointDepth = 0)
         {
             changed = default;
             BeginRemoval();
@@ -359,7 +383,8 @@ namespace SomethingDownThere
                 || !Finite(normal.sqrMagnitude) || normal.sqrMagnitude < 0.0001f) return false;
             // Covers the bevelled, tapered bite in every orientation, including its
             // outward cap. The density halo must fit too for matching chunk normals.
-            float maximumRadius = radius * (shovel ? 1.8f : 1f);
+            // A drill's point reaches deeper than its radius in soft ground.
+            float maximumRadius = Mathf.Max(radius * (shovel ? 1.8f : 1f), (shaveDepth + pointDepth) * 1.4f);
             float influence = maximumRadius + band;
             Vector3 extent = Extent;
             if (center.x + maximumRadius < 0 || center.y + maximumRadius < 0 || center.z + maximumRadius < 0
@@ -382,6 +407,21 @@ namespace SomethingDownThere
                 tangent = Quaternion.AngleAxis(Next01(ref random) * 360, normal) * tangent;
 
             Vector3 bitangent = Vector3.Cross(normal, tangent);
+            // The point's floor is measured from the ground around the contact: the aim settles in an earlier cut's
+            // point (its deepest spot), and from there the cut takes the next layer instead of sinking the point with
+            // every cut, so a pointed cut digs as fast as a flat one.
+            float lift = 0, pointRadius = radius * EquipmentProgression.DrillPointRadiusRatio;
+            if (pointDepth > 0)
+            {
+                // Sampled on a ring between the point and the bite's edge, in the footprint of the ground at the contact.
+                var ground = adaptMaterials ? MaterialAt(center - normal * CellSize * .5f) : TerrainMaterialId.Soil;
+                var footprint = EquipmentProgression.MaterialResponse(ground);
+                bool round = ground == TerrainMaterialId.Soil || ground == TerrainMaterialId.Backfill;
+                float ring = radius * (1 + EquipmentProgression.DrillPointRadiusRatio) * .5f;
+                lift = GroundAbove(center, normal, tangent * (round ? ring : ring * footprint.Width),
+                    bitangent * (round ? ring : ring * footprint.Length), pointDepth * 1.5f);
+                center += normal * lift;
+            }
             float width = radius * Mathf.Lerp(1.02f, 1.14f, Next01(ref random));
             float length = radius * Mathf.Lerp(0.84f, 0.96f, Next01(ref random));
             float depth = radius * Mathf.Lerp(0.68f, 0.82f, Next01(ref random));
@@ -412,13 +452,14 @@ namespace SomethingDownThere
                 {
                     float height = Vector3.Dot(delta, normal);
                     float radial = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
-                    float side = radial - radius;
+                    float side = radial - radius, spread = radial;
                     float floor = -height - shaveDepth * response.Penetration;
                     // Backfill cuts with soil's rounded footprint, only larger.
                     if (material != TerrainMaterialId.Soil && material != TerrainMaterialId.Backfill)
                     {
                         float u = Vector3.Dot(delta, tangent) / response.Width;
                         float v = Vector3.Dot(delta, bitangent) / response.Length;
+                        spread = Mathf.Sqrt(u * u + v * v);
                         side = material == TerrainMaterialId.Rock
                             ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f))) - radius
                             // Concrete breaks into clean square chips with flat floors.
@@ -437,10 +478,24 @@ namespace SomethingDownThere
                         side += grain * radius * .1f;
                         floor += grain * shaveDepth * .3f;
                     }
+                    // The drill's point: a cone deepest at the axis, harder ground taking a shallower one, as it does
+                    // a shallower layer.
+                    if (pointDepth > 0)
+                    {
+                        // Its tip is rounded over a cell and a half: a sharper one leaves a needle of air one sample
+                        // wide, whose mesh collapses and lets a ray straight down it (the aim that bored it) fall through.
+                        float tip = CellSize * 1.5f, along = spread < tip ? (spread * spread + tip * tip) / (2 * tip) : spread;
+                        floor -= pointDepth * response.Penetration * Mathf.Max(0, 1 - along / pointRadius);
+                        // The point bores in a step a cut: nothing goes more than a layer and a step below the contact.
+                        floor = Mathf.Max(floor, -(height + lift)
+                            - (shaveDepth + pointDepth * EquipmentProgression.DrillPointStep) * response.Penetration);
+                    }
                     float rounding = Mathf.Min(radius * 0.18f, shaveDepth * 0.5f);
                     float join = Mathf.Max(rounding - Mathf.Abs(side - floor), 0) / rounding;
                     cut = Mathf.Max(side, floor) + join * join * rounding * 0.25f;
-                    cut = Mathf.Max(cut, height - radius);
+                    // A drill's axis follows its aim, not the face, so its bite stays a thin layer across that axis
+                    // (otherwise a slanted bite would sweep up the ground beside it).
+                    cut = Mathf.Max(cut, height - (pointDepth > 0 ? shaveDepth * response.Penetration : radius));
                 }
                 else if (shovel)
                 {

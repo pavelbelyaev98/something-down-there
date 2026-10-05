@@ -22,6 +22,7 @@ unity/Assets/TowerCrane/**/*.pdf filter=lfs diff=lfs merge=lfs -text
 unity/Assets/HandMiningDrill/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 art/hand-mining-drill/source/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Content/ToolRig/MiningDrill/*.png filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Content/ToolRig/MiningDrill/*.asset filter=lfs diff=lfs merge=lfs -text
 
 # Purchased Stylized Western Shovel: binary payloads in LFS, as is the project's copy of its metallic map.
 unity/Assets/StylizedShovel/**/*.png filter=lfs diff=lfs merge=lfs -text

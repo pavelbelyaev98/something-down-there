@@ -12,7 +12,7 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
  western round-point shovel (strapped, riveted socket and a T-handle) at three quarters of its first size on
  screen; each stroke pries the soil loose (push in, lever the handle down) and then scoops it, the blade
  lifting clear, and the dirt disappears at the scoop. The drill is a hand mining drill (a jackhammer body with a
- spinning screw head). Per-level visual upgrades wait for the user, and are not added in the meantime.
+ spinning screw head sitting right on it, no shaft between). Per-level visual upgrades wait for the user, and are not added in the meantime.
 - **Power escalation:** The machine grows faster than the ground gets tougher. Small early
  digs become large, fast late excavation. Revisit familiar ground and feel the difference; the
  payoff is what the machine can do, not just how it looks.
@@ -33,7 +33,10 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
 - No mashing, no QTEs, no rhythm inputs, anywhere in the game.
 
 Holding repeats ordinary shovel scoops at the early levels. From tool level seven onward it
-steadily shaves shallow layers as the aim moves across the ground. The visible rig communicates
+steadily shaves shallow layers as the aim moves across the ground. Like a real bit it bores the way
+it is pointed (a slanted look makes a slanted hole) and puts a deep point into the middle of its hole
+within a few cuts, where the shovel's scoops leave a flat floor. The
+point never makes the drill dig faster: it stays a fixed depth below the floor it shaves. The visible rig communicates
 this shovel-to-drill transition: scoops per stroke, then a spinning drill head. Developer admin retains a
 session-only motion comparison; normal play follows the owned level automatically.
 

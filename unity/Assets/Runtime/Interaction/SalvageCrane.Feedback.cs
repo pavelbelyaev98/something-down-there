@@ -8,7 +8,7 @@ namespace SomethingDownThere
     // they land, a spray of fine crumbs that end where they meet the ground, a short dust puff that slows
     // and thins out, and a brief trickle from the broken face. All are coloured by the ground there and lit like it;
     // bigger breaks and a harder-driven machine throw more. Visual only: nothing collides.
-    // A session A/B switch adds dust that hangs in the passage for a few seconds after breaks.
+    // The finest dust hangs in the passage for a few seconds after breaks.
     public sealed partial class SalvageCrane
     {
         [SerializeField] private Material soilChipsMaterial, soilDustMaterial, soilClodsMaterial;
@@ -165,12 +165,9 @@ namespace SomethingDownThere
             var (dark, light) = DebrisColors(terrain.MaterialAt(point - normal * (settings.ContactBreakDepth + terrain.CellSize)));
             // Dust is the same earth, paler and greyer as a fine cloud.
             Color dustColor = Color.Lerp(Color.Lerp(dark, light, .7f), new Color(.5f, .48f, .45f), .35f);
-            if (player.ShaftDust)
-            {
-                shaftDustLevel = Mathf.Min(MaximumShaftDust, shaftDustLevel + .45f * amount);
-                // The finest dust, the part that stays aloft, is paler still.
-                shaftDustColor = Color.Lerp(dustColor, new Color(.72f, .67f, .6f), .4f); shaftDustFloor = job.Progress;
-            }
+            shaftDustLevel = Mathf.Min(MaximumShaftDust, shaftDustLevel + .45f * amount);
+            // The finest dust, the part that stays aloft, is paler still.
+            shaftDustColor = Color.Lerp(dustColor, new Color(.72f, .67f, .6f), .4f); shaftDustFloor = job.Progress;
             Quaternion face = Quaternion.LookRotation(normal);
             Vector3 inherited = LoadBody.linearVelocity * .15f;
             float now = Time.time;
@@ -348,7 +345,7 @@ namespace SomethingDownThere
         {
             if (shaftDustLevel < .02f) { shaftDustLevel = moteDebt = 0; return; }
             shaftDustLevel *= Mathf.Exp(-dt / ShaftDustSeconds);
-            if (!player.ShaftDust || shaftMotes == null || settings.BreakParticleIntensity <= 0) return;
+            if (shaftMotes == null || settings.BreakParticleIntensity <= 0) return;
             moteDebt += shaftDustLevel * MotesPerSecond * settings.BreakParticleIntensity * dt;
             if (moteDebt < 1) return;
             // Only down in the ground, clear of the mouth: out in the open dust blows away at once, and

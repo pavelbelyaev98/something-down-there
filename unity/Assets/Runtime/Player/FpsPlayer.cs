@@ -83,10 +83,8 @@ namespace SomethingDownThere
         private bool adminDetectorOff;
         private bool adminHoverOnRelease;
         private bool adminGroundXray;
-        // Crane effect A/B (101): dust lingering in the shaft after rope breaks (on by default).
-        private bool adminShaftDustOff;
-        // Drill size comparison (playtest 001): the drill's size in first person, picked from AdminDrillSizes.
-        private int adminDrillSize;
+        // Drill look comparison (playtest 001): the step picked on each DrillDial.
+        private readonly int[] adminDrillDials = new int[DrillDialSteps.Length];
         // Ground contact shading (SSAO) strength set from the admin slider for the session.
         private bool adminContactShading;
         // A shovel stroke starts on the press and its cut waits for the scoop (pendingScoop counts down to it; below
@@ -147,16 +145,25 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray
-            || adminShaftDustOff || adminContactShading);
+            || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray || adminContactShading);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
-        // The drill's scale in the tool rig (1 = the purchased model's size); the first is the default.
-        public static readonly float[] AdminDrillSizes = { .9f, 1f, 1.15f, 1.3f, 1.5f, 1.75f, 2f };
-        public float DrillSize => AdminDrillSizes[AdminAvailable ? adminDrillSize : 0];
-        public string AdminDrillSizeLabel => $"{DrillSize * 100f:0}%";
-        public bool ShaftDust => !(AdminAvailable && adminShaftDustOff);
+        // The first-person drill's look (ToolRigPresenter), dialled per session in developer admin; each dial's first
+        // step is the default. Size scales the drill (1 = the purchased model); Position moves it along the tool (metres,
+        // + away from the eye).
+        public enum DrillDial { Size, Position }
+        private static readonly float[][] DrillDialSteps =
+        {
+            new[] { 1f, 1.05f, 1.1f, 1.15f, 1.2f, 1.3f, 1.4f, 1.5f, 1.75f, 2f, .9f, .95f },
+            new[] { -.06f, -.07f, -.08f, -.09f, -.1f, -.11f, -.12f, -.05f, -.04f, -.02f, 0f },
+        };
+        public float DrillLook(DrillDial dial) => DrillDialSteps[(int)dial][AdminAvailable ? adminDrillDials[(int)dial] : 0];
+        public string AdminDrillLabel(DrillDial dial)
+        {
+            float value = DrillLook(dial);
+            return dial == DrillDial.Position ? (value * 100f).ToString("+0;-0;0") + " cm" : $"{value * 100f:0}%";
+        }
         public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
             ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
         public string AdminMotionLabel => (adminShavingOverride.HasValue ? "Override: " : "Automatic: ")
@@ -785,7 +792,7 @@ namespace SomethingDownThere
             if (!PrepareDig(out var hit, out var target, out var material, out float cost)) return false;
             var terrain = target as TerrainVolume;
             bool accepted = terrain != null
-                ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled)
+                ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled, AimRay.direction)
                 : target.TryDig(hit);
             if (!accepted) return false;
             LastDigMaterial = material;
@@ -811,7 +818,6 @@ namespace SomethingDownThere
             adminDetectorOff = false;
             adminHoverOnRelease = false;
             adminGroundXray = false;
-            adminShaftDustOff = false;
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
@@ -856,11 +862,12 @@ namespace SomethingDownThere
             MenuChanged?.Invoke();
         }
 
-        public void CycleAdminDrillSize()
+        public void CycleAdminDrill(DrillDial dial)
         {
             if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminDrillSize = (adminDrillSize + 1) % AdminDrillSizes.Length;
-            ShowFeedback("Drill size " + AdminDrillSizeLabel);
+            int i = (int)dial;
+            adminDrillDials[i] = (adminDrillDials[i] + 1) % DrillDialSteps[i].Length;
+            ShowFeedback("Drill " + dial.ToString().ToLowerInvariant() + " " + AdminDrillLabel(dial));
             MenuChanged?.Invoke();
         }
 
@@ -870,14 +877,6 @@ namespace SomethingDownThere
             adminDetectorOff = !adminDetectorOff;
             Detector?.Reset();
             ShowFeedback(DetectorShown ? "Detector shown" : "Detector off for this session");
-            MenuChanged?.Invoke();
-        }
-
-        public void ToggleAdminShaftDust()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminShaftDustOff = !adminShaftDustOff;
-            ShowFeedback(ShaftDust ? "Shaft dust on" : "Shaft dust off for this session");
             MenuChanged?.Invoke();
         }
 

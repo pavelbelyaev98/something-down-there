@@ -139,7 +139,8 @@ namespace SomethingDownThere.Tests
                     Vector3 top = new Vector3(1.5f, grid.Extent.y, 1.5f);
                     bool cut = scoop
                         ? grid.RemoveScoop(top - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62, .1f, out _, true)
-                        : grid.RemoveShave(top, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62);
+                        : grid.RemoveShave(top, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62,
+                            profile.Radius * EquipmentProgression.DrillPointDepthRatio);
                     Assert.That(cut, Is.True);
                     float rate = grid.LastRemovedVolume / (profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval);
                     Assert.That(rate, Is.GreaterThan(previous[(int)material]), $"{material} must improve with each tier.");
@@ -214,11 +215,55 @@ namespace SomethingDownThere.Tests
                 }
                 var surface = new Vector3(1.5f, (low + high) * .5f, 1.5f);
                 Assert.That(drill
-                    ? grid.RemoveShave(surface, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut)
+                    ? grid.RemoveShave(surface, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut,
+                        profile.Radius * EquipmentProgression.DrillPointDepthRatio)
                     : grid.RemoveScoop(surface - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62 + cut, .1f, out _, true), Is.True);
                 if (cut == 0) first = grid.LastRemovedVolume / interval;
             }
             return (first, grid.RemovedVolume / (12 * interval));
+        }
+
+        // A drill cut leaves a pointed middle, and the point keeps its depth below the floor instead of sinking with
+        // every cut: boring in place digs about as fast as a flat cut (concept 04).
+        [Test]
+        public void DrillCutsLeaveAPointedMiddleThatDoesNotOutdigAFlatCut()
+        {
+            var profile = EquipmentProgression.ToolProfiles()[EquipmentProgression.DrillLevel - 1];
+            float point = profile.Radius * EquipmentProgression.DrillPointDepthRatio;
+            var (pointed, pointedVolume) = Bore(profile.Radius, point);
+            var (flat, flatVolume) = Bore(profile.Radius, 0);
+            Assert.That(pointedVolume, Is.EqualTo(flatVolume).Within(flatVolume * .12f), "Boring rate");
+            var axis = new Vector3(1.5f, 0, 1.5f);
+            float Dip(ExcavationGrid grid) => SurfaceAt(grid, axis + Vector3.right * profile.Radius * .6f) - SurfaceAt(grid, axis);
+            Assert.That(Dip(pointed), Is.GreaterThan(point * .5f), "Pointed middle");
+            Assert.That(Dip(flat), Is.LessThan(point * .2f), "Flat floor");
+        }
+
+        // Drill cuts into soil until the point has fully bored in (DrillPointStep), each from the deepest point under
+        // the axis: the grid and the volume removed.
+        private static (ExcavationGrid grid, float volume) Bore(float radius, float point)
+        {
+            var grid = new ExcavationGrid(new Vector3Int(48, 192, 48), .0625f);
+            var saved = grid.Capture();
+            saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, TerrainMaterialId.Soil);
+            grid.Restore(saved);
+            var axis = new Vector3(1.5f, 0, 1.5f);
+            for (int cut = 0; cut < 24; cut++)
+                Assert.That(grid.RemoveShave(new Vector3(axis.x, SurfaceAt(grid, axis), axis.z), radius, Vector3.up,
+                    radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut, point), Is.True);
+            return (grid, grid.RemovedVolume);
+        }
+
+        // The ground's height under x/z, by bisection down the column.
+        private static float SurfaceAt(ExcavationGrid grid, Vector3 at)
+        {
+            float low = 0, high = grid.Extent.y;
+            for (int step = 0; step < 18; step++)
+            {
+                float middle = (low + high) * .5f;
+                if (grid.Sample(new Vector3(at.x, middle, at.z)) > 0) low = middle; else high = middle;
+            }
+            return (low + high) * .5f;
         }
 
         [Test]
