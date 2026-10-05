@@ -88,10 +88,8 @@ namespace SomethingDownThere
         // Ground contact shading (SSAO) strength set from the admin slider for the session.
         private bool adminContactShading;
         // A shovel stroke starts on the press and its cut waits for the scoop (pendingScoop counts down to it; below
-        // zero nothing is pending), lifting the dirt where the stroke went in (scoopAim) wherever the player looks by then.
+        // zero nothing is pending), lifting the dirt wherever the player looks when it lands.
         private float pendingScoop = -1f;
-        private Ray scoopAim;
-        private Ray? aimOverride;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
         private bool? adminShavingOverride;
@@ -595,8 +593,7 @@ namespace SomethingDownThere
             return Physics.Raycast(aim.origin, aim.direction, out hit, reach, worldMask, QueryTriggerInteraction.Ignore);
         }
 
-        // The view's ray, or the press's while a shovel stroke's scoop cuts.
-        private Ray AimRay => aimOverride ?? new Ray(viewCamera.transform.position, viewCamera.transform.forward);
+        private Ray AimRay => new Ray(viewCamera.transform.position, viewCamera.transform.forward);
 
         private static T Contract<T>(Collider collider) where T : class
         {
@@ -700,7 +697,6 @@ namespace SomethingDownThere
                         LastDigInterval = scheduledDigInterval;
                         StrokesStarted++;
                         pendingScoop = ToolRigPresenter.ScoopDelay(scheduledDigInterval, ground);
-                        scoopAim = AimRay;
                     }
                     ScheduleNextDig();
                     return ready;
@@ -748,19 +744,14 @@ namespace SomethingDownThere
 
         public bool TryDig() => TryDig(true);
 
-        // The cut a shovel stroke started earlier, at its scoop, where the stroke went in; a find it reveals is collected
-        // as on a press.
+        // The cut a shovel stroke started earlier, at its scoop, where the player looks by then (user, 2026-10-05: not
+        // where the stroke began); a find it reveals is collected as on a press.
         private void CompletePendingScoop()
         {
             pendingScoop = -1f;
-            aimOverride = scoopAim;
-            try
-            {
-                if (!TryDig(false)) return;
-                if (TryGetTarget(MaximumPickupReach, out var exposed) && Contract<BuriedFind>(exposed.collider) is BuriedFind revealed)
-                    revealed.TryCollect(this);
-            }
-            finally { aimOverride = null; }
+            if (!TryDig(false)) return;
+            if (TryGetTarget(MaximumPickupReach, out var exposed) && Contract<BuriedFind>(exposed.collider) is BuriedFind revealed)
+                revealed.TryCollect(this);
         }
 
         // What a cut here would hit, in what ground, and its cost; false (with feedback) when nothing can be dug.

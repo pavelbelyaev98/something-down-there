@@ -338,3 +338,10 @@ pushed the motors off the bottom of the screen and left only the bit.
   (the aim that bored it) fell through after ~11 held cuts, losing the target (ShavingIntegrationTests). The tip is
   now rounded over 1.5 cells and the point deepened to 1.2 R to keep its look (lab: 24 straight cuts at three spots,
   no misses; the floor still drops ~45 cm to the point after six cuts). RemoveShave accepts points up to 2 R.
+
+## Iteration: the scoop cuts where the player looks (user, 2026-10-05)
+
+- Feedback: turning to another spot during a stroke dug the spot the stroke began on. The scoop now cuts along the
+  view when it lands (`FpsPlayer.CompletePendingScoop`); the saved press aim (`scoopAim`, `aimOverride`) went. A
+  look at nothing diggable by then digs nothing. TerrainIntegrationTests now aims through the player's pitch, since
+  a tick rewrites a hand-set camera rotation before the scoop lands (what the press aim had worked around).

@@ -811,6 +811,12 @@ namespace SomethingDownThere.Tests
                 Assert.That(terrain.TryToolCut(hit, player.EffectiveShovel.Radius, true), Is.False);
                 Assert.That(notifications, Is.EqualTo(i + 1), "Rejected stale cuts publish nothing.");
             }
+            // Ticks aim the camera by the player's own pitch, and a scoop cuts where the player looks when it lands:
+            // look down through that pitch as the loop's camera did.
+            player.Tuning.PitchLimit = 89f;
+            typeof(FpsPlayer).GetField("pitch", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(player, 89f);
+            player.ViewCamera.transform.localRotation = Quaternion.Euler(89f, 0f, 0f);
             Vector3 cameraPosition = player.ViewCamera.transform.position;
             Quaternion cameraRotation = player.ViewCamera.transform.rotation;
             Assert.That(player.TryPrimaryAction(), Is.True);
