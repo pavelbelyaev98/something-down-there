@@ -137,12 +137,13 @@ namespace SomethingDownThere.Tests
                     { softerRate = classMinimum; classMinimum = float.MaxValue; classResponse = response; }
                     var grid = Homogeneous(material);
                     Vector3 top = new Vector3(1.5f, grid.Extent.y, 1.5f);
-                    bool cut = scoop
-                        ? grid.RemoveScoop(top - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62, .1f, out _, true)
-                        : grid.RemoveShave(top, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62,
-                            profile.Radius * EquipmentProgression.DrillPointDepthRatio);
-                    Assert.That(cut, Is.True);
-                    float rate = grid.LastRemovedVolume / (profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval);
+                    // A scoop's first bite; a drill bores tip first, so its first moments (a dozen cuts) count.
+                    int cuts = scoop ? 1 : 12;
+                    for (int cut = 0; cut < cuts; cut++)
+                        Assert.That(scoop
+                            ? grid.RemoveScoop(top - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62, .1f, out _, true)
+                            : Drill(grid, new Vector3(top.x, SurfaceAt(grid, top), top.z), profile.Radius, 62 + cut), Is.True);
+                    float rate = grid.RemovedVolume / (cuts * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval);
                     Assert.That(rate, Is.GreaterThan(previous[(int)material]), $"{material} must improve with each tier.");
                     Assert.That(rate, Is.LessThan(softerRate), $"{material} must retain its resistance.");
                     previous[(int)material] = rate; classMinimum = Mathf.Min(classMinimum, rate);
@@ -193,7 +194,7 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        // Fresh and sustained output (m3/s) of the automatic motion boring straight down.
+        // Fresh (the first second) and sustained (four seconds) output (m3/s) of the automatic motion held straight down.
         private static (float first, float sustained) Output(TerrainMaterialId material, int level)
         {
             var profile = EquipmentProgression.ToolProfiles()[level - 1];
@@ -204,54 +205,57 @@ namespace SomethingDownThere.Tests
             bool drill = EquipmentProgression.UsesDrill(level);
             float interval = .35f * profile.CadenceMultiplier * EquipmentProgression.MaterialResponse(material).Interval
                 * (drill ? EquipmentProgression.ShavingIntervalScale : 1);
+            int perSecond = Mathf.CeilToInt(1f / interval), cuts = Mathf.CeilToInt(4f / interval);
+            var axis = new Vector3(1.5f, 0, 1.5f);
             float first = 0;
-            for (int cut = 0; cut < 12; cut++)
+            for (int cut = 0; cut < cuts; cut++)
             {
-                float low = 0, high = grid.Extent.y;
-                for (int step = 0; step < 18; step++)
-                {
-                    float middle = (low + high) * .5f;
-                    if (grid.Sample(new Vector3(1.5f, middle, 1.5f)) > 0) low = middle; else high = middle;
-                }
-                var surface = new Vector3(1.5f, (low + high) * .5f, 1.5f);
+                var surface = new Vector3(axis.x, SurfaceAt(grid, axis), axis.z);
                 Assert.That(drill
-                    ? grid.RemoveShave(surface, profile.Radius, Vector3.up, profile.Radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut,
-                        profile.Radius * EquipmentProgression.DrillPointDepthRatio)
+                    ? Drill(grid, surface, profile.Radius, 62 + cut)
                     : grid.RemoveScoop(surface - Vector3.up * profile.Radius * .12f, profile.Radius, Vector3.up, 62 + cut, .1f, out _, true), Is.True);
-                if (cut == 0) first = grid.LastRemovedVolume / interval;
+                if (cut == perSecond - 1) first = grid.RemovedVolume / (perSecond * interval);
             }
-            return (first, grid.RemovedVolume / (12 * interval));
+            return (first, grid.RemovedVolume / (cuts * interval));
         }
 
-        // A drill cut leaves a pointed middle, and the point keeps its depth below the floor instead of sinking with
-        // every cut: boring in place digs about as fast as a flat cut (concept 04).
+        // One drill cut straight down from `surface`, as TerrainVolume.TryToolCut makes it.
+        private static bool Drill(ExcavationGrid grid, Vector3 surface, float radius, int seed)
+        {
+            var ground = EquipmentProgression.MaterialResponse(grid.MaterialAt(surface - Vector3.up * .03f));
+            float advance = radius * EquipmentProgression.DrillAdvanceRatio * ground.Penetration;
+            float engaged = EquipmentProgression.DrillEngagedShare * Mathf.PI * radius * radius * advance * ground.Width * ground.Length;
+            return grid.RemoveBore(surface - Vector3.up * advance, radius, Vector3.up, radius * EquipmentProgression.DrillBoreLengthRatio, out _, true, seed,
+                advance, EquipmentProgression.DrillPushes, engaged);
+        }
+
+        // The drill bores tip first (user, 2026-10-05): held, it opens the middle and widens around it into a cone, with no
+        // pit at its tip, then takes a layer a cut.
         [Test]
-        public void DrillCutsLeaveAPointedMiddleThatDoesNotOutdigAFlatCut()
+        public void DrillOpensTheMiddleFirstIntoAConeThenTakesALayerACut()
         {
             var profile = EquipmentProgression.ToolProfiles()[EquipmentProgression.DrillLevel - 1];
-            float point = profile.Radius * EquipmentProgression.DrillPointDepthRatio;
-            var (pointed, pointedVolume) = Bore(profile.Radius, point);
-            var (flat, flatVolume) = Bore(profile.Radius, 0);
-            Assert.That(pointedVolume, Is.EqualTo(flatVolume).Within(flatVolume * .12f), "Boring rate");
-            var axis = new Vector3(1.5f, 0, 1.5f);
-            float Dip(ExcavationGrid grid) => SurfaceAt(grid, axis + Vector3.right * profile.Radius * .6f) - SurfaceAt(grid, axis);
-            Assert.That(Dip(pointed), Is.GreaterThan(point * .5f), "Pointed middle");
-            Assert.That(Dip(flat), Is.LessThan(point * .2f), "Flat floor");
-        }
-
-        // Drill cuts into soil until the point has fully bored in (DrillPointStep), each from the deepest point under
-        // the axis: the grid and the volume removed.
-        private static (ExcavationGrid grid, float volume) Bore(float radius, float point)
-        {
+            float radius = profile.Radius, layer = radius * EquipmentProgression.DrillAdvanceRatio;
             var grid = new ExcavationGrid(new Vector3Int(48, 192, 48), .0625f);
             var saved = grid.Capture();
             saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, TerrainMaterialId.Soil);
             grid.Restore(saved);
             var axis = new Vector3(1.5f, 0, 1.5f);
-            for (int cut = 0; cut < 24; cut++)
-                Assert.That(grid.RemoveShave(new Vector3(axis.x, SurfaceAt(grid, axis), axis.z), radius, Vector3.up,
-                    radius * EquipmentProgression.ShavingDepthRatio, out _, true, 62 + cut, point), Is.True);
-            return (grid, grid.RemovedVolume);
+            float top = SurfaceAt(grid, axis), last = 0;
+            int cuts = Mathf.CeilToInt(EquipmentProgression.DrillBoreLengthRatio / EquipmentProgression.DrillAdvanceRatio) + 6;
+            for (int cut = 0; cut < cuts; cut++)
+            {
+                Assert.That(Drill(grid, new Vector3(axis.x, SurfaceAt(grid, axis), axis.z), radius, 62 + cut), Is.True);
+                last = grid.LastRemovedVolume;
+                if (cut == 0)
+                    Assert.That(grid.IsSolid(new Vector3(axis.x + radius * .6f, top - layer * .5f, axis.z)), Is.True, "Middle first");
+            }
+            Assert.That(grid.IsSolid(new Vector3(axis.x + radius * .9f, top - layer * .5f, axis.z)), Is.False, "Then the full bite");
+            // The floor falls steadily to the tip, like a cone, rather than dropping into a pit at the middle.
+            float Rise(float r) => SurfaceAt(grid, axis + Vector3.right * radius * r) - SurfaceAt(grid, axis);
+            Assert.That(Rise(.5f) / Rise(.25f), Is.InRange(1.5f, 2.6f), "Cone, not a pit");
+            float flatLayer = Mathf.PI * radius * radius * layer;
+            Assert.That(last, Is.EqualTo(flatLayer).Within(flatLayer * .15f), "A layer a cut once bored in");
         }
 
         // The ground's height under x/z, by bisection down the column.
@@ -277,10 +281,12 @@ namespace SomethingDownThere.Tests
             for (int x = 0; x <= mixed.Size.x; x++) ids[i++] = (byte)(x >= 24 ? TerrainMaterialId.Rock : TerrainMaterialId.Soil);
             snapshot.Materials = TerrainMaterialSnapshot.CopyFrom(ids); mixed.Restore(snapshot);
             var soil = Homogeneous(TerrainMaterialId.Soil); var rock = Homogeneous(TerrainMaterialId.Rock);
+            // The bit deep enough that its cone is wide at the surface.
             foreach (var grid in new[] { mixed, soil, rock })
-                Assert.That(grid.RemoveShave(new Vector3(1.5f, 2, 1.5f), .56f, Vector3.up, .028f, out _, true, 53), Is.True);
-            Assert.That(mixed.Sample(26, 32, 24), Is.EqualTo(rock.Sample(26, 32, 24)).Within(.00001f));
-            Assert.That(mixed.Sample(26, 32, 24), Is.GreaterThan(soil.Sample(26, 32, 24)));
+                Assert.That(grid.RemoveBore(new Vector3(1.5f, 1.6f, 1.5f), .56f, Vector3.up, .56f * EquipmentProgression.DrillBoreLengthRatio, out _, true, 53), Is.True);
+            // At the surface the cone is ~0.38 m round in soil; rock's narrower footprint leaves 0.31 m from the axis.
+            Assert.That(mixed.Sample(29, 32, 24), Is.EqualTo(rock.Sample(29, 32, 24)).Within(.00001f));
+            Assert.That(mixed.Sample(29, 32, 24), Is.GreaterThan(soil.Sample(29, 32, 24)));
             Assert.That(mixed.Sample(22, 32, 24), Is.EqualTo(soil.Sample(22, 32, 24)).Within(.00001f));
         }
 
@@ -297,14 +303,15 @@ namespace SomethingDownThere.Tests
         [TestCase(TerrainMaterialId.Soil, false, false)]
         [TestCase(TerrainMaterialId.Clay, false, true)]
         [TestCase(TerrainMaterialId.Rock, true, false)]
-        public void HeldShavingRetainsDistinctContoursInsteadOfAveragingIntoRoundHoles(TerrainMaterialId material, bool solidX, bool solidZ)
+        public void HeldDrillRetainsDistinctContoursInsteadOfAveragingIntoRoundHoles(TerrainMaterialId material, bool solidX, bool solidZ)
         {
             var grid = Homogeneous(material);
             var surface = new Vector3(1.5f, 2, 1.5f);
-            for (int i = 0; i < 30; i++)
+            // Long enough for even rock's slower bit to reach full width at the lip.
+            for (int i = 0; i < 60; i++)
             {
-                Assert.That(grid.RemoveShave(surface, .56f, Vector3.up, .028f, out _, true, i * 486187739), Is.True);
                 surface.y -= .028f * EquipmentProgression.MaterialResponse(material).Penetration;
+                Assert.That(grid.RemoveBore(surface, .56f, Vector3.up, .56f * EquipmentProgression.DrillBoreLengthRatio, out _, true, i * 486187739), Is.True);
             }
             var lip = new Vector3(1.5f, 1.93f, 1.5f);
             Assert.That(grid.IsSolid(lip + Vector3.right * .45f), Is.EqualTo(solidX));

@@ -8,9 +8,15 @@ namespace SomethingDownThere.Tests
     {
         private static readonly Vector3 Extent = new Vector3(6, 6, 6);
         private static readonly Bounds All = new Bounds(Extent * 0.5f, Extent);
+        // Open or closed shapes as a density: closed far from air, so nodes keep to their own points.
+        private static Func<Vector3, float> Density(Func<Vector3, bool> air) => p => air(p) ? -1f : 1f;
+
         private static void Rebuild(ExcavationDaylightGrid grid, Func<Vector3, bool> air, Bounds? bounds = null)
+            => Rebuild(grid, Density(air), bounds);
+
+        private static void Rebuild(ExcavationDaylightGrid grid, Func<Vector3, float> density, Bounds? bounds = null)
         {
-            var work = grid.Rebuild(bounds ?? All, air);
+            var work = grid.Rebuild(bounds ?? All, density);
             while (work.MoveNext()) { }
         }
 
@@ -116,12 +122,30 @@ namespace SomethingDownThere.Tests
             Assert.That(grid.Sample(new Vector3(3, 7.5f, 3)), Is.Zero);
             deeper = true;
             var cut = new Bounds(new Vector3(3, 7.75f, 3), new Vector3(1.2f, 1.5f, 1.2f));
-            grid.Patch(cut, air);
+            grid.Patch(cut, Density(air));
             Assert.That(grid.Sample(new Vector3(3, 7.5f, 3)), Is.GreaterThan(.7f), "The fresh floor is lit at once, not after the rebuild.");
             Rebuild(grid, air, cut);
             var full = new ExcavationDaylightGrid(extent);
             Rebuild(full, air, new Bounds(extent * .5f, extent));
             Assert.That(grid.Light, Is.EqualTo(full.Light), "The partial rebuild matches a complete one.");
+        }
+
+        // A hole narrower than the node spacing, between node columns, carries daylight down it (user, 2026-10-05: a
+        // narrow hole went black and lit up once widened).
+        [Test]
+        public void NarrowHoleBetweenNodesIsLit()
+        {
+            var axis = new Vector3(3.25f, 0, 3.25f);
+            float Hole(Vector3 p)
+            {
+                if (p.y >= 6) return -1f;
+                float aside = new Vector2(p.x - axis.x, p.z - axis.z).magnitude - .3f;
+                return Mathf.Clamp(Mathf.Max(aside, 3.5f - p.y), -.25f, .25f);
+            }
+            var grid = new ExcavationDaylightGrid(Extent);
+            Rebuild(grid, Hole);
+            Assert.That(grid.Sample(new Vector3(axis.x + .3f, 4.5f, axis.z)), Is.GreaterThan(.5f), "Its wall 1.5 m down");
+            Assert.That(grid.Sample(new Vector3(axis.x + 1.5f, 4.5f, axis.z)), Is.Zero, "Ground beside it stays dark");
         }
 
         [Test]

@@ -92,7 +92,6 @@ namespace SomethingDownThere
         private float pendingScoop = -1f;
         private static readonly bool DetectorOffAtLaunch = Array.IndexOf(Environment.GetCommandLineArgs(), "-noDetector") >= 0;
         public bool DetectorShown => !DetectorOffAtLaunch && !(AdminAvailable && adminDetectorOff);
-        private bool? adminShavingOverride;
         private bool jetpackReadyInAir;
 
         public FpsTuning Tuning => tuning;
@@ -143,7 +142,7 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminShavingOverride.HasValue || adminHoverOnRelease || adminGroundXray || adminContactShading);
+            || adminHoverOnRelease || adminGroundXray || adminContactShading);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
@@ -162,10 +161,7 @@ namespace SomethingDownThere
             float value = DrillLook(dial);
             return dial == DrillDial.Position ? (value * 100f).ToString("+0;-0;0") + " cm" : $"{value * 100f:0}%";
         }
-        public bool ShavingEnabled => ExcavationAvailable && (AdminAvailable && adminShavingOverride.HasValue
-            ? adminShavingOverride.Value : EquipmentProgression.UsesDrill(EffectiveShovelLevel));
-        public string AdminMotionLabel => (adminShavingOverride.HasValue ? "Override: " : "Automatic: ")
-            + (ShavingEnabled ? "drill" : "shovel");
+        public bool ShavingEnabled => ExcavationAvailable && EquipmentProgression.UsesDrill(EffectiveShovelLevel);
         public DiscoveryField Discoveries => discoveries;
         public bool AdminXray => AdminAvailable && adminXray && discoveries != null && discoveries.isActiveAndEnabled;
         public bool AdminGroundXray => AdminAvailable && adminGroundXray && excavationTerrain.GroundXrayEnabled;
@@ -345,7 +341,6 @@ namespace SomethingDownThere
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
             unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = false;
-            adminShavingOverride = null;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             motor.enabled = false;
@@ -813,7 +808,6 @@ namespace SomethingDownThere
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
-            adminShavingOverride = null;
             ResetDigComparisonInput();
             ShowFeedback("Normal rules restored");
             MenuChanged?.Invoke();
@@ -824,16 +818,6 @@ namespace SomethingDownThere
             if (!focused || !AdminAvailable) return;
             unlimitedBattery = !unlimitedBattery;
             ShowFeedback(unlimitedBattery ? "Unlimited battery enabled" : "Normal battery use restored");
-            MenuChanged?.Invoke();
-        }
-
-        public void ToggleAdminShaving()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            bool shaving = !ShavingEnabled;
-            adminShavingOverride = shaving == EquipmentProgression.UsesDrill(EffectiveShovelLevel) ? (bool?)null : shaving;
-            ResetDigComparisonInput();
-            ShowFeedback(AdminMotionLabel);
             MenuChanged?.Invoke();
         }
 

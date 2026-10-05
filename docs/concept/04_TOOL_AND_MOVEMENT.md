@@ -32,13 +32,13 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
  sensitivity options; optional gyro.
 - No mashing, no QTEs, no rhythm inputs, anywhere in the game.
 
-Holding repeats ordinary shovel scoops at the early levels. From tool level seven onward it
-steadily shaves shallow layers as the aim moves across the ground. Like a real bit it bores the way
-it is pointed (a slanted look makes a slanted hole) and puts a deep point into the middle of its hole
-within a few cuts, where the shovel's scoops leave a flat floor. The
-point never makes the drill dig faster: it stays a fixed depth below the floor it shaves. The visible rig communicates
-this shovel-to-drill transition: scoops per stroke, then a spinning drill head. Developer admin retains a
-session-only motion comparison; normal play follows the owned level automatically.
+Holding repeats ordinary shovel scoops at the early levels. From tool level seven onward it bores
+like a real bit (user, 2026-10-05): tip first, the way it is pointed (a slanted look makes a slanted
+hole). Held on a spot, its tip opens the middle and its cone widens the hole around it into a clean
+cone within about a second, then it takes a layer a cut; the shovel's scoops leave a flat floor.
+Sweeping fresh ground digs slowly, since only the tip meets new ground. The visible rig communicates
+this shovel-to-drill transition: scoops per stroke, then a spinning drill head; the motion always follows
+the tool level (user, 2026-10-05: no admin override).
 
 ## 3. Automatic material adaptation (the mode model)
 

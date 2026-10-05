@@ -69,7 +69,6 @@ namespace SomethingDownThere.Tests
         [Test]
         public void ScoopsChargeOnceMatchCollisionAndRejectStaleHits()
         {
-            if (player.ShavingEnabled) player.ToggleAdminShaving();
             player.enabled = true;
             for (int stroke = 0; stroke < 4; stroke++)
             {
@@ -97,7 +96,6 @@ namespace SomethingDownThere.Tests
         [Test]
         public void DetachedColumnDisappearsAcrossChunksInTheSamePaidStroke()
         {
-            if (player.ShavingEnabled) player.ToggleAdminShaving();
             // A moat leaves a tall, narrow pillar supported from below. Its crown
             // crosses four chunk seams and lies well outside the final shovel brush.
             for (int i = 0; i < 24; i++)
@@ -399,7 +397,6 @@ namespace SomethingDownThere.Tests
         [Test]
         public void AdminLevelsUseAutomaticMotionAndNeverChangeOwnedProgression()
         {
-            if (player.ShavingEnabled) player.ToggleAdminShaving();
             Assert.That(player.AdminAvailable, Is.True);
             float previous = 0;
             for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
@@ -414,12 +411,16 @@ namespace SomethingDownThere.Tests
                 float energy = player.Battery.Charge;
                 Assert.That(player.TryDig(), Is.True);
                 Assert.That(player.Battery.Charge, Is.EqualTo(energy - player.EffectiveDigEnergy).Within(.001f));
-                float rate = player.LastScoopVolume / player.LastDigInterval;
-                if (previous > 0) Assert.That(rate, Is.GreaterThan(previous));
+                // A second held: the drill bores tip first, so its first cut alone says little.
+                float removed = player.LastScoopVolume;
+                int digs = Mathf.CeilToInt(1f / player.LastDigInterval);
+                for (int dig = 1; dig < digs; dig++) { Assert.That(player.TryDig(), Is.True); removed += player.LastScoopVolume; }
+                float rate = removed / (digs * player.LastDigInterval);
+                if (previous > 0) Assert.That(rate, Is.GreaterThan(previous), $"Level {level}");
                 Assert.That(player.ShavingEnabled, Is.EqualTo(EquipmentProgression.UsesDrill(level)));
                 // The starter is deliberately weak (048 follow-up); the ceiling still
                 // guards against an explosive late-tier bite.
-                Assert.That(player.LastScoopVolume, Is.GreaterThan(.005f));
+                Assert.That(removed, Is.GreaterThan(.005f));
                 previous = rate;
                 Assert.That(player.Shovel.Level, Is.EqualTo(1));
             }
@@ -462,7 +463,6 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator AttachedRemnantClearsPlayerTraversalAndCollisionInOnePaidStroke()
         {
-            if (player.ShavingEnabled) player.ToggleAdminShaving();
             InstallExcavatedSpikeFixture();
             var tip = Seam + new Vector3(0, -1.75f, 0);
             var feet = Seam + new Vector3(0, -1.94f, -1);

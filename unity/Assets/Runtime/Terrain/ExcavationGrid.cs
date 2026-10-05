@@ -339,40 +339,36 @@ namespace SomethingDownThere
             bool adaptMaterials = false)
             => RemoveBrush(center, radius, normal, seed, variation, true, 0, out changed, adaptMaterials);
 
-        // `point`: a drill's pointed middle, that deep at the axis (EquipmentProgression.DrillPoint*); 0 shaves flat.
-        public bool RemoveShave(Vector3 surface, float radius, Vector3 normal, float depth, out BoundsInt changed,
-            bool adaptMaterials = false, int seed = 0, float point = 0)
+        // The drill's cut (user, 2026-10-05: tip first, like a real bit): a bit pushed along `axis` (pointing back out of the
+        // ground) with its tip at `tip`, a cone widening to `radius` over `length`, then a short collar. Held, its tip
+        // opens the middle and the cone widens the hole around it (EquipmentProgression.DrillBoreLengthRatio). While it
+        // has taken less than `engaged`, it pushes on another `advance`, up to `pushes` positions in all.
+        public bool RemoveBore(Vector3 tip, float radius, Vector3 axis, float length, out BoundsInt changed,
+            bool adaptMaterials = false, int seed = 0, float advance = 0, int pushes = 1, float engaged = 0)
         {
             changed = default;
-            if (!Finite(depth) || depth <= 0 || depth > radius || !Finite(point) || point < 0 || point > radius * 2) return false;
-            return RemoveBrush(surface, radius, normal, seed, 0, false, depth, out changed, adaptMaterials, point);
+            if (!Finite(length) || length <= 0 || length > radius * 4 || pushes < 1 || pushes > 4
+                || !Finite(advance) || advance < 0 || advance > radius || !Finite(engaged)) return false;
+            return RemoveBrush(tip, radius, axis, seed, 0, false, length, out changed, adaptMaterials, advance, pushes, engaged);
         }
 
-        // How far the ground stands above `center` along `normal` (0 to `reach`), averaged over the ring spanned by the
-        // two axes.
-        private float GroundAbove(Vector3 center, Vector3 normal, Vector3 axisA, Vector3 axisB, float reach)
+        // About the signed distance from the bit at `height` back along its axis from the tip and `spread` out from it: a
+        // cone from the tip to `radius` over `length`, then a cylinder. The tip is a ball a cell and a half across,
+        // meeting the cone's flank where their slopes match: a sharper tip leaves a needle of air one sample wide, whose
+        // mesh collapses and lets the aim fall through it, and a blunt step reads as a hole in the middle.
+        private float Bit(float height, float spread, float radius, float length)
         {
-            float sum = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                float angle = i * Mathf.PI * .25f;
-                Vector3 at = center + axisA * Mathf.Cos(angle) + axisB * Mathf.Sin(angle);
-                if (Sample(at) <= 0) continue;
-                if (Sample(at + normal * reach) > 0) { sum += reach; continue; }
-                // Fine enough that the floor it finds stays well inside one layer: an error here repeats every cut.
-                float low = 0, high = reach;
-                for (int step = 0; step < 12; step++)
-                {
-                    float middle = (low + high) * .5f;
-                    if (Sample(at + normal * middle) > 0) low = middle; else high = middle;
-                }
-                sum += (low + high) * .5f;
-            }
-            return sum / 8;
+            float ball = CellSize * 1.5f, slant = Mathf.Sqrt(length * length + radius * radius);
+            float sin = radius / slant, cos = length / slant;
+            if (height < ball * (1 - sin)) return new Vector2(height - ball, spread).magnitude - ball;
+            // The flank's apex lies below the tip, where the ball's tangent lines cross.
+            float apex = ball - ball / sin;
+            return Mathf.Max((spread - (height - apex) * sin / cos) * cos, spread - radius);
         }
 
         private bool RemoveBrush(Vector3 center, float radius, Vector3 normal, int seed, float variation,
-            bool shovel, float shaveDepth, out BoundsInt changed, bool adaptMaterials = false, float pointDepth = 0)
+            bool shovel, float boreLength, out BoundsInt changed, bool adaptMaterials = false,
+            float advance = 0, int pushes = 1, float engaged = 0)
         {
             changed = default;
             BeginRemoval();
@@ -383,8 +379,9 @@ namespace SomethingDownThere
                 || !Finite(normal.sqrMagnitude) || normal.sqrMagnitude < 0.0001f) return false;
             // Covers the bevelled, tapered bite in every orientation, including its
             // outward cap. The density halo must fit too for matching chunk normals.
-            // A drill's point reaches deeper than its radius in soft ground.
-            float maximumRadius = Mathf.Max(radius * (shovel ? 1.8f : 1f), (shaveDepth + pointDepth) * 1.4f);
+            float maximumRadius = radius * (shovel ? 1.8f : 1f);
+            // A bit reaches back from its tip over its cone and collar.
+            if (boreLength > 0) maximumRadius = boreLength + radius * 1.3f;
             float influence = maximumRadius + band;
             Vector3 extent = Extent;
             if (center.x + maximumRadius < 0 || center.y + maximumRadius < 0 || center.z + maximumRadius < 0
@@ -400,156 +397,123 @@ namespace SomethingDownThere
             Vector3 phase = new Vector3(Next01(ref random), Next01(ref random), Next01(ref random)) * (2 * Mathf.PI);
             normal.Normalize();
             Vector3 tangent = Vector3.Cross(normal, Mathf.Abs(normal.y) < 0.95f ? Vector3.up : Vector3.forward).normalized;
-            // A continuously held material shave retains its footprint. Spinning an
-            // ellipse or faceted chip every tick accumulates into a circular bore and
-            // erases the material's shape. Organic scoop strokes keep their variation.
-            if (!adaptMaterials || shaveDepth <= 0)
+            // A held drill keeps its footprint. Spinning an ellipse or faceted chip every
+            // tick accumulates into a circular bore and erases the material's shape.
+            // Organic scoop strokes keep their variation.
+            if (!adaptMaterials || boreLength <= 0)
                 tangent = Quaternion.AngleAxis(Next01(ref random) * 360, normal) * tangent;
 
             Vector3 bitangent = Vector3.Cross(normal, tangent);
-            // The point's floor is measured from the ground around the contact: the aim settles in an earlier cut's
-            // point (its deepest spot), and from there the cut takes the next layer instead of sinking the point with
-            // every cut, so a pointed cut digs as fast as a flat one.
-            float lift = 0, pointRadius = radius * EquipmentProgression.DrillPointRadiusRatio;
-            if (pointDepth > 0)
-            {
-                // Sampled on a ring between the point and the bite's edge, in the footprint of the ground at the contact.
-                var ground = adaptMaterials ? MaterialAt(center - normal * CellSize * .5f) : TerrainMaterialId.Soil;
-                var footprint = EquipmentProgression.MaterialResponse(ground);
-                bool round = ground == TerrainMaterialId.Soil || ground == TerrainMaterialId.Backfill;
-                float ring = radius * (1 + EquipmentProgression.DrillPointRadiusRatio) * .5f;
-                lift = GroundAbove(center, normal, tangent * (round ? ring : ring * footprint.Width),
-                    bitangent * (round ? ring : ring * footprint.Length), pointDepth * 1.5f);
-                center += normal * lift;
-            }
             float width = radius * Mathf.Lerp(1.02f, 1.14f, Next01(ref random));
             float length = radius * Mathf.Lerp(0.84f, 0.96f, Next01(ref random));
             float depth = radius * Mathf.Lerp(0.68f, 0.82f, Next01(ref random));
             float tiltX = Mathf.Lerp(-0.16f, 0.16f, Next01(ref random));
             float tiltZ = Mathf.Lerp(-0.12f, 0.12f, Next01(ref random));
             float amplitude = radius * variation, bevel = radius * 0.24f;
-            Vector3 boundsCenter = center, boundsExtent = Vector3.one * influence;
-
-            Vector3Int first = Vector3Int.Max(Vector3Int.zero,
-                Vector3Int.FloorToInt((boundsCenter - boundsExtent) / CellSize));
-            Vector3Int last = Vector3Int.Min(Size,
-                Vector3Int.CeilToInt((boundsCenter + boundsExtent) / CellSize));
             Vector3Int changedMin = Size + Vector3Int.one, changedMax = -Vector3Int.one;
             float unitVolume = CellSize * CellSize * CellSize;
-            for (int z = first.z; z <= last.z; z++)
-            for (int y = first.y; y <= last.y; y++)
-            for (int x = first.x; x <= last.x; x++)
+            // A drill bit pushes on `advance` at a time while it has taken less than `engaged`; other brushes cut once.
+            for (int push = 0; push < pushes && (push == 0 || LastRemovedVolume < engaged); push++)
             {
-                int index = x + y * strideY + z * strideZ;
-                float before = density[index];
-                if (before <= -band) continue;
-                Vector3 delta = new Vector3(x, y, z) * CellSize - center;
-                var material = adaptMaterials ? materials[index] : TerrainMaterialId.Soil;
-                var response = EquipmentProgression.MaterialResponse(material);
-                float cut;
+                Vector3 origin = center - normal * (advance * push);
+                Vector3 boundsCenter = origin, boundsExtent = Vector3.one * influence;
+                if (boreLength > 0)
+                {
+                    // The bit runs back along its axis from the tip; only that box can change.
+                    float half = (boreLength + radius * .25f) * .5f;
+                    boundsCenter = origin + normal * half;
+                    boundsExtent = new Vector3(Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z)) * half
+                        + Vector3.one * (radius * 1.3f + band);
+                }
 
-                if (shaveDepth > 0)
+                Vector3Int first = Vector3Int.Max(Vector3Int.zero,
+                    Vector3Int.FloorToInt((boundsCenter - boundsExtent) / CellSize));
+                Vector3Int last = Vector3Int.Min(Size,
+                    Vector3Int.CeilToInt((boundsCenter + boundsExtent) / CellSize));
+                for (int z = first.z; z <= last.z; z++)
+                for (int y = first.y; y <= last.y; y++)
+                for (int x = first.x; x <= last.x; x++)
                 {
-                    float height = Vector3.Dot(delta, normal);
-                    float radial = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
-                    float side = radial - radius, spread = radial;
-                    float floor = -height - shaveDepth * response.Penetration;
-                    // Backfill cuts with soil's rounded footprint, only larger.
-                    if (material != TerrainMaterialId.Soil && material != TerrainMaterialId.Backfill)
+                    int index = x + y * strideY + z * strideZ;
+                    float before = density[index];
+                    if (before <= -band) continue;
+                    Vector3 delta = new Vector3(x, y, z) * CellSize - origin;
+                    var material = adaptMaterials ? materials[index] : TerrainMaterialId.Soil;
+                    var response = EquipmentProgression.MaterialResponse(material);
+                    float cut;
+
+                    if (boreLength > 0)
                     {
-                        float u = Vector3.Dot(delta, tangent) / response.Width;
-                        float v = Vector3.Dot(delta, bitangent) / response.Length;
-                        spread = Mathf.Sqrt(u * u + v * v);
-                        side = material == TerrainMaterialId.Rock
-                            ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f))) - radius
-                            // Concrete breaks into clean square chips with flat floors.
-                            : material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete ? Mathf.Max(Mathf.Abs(u), Mathf.Abs(v)) - radius
-                            : Mathf.Sqrt(u * u + v * v) - radius;
-                        // A shallow faceted chip, versus the clay's smooth elliptical shave.
-                        if (material == TerrainMaterialId.Rock) floor += Mathf.Abs(u * .3f + v * .2f) * shaveDepth / radius;
+                        // Back along the axis from the tip, and out from it in the ground's own cut shape: rock faceted,
+                        // concrete square, clays and broken rock elliptical, soil and backfill round.
+                        float height = Vector3.Dot(delta, normal);
+                        float spread = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
+                        if (material != TerrainMaterialId.Soil && material != TerrainMaterialId.Backfill)
+                        {
+                            float u = Vector3.Dot(delta, tangent) / response.Width, v = Vector3.Dot(delta, bitangent) / response.Length;
+                            spread = material == TerrainMaterialId.Rock
+                                ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f)))
+                                : material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete ? Mathf.Max(Mathf.Abs(u), Mathf.Abs(v))
+                                : Mathf.Sqrt(u * u + v * v);
+                        }
+                        // Loose stones indent the edge, never widen it, so it stays pebbly under a held drill.
+                        if (material == TerrainMaterialId.Gravel) spread += Grain(index) * radius * .1f;
+                        cut = Mathf.Max(Bit(height, spread, radius, boreLength), height - boreLength - radius * .25f);
                     }
-                    if (material == TerrainMaterialId.Gravel)
+                    else if (shovel)
                     {
-                        // Loose stones: every sample keeps its own grain, so the edge and floor
-                        // stay pebbly under a held cut instead of smoothing into a clean face.
-                        // Grain only indents: symmetric jitter would out-dig soil, because a
-                        // deeper sample always carves while a shallower one keeps the old cut.
-                        float grain = Grain(index);
-                        side += grain * radius * .1f;
-                        floor += grain * shaveDepth * .3f;
+                        float u = Vector3.Dot(delta, tangent) / response.Width, v = Vector3.Dot(delta, bitangent) / response.Length;
+                        float height = Vector3.Dot(delta, normal);
+                        float floor = -height - depth * response.Penetration + u * tiltX + v * tiltZ;
+                        float cap = height - radius * 0.8f;
+                        if (Mathf.Max(floor, cap) - amplitude >= before) continue;
+                        // A broad, slanted fracture face instead of a spherical bottom.
+                        // Taper and a rounded superellipse soften the lip without making
+                        // a hemisphere; oblique clipped shoulders break the stamped rim.
+                        float taper = 1 - 0.16f * Mathf.Clamp01(-height / radius);
+                        float a = Mathf.Abs(u / (width * taper)), b = Mathf.Abs(v / (length * taper));
+                        // The superellipse is at least max(a,b). Reject unchanged samples
+                        // with that cheap bound before powers/noise, especially in deep pits.
+                        if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
+                        float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete
+                            ? (Mathf.Max(a, b) - 1) * length
+                            // Clays and broken rock crumble into smooth elliptical cuts.
+                            : material == TerrainMaterialId.Clay || material == TerrainMaterialId.PondClay || material == TerrainMaterialId.FracturedRock
+                                || material == TerrainMaterialId.Crack ? (Mathf.Sqrt(a * a + b * b) - 1) * length
+                            : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
+                        // Loose stones indent the scoop edge (never widen it, like the shave).
+                        if (material == TerrainMaterialId.Gravel) side += Grain(index) * length * .1f;
+                        side = Mathf.Max(side, (u * 0.72f + v * 0.69f - radius * 0.98f) * 0.9f);
+                        side = Mathf.Max(side, (-u * 0.86f - v * 0.51f - radius * 0.94f) * 0.9f);
+                        float join = Mathf.Max(bevel - Mathf.Abs(side - floor), 0) / bevel;
+                        cut = Mathf.Max(side, floor) + join * join * bevel * 0.25f;
+                        cut = Mathf.Max(cut, cap);
+                        if (cut - amplitude >= before) continue;
+                        float ripple = variation == 0 ? 0 : 0.5f * Mathf.Sin(Vector3.Dot(delta, axisA) + phase.x)
+                            + 0.3f * Mathf.Sin(Vector3.Dot(delta, axisB) + phase.y)
+                            + 0.2f * Mathf.Sin(Vector3.Dot(delta, axisC) + phase.z);
+                        cut -= amplitude * ripple;
                     }
-                    // The drill's point: a cone deepest at the axis, harder ground taking a shallower one, as it does
-                    // a shallower layer.
-                    if (pointDepth > 0)
+                    else cut = delta.magnitude - radius;
+                    float after = Mathf.Max(-band, Mathf.Min(before, cut));
+                    if (bankBeyond != null) after = Mathf.Max(after, Mathf.Min(before, Bank(x, y, z)));
+                    if (before - after < 0.00001f) continue;
+                    density[index] = after;
+                    if (before > 0) remnantSeeds.Add(index);
+                    if (before > 0 && after <= 0)
                     {
-                        // Its tip is rounded over a cell and a half: a sharper one leaves a needle of air one sample
-                        // wide, whose mesh collapses and lets a ray straight down it (the aim that bored it) fall through.
-                        float tip = CellSize * 1.5f, along = spread < tip ? (spread * spread + tip * tip) / (2 * tip) : spread;
-                        floor -= pointDepth * response.Penetration * Mathf.Max(0, 1 - along / pointRadius);
-                        // The point bores in a step a cut: nothing goes more than a layer and a step below the contact.
-                        floor = Mathf.Max(floor, -(height + lift)
-                            - (shaveDepth + pointDepth * EquipmentProgression.DrillPointStep) * response.Penetration);
+                        severedSamples.Add(index);
+                        lowestCarvedY = Mathf.Min(lowestCarvedY, y);
                     }
-                    float rounding = Mathf.Min(radius * 0.18f, shaveDepth * 0.5f);
-                    float join = Mathf.Max(rounding - Mathf.Abs(side - floor), 0) / rounding;
-                    cut = Mathf.Max(side, floor) + join * join * rounding * 0.25f;
-                    // A drill's axis follows its aim, not the face, so its bite stays a thin layer across that axis
-                    // (otherwise a slanted bite would sweep up the ground beside it).
-                    cut = Mathf.Max(cut, height - (pointDepth > 0 ? shaveDepth * response.Penetration : radius));
+                    // Sample quadrature in m3, with half weights at finite-domain boundaries.
+                    float weight = (x == 0 || x == Size.x ? 0.5f : 1f)
+                        * (y == 0 || y == Size.y ? 0.5f : 1f) * (z == 0 || z == Size.z ? 0.5f : 1f);
+                    LastRemovedVolume += (Mathf.Clamp01(0.5f + before / CellSize)
+                        - Mathf.Clamp01(0.5f + after / CellSize)) * unitVolume * weight;
+                    var sample = new Vector3Int(x, y, z);
+                    changedMin = Vector3Int.Min(changedMin, sample);
+                    changedMax = Vector3Int.Max(changedMax, sample);
                 }
-                else if (shovel)
-                {
-                    float u = Vector3.Dot(delta, tangent) / response.Width, v = Vector3.Dot(delta, bitangent) / response.Length;
-                    float height = Vector3.Dot(delta, normal);
-                    float floor = -height - depth * response.Penetration + u * tiltX + v * tiltZ;
-                    float cap = height - radius * 0.8f;
-                    if (Mathf.Max(floor, cap) - amplitude >= before) continue;
-                    // A broad, slanted fracture face instead of a spherical bottom.
-                    // Taper and a rounded superellipse soften the lip without making
-                    // a hemisphere; oblique clipped shoulders break the stamped rim.
-                    float taper = 1 - 0.16f * Mathf.Clamp01(-height / radius);
-                    float a = Mathf.Abs(u / (width * taper)), b = Mathf.Abs(v / (length * taper));
-                    // The superellipse is at least max(a,b). Reject unchanged samples
-                    // with that cheap bound before powers/noise, especially in deep pits.
-                    if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
-                    float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete
-                        ? (Mathf.Max(a, b) - 1) * length
-                        // Clays and broken rock crumble into smooth elliptical cuts.
-                        : material == TerrainMaterialId.Clay || material == TerrainMaterialId.PondClay || material == TerrainMaterialId.FracturedRock
-                            || material == TerrainMaterialId.Crack ? (Mathf.Sqrt(a * a + b * b) - 1) * length
-                        : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
-                    // Loose stones indent the scoop edge (never widen it, like the shave).
-                    if (material == TerrainMaterialId.Gravel) side += Grain(index) * length * .1f;
-                    side = Mathf.Max(side, (u * 0.72f + v * 0.69f - radius * 0.98f) * 0.9f);
-                    side = Mathf.Max(side, (-u * 0.86f - v * 0.51f - radius * 0.94f) * 0.9f);
-                    float join = Mathf.Max(bevel - Mathf.Abs(side - floor), 0) / bevel;
-                    cut = Mathf.Max(side, floor) + join * join * bevel * 0.25f;
-                    cut = Mathf.Max(cut, cap);
-                    if (cut - amplitude >= before) continue;
-                    float ripple = variation == 0 ? 0 : 0.5f * Mathf.Sin(Vector3.Dot(delta, axisA) + phase.x)
-                        + 0.3f * Mathf.Sin(Vector3.Dot(delta, axisB) + phase.y)
-                        + 0.2f * Mathf.Sin(Vector3.Dot(delta, axisC) + phase.z);
-                    cut -= amplitude * ripple;
-                }
-                else cut = delta.magnitude - radius;
-                float after = Mathf.Max(-band, Mathf.Min(before, cut));
-                if (bankBeyond != null) after = Mathf.Max(after, Mathf.Min(before, Bank(x, y, z)));
-                if (before - after < 0.00001f) continue;
-                density[index] = after;
-                if (before > 0) remnantSeeds.Add(index);
-                if (before > 0 && after <= 0)
-                {
-                    severedSamples.Add(index);
-                    lowestCarvedY = Mathf.Min(lowestCarvedY, y);
-                }
-                // Sample quadrature in m3, with half weights at finite-domain boundaries.
-                float weight = (x == 0 || x == Size.x ? 0.5f : 1f)
-                    * (y == 0 || y == Size.y ? 0.5f : 1f) * (z == 0 || z == Size.z ? 0.5f : 1f);
-                LastRemovedVolume += (Mathf.Clamp01(0.5f + before / CellSize)
-                    - Mathf.Clamp01(0.5f + after / CellSize)) * unitVolume * weight;
-                var sample = new Vector3Int(x, y, z);
-                changedMin = Vector3Int.Min(changedMin, sample);
-                changedMax = Vector3Int.Max(changedMax, sample);
             }
             return CompleteRemoval(changedMin, changedMax, out changed);
         }

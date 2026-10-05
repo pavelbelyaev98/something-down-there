@@ -67,3 +67,14 @@ bright surface and entrance. This is the requested playtest fix ahead of task 00
 ## Restore surface color after playtest
 - Restore the exact previous project color profile and remove the setup override that replaced it. Keep the slower underground daylight fade and bounded lamp falloff; higher graphics defaults remain intact.
 - Review: live MainGame surface, shaft and close lamp captures confirm restored colors with the existing local lighting improvements. The material and global ambient/sun settings are unchanged.
+
+## Iteration: narrow holes went black (user, 2026-10-05)
+
+- Report: a hole dug in one spot went completely dark a metre or so down and lit up as soon as it was widened.
+  The daylight nodes are 0.5 m apart and a node was air only if its own point was: a hole under ~0.7 m across can
+  pass between node columns, leaving no air node to carry light, so its walls read only buried nodes.
+- A buried node with air within 0.2 m (0.4 of the spacing; density is about the distance to air, so deeper nodes
+  skip the search) now stands at the most open of a few points in its cell (`ExcavationDaylightGrid.Anchors`), and
+  links run between where nodes stand, still sampled at quarter steps, so thin earth partitions and sealed rooms
+  still block light. The grid now takes the signed density rather than an open test. Lab: a level 1 shovel hole
+  dug in one spot reads 0.99 daylight a metre down (ExcavationDaylightTests.NarrowHoleBetweenNodesIsLit).

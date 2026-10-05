@@ -74,12 +74,13 @@ namespace SomethingDownThere.Tests
                 Assert.That(player.TryDig(), Is.True, "Shave " + i);
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var after), Is.True, $"Target after cut {i} (before at {before.point.y:F3})");
                 Assert.That(after.point.y, Is.LessThan(before.point.y - .001f));
-                // A layer and a step of the drill's point (in the softest ground), never a whole scoop (about 0.75 R).
+                // The bit goes a few layers further at most (while it bores in, more in the softest ground), never a whole
+                // scoop (about 0.75 R).
                 Assert.That(before.point.y - after.point.y, Is.LessThan(player.EffectiveShovel.Radius * 1.4f
-                    * (EquipmentProgression.ShavingDepthRatio + EquipmentProgression.DrillPointDepthRatio * EquipmentProgression.DrillPointStep)),
+                    * EquipmentProgression.DrillAdvanceRatio * EquipmentProgression.DrillPushes),
                     "Drilling removes shallow layers, not whole scoops.");
                 timings.Add(terrain.LastDigMilliseconds);
-                Assert.That(terrain.TryShave(before, player.EffectiveShovel.Radius, .03f), Is.False, "Reject stale contact.");
+                Assert.That(terrain.TryToolCut(before, player.EffectiveShovel.Radius, true, Vector3.down), Is.False, "Reject stale contact.");
                 previousY = after.point.y;
             }
             Assert.That(previousY, Is.LessThan(-.2f), "Steady held contact must keep advancing.");
@@ -95,32 +96,6 @@ namespace SomethingDownThere.Tests
             TestContext.WriteLine($"Shaving: mean {timings.Average():F2} ms, max {timings.Max():F2} ms per cut.");
         }
 
-        [Test]
-        public void ComparisonSwitchPreservesWorldAndMatchesEnergyRate()
-        {
-            player.SelectAdminLevel(EquipmentProgression.DrillLevel);
-            float shavingInterval = player.EffectiveDigInterval;
-            float shavingRate = player.EffectiveDigEnergy / shavingInterval;
-            Assert.That(player.TryDig(), Is.True);
-            float shaved = terrain.RemovedVolume;
-            int revision = terrain.Revision;
-            player.ToggleAdminShaving();
-            Assert.That(player.ShavingEnabled, Is.False);
-            Assert.That(player.HasAdminOverrides, Is.True);
-            Assert.That(terrain.Revision, Is.EqualTo(revision));
-            Assert.That(terrain.RemovedVolume, Is.EqualTo(shaved));
-            Assert.That(player.EffectiveDigInterval, Is.GreaterThan(shavingInterval * 5));
-            Assert.That(player.EffectiveDigEnergy / player.EffectiveDigInterval, Is.EqualTo(shavingRate).Within(.0001f));
-            Assert.That(player.TryDig(), Is.True);
-            Assert.That(player.LastScoopVolume, Is.GreaterThan(shaved * 2));
-            player.ToggleAdminShaving();
-            Assert.That(player.ShavingEnabled, Is.True);
-            Assert.That(player.TryDig(), Is.True);
-            player.ToggleAdminShaving(); player.RestoreAdminOverrides();
-            Assert.That(player.ShavingEnabled, Is.False);
-            Assert.That(player.Shovel.Level, Is.EqualTo(1));
-        }
-
         [TestCase(6, false)] [TestCase(7, true)] [TestCase(10, true)]
         public void OwnedMotionAndSaveRestoreIgnoreDeveloperOverrides(int level, bool drill)
         {
@@ -131,7 +106,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryDig(), Is.True);
             Assert.That(player.Battery.Charge, Is.LessThan(charge));
             var saved = new WorldSnapshot(); player.Capture(saved);
-            player.SelectAdminLevel(drill ? 1 : 10); player.ToggleAdminShaving();
+            player.SelectAdminLevel(drill ? 1 : 10);
             player.Restore(saved);
             Assert.That(player.Shovel.Level, Is.EqualTo(level));
             Assert.That(player.ShavingEnabled, Is.EqualTo(drill));

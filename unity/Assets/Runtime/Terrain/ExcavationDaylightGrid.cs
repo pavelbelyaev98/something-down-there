@@ -7,7 +7,8 @@ namespace SomethingDownThere
 {
     // A small, derived lighting cache. Only the open top admits sky light; the route through
     // connected air attenuates it: descent slowly, sideways travel at once.
-    // It is rebuilt from density, never persisted in excavation checkpoints.
+    // It is rebuilt from density (signed, about the distance to air, open at or below OpenDensity), never persisted in
+    // excavation checkpoints.
     public sealed class ExcavationDaylightGrid
     {
         // Route choice weights in quarter cells. Straight down is cheapest; a slope (one down, one
@@ -22,8 +23,20 @@ namespace SomethingDownThere
         // 85% at 5 m, 53% at 10 m, 24% at 15 m, 8% at 20 m. Every metre sideways or back up loses
         // light at once, like light turning a corner, so a side tunnel dims faster at any depth.
         public const float DaylightReach = 12.5f, DaylightShoulder = 2f, SidewaysReach = 3f;
+        private const float OpenDensity = .001f;
+        // Where in its cell a node may stand (fractions of the node spacing): its own point first. A hole narrower than
+        // the spacing can pass between nodes, leaving no air node to carry light down it; a buried node with air within
+        // AnchorReach stands at the most open of these points instead (user, 2026-10-05: a narrow hole went black).
+        private const float AnchorReach = .4f;
+        private static readonly Vector3[] Anchors =
+        {
+            Vector3.zero,
+            new Vector3(.4f, 0, 0), new Vector3(-.4f, 0, 0), new Vector3(0, 0, .4f), new Vector3(0, 0, -.4f),
+            new Vector3(.28f, 0, .28f), new Vector3(-.28f, 0, .28f), new Vector3(.28f, 0, -.28f), new Vector3(-.28f, 0, -.28f),
+            new Vector3(0, .4f, 0), new Vector3(0, -.4f, 0)
+        };
         private readonly bool[] air;
-        private readonly byte[] links;
+        private readonly byte[] links, anchor;
         private readonly ushort[] distance, descent, aside;
         private readonly float[] descentFalloff = new float[MaximumDistance + 1], asideFalloff = new float[MaximumDistance + 1];
         private readonly List<int>[] buckets = new List<int>[MaximumDistance + 1];
@@ -50,7 +63,7 @@ namespace SomethingDownThere
                 Mathf.CeilToInt(extent.y / spacing) + 1, Mathf.CeilToInt(extent.z / spacing) + 1);
             Step = new Vector3(extent.x / (Size.x - 1), extent.y / (Size.y - 1), extent.z / (Size.z - 1));
             int count = Size.x * Size.y * Size.z;
-            air = new bool[count]; links = new byte[count]; light = new byte[count]; computed = new byte[count];
+            air = new bool[count]; links = new byte[count]; anchor = new byte[count]; light = new byte[count]; computed = new byte[count];
             distance = new ushort[count]; descent = new ushort[count]; aside = new ushort[count];
             for (int i = 0; i < count; i++) distance[i] = MaximumDistance + 1;
             for (int i = 0; i < buckets.Length; i++) buckets[i] = new List<int>();
@@ -82,7 +95,7 @@ namespace SomethingDownThere
         // filled from their lit neighbours: nearly all of the light from above, less from the side,
         // as the rebuild would, so a fresh cut neither flashes dark nor brightens the ground around
         // it. Wall samples beside fresh air take its light. The next rebuild replaces these values.
-        public void Patch(Bounds changed, Func<Vector3, bool> isOpen)
+        public void Patch(Bounds changed, Func<Vector3, float> density)
         {
             Range(changed, out var min, out var max);
             int sx = max.x - min.x + 1, sy = max.y - min.y + 1, sz = max.z - min.z + 1;
@@ -92,7 +105,7 @@ namespace SomethingDownThere
             for (int x = min.x; x <= max.x; x++)
             {
                 int i = Index(x, y, z);
-                bool open = isOpen(Point(x, y, z)), fresh = open && (!air[i] || light[i] == 0);
+                bool open = Locate(x, y, z, density, out _), fresh = open && (!air[i] || light[i] == 0);
                 patchOpen.Add(open); patchFresh.Add(fresh);
                 if (fresh) light[i] = 0;
             }
@@ -141,33 +154,63 @@ namespace SomethingDownThere
         }
         private Vector3 Point(int x, int y, int z) => new Vector3(x * Step.x, y * Step.y, z * Step.z);
 
+        // Where node i (at x, y, z) stands: its own point, or its anchor in a narrow hole.
+        private Vector3 Stand(int i, int x, int y, int z) => Point(x, y, z) + Vector3.Scale(Anchors[anchor[i]], Step);
+
+        // Whether the node's cell is open at its point or, failing that, at the most open anchor within reach (`which`).
+        private bool Locate(int x, int y, int z, Func<Vector3, float> density, out byte which)
+        {
+            which = 0;
+            var p = Point(x, y, z);
+            float best = density(p);
+            if (best <= OpenDensity) return true;
+            // Density is about the distance to air: deep in the ground nothing within reach is open.
+            if (best >= Step.x * AnchorReach) return false;
+            for (byte k = 1; k < Anchors.Length; k++)
+            {
+                float value = density(p + Vector3.Scale(Anchors[k], Step));
+                if (value < best) { best = value; which = k; }
+            }
+            return best <= OpenDensity;
+        }
+
         // Caller timeslices this iterator. Expand the dirty area by one cell so
         // a newly opened/closed connection also invalidates its neighbour's link.
         // Links point up/positive from each air node: +x 1, +y 2, +z 4, and the
         // rising diagonals (+x,+y) 8, (-x,+y) 16, (+z,+y) 32, (-z,+y) 64.
-        public IEnumerator Rebuild(Bounds changed, Func<Vector3, bool> isOpen)
+        public IEnumerator Rebuild(Bounds changed, Func<Vector3, float> density)
         {
             Range(changed, out var first, out var last);
             int work = 0;
+            // Where every node stands first: links run between those points.
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
             for (int x = first.x; x <= last.x; x++)
             {
                 int i = Index(x, y, z);
-                Vector3 p = Point(x, y, z);
-                air[i] = isOpen(p);
+                air[i] = Locate(x, y, z, density, out anchor[i]);
+                if (++work % 128 == 0) yield return null;
+            }
+            int plane = Size.x * Size.y;
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+            {
+                int i = Index(x, y, z);
                 links[i] = 0;
                 if (air[i])
                 {
-                    if (x < Size.x - 1 && Clear(p, Vector3.right * Step.x, isOpen)) links[i] |= 1;
-                    if (y < Size.y - 1 && Clear(p, Vector3.up * Step.y, isOpen)) links[i] |= 2;
-                    if (z < Size.z - 1 && Clear(p, Vector3.forward * Step.z, isOpen)) links[i] |= 4;
+                    Vector3 p = Stand(i, x, y, z);
+                    bool To(int j, int jx, int jy, int jz) => Clear(p, Stand(j, jx, jy, jz) - p, density);
+                    if (x < Size.x - 1 && To(i + 1, x + 1, y, z)) links[i] |= 1;
+                    if (y < Size.y - 1 && To(i + Size.x, x, y + 1, z)) links[i] |= 2;
+                    if (z < Size.z - 1 && To(i + plane, x, y, z + 1)) links[i] |= 4;
                     if (y < Size.y - 1)
                     {
-                        if (x < Size.x - 1 && Clear(p, new Vector3(Step.x, Step.y, 0), isOpen)) links[i] |= 8;
-                        if (x > 0 && Clear(p, new Vector3(-Step.x, Step.y, 0), isOpen)) links[i] |= 16;
-                        if (z < Size.z - 1 && Clear(p, new Vector3(0, Step.y, Step.z), isOpen)) links[i] |= 32;
-                        if (z > 0 && Clear(p, new Vector3(0, Step.y, -Step.z), isOpen)) links[i] |= 64;
+                        if (x < Size.x - 1 && To(i + 1 + Size.x, x + 1, y + 1, z)) links[i] |= 8;
+                        if (x > 0 && To(i - 1 + Size.x, x - 1, y + 1, z)) links[i] |= 16;
+                        if (z < Size.z - 1 && To(i + plane + Size.x, x, y + 1, z + 1)) links[i] |= 32;
+                        if (z > 0 && To(i - plane + Size.x, x, y + 1, z - 1)) links[i] |= 64;
                     }
                 }
                 if (++work % 128 == 0) yield return null;
@@ -247,10 +290,10 @@ namespace SomethingDownThere
             Buffer.BlockCopy(computed, 0, light, 0, light.Length);
         }
 
-        private static bool Clear(Vector3 p, Vector3 delta, Func<Vector3, bool> isOpen)
+        private static bool Clear(Vector3 p, Vector3 delta, Func<Vector3, float> density)
         {
             // Quarter-cell samples reject thin earth partitions between nodes.
-            for (int s = 1; s <= 4; s++) if (!isOpen(p + delta * (s * 0.25f))) return false;
+            for (int s = 1; s <= 4; s++) if (density(p + delta * (s * 0.25f)) > OpenDensity) return false;
             return true;
         }
 

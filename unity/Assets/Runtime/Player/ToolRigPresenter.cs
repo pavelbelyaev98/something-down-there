@@ -17,9 +17,9 @@ namespace SomethingDownThere
         public const float ReferenceFov = 75f;
         private const float LowerSeconds = .15f, CutWindow = .15f, MaxSpinStep = 70f;
         private static readonly Regex StageName = new Regex(@"^L(\d{2})(?:-(\d{2}))?_");
-        // A shovel stroke pries and then scoops; the drill only pushes. The shovel's stroke takes ScoopLength times a
-        // plain push and turns about the blade's tip; the drill's turns about the socket (model metres). The scoop
-        // lifts the blade from ScoopAt of the stroke, where the dirt is removed.
+        // A shovel stroke pries and then scoops; the drill has no stroke, only its spin and chatter. The shovel's stroke
+        // takes ScoopLength times a plain push and turns about the blade's tip; the drill lowers away about the socket
+        // (model metres). The scoop lifts the blade from ScoopAt of the stroke, where the dirt is removed.
         private const float ScoopLength = 2.2f, ScoopPivot = 1.2f, DrillPivot = .9f, ScoopAt = .6f;
 
         [SerializeField] private FpsPlayer player;
@@ -112,7 +112,7 @@ namespace SomethingDownThere
                 // Soft ground takes a longer push, hard ground a shorter one with a little shudder.
                 float reach = (sink ? 1.5f : 1f) * (crisp ? 1.1f : 1f) * power;
                 float amount = (family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f) * reach * strokeDepth;
-                var (move, angles) = drill ? DrillPush(stroke, amount) : PryScoop(stroke, amount);
+                var (move, angles) = PryScoop(stroke, amount);
                 offset = Quaternion.Euler(restEuler) * move;
                 turn = angles;
                 if (family == MotionFamily.Hard)
@@ -180,13 +180,6 @@ namespace SomethingDownThere
             float side = strokeSide, roll = strokeRoll;
             return (new Vector3(.003f * side * push, .032f * scoop, 1.2f * amount * push - .6f * amount * scoop),
                     new Vector3(-14f * lever - 13f * scoop, 1f * side * lever, 3f * roll * lever + 3f * roll * scoop));
-        }
-
-        // A quick push (first 30%) and an eased return along the tool, never a swing.
-        private (Vector3 move, Vector3 turn) DrillPush(float t, float amount)
-        {
-            float jab = t < .3f ? 1f - (1f - t / .3f) * (1f - t / .3f) : 1f - Mathf.SmoothStep(0f, 1f, (t - .3f) / .7f);
-            return (new Vector3(.003f * strokeSide * jab, 0f, amount * jab), new Vector3(1.2f * strokeSide, 0f, 2.5f * strokeRoll) * jab);
         }
 
         private static float Rise(float t, float a, float b) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(a, b, t));

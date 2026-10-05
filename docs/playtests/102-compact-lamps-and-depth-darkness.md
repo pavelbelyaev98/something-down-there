@@ -5,6 +5,8 @@ load). You start with 4 lamps (HUD: `LAMPS available/owned`). Developer shortcut
 panel's money button helps you buy lamps quickly.
 
 **Try:**
+- Dig a narrow hole in one spot with the shovel or drill: it should dim with depth like a wide one, never
+  go black a metre down and light up when you widen it.
 - Dig a straight shaft down and watch the walls as you go: noticeably dimmer by 5 m, dim at 10 m,
   wanting a lamp from about 12-15 m, black by about 20 m. Also walk down a sloped ramp: it should
   darken almost like the shaft.

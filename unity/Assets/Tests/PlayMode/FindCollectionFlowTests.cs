@@ -13,8 +13,7 @@ namespace SomethingDownThere.Tests
         public void FullBagKeepsCuttingThroughAnAimedFindAndCollectsWhenSpaceReturns(bool shaving)
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
-            player.Tuning.Gravity = 0; player.SelectAdminLevel(4);
-            if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(shaving ? EquipmentProgression.DrillLevel : 4);
             PlacePickupCutFixture(find, false); AimPickupCutFixture(find, 0);
             while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count, "Carried", 1));
             int count = player.Inventory.Count, strokes = player.SuccessfulStrokes;
@@ -64,8 +63,7 @@ namespace SomethingDownThere.Tests
             // Cadence on its own: the cut lands on the press here (TerrainIntegrationTests covers the scoop).
             player.Tuning.CutAtScoop = false;
             // Level 6 reaches the ground behind the find even after the first bite deepens it.
-            player.SelectAdminLevel(6);
-            if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
+            player.SelectAdminLevel(shaving ? EquipmentProgression.DrillLevel : 6);
             PlacePickupCutFixture(find, nearby);
             AimPickupCutFixture(find, nearby ? .7f : 0);
             Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
@@ -91,8 +89,7 @@ namespace SomethingDownThere.Tests
             player.Tuning.Gravity = 0;
             // Cadence on its own: the cut lands on the press here (TerrainIntegrationTests covers the scoop).
             player.Tuning.CutAtScoop = false;
-            player.SelectAdminLevel(4);
-            if (player.ShavingEnabled != shaving) player.ToggleAdminShaving();
+            player.SelectAdminLevel(shaving ? EquipmentProgression.DrillLevel : 4);
             PlacePickupCutFixture(find, false);
             AimPickupCutFixture(find, 1.1f);
             Assert.That(player.TryPrimaryAction(), Is.True);

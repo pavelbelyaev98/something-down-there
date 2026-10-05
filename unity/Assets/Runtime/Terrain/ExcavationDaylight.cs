@@ -109,17 +109,17 @@ namespace SomethingDownThere
             if (dirty) pending.Encapsulate(local); else pending = local;
             dirty = true;
             // Light the fresh cut now instead of when the route rebuild lands.
-            if (!terrain.IsRestoring) { grid.Patch(local, IsOpen); patched = true; }
+            if (!terrain.IsRestoring) { grid.Patch(local, Density); patched = true; }
         }
 
-        private bool IsOpen(Vector3 local) => terrain.SignedDensity(transform.TransformPoint(local)) <= 0.001f;
+        private float Density(Vector3 local) => terrain.SignedDensity(transform.TransformPoint(local));
 
         private void LateUpdate()
         {
             if (terrain.IsRestoring) return;
             if (rebuild == null && dirty)
             {
-                rebuild = grid.Rebuild(pending, IsOpen);
+                rebuild = grid.Rebuild(pending, Density);
                 dirty = false;
                 accumulatedMilliseconds = 0;
             }
@@ -134,7 +134,7 @@ namespace SomethingDownThere
                 {
                     rebuild = null;
                     // Cuts made while it ran are not in this result yet: light them again.
-                    if (dirty) grid.Patch(pending, IsOpen);
+                    if (dirty) grid.Patch(pending, Density);
                     patched = true;
                     PublishedRevision++;
                     LastRebuildMilliseconds = accumulatedMilliseconds;

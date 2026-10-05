@@ -345,3 +345,45 @@ pushed the motors off the bottom of the screen and left only the bit.
   view when it lands (`FpsPlayer.CompletePendingScoop`); the saved press aim (`scoopAim`, `aimOverride`) went. A
   look at nothing diggable by then digs nothing. TerrainIntegrationTests now aims through the player's pitch, since
   a tick rewrites a hand-set camera rotation before the scoop lands (what the press aim had worked around).
+
+## Iteration: experimental bore (user, 2026-10-05)
+
+- Asked: drill the middle first and then around it, instead of a full-width layer with a point dropped in it.
+  Developer admin **Drill bite: layers / bore** (`FpsPlayer.DrillDial.Bite`, session-only, layers by default):
+  bore pushes a bit along the aim (`ExcavationGrid.RemoveBore`): a cone 1.2 R long (`DrillBoreLengthRatio`)
+  widening to the bite, then a short collar, its tip a layer past the contact each cut and blunt over 1.5 cells
+  (no needle). Lab, one spot: 14 cm deep and ~0.6 m wide after two cuts, 33 cm after five, 82 cm and ~1.4 m wide
+  after twelve; once full width a cut takes a layer like the layered drill (TerrainMaterialTests).
+- Trade-off for the playtest: sweeping fresh ground barely digs with bore, as only the tip meets new ground.
+
+## Iteration: no motion override, gradual bore (user, 2026-10-05)
+
+- The admin **Motion: Automatic/Override** went: the motion always follows the tool level (`FpsPlayer.ShavingEnabled`).
+  The drill's push stroke, which only played when the override forced strokes at a drill level and read as a
+  shovel, went with it; the drill keeps only its spin and chatter. ShavingIntegrationTests' comparison-switch test
+  went; the find-collection tests pick the drill level instead of overriding a shovel level.
+- Feedback: bore opened a small hole and then cleared the wide area at once. **Drill bite** gains **bore, gradual**:
+  the same bit with a cone twice as long (`DrillGradualBoreLengthRatio` 2.4 R), so it widens half as fast (about
+  twenty cuts to the full bite) and leaves a deeper funnel. `TryToolCut`'s `bore` is now the cone length in radii.
+
+## Iteration: the bore is the drill (user, 2026-10-05)
+
+- Verdict: bore (tip first) won; layers, the gradual bore and the admin **Drill bite** went, with the layered cut
+  (`ExcavationGrid.RemoveShave`, its point, the floor search `GroundAbove`, `TerrainVolume.TryShave`, the
+  `DrillPoint*` constants). The drill's advance is `EquipmentProgression.DrillAdvanceRatio` (was ShavingDepthRatio).
+- Feedback: a little hole sat in the middle of the cone. That was the bore's blunt tip, a cylinder 1.5 cells wide
+  kept so the tip would not leave a needle of air. The tip is now a ball of that size meeting the cone's flank
+  where their slopes match (`ExcavationGrid.Bit`): a smooth cone with a rounded point (lab, level 9: 15, 41 and
+  83 cm deep after 3, 8 and 15 cuts, sides falling ~11 cm per 10 cm with no pit). Gradual felt like a needle
+  going in and then the area around it going at once; the 1.2 R cone widens evenly.
+- The bore now takes each ground's cut shape in its cross-section (rock faceted, concrete square, clays
+  elliptical, gravel pebbly) and its bounds follow the bit along its axis instead of a cube round the tip.
+- Balance tests: a tip-first bit's first cut is tiny by design, so the drill's tiers compare a dozen cuts and
+  the milestone tests compare the first second (fresh) and four seconds held (sustained) instead of one and
+  twelve cuts; the layered drill's tests went, the grid and contour tests now run on the bore.
+- A layer a cut left the bit's first moments slow, worst in hard ground (concrete needed ~23 cuts, over two seconds,
+  to bore in: the same needle feel), and its first second fell below the level 6 shovel's in rock and concrete.
+  A bit with little of it biting now pushes on a layer at a time within one cut, up to `DrillPushes` (3), until it
+  has taken `DrillEngagedShare` (0.6) of a layer, all in one grid edit; bored in it takes a layer a cut. First second
+  at level 7 vs the level 6 shovel: soil 0.56 vs 0.24, rock 0.17 vs 0.09, concrete 0.065 vs 0.032 m3/s. Lab: 17, 51
+  and 79 cm deep after 1, 3 and 8 cuts, a clean cone throughout.

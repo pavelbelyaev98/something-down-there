@@ -559,7 +559,6 @@ namespace SomethingDownThere
                 + $"This site: {player.SuccessfulStrokes} strokes, {player.ExcavatedVolume:F1} m³ removed."
                 + DensityLine(), "body");
             var grid = Element(scroll, "admin-actions");
-            Button(grid, "Motion: " + player.AdminMotionLabel, player.ToggleAdminShaving);
             Button(grid, "Hover: " + player.AdminHoverLabel, player.ToggleAdminHover);
             foreach (FpsPlayer.DrillDial dial in Enum.GetValues(typeof(FpsPlayer.DrillDial)))
                 Button(grid, $"Drill {dial.ToString().ToLowerInvariant()}: {player.AdminDrillLabel(dial)}", () => player.CycleAdminDrill(dial));

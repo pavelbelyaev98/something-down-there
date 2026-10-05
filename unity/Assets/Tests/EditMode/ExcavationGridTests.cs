@@ -89,7 +89,7 @@ namespace SomethingDownThere.Tests
         }
 
         [TestCase(0f, 1f, 0f)] [TestCase(1f, 0f, 0f)] [TestCase(1f, 1f, 1f)]
-        public void ShavingAdvancesBelowVoxelSizeAndPreservesNearbySupport(float x, float y, float z)
+        public void DrillAdvancesBelowVoxelSizeAndPreservesNearbySupport(float x, float y, float z)
         {
             var normal = new Vector3(x, y, z).normalized;
             var origin = new Vector3(2, 2, 2);
@@ -103,12 +103,12 @@ namespace SomethingDownThere.Tests
                     Vector3 middle = (inside + outside) * .5f;
                     if (grid.Sample(middle) > 0) inside = middle; else outside = middle;
                 }
-                Vector3 surface = (inside + outside) * .5f;
-                Assert.That(grid.RemoveShave(surface, .35f, normal, .035f, out _), Is.True);
+                Vector3 tip = (inside + outside) * .5f - normal * .035f;
+                Assert.That(grid.RemoveBore(tip, .35f, normal, .42f, out _), Is.True);
                 Assert.That(grid.RemovedVolume, Is.GreaterThan(previousVolume));
                 previousVolume = grid.RemovedVolume;
-                Assert.That(grid.RemoveShave(surface, .35f, normal, .035f, out _), Is.False,
-                    "Replaying a fixed brush must not mine additional soil.");
+                Assert.That(grid.RemoveBore(tip, .35f, normal, .42f, out _), Is.False,
+                    "Replaying a fixed bit must not mine additional soil.");
             }
             Assert.That(grid.IsSolid(origin - normal * .3f), Is.False);
             Assert.That(grid.IsSolid(origin - normal * 1.2f), Is.True);
@@ -121,11 +121,11 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void InvalidShavingCannotChangeTheGrid()
+        public void InvalidDrillCannotChangeTheGrid()
         {
             var grid = new ExcavationGrid(new Vector3Int(16, 16, 16), .125f);
-            foreach (float depth in new[] { 0f, -1f, float.NaN, float.PositiveInfinity, 1f })
-                Assert.That(grid.RemoveShave(new Vector3(1, 2, 1), .3f, Vector3.up, depth, out _), Is.False);
+            foreach (float length in new[] { 0f, -1f, float.NaN, float.PositiveInfinity, 2f })
+                Assert.That(grid.RemoveBore(new Vector3(1, 2, 1), .3f, Vector3.up, length, out _), Is.False);
             Assert.That(grid.Revision, Is.Zero);
             Assert.That(grid.RemovedVolume, Is.Zero);
         }

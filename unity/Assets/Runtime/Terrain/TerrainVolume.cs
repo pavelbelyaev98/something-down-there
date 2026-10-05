@@ -203,15 +203,11 @@ namespace SomethingDownThere
         public bool TryDig(RaycastHit hit) => TryDig(hit, digRadius);
 
         public bool TryDig(RaycastHit hit, float radius)
-            => TryCut(hit, radius, 0);
-
-        public bool TryShave(RaycastHit hit, float radius, float depth)
-            => ExcavationGrid.Finite(depth) && depth > 0 && depth <= radius && TryCut(hit, radius, depth);
+            => TryCut(hit, radius, false);
 
         // `aim`: the way the tool is pushed. A drill bores along it (zero: straight into the face it hit).
-        public bool TryToolCut(RaycastHit hit, float radius, bool shaving, Vector3 aim = default)
-            => TryCut(hit, radius, shaving ? radius * EquipmentProgression.ShavingDepthRatio : 0, true,
-                shaving ? radius * EquipmentProgression.DrillPointDepthRatio : 0, aim);
+        public bool TryToolCut(RaycastHit hit, float radius, bool drill, Vector3 aim = default)
+            => TryCut(hit, radius, drill, true, aim);
 
         private bool RefineContact(ref Vector3 surface, Vector3 normal)
         {
@@ -235,8 +231,7 @@ namespace SomethingDownThere
             return true;
         }
 
-        private bool TryCut(RaycastHit hit, float radius, float shaveDepth, bool adaptMaterials = false, float pointDepth = 0,
-            Vector3 aim = default)
+        private bool TryCut(RaycastHit hit, float radius, bool drill, bool adaptMaterials = false, Vector3 aim = default)
         {
             LastRebuiltChunkCount = 0;
             LastDigMilliseconds = 0;
@@ -271,17 +266,24 @@ namespace SomethingDownThere
             float depthOffset = ((depthHash >> 8) * (1f / 16777216f) * 2 - 1) * scoopDepthVariation;
             Vector3 normal = transform.InverseTransformDirection(hit.normal).normalized;
             // A drill bores the way it is pushed, not square to whatever face it meets (user, 2026-10-05).
-            if (pointDepth > 0 && aim.sqrMagnitude > 1e-6f) normal = -transform.InverseTransformDirection(aim).normalized;
+            if (drill && aim.sqrMagnitude > 1e-6f) normal = -transform.InverseTransformDirection(aim).normalized;
             Vector3 point = surface - normal * (radius * (0.12f + depthOffset));
             var timer = Stopwatch.StartNew();
             BoundsInt changed;
             var material = adaptMaterials ? ToolMaterialAt(hit) : TerrainMaterialId.Soil;
-            if (shaveDepth > 0)
+            if (drill)
             {
                 // Surface nets approximate the isosurface. Resolve the true contact so
                 // a cut shallower than a voxel keeps advancing on tilted faces too.
                 if (!RefineContact(ref surface, normal)) return false;
-                if (!grid.RemoveShave(surface, radius, normal, shaveDepth, out changed, adaptMaterials, adaptMaterials ? seed : 0, pointDepth)) return false;
+                // The bit's tip goes a layer past the contact (less in harder ground). With little of it biting it goes
+                // in faster, as a real bit does: a layer at a time, up to DrillPushes, until it has taken
+                // DrillEngagedShare of a layer; bored in, a layer a cut.
+                var ground = EquipmentProgression.MaterialResponse(grid.MaterialAt(surface - normal * cellSize * .5f));
+                float advance = radius * EquipmentProgression.DrillAdvanceRatio * ground.Penetration;
+                float engaged = EquipmentProgression.DrillEngagedShare * Mathf.PI * radius * radius * advance * ground.Width * ground.Length;
+                if (!grid.RemoveBore(surface - normal * advance, radius, normal, radius * EquipmentProgression.DrillBoreLengthRatio,
+                    out changed, adaptMaterials, seed, advance, EquipmentProgression.DrillPushes, engaged)) return false;
             }
             else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed, adaptMaterials)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
