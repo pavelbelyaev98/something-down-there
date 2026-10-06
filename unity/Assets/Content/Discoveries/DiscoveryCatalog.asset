@@ -41,7 +41,8 @@ MonoBehaviour:
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1574777764794235731, guid: 5b43cd0c70fde7e4c914f4e4c9c22aeb, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 8706707701303512087, guid: 2e1ca6cc48cb1e34abcbe8367aa6abec, type: 3}
     Count: 1200
     ShallowCount: 0
     ShallowMinCover: 0

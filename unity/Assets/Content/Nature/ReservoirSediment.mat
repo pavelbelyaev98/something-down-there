@@ -64,6 +64,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 1a954c14882210c4ea21c86d1d554bcd, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ShellAlbedo:
+        m_Texture: {fileID: 2800000, guid: e7e08a38a6a33274cbcaccba91e88290, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ShellBAlbedo:
         m_Texture: {fileID: 2800000, guid: d6887682365ebcf438ab1f1f49cdbbe6, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -74,6 +78,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _ShellBNormal:
         m_Texture: {fileID: 2800000, guid: 827606ce91dc65d41a3b32ca6718ac12, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellMask:
+        m_Texture: {fileID: 2800000, guid: b57f6c3847dd390428b1076a7019fbd2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellNormal:
+        m_Texture: {fileID: 2800000, guid: 0b6e84dfa0255f84d89df1e56b63babd, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SoilAlbedo:

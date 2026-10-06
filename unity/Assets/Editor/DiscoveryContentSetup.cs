@@ -19,7 +19,8 @@ namespace SomethingDownThere.Editor
         [Serializable] public sealed class SourceCatalog { public int schema_version; public SourceEntry[] variants; }
         [Serializable] public sealed class Maps { public string BaseColor, Normal, Masks; }
         // A further look made from a bought prop prefab (BuriedPropsSetup), saved under its own key.
-        [Serializable] public sealed class PropLook { public string content_id, prefab; }
+        // A further look of a prop find; model_scale (when above zero) replaces the find's for a prop of another size.
+        [Serializable] public sealed class PropLook { public string content_id, prefab; public float model_scale; }
         [Serializable] public sealed class SourceEntry
         {
             public string content_id, display_name, atlas_group, tier, fbx, collision_fbx, recovery, lore;
@@ -34,8 +35,6 @@ namespace SomethingDownThere.Editor
             // Lines geodes only (110): its instances are the geodes' seats.
             public bool geode;
             public float required_exposure;
-            // Small finds keep the entry carpet: coal ships this way.
-            public bool small;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
             // Host ground: ground names (soil, backfill) and a density weight for each (unlisted ground is 1).
             public string[] host_grounds;

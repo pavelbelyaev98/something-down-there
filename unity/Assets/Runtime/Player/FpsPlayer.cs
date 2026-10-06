@@ -89,8 +89,6 @@ namespace SomethingDownThere
         private bool adminGroundXray;
         // Break-in A/B (109): breaking into a chest's pocket caves part of it in (default) or only drops crumbs and dust.
         private bool adminBreakInDust;
-        // Geode A/Bs (110): the shell's texture set (A by default, or B) and a faint glow on geode crystals (off by default).
-        private bool adminGeodeShellB, adminGeodeGlow;
         // Drill look comparison (playtest 001): the step picked on each DrillDial.
         private readonly int[] adminDrillDials = new int[DrillDialSteps.Length];
         // Ground contact shading (SSAO) strength set from the admin slider for the session.
@@ -150,14 +148,12 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminHoverOnRelease || adminGroundXray || adminContactShading || adminBreakInDust || adminGeodeShellB || adminGeodeGlow);
+            || adminHoverOnRelease || adminGroundXray || adminContactShading || adminBreakInDust);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
         public bool BreakInCollapses => !(AdminAvailable && adminBreakInDust);
         public string AdminBreakInLabel => BreakInCollapses ? "collapse" : "dust only";
-        public string AdminGeodeShellLabel => AdminAvailable && adminGeodeShellB ? "B" : "A";
-        public string AdminGeodeGlowLabel => AdminAvailable && adminGeodeGlow ? "faint" : "off";
         // The first-person drill's look (ToolRigPresenter), dialled per session in developer admin; each dial's first
         // step is the default. Size scales the drill (1 = the purchased model); Position moves it along the tool (metres,
         // + away from the eye).
@@ -353,8 +349,6 @@ namespace SomethingDownThere
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
             unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = adminBreakInDust = false;
-            adminGeodeShellB = adminGeodeGlow = false;
-            ApplyGeodeLooks();
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             motor.enabled = false;
@@ -817,8 +811,6 @@ namespace SomethingDownThere
             adminHoverOnRelease = false;
             adminGroundXray = false;
             adminBreakInDust = false;
-            adminGeodeShellB = adminGeodeGlow = false;
-            ApplyGeodeLooks();
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
@@ -858,30 +850,6 @@ namespace SomethingDownThere
             adminBreakInDust = !adminBreakInDust;
             ShowFeedback("Breaking into a chest's pocket: " + AdminBreakInLabel);
             MenuChanged?.Invoke();
-        }
-
-        public void ToggleAdminGeodeShell()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminGeodeShellB = !adminGeodeShellB;
-            ApplyGeodeLooks();
-            ShowFeedback("Geode shell: " + AdminGeodeShellLabel);
-            MenuChanged?.Invoke();
-        }
-
-        public void ToggleAdminGeodeGlow()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminGeodeGlow = !adminGeodeGlow;
-            ApplyGeodeLooks();
-            ShowFeedback("Geode crystals' glow: " + AdminGeodeGlowLabel);
-            MenuChanged?.Invoke();
-        }
-
-        private void ApplyGeodeLooks()
-        {
-            TerrainVolume.SetGeodeShellLook(AdminAvailable && adminGeodeShellB);
-            discoveries?.SetGeodeGlow(AdminAvailable && adminGeodeGlow);
         }
 
         public void CycleAdminDrill(DrillDial dial)

@@ -561,8 +561,6 @@ namespace SomethingDownThere
             var grid = Element(scroll, "admin-actions");
             Button(grid, "Hover: " + player.AdminHoverLabel, player.ToggleAdminHover);
             Button(grid, "Break-in: " + player.AdminBreakInLabel, player.ToggleAdminBreakIn);
-            Button(grid, "Geode shell: " + player.AdminGeodeShellLabel, player.ToggleAdminGeodeShell);
-            Button(grid, "Geode glow: " + player.AdminGeodeGlowLabel, player.ToggleAdminGeodeGlow);
             foreach (FpsPlayer.DrillDial dial in Enum.GetValues(typeof(FpsPlayer.DrillDial)))
                 Button(grid, $"Drill {dial.ToString().ToLowerInvariant()}: {player.AdminDrillLabel(dial)}", () => player.CycleAdminDrill(dial));
             for (int i = 1; i <= player.Shovel.LevelCount; i++)

@@ -1,12 +1,10 @@
-"""Writes the geode shell's two texture sets (110, an A/B for the user) from Crystal Caverns' own tiling rock details:
-A, _RockDetail1's porous stone graded to a dark grey; B, the same stone with a fifth of _RockDetail2's banding, graded
-to a pale, cool grey like a real geode's chalcedony crust. Both keep _RockDetail1's normal map. (B as _RockDetail2
-alone, with relief from its lines, read as white marble.) Both read apart from the warm
-soil, the grey-brown backfill and the site's walls. (The cave surfaces' maps were tried first: they are UV atlases, and
-the gaps between their islands showed as black holes in the wall.) The details are near-white overlays, so each is
-stretched over its own 2-98 % range into the look's palette, and blended with its half-offset copy where its edges meet
-so it tiles exactly. Colour, normal and occlusion (G), each 2048 px, into Content/GroundTextures as GeodeShellA_* and
-GeodeShellB_*.
+"""Writes the geode shell's texture set (110) from Crystal Caverns' own tiling rock detail: _RockDetail1's porous stone
+graded to a dark grey, with its own normal map. It reads apart from the warm soil, the grey-brown backfill and the
+site's walls. (User, 2026-10-06: "geode shell A is beautiful". B, the same stone pale and cool with a fifth of
+_RockDetail2's banding, lost the A/B; _RockDetail2 alone, with relief from its lines, read as white marble; the cave
+surfaces' maps are UV atlases whose island gaps showed as black holes in the wall.) The detail is a near-white overlay,
+so it is stretched over its own 2-98 % range into the palette, and blended with its half-offset copy where its edges
+meet so it tiles exactly. Colour, normal and occlusion (G), each 2048 px, into Content/GroundTextures as GeodeShell_*.
 Run from the repository root (needs Pillow and numpy) after reimporting the pack."""
 from pathlib import Path
 
@@ -16,12 +14,8 @@ from PIL import Image
 surfaces = Path('unity/Assets/BK/PureNature_CrystalCaverns/Textures/Surfaces')
 target = Path('unity/Assets/Content/GroundTextures')
 size = 2048
-# Each look: the share of _RockDetail2's banding over _RockDetail1's stone, and the dark and light ends of its palette
-# (sRGB).
-looks = {
-    'A': (0, np.array([.22, .21, .23]), np.array([.48, .46, .48])),
-    'B': (.2, np.array([.48, .5, .54]), np.array([.66, .68, .71])),
-}
+# The dark and light ends of the palette (sRGB).
+dark, light = np.array([.22, .21, .23]), np.array([.48, .46, .48])
 # The cross fade's half width as a share of the tile.
 fade = .18
 
@@ -49,26 +43,19 @@ def tileable(image, w):
     return mean + (blend - mean) * (scale[..., None] if image.ndim == 3 else scale)
 
 
-def stretched(detail):
-    """A detail map's shade, tileable, over its own 2-98 % range."""
-    shade = tileable(load(surfaces / f'{detail}_a.png', 'L'), w)
-    low, high = np.percentile(shade, [2, 98])
-    return np.clip((shade - low) / max(1e-6, high - low), 0, 1)
-
-
 w = weight()
-stone, bands = stretched('_RockDetail1'), stretched('_RockDetail2')
+shade = tileable(load(surfaces / '_RockDetail1_a.png', 'L'), w)
+low, high = np.percentile(shade, [2, 98])
+t = np.clip((shade - low) / max(1e-6, high - low), 0, 1)
+colour = dark + (light - dark) * t[..., None]
 normal = tileable(load(surfaces / '_RockDetail1_n.png', 'RGB') / 255 * 2 - 1, w)
 normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
+# The detail's dark pits and seams sit a little in shadow.
+occlusion = .75 + .25 * t
 target.mkdir(parents=True, exist_ok=True)
-for look, (banding, dark, light) in looks.items():
-    t = stone * (1 - banding) + bands * banding
-    colour = dark + (light - dark) * t[..., None]
-    # The detail's dark pits and seams sit a little in shadow.
-    occlusion = .75 + .25 * t
-    Image.fromarray(np.uint8(np.clip(colour, 0, 1) * 255 + .5)).save(target / f'GeodeShell{look}_Albedo.png')
-    Image.fromarray(np.uint8(np.clip((normal + 1) / 2, 0, 1) * 255 + .5)).save(target / f'GeodeShell{look}_Normal.png')
-    full = np.full(occlusion.shape, 255, np.uint8)
-    Image.fromarray(np.dstack([np.zeros_like(full), np.uint8(np.clip(occlusion, 0, 1) * 255 + .5), np.zeros_like(full), full])).save(
-        target / f'GeodeShell{look}_Mask.png')
-    print('Geode shell', look, 'written to', target)
+Image.fromarray(np.uint8(np.clip(colour, 0, 1) * 255 + .5)).save(target / 'GeodeShell_Albedo.png')
+Image.fromarray(np.uint8(np.clip((normal + 1) / 2, 0, 1) * 255 + .5)).save(target / 'GeodeShell_Normal.png')
+full = np.full(occlusion.shape, 255, np.uint8)
+Image.fromarray(np.dstack([np.zeros_like(full), np.uint8(np.clip(occlusion, 0, 1) * 255 + .5), np.zeros_like(full), full])).save(
+    target / 'GeodeShell_Mask.png')
+print('Geode shell written to', target)

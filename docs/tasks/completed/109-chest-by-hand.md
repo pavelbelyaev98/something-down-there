@@ -214,3 +214,12 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
   - Dust only: a lighter fall of crumbs and dust at the breach.
   - `ChestSnapshot.Breached` keeps it from happening twice (save format 19).
 - Digging beside the pocket never sets it off. Restoring a save never replays it.
+
+## Iteration 4 (user, 2026-10-06)
+
+- "After breaking it, it leaves weird gaps which are hard to remove since they are thin and I have to point": the
+  cave-in is a ball now, 1.4 m across and 0.2 m beyond the breach (`TerrainVolume.ClearSphere`), not a box slab. The
+  box's edges left thin rims between the way in and the pocket.
+- "Add in the Ground Lab, in the backfill, an actual chest inside so I test the whole flow": the backfill pit bay's
+  pit leads down to an old chest 4.6 m down, in its pocket of air and fill shell as the site's chests are
+  (`GroundLab.Layout`), holding one each of the dearest contents.

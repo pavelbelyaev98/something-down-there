@@ -102,16 +102,7 @@ namespace SomethingDownThere
             untouchedPreview = preview;
         }
 
-        // The geode shell A/B (110, admin): which of its two texture sets every ground material draws, a shader global so
-        // no material asset changes at run time. Each session starts on A.
-        private static readonly int GeodeShellLookId = Shader.PropertyToID("_GeodeShellLook");
-        public static void SetGeodeShellLook(bool lookB) => Shader.SetGlobalFloat(GeodeShellLookId, lookB ? 1 : 0);
-
-        private void Awake()
-        {
-            SetGeodeShellLook(false);
-            InitializeSession();
-        }
+        private void Awake() => InitializeSession();
 
         public void InitializeSession()
         {
@@ -305,6 +296,15 @@ namespace SomethingDownThere
             return true;
         }
 
+        // A ball of ground cleared, like ClearLoadSweep regardless of the ground's resistance (a chest pocket's cave-in).
+        public bool ClearSphere(Vector3 centre, float radius)
+        {
+            if (!CanDig || IsRestoring) return false;
+            LastRebuiltChunkCount = 0;
+            if (grid.RemoveSphere(transform.InverseTransformPoint(centre), radius, out var changed)) CommitEdit(changed);
+            return true;
+        }
+
         public bool ClearLoadSweep(Vector3 from, Vector3 to, Quaternion rotation, Vector3 halfExtents)
         {
             using var profile = LoadSweepMarker.Auto();
@@ -352,7 +352,7 @@ namespace SomethingDownThere
         public void UseGroundLab()
         {
             if (grid == null) return;
-            grid.UseGroundLab();
+            grid.UseGroundLab(new Bounds(stashPocketCentre, stashPocketHalf * 2));
             RebuildAfterReset();
         }
 

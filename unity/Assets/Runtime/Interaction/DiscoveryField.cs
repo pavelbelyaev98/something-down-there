@@ -133,7 +133,6 @@ namespace SomethingDownThere
                 finds.Add(find);
             }
             DeriveGeodes();
-            ApplyGeodeGlow();
             initialized = true;
             PopulationRevision++;
         }
@@ -187,7 +186,6 @@ namespace SomethingDownThere
             foreach (var find in finds) find.RefreshExposure();
             SpawnGallery();
             DeriveGeodes();
-            ApplyGeodeGlow();
             clearsStored = true;
             initialized = true;
             PopulationRevision++;
@@ -203,7 +201,17 @@ namespace SomethingDownThere
             if (catalog.Chest == null || catalog.ChestContents.Length == 0) return;
             // Its base 2 cm into the ground (the pocket's floor lies that far above the base), so its footing holds.
             var position = new Vector3(LabChestAt.x, terrain.SurfaceHeight - catalog.Chest.Pocket.min.y, LabChestAt.z);
-            var chest = SpawnChest(position, Quaternion.Euler(0, 90, 0));
+            FillLabChest(SpawnChest(position, Quaternion.Euler(0, 90, 0)), "ground-lab-chest");
+            // The backfill pit bay's chest, buried in its pocket as the site's are, to dig down to, break into and open.
+            int n = 0;
+            foreach (var stash in terrain.GroundLayout.Stashes)
+                FillLabChest(SpawnChest(terrain.transform.TransformPoint((Vector3)stash.Centre), terrain.transform.rotation * stash.Rotation),
+                    "ground-lab-buried-chest-" + n++);
+        }
+
+        // One each of the chest contents' most valuable kinds, heaped as in the site's chests.
+        private void FillLabChest(BuriedChest chest, string id)
+        {
             var random = new System.Random(6);
             var kinds = new List<DiscoveryCatalog.Entry>();
             foreach (var content in catalog.ChestContents)
@@ -219,8 +227,8 @@ namespace SomethingDownThere
                 var (at, lie) = heap.Place(chest.ContentSeats[k], entry);
                 var find = Instantiate(entry.Appearance(random.Next(entry.AppearanceCount)), chest.transform.TransformPoint(at),
                     chest.transform.rotation * lie, transform);
-                find.Initialize(terrain, $"ground-lab-chest-{k}", this);
-                find.name = find.Item.DisplayName + " (lab chest " + k + ")";
+                find.Initialize(terrain, $"{id}-{k}", this);
+                find.name = find.Item.DisplayName + " (" + id + " " + k + ")";
                 finds.Add(find);
             }
         }
@@ -340,7 +348,6 @@ namespace SomethingDownThere
                 foreach (var stash in terrain.GroundLayout.Stashes)
                     SpawnChest(terrain.transform.TransformPoint((Vector3)stash.Centre), terrain.transform.rotation * stash.Rotation);
             DeriveGeodes();
-            ApplyGeodeGlow();
             initialized = true;
             PopulationRevision++;
         }
@@ -411,37 +418,6 @@ namespace SomethingDownThere
             foreach (var candidate in FindObjectsByType<FpsPlayer>())
                 if (candidate.gameObject.scene == gameObject.scene) return candidate;
             return null;
-        }
-
-        // Geode glow A/B (110, admin): off, or each geode crystal faintly lit in its own colour, so it reads in the dark
-        // before a lamp reaches it. Their materials keep emission on at black; a property block sets the colour.
-        private const float GeodeGlowStrength = .35f;
-        private bool geodeGlow;
-        private MaterialPropertyBlock glowBlock;
-
-        public void SetGeodeGlow(bool on)
-        {
-            geodeGlow = on;
-            ApplyGeodeGlow();
-        }
-
-        private void ApplyGeodeGlow()
-        {
-            if (catalog == null) return;
-            var geodeIds = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var entry in catalog.Entries)
-                if (entry.Geode) for (int i = 0; i < entry.AppearanceCount; i++) geodeIds.Add(entry.Appearance(i).SaveContentId);
-            if (geodeIds.Count == 0) return;
-            glowBlock ??= new MaterialPropertyBlock();
-            foreach (var find in finds)
-            {
-                if (find == null || !geodeIds.Contains(find.SaveContentId) || !find.TryGetComponent<MeshRenderer>(out var renderer)) continue;
-                if (!geodeGlow) { renderer.SetPropertyBlock(null); continue; }
-                var colour = renderer.sharedMaterial != null && renderer.sharedMaterial.HasProperty("_BaseColor")
-                    ? renderer.sharedMaterial.GetColor("_BaseColor") : Color.white;
-                glowBlock.SetColor("_EmissionColor", colour * GeodeGlowStrength);
-                renderer.SetPropertyBlock(glowBlock);
-            }
         }
 
         private BuriedChest SpawnChest(Vector3 position, Quaternion rotation)

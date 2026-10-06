@@ -4,14 +4,13 @@
     {
       "content_id": "mineral_coal",
       "display_name": "Coal",
-      "atlas_group": "Coal",
       "tier": "common",
-      "fbx": "coal/Coal.fbx",
-      "collision_fbx": "coal/Coal_collision.fbx",
-      "dimensions_m": [
-        0.7,
-        0.55,
-        0.45
+      "prefab": "Assets/Content/BuriedProps/MiningPack/Coal_Layered_Large.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_coal_b",
+          "prefab": "Assets/Content/BuriedProps/MiningPack/Coal_Layered_Small.prefab"
+        }
       ],
       "instances": 1200,
       "shallow_instances": 0,
@@ -25,12 +24,7 @@
       "core_minimum_depth_m": 1,
       "core_maximum_depth_m": 5.5,
       "core_share": 0.9,
-      "model_scale": 0.6,
-      "textures": {
-        "BaseColor": "coal/BaseColor.png",
-        "Normal": "coal/Normal.png",
-        "Masks": "coal/Masks.png"
-      }
+      "model_scale": 0.2
     },
     {
       "content_id": "mineral_copper",
@@ -40,7 +34,8 @@
       "prop_looks": [
         {
           "content_id": "mineral_copper_b",
-          "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_CopperB.prefab"
+          "prefab": "Assets/Content/BuriedProps/MiningPack/Copper_Native.prefab",
+          "model_scale": 0.15
         }
       ],
       "instances": 1280,

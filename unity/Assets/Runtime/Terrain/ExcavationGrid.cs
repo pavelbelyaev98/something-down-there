@@ -143,11 +143,12 @@ namespace SomethingDownThere
             ClearSupportSearch();
         }
 
-        // Developer Ground Lab: labelled bays of each ground instead of the seeded site, with the geode bay's geode.
-        public void UseGroundLab()
+        // Developer Ground Lab: labelled bays of each ground instead of the seeded site, with the backfill pit bay's chest in
+        // its pocket (stashPocket, the chest's) and the geode bay's geode.
+        public void UseGroundLab(Bounds stashPocket = default)
         {
-            materials = GroundLab.Materials(Size, CellSize);
-            Layout = GroundLab.Layout();
+            materials = GroundLab.Materials(Size, CellSize, stashPocket);
+            Layout = GroundLab.Layout(stashPocket);
             labCarves = GroundLab.Cavities();
             Reset();
         }

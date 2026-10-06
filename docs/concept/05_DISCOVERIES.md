@@ -14,10 +14,12 @@ Commons include the mineral ladder (coal → copper → iron → silver → gold
 bottles, plain stones, commonplace scrap, packaging and rubbish. Each zone has its own pair of
 minerals (`114`): coal and copper in the recent fill, iron and silver in the sediment, gold and
 emerald in the third zone, ruby and diamond in the deep stone. Pyrite, fool's gold, is a cheap
-aside in the sediment: it looks like gold and sells like rock. Every mineral looks like the plain
-rock the user approved: plain, matte stone, never glossy or finely detailed (user, 2026-10-06).
-Gems dug out of the ground are big, dirty crystals; the clean ones in old chests are smaller and
-worth less (user, 2026-10-06: "weird smaller crystals cost more"). "Common" means routine to find
+aside in the sediment: it looks like gold and sells like rock. Every mineral is plain, matte and
+earthy like the plain rock the user approved, never glossy or finely detailed, yet reads as its own
+material at a glance (user, 2026-10-06): coal is a black, layered lump, not a dark rock; iron is
+rust-streaked, never glowing like lava; silver keeps its sparkle; copper is an ore or a native nugget
+(an A/B). Gems dug out of the ground are big, dusty crystals, never darkly stained; the clean ones in
+old chests are smaller and worth less (user, 2026-10-06: "weird smaller crystals cost more"). "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
 During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.

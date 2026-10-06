@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace SomethingDownThere.Editor
 {
-    // The mineral batch (art/minerals/catalog.json): a mineral is either a source-owned Blender model or, where a bought
-    // pack has it (113), that pack's prop prefabs in its looks (PropFindSetup).
+    // The mineral batch (art/minerals/catalog.json): each mineral's looks are bought packs' prop prefabs (PropFindSetup):
+    // the Mining pack's ores and rocks, Crystal Caverns' crystals (113, 114).
     public static class MineralSetup
     {
         public const string Folder = "Assets/Content/Minerals";
@@ -34,15 +34,13 @@ namespace SomethingDownThere.Editor
                     || !float.IsFinite(e.core_minimum_depth_m) || !float.IsFinite(e.core_maximum_depth_m)
                     || !float.IsFinite(e.core_share) || e.core_share <= 0 || e.core_share > 1
                     || e.core_minimum_depth_m < e.minimum_depth_m || e.core_maximum_depth_m > e.maximum_depth_m
-                    || e.core_maximum_depth_m <= e.core_minimum_depth_m
-                    || string.IsNullOrEmpty(e.prefab) && (e.dimensions_m == null || e.dimensions_m.Length != 3 || e.dimensions_m.Any(v => !float.IsFinite(v) || v <= 0)))
+                    || e.core_maximum_depth_m <= e.core_minimum_depth_m || string.IsNullOrEmpty(e.prefab))
                     throw new InvalidDataException("Invalid mineral identity, placement or collection contract.");
                 if (i > 0 && (e.sale_value <= source.variants[i - 1].sale_value
                     || e.core_minimum_depth_m <= source.variants[i - 1].core_minimum_depth_m))
                     throw new InvalidDataException("Mineral value and core depth must increase in the selected order.");
                 float mass = i < 5 ? 4 : 2;
-                var looks = string.IsNullOrEmpty(e.prefab) ? new List<BuriedFind> { DiscoveryContentSetup.ImportAppearance(e, Source, Folder, !e.small, mass) }
-                    : PropFindSetup.ImportLooks(e, Folder, false, mass);
+                var looks = PropFindSetup.ImportLooks(e, Folder, false, mass);
                 entries.Add(new DiscoveryCatalog.Entry { ItemId = e.content_id, Prefab = looks[0], AppearanceVariants = looks.Skip(1).ToArray(), Count = e.instances,
                     ShallowCount = e.shallow_instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m,
                     CoreMinDepth = e.core_minimum_depth_m, CoreMaxDepth = e.core_maximum_depth_m, CoreShare = e.core_share,

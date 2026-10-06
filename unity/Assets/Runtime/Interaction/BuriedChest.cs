@@ -170,8 +170,9 @@ namespace SomethingDownThere
         // pocket's air sets off the break-in, a part of the pocket's roof or wall caving in with clods and dust
         // (FpsPlayer.BreakInCollapses), or a fall of crumbs and dust only. The way from the cut to the nearest point of the
         // pocket must be open, so digging beside it does nothing.
-        private const float BreakInStep = .08f, CollapseDepth = .35f;
-        private static readonly Vector3 CollapseHalf = new Vector3(.5f, .4f, .5f);
+        // The cave-in is a ball CollapseRadius across, CollapseDepth beyond the breach, rounded so it takes the thin rims a box
+        // left between the way in and the pocket (user, 2026-10-06: "weird gaps, thin, hard to remove").
+        private const float BreakInStep = .08f, CollapseDepth = .2f, CollapseRadius = .7f;
 
         private void CheckBreach(Bounds changed)
         {
@@ -198,9 +199,8 @@ namespace SomethingDownThere
             bool collapse = viewer == null || viewer.BreakInCollapses;
             if (collapse)
             {
-                // The fill around the breach gives way: a slab of roof or wall drops into the pocket.
-                var slab = point - inward * CollapseDepth + Vector3.up * .15f;
-                terrain.ClearLoadSweep(slab, slab, Quaternion.LookRotation(inward, Mathf.Abs(Vector3.Dot(inward, Vector3.up)) > .9f ? transform.forward : Vector3.up), CollapseHalf);
+                // The fill around the breach gives way: a rounded piece of roof or wall drops into the pocket.
+                terrain.ClearSphere(point - inward * CollapseDepth, CollapseRadius);
             }
             var crane = viewer != null ? viewer.Crane : null;
             if (crane == null) return;

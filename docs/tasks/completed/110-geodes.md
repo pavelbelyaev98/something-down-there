@@ -5,7 +5,7 @@
   in zones 2–3. The first way in opens each one once, with crumbs and dust.
 - Six crystals line each hollow, from the population: celestine and fluorite in the sediment, amethyst and
   citrine deeper.
-- The shell look (A/B) and a faint crystal glow (A/B) are admin variations awaiting the user's pick.
+- The shell is Crystal Caverns' porous rock detail graded dark grey, which won its A/B. The crystals don't glow.
 
 Plan and research: [107](107-asset-only-grounds.md).
 
@@ -257,3 +257,12 @@ Pulpí geode in Spain is big enough to walk into.
 - Compare the shell A/B and the glow A/B.
 - **Good feels like:** "a hard ball of rock... something is in there", then darkness, a lamp, and a
   sparkle that pays.
+
+## Iteration (user, 2026-10-06, after a first look)
+
+- "Geode shell A is beautiful": B (the same stone pale and cool, faintly banded) and the shader global that switched
+  them are gone; the shell has one texture set, `GeodeShell_*`.
+- "The glow makes no difference": the glow A/B is gone (the crystals' property block, their trace of emission, the
+  admin toggle). A crystal shows in the lamp's light, as concept `03` §5 has it.
+- Emission had first failed to show at all: URP's material validation switches a material's `_EMISSION` off when
+  its emission colour is black, and the excavation daylight's copy kept that.

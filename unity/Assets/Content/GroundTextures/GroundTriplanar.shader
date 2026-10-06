@@ -12,12 +12,9 @@ Shader "Something Down There/Ground Triplanar"
         _BackfillTint("Backfill tint", Color) = (1,1,1,1)
         _BackfillTileMetres("Backfill tile metres", Float) = 8
         _BackfillNormalStrength("Backfill relief", Range(0, 2)) = 1
-        _ShellAAlbedo("Geode shell A colour", 2D) = "white" {}
-        [Normal] _ShellANormal("Geode shell A normal", 2D) = "bump" {}
-        _ShellAMask("Geode shell A occlusion (G)", 2D) = "white" {}
-        _ShellBAlbedo("Geode shell B colour", 2D) = "white" {}
-        [Normal] _ShellBNormal("Geode shell B normal", 2D) = "bump" {}
-        _ShellBMask("Geode shell B occlusion (G)", 2D) = "white" {}
+        _ShellAlbedo("Geode shell colour", 2D) = "white" {}
+        [Normal] _ShellNormal("Geode shell normal", 2D) = "bump" {}
+        _ShellMask("Geode shell occlusion (G)", 2D) = "white" {}
         _ShellTint("Geode shell tint", Color) = (1,1,1,1)
         _ShellTileMetres("Geode shell tile metres", Float) = 3
         _ShellNormalStrength("Geode shell relief", Range(0, 2)) = 1
@@ -84,8 +81,6 @@ Shader "Something Down There/Ground Triplanar"
             float4 _ShellTint;
             float _ShellTileMetres, _ShellNormalStrength;
         CBUFFER_END
-        // The geode shell A/B (110, admin): 0 draws look A, 1 look B. A global, so no material changes at run time.
-        float _GeodeShellLook;
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
         TEXTURE2D(_SoilRoughness); SAMPLER(sampler_SoilRoughness);
@@ -98,8 +93,7 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_DigEdge); SAMPLER(sampler_DigEdge);
         // Identical repeat/trilinear imports share sampler states across layers.
         TEXTURE2D(_BackfillAlbedo); TEXTURE2D(_BackfillNormal); TEXTURE2D(_BackfillMask);
-        TEXTURE2D(_ShellAAlbedo); TEXTURE2D(_ShellANormal); TEXTURE2D(_ShellAMask);
-        TEXTURE2D(_ShellBAlbedo); TEXTURE2D(_ShellBNormal); TEXTURE2D(_ShellBMask);
+        TEXTURE2D(_ShellAlbedo); TEXTURE2D(_ShellNormal); TEXTURE2D(_ShellMask);
         #include "../../Runtime/Terrain/ExcavationDaylight.hlsl"
 
         struct GroundAttributes
@@ -375,21 +369,15 @@ Shader "Something Down There/Ground Triplanar"
                 occlusion = lerp(occlusion, layerOcclusion, backfill);
                 roughness = lerp(roughness, 1, backfill);
             }
-            // Geode shell (110): dense mauve-grey stone from the cave pack's surfaces, a little less rough than earth.
+            // Geode shell (110): dense dark grey stone from the cave pack's rock detail, a little less rough than earth.
             half shell = saturate(materials.z);
             [branch] if (shell > 0.001)
             {
                 half3 layerColour, layerNormal; half layerOcclusion;
-                [branch] if (_GeodeShellLook > 0.5)
-                    DepositSurface(TEXTURE2D_ARGS(_ShellBAlbedo, sampler_SoilAlbedo),
-                        TEXTURE2D_ARGS(_ShellBNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ShellBMask, sampler_SoilRoughness),
-                        position, dx, dy, n, _ShellTileMetres, _ShellTint.rgb, _ShellNormalStrength,
-                        layerColour, layerNormal, layerOcclusion);
-                else
-                    DepositSurface(TEXTURE2D_ARGS(_ShellAAlbedo, sampler_SoilAlbedo),
-                        TEXTURE2D_ARGS(_ShellANormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ShellAMask, sampler_SoilRoughness),
-                        position, dx, dy, n, _ShellTileMetres, _ShellTint.rgb, _ShellNormalStrength,
-                        layerColour, layerNormal, layerOcclusion);
+                DepositSurface(TEXTURE2D_ARGS(_ShellAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_ShellNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ShellMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _ShellTileMetres, _ShellTint.rgb, _ShellNormalStrength,
+                    layerColour, layerNormal, layerOcclusion);
                 colour = lerp(colour, layerColour, shell);
                 normal = normalize(lerp(normal, layerNormal, shell));
                 occlusion = lerp(occlusion, layerOcclusion, shell);

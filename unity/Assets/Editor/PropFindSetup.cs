@@ -63,7 +63,8 @@ namespace SomethingDownThere.Editor
                     throw new InvalidDataException(e.content_id + ": each further look needs its own key under the find's.");
                 var look = JsonUtility.FromJson<DiscoveryContentSetup.SourceEntry>(JsonUtility.ToJson(e));
                 look.content_id = other.content_id;
-                looks.Add(Import(look, other.prefab, folder, boxHull, mass, scale));
+                if (other.model_scale > 0) look.model_scale = other.model_scale;
+                looks.Add(Import(look, other.prefab, folder, boxHull, mass, DiscoveryContentSetup.ModelScale(look)));
             }
             return looks;
         }

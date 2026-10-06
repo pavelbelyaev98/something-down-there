@@ -11,6 +11,9 @@ namespace SomethingDownThere
         private Collider[] overlaps = new Collider[128];
         private bool active;
         private const float Radius = 2.25f;
+        // The sight line aims this far inside the find past its nearest point: a ray to an edge or a corner exactly can
+        // graze past it (an angular find, such as layered coal, then never counted as seen).
+        private const float EdgeInset = .03f;
         private Vector3 Probe => player.ViewCamera.transform.position;
 
         public FindProximityCollection(FpsPlayer player, CharacterController motor, int mask)
@@ -55,7 +58,8 @@ namespace SomethingDownThere
             if (Vector3.Dot(player.ViewCamera.transform.forward, find.WorldBounds.center - Probe) < 0) return false;
             float length = delta.magnitude;
             if (length < .001f) return true;
-            return Physics.Raycast(Probe, delta / length, out var hit, length + .015f,
+            var sight = delta + (find.WorldBounds.center - (Probe + delta)).normalized * EdgeInset;
+            return Physics.Raycast(Probe, sight.normalized, out var hit, sight.magnitude + .015f,
                 worldMask, QueryTriggerInteraction.Ignore) && hit.collider == find.HitCollider;
         }
     }

@@ -121,24 +121,20 @@ namespace SomethingDownThere.Editor
             material.SetColor("_BackfillTint", Color.white);
             material.SetFloat("_BackfillTileMetres", 7f);
             material.SetFloat("_BackfillNormalStrength", 1f);
-            // Geode shell (110): two looks from Crystal Caverns' cave surfaces (art/pure-nature-crystal-caverns/make_shell.py)
-            // for the user's A/B; the shader picks one on a global (TerrainVolume.SetGeodeShellLook).
-            foreach (string look in new[] { "A", "B" })
-            {
-                material.SetTexture($"_Shell{look}Albedo", Shell(look, "Albedo"));
-                material.SetTexture($"_Shell{look}Normal", Shell(look, "Normal"));
-                material.SetTexture($"_Shell{look}Mask", Shell(look, "Roughness"));
-            }
+            // Geode shell (110): Crystal Caverns' porous rock detail graded dark grey (art/pure-nature-crystal-caverns/make_shell.py).
+            material.SetTexture("_ShellAlbedo", Shell("Albedo"));
+            material.SetTexture("_ShellNormal", Shell("Normal"));
+            material.SetTexture("_ShellMask", Shell("Roughness"));
             material.SetColor("_ShellTint", Color.white);
             material.SetFloat("_ShellTileMetres", 2f);
             material.SetFloat("_ShellNormalStrength", 1f);
             EditorUtility.SetDirty(material);
         }
 
-        // One of the geode shell's texture sets, written by art/pure-nature-crystal-caverns/make_shell.py.
-        private static Texture2D Shell(string look, string channel)
+        // The geode shell's texture set, written by art/pure-nature-crystal-caverns/make_shell.py.
+        private static Texture2D Shell(string channel)
         {
-            string path = Folder + "GeodeShell" + look + "_" + (channel == "Roughness" ? "Mask" : channel) + ".png";
+            string path = Folder + "GeodeShell_" + (channel == "Roughness" ? "Mask" : channel) + ".png";
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null)
                 throw new InvalidOperationException("Missing " + path + " (run art/pure-nature-crystal-caverns/make_shell.py).");
             ConfigureImport(path, channel);

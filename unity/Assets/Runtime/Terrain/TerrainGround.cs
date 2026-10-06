@@ -133,13 +133,17 @@ namespace SomethingDownThere
             for (int i = 0; i < pits.Length; i++)
             {
                 uint h = unchecked((uint)seed * 2654435761u ^ (uint)i * 2246822519u ^ 0x9e3779b9u);
-                var rotation = quaternion.RotateY(TerrainMaterialSnapshot.NextUnit(ref h) * 2 * math.PI);
-                var centre = pits[i].Bottom + new float3(0, StashLift, 0);
-                float reach = math.length(pocket.extents) + math.length(pocket.center);
-                stashes[i] = new Stash { Centre = centre, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)),
-                    PocketCentre = pocket.center, PocketHalf = pocket.extents, Min = centre - reach, Max = centre + reach };
+                stashes[i] = MakeStash(pits[i].Bottom + new float3(0, StashLift, 0), quaternion.RotateY(TerrainMaterialSnapshot.NextUnit(ref h) * 2 * math.PI), pocket);
             }
             return stashes;
+        }
+
+        // A chest at centre (grid-local), turned by rotation, in its pocket.
+        public static Stash MakeStash(float3 centre, quaternion rotation, Bounds pocket)
+        {
+            float reach = math.length(pocket.extents) + math.length(pocket.center);
+            return new Stash { Centre = centre, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)),
+                PocketCentre = pocket.center, PocketHalf = pocket.extents, Min = centre - reach, Max = centre + reach };
         }
 
         // Seeded geodes, each wholly inside its zone and the find footprint, clear of pits, uniques' spaces and each other.
@@ -267,7 +271,7 @@ namespace SomethingDownThere
         // The fill around a chest (user, 2026-10-06: "all ground around it"): its pocket's walls, floor and roof are
         // backfill to ChestShell beyond it, with a lumpy edge, wherever the pit itself does not reach.
         public const float ChestShell = .6f;
-        private static void FillShell(byte[] ids, Vector3Int size, float cellSize, Stash stash, float4 offsets)
+        public static void FillShell(byte[] ids, Vector3Int size, float cellSize, Stash stash, float4 offsets)
         {
             int stride = size.x + 1, plane = stride * (size.y + 1);
             float reach = math.length(stash.PocketHalf) + math.length(stash.PocketCentre) + ChestShell + .2f;

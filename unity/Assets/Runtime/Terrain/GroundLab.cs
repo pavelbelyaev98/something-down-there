@@ -29,7 +29,7 @@ namespace SomethingDownThere
         {
             new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil)),
             new Bay("Backfill", "rubble fill: about three quarters of soil's speed", Only(TerrainMaterialId.Backfill)),
-            new Bay("Backfill pit", "1 m rubble pit in soil, 5 m deep", (u, d, v) =>
+            new Bay("Backfill pit", "1 m rubble pit down to a buried old chest, 4.6 m", (u, d, v) =>
                 Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil),
             new Bay("Geode shell", "geode stone to 3 m: about a quarter of soil's speed", (u, d, v) =>
                 d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil),
@@ -41,9 +41,15 @@ namespace SomethingDownThere
             (Unity.Mathematics.float3)Local(new Vector3(BayCentre(4).x, -2.6f, BayCentre(4).y)),
             new Unity.Mathematics.float3(.9f, .75f, .9f), .6f, .4f, 0);
 
-        // The lab's seeded ground: no pits, the geode bay's geode.
-        public static TerrainGround.GroundLayout Layout() => new TerrainGround.GroundLayout(
-            Array.Empty<TerrainGround.Pit>(), Array.Empty<TerrainGround.Stash>(), new[] { Geode });
+        // The backfill pit bay's old chest (user, 2026-10-06: "actual chest inside, so I test the whole flow"), buried in its
+        // pocket of air and fill as the site's are, its lock to the south. pocket: the chest's (size zero: no chest).
+        private static readonly Vector3 LabStashAt = new Vector3(BayCentre(2).x, -4.6f, BayCentre(2).y);
+        private static TerrainGround.Stash[] Stashes(Bounds pocket) => pocket.size == Vector3.zero ? Array.Empty<TerrainGround.Stash>()
+            : new[] { TerrainGround.MakeStash((Unity.Mathematics.float3)Local(LabStashAt), Unity.Mathematics.quaternion.RotateY(Mathf.PI / 2), pocket) };
+
+        // The lab's seeded ground: the backfill pit bay's chest and the geode bay's geode.
+        public static TerrainGround.GroundLayout Layout(Bounds stashPocket = default) => new TerrainGround.GroundLayout(
+            Array.Empty<TerrainGround.Pit>(), Stashes(stashPocket), new[] { Geode });
 
         public static Vector2 BayCentre(int bay) => new Vector2(Columns[bay % Columns.Length], Rows[bay / Columns.Length]);
 
@@ -67,7 +73,7 @@ namespace SomethingDownThere
         }
 
         // The lab's grounds for the shipped site grid: bays in soil to 12 m, soil below.
-        public static TerrainMaterialSnapshot Materials(Vector3Int size, float cellSize)
+        public static TerrainMaterialSnapshot Materials(Vector3Int size, float cellSize, Bounds stashPocket = default)
         {
             int strideY = size.x + 1, strideZ = strideY * (size.y + 1);
             var ids = new byte[strideZ * (size.z + 1)];
@@ -86,6 +92,7 @@ namespace SomethingDownThere
                 }
             }
             TerrainGround.FillGeode(ids, size, cellSize, Geode);
+            foreach (var stash in Stashes(stashPocket)) TerrainGround.FillShell(ids, size, cellSize, stash, new Unity.Mathematics.float4(17, 31, 47, 59));
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
 

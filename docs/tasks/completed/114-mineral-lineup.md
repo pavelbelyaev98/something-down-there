@@ -1,9 +1,10 @@
 # 114 — Mineral Lineup: What Lies Where, and How It Looks
 
 **Status:** complete. Each zone has its own pair of minerals: coal and copper, iron and silver, gold and emerald,
-ruby and diamond, with pyrite as a cheap aside in zone 2. Coal is the approved photo rock with a coal map; the ores
-are the Mining pack's chunks in a plainer, duller style; ground gems and pyrite are soil-caked Crystal Caverns
-crystals. The chests' clean crystals stay separate items, smaller and cheaper than the ground gems.
+ruby and diamond, with pyrite as a cheap aside in zone 2. Coal is the Mining pack's layered rocks in black; copper is
+its ore chunk or a native copper nugget (an A/B); iron, silver and gold are its ore chunks, iron rust-veined and silver
+at the pack's quality; ground gems and pyrite are dusty Crystal Caverns crystals. The chests' clean crystals stay
+separate items, smaller and cheaper than the ground gems.
 
 ## Objective
 
@@ -187,3 +188,24 @@ at the bottom, and cut in the old chests.
 - **Agent's view:** they work best together. The ending components open the gate, and behind it stands the ancient
   mech, the machine yours descends from. Both are recorded in `13` as the user's candidates; the choice comes with
   the mystery payoff before Phase 7.
+
+## Iteration (user, 2026-10-06, after a first look)
+
+- "Coal is decent but looks too much like a rock now": coal moved off the photo rock onto the Mining pack's layered
+  rocks (large and small, two looks), black at 0.17 with a dull sheen (0.5). It reads as a blocky lump with bedding
+  planes.
+  - Their meshes are copied into `Content/BuriedProps/MiningPack/Rocks` and their maps into 1024 px PNGs
+    (`art/mining-pack/make_maps.py`). The pack's 4K rock maps, 160 MB a set, stay out of the repository.
+  - The photo-rock coal (`art/minerals/coal`, `make_coal.py`) and the retired Blender mineral sources are deleted, and
+    `MineralSetup` builds prefab looks only.
+- "Iron looks like lava": its colour map's orange veins are turned a dull rust and the rock a little cooler
+  (`Ore_Iron_Rust.png`, `make_maps.py`).
+- "Silver could be higher quality": the silver ore keeps the pack's maps and gloss (`PackStyle.Pack`).
+- "Copper is a rock plus copper; wonder if pure copper is better": copper's second look is now a native copper
+  nugget, the pack's large jagged rock in copper metal (0.7 metal, 0.55 gloss). It is an A/B with the ore chunk:
+  both appear in play and side by side in the gallery. Each prop look may carry its own `model_scale`.
+- "The crystals look like they have black spots instead of dust": the soil caked on the dirty crystals was tinted by
+  the crystal's dark colour. The colour is now baked into the map with a pale dust film (`make_dirty.py`), and the
+  dirty materials draw it in white.
+- Found by the tests: nearby pickup's sight line went to the find's exact nearest point, which on the layered coal is
+  an edge the ray grazed past. It now aims 3 cm inside the find (`FindProximityCollection.EdgeInset`).
