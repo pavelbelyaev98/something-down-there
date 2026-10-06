@@ -10,14 +10,17 @@ namespace SomethingDownThere
     {
         public const float CellSize = 0.125f;
         // Grounds return to the site one at a time as the user redesigns them in the Ground Lab: soil
-        // everywhere, plus backfill pits in the recent fill (106) and geodes in the middle zones (110).
-        public const TerrainGround.Features Ground = TerrainGround.Features.Pits | TerrainGround.Features.Geodes;
+        // everywhere, plus backfill pits in the recent fill (106), geodes in the middle zones (110) and a cavern
+        // in each zone (115).
+        public const TerrainGround.Features Ground = TerrainGround.Features.Pits | TerrainGround.Features.Geodes | TerrainGround.Features.Caverns;
         // Other grids (fixtures, benchmarks, test scenes) stay plain soil.
         public static TerrainGround.Features GroundFor(Vector3Int size, float cellSize)
             => size == Size && Mathf.Approximately(cellSize, CellSize) ? Ground : TerrainGround.Features.None;
         public const int DepthCells = 1200;
-        // East-west is wider than north-south; the grid stays inside the save sample budget.
-        public const int WidthCells = 288;
+        // East-west is wider than north-south. Underground the site is wider than the plot above it (user,
+        // 2026-10-06: "underground it is wider so caves make more sense"): some 8 m of ground each side of the plot
+        // for the caverns (115), within the save sample budget.
+        public const int WidthCells = 400;
         public const int LengthCells = 208;
         public const int ChunkSize = 16;
         // Permanent lakebed ground around the opening sits just above the voxel top.

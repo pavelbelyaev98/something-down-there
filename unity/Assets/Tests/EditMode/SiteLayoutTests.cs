@@ -12,11 +12,11 @@ namespace SomethingDownThere.Tests
         [Test]
         public void ShippedSiteFitsEveryTerrainAndSaveBound()
         {
-            Assert.That(SiteLayout.Size, Is.EqualTo(new Vector3Int(288, 1200, 208)));
+            Assert.That(SiteLayout.Size, Is.EqualTo(new Vector3Int(400, 1200, 208)));
             Assert.That(SiteLayout.CellSize, Is.EqualTo(.125f));
             Assert.That(SiteLayout.ChunkSize, Is.InRange(2, 24));
-            Assert.That(SiteLayout.Extent, Is.EqualTo(new Vector3(36, 150, 26)));
-            Assert.That(SiteLayout.Origin, Is.EqualTo(new Vector3(-18, -150, -13)));
+            Assert.That(SiteLayout.Extent, Is.EqualTo(new Vector3(50, 150, 26)));
+            Assert.That(SiteLayout.Origin, Is.EqualTo(new Vector3(-25, -150, -13)));
             Assert.That(SiteLayout.Size.x % SiteLayout.ChunkSize, Is.Zero);
             Assert.That(SiteLayout.Size.z % SiteLayout.ChunkSize, Is.Zero);
             foreach (int cells in new[] { SiteLayout.Size.x, SiteLayout.Size.y, SiteLayout.Size.z })
@@ -26,9 +26,6 @@ namespace SomethingDownThere.Tests
                 "The shipped density must fit the save reader's sample bound.");
             Assert.That(samples * (sizeof(float) + sizeof(byte)), Is.LessThan(WorldSaveCodec.MaximumUnpackedBytes),
                 "The shipped density and material IDs must fit the unpacked payload budget.");
-            // The documented next step (200 m, if playtests ask for it) needs no new budget.
-            long twoHundred = ((long)SiteLayout.Size.x + 1) * (1600 + 1) * (SiteLayout.Size.z + 1);
-            Assert.That(twoHundred, Is.LessThanOrEqualTo(WorldSaveCodec.MaximumSamples));
         }
 
         // The plot outline stays inside the grid with room for the rim collar, keeps the

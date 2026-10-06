@@ -8,10 +8,10 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // The seeded ground: soil, with backfill pits someone dug and refilled in the recent fill and a few geodes deeper
-    // down. Written once per session into the one-byte material field; saves store the bytes, so nothing here is saved
-    // separately.
-    public static class TerrainGround
+    // The seeded ground: soil, with backfill pits someone dug and refilled in the recent fill, a few geodes deeper down
+    // and a cavern in each zone (TerrainGround.Caverns). Written once per session into the one-byte material field;
+    // saves store the bytes, so nothing here is saved separately.
+    public static partial class TerrainGround
     {
         // Metres below the surface: even quarters of the 150 m site. Absolute depths, so a
         // shallow grid (fixtures, tests) is all zone 1.
@@ -21,7 +21,7 @@ namespace SomethingDownThere
         public const float SurfaceSoil = 1.1f, PitTop = 3f, PitMargin = 3f;
 
         // What the generator lays down. The site admits grounds one at a time (SiteLayout.Ground).
-        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, All = Pits | Geodes }
+        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, Caverns = 4, All = Pits | Geodes | Caverns }
         private static bool Has(Features features, Features feature) => (features & feature) != 0;
 
         // Disturbed ground (099, 106): a column of backfill someone dug and refilled, from Top down to the old chest
@@ -189,7 +189,8 @@ namespace SomethingDownThere
         }
 
         // Seeded geodes, each wholly inside its zone and the find footprint, clear of pits, uniques' spaces and each other.
-        public static Geode[] Geodes(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots = null, Features features = Features.All)
+        public static Geode[] Geodes(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots = null, Features features = Features.All,
+            Cavern[] caverns = null)
         {
             if (!Has(features, Features.Geodes)) return Array.Empty<Geode>();
             var extent = (Vector3)size * cellSize;
@@ -227,6 +228,7 @@ namespace SomethingDownThere
                         foreach (var pit in pits) clear &= math.any(geode.Min > pit.Max + GeodePitClearance) || math.any(pit.Min > geode.Max + GeodePitClearance);
                         if (spots != null) foreach (var spot in spots) clear &= math.any(geode.Min > spot.Max + GeodeSpotClearance) || math.any(spot.Min > geode.Max + GeodeSpotClearance);
                         foreach (var other in geodes) clear &= math.distance(other.Centre, centre) > other.Reach + reach + GeodeSpacing;
+                        if (caverns != null) foreach (var cavern in caverns) clear &= math.any(geode.Min > cavern.Max + GeodePitClearance) || math.any(cavern.Min > geode.Max + GeodePitClearance);
                         if (!clear) continue;
                         geodes.Add(geode);
                         break;
@@ -297,27 +299,8 @@ namespace SomethingDownThere
         // face's outward normal there, grid-local: marched out HollowStep at a time, then halved to a millimetre or so.
         private const float HollowStep = .08f;
         public static (float3 surface, float3 outward) HollowFace(Geode geode, float3 direction)
-        {
-            var way = math.mul(new float3x3(geode.Rotation), math.normalizesafe(direction, new float3(0, -1, 0)));
-            float inside = 0, outside = geode.Reach;
-            for (float t = HollowStep; t < geode.Reach; t += HollowStep)
-            {
-                if (HollowDistance(geode, geode.Centre + way * t) >= 0) { outside = t; break; }
-                inside = t;
-            }
-            for (int i = 0; i < 6; i++)
-            {
-                float middle = (inside + outside) * .5f;
-                if (HollowDistance(geode, geode.Centre + way * middle) >= 0) outside = middle; else inside = middle;
-            }
-            var surface = geode.Centre + way * outside;
-            const float h = .03f;
-            var gradient = new float3(
-                HollowDistance(geode, surface + new float3(h, 0, 0)) - HollowDistance(geode, surface - new float3(h, 0, 0)),
-                HollowDistance(geode, surface + new float3(0, h, 0)) - HollowDistance(geode, surface - new float3(0, h, 0)),
-                HollowDistance(geode, surface + new float3(0, 0, h)) - HollowDistance(geode, surface - new float3(0, 0, h)));
-            return (surface, math.normalizesafe(gradient, way));
-        }
+            => Face(p => HollowDistance(geode, p), geode.Centre,
+                math.mul(new float3x3(geode.Rotation), math.normalizesafe(direction, new float3(0, -1, 0))), geode.Reach);
 
         // A geode's signed distances, to its hollow or to its shell's outer face, at every sample from first to last
         // (inclusive, x fastest). Burst-compiled: a geode's box holds a few hundred thousand samples.
@@ -351,21 +334,23 @@ namespace SomethingDownThere
             }
         }
 
-        // What find placement needs from the seeded ground: the pits and their chests, and the geodes.
+        // What find placement needs from the seeded ground: the pits and their chests, the geodes and the caverns.
         public sealed class GroundLayout
         {
-            public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Pit>(), Array.Empty<Stash>(), Array.Empty<Geode>());
-            public readonly Pit[] Pits; public readonly Stash[] Stashes; public readonly Geode[] Geodes;
-            public GroundLayout(Pit[] pits, Stash[] stashes, Geode[] geodes) { Pits = pits; Stashes = stashes; Geodes = geodes; }
+            public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Pit>(), Array.Empty<Stash>(), Array.Empty<Geode>(), Array.Empty<Cavern>());
+            public readonly Pit[] Pits; public readonly Stash[] Stashes; public readonly Geode[] Geodes; public readonly Cavern[] Caverns;
+            public GroundLayout(Pit[] pits, Stash[] stashes, Geode[] geodes, Cavern[] caverns)
+            { Pits = pits; Stashes = stashes; Geodes = geodes; Caverns = caverns; }
         }
 
-        // Pits and geodes keep clear of every unique's space.
+        // Pits, caverns and geodes keep clear of every unique's space, and geodes of the caverns.
         public static GroundLayout Layout(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null, Features features = Features.All,
             Bounds stashPocket = default)
         {
             var spots = OddSpots(oddSpots);
             var pits = Pits(size, cellSize, seed, spots, features);
-            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), Geodes(size, cellSize, seed, pits, spots, features));
+            var caverns = Caverns(size, cellSize, seed, pits, spots, features);
+            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), Geodes(size, cellSize, seed, pits, spots, features, caverns), caverns);
         }
 
         private static bool Inside(Func<Vector2, bool> footprint, float3 centre, float reach)
@@ -392,7 +377,9 @@ namespace SomethingDownThere
                 .Schedule(size.z + 1, 1).Complete();
             var ids = output.ToArray();
             foreach (var stash in Stashes(pits, seed, stashPocket)) if (stash.HasPocket) FillShell(ids, size, cellSize, stash, offsets);
-            foreach (var geode in Geodes(size, cellSize, seed, pits, spots, features)) FillGeode(ids, size, cellSize, geode);
+            var caverns = Caverns(size, cellSize, seed, pits, spots, features);
+            foreach (var cavern in caverns) FillCavern(ids, size, cellSize, cavern);
+            foreach (var geode in Geodes(size, cellSize, seed, pits, spots, features, caverns)) FillGeode(ids, size, cellSize, geode);
             return ids;
         }
 

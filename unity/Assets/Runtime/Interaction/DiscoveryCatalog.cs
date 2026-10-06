@@ -30,6 +30,9 @@ namespace SomethingDownThere
             public bool LayOnSide, RandomOrientation;
             // Lines geodes only (110): its instances are the geodes' seats (SeatGeodes), never loose in the ground.
             public bool Geode;
+            // Shows in caverns' walls too (115): some of its instances whose band covers a cavern sit half-buried in its
+            // walls (SeatCaverns); the rest lie in the ground as ever.
+            public bool Cavern;
             // Host ground (concept 03 §4): at the same depth, ground listed here carries its weight
             // times the find density of unlisted ground (weight 1). Soft bias with scatter; the
             // depth bands and prices never change.
@@ -226,8 +229,13 @@ namespace SomethingDownThere
                 }
                 foreach (var geode in groundLayout.Geodes)
                     reserved.Add(new DiscoveryReservation(geode.Centre, geode.Reach + DiscoveryField.SoilClearance));
+                foreach (var cavern in groundLayout.Caverns)
+                    for (int c = 0; c < cavern.Centres.Length; c++)
+                        reserved.Add(new DiscoveryReservation(cavern.Centres[c], Unity.Mathematics.math.cmax(cavern.Radii[c]) + cavern.Shell
+                            + TerrainGround.CavernWarp + DiscoveryField.SoilClearance));
                 SeatChests(stashes, extent, seed, shallow, bands, seats, seatTurns);
                 SeatGeodes(groundLayout.Geodes, extent, seed, shallow, bands, seats, seatTurns);
+                SeatCaverns(groundLayout.Caverns, extent, seed, shallow, bands, seats, seatTurns);
             }
             Func<int, Vector3, float> weight = null;
             if (ground != null)
@@ -405,6 +413,58 @@ namespace SomethingDownThere
             var inward = -(Vector3)outward;
             float half = entry.RestingHalfHeight;
             var position = (Vector3)surface + inward * (half * (1 - 2 * GeodeSink));
+            var rotation = Quaternion.FromToRotation(Vector3.up, inward) * Quaternion.Euler(0, (float)random.NextDouble() * 360f, 0);
+            return (position, rotation);
+        }
+
+        // What each cavern shows in its walls (115): CavernFinds finds (CrystalCavernFinds in the crystal cavern) of the
+        // types that line caverns, each the next unseated instance whose band covers the cavern's floor, drawn by how many
+        // of a type are left, so the zone's own minerals dominate and counts never change. They sit in the walls and the
+        // pillars, low and high round each chamber, sunk CavernSink of their height: a lamp shows them, digging frees them.
+        public const int CavernFinds = 12, CrystalCavernFinds = 24;
+        public const float CavernSink = .45f;
+        private void SeatCaverns(TerrainGround.Cavern[] caverns, Vector3 extent, int seed, List<int> order, Vector2[] bands,
+            Vector3[] seats, Dictionary<int, Quaternion> turns)
+        {
+            var random = new System.Random(unchecked(seed ^ 0x0CA7E5));
+            foreach (var cavern in caverns)
+            {
+                float depth = extent.y - cavern.Floor;
+                var left = new SortedDictionary<int, List<int>>();
+                for (int i = ShallowCount; i < seats.Length; i++)
+                    if (Entries[order[i]].Cavern && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y)
+                    {
+                        if (!left.TryGetValue(order[i], out var list)) left[order[i]] = list = new List<int>();
+                        list.Add(i);
+                    }
+                int finds = cavern.Crystal ? CrystalCavernFinds : CavernFinds;
+                for (int k = 0; k < finds && left.Count > 0; k++)
+                {
+                    int total = 0; foreach (var list in left.Values) total += list.Count;
+                    int pick = random.Next(total), entry = -1;
+                    foreach (var pair in left) { if (pick < pair.Value.Count) { entry = pair.Key; break; } pick -= pair.Value.Count; }
+                    var instances = left[entry];
+                    int seated = instances[0];
+                    instances.RemoveAt(0);
+                    if (instances.Count == 0) left.Remove(entry);
+                    var (position, rotation) = CavernSeat(cavern, k, Entries[entry], random);
+                    seats[seated] = position;
+                    turns[seated] = rotation;
+                }
+            }
+        }
+
+        // The kth find's seat in a cavern's wall (grid-local): round the chambers in turn, a seeded direction from the
+        // chamber's heart, mostly sideways and a little up, where it meets the stone; pointing out of it, sunk.
+        internal static (Vector3 position, Quaternion rotation) CavernSeat(TerrainGround.Cavern cavern, int k, Entry entry, System.Random random)
+        {
+            int chamber = k % cavern.Centres.Length;
+            float around = (float)random.NextDouble() * 360f, elevation = Mathf.Lerp(-15f, 45f, (float)random.NextDouble());
+            var direction = Quaternion.Euler(-elevation, around, 0) * Vector3.forward;
+            var (surface, outward) = TerrainGround.CavernFace(cavern, TerrainGround.CavernHeart(cavern, chamber), direction);
+            var inward = -(Vector3)outward;
+            float half = entry.RestingHalfHeight;
+            var position = (Vector3)surface + inward * (half * (1 - 2 * CavernSink));
             var rotation = Quaternion.FromToRotation(Vector3.up, inward) * Quaternion.Euler(0, (float)random.NextDouble() * 360f, 0);
             return (position, rotation);
         }

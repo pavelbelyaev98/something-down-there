@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Seeded air (stash chests' pockets, geodes' hollows, a lab's hollows and dug scenes) exists from the start, below the surface
+    // Seeded air (stash chests' pockets, geodes' hollows, caverns, a lab's hollows and dug scenes) exists from the start, below the surface
     // layer, with no cut to create its chunks, so they are built with the session.
     public sealed partial class TerrainVolume
     {
@@ -12,6 +12,7 @@ namespace SomethingDownThere
         {
             foreach (var stash in grid.Layout.Stashes) if (stash.HasPocket) MaterializeAround(stash.Min, stash.Max);
             foreach (var geode in grid.Layout.Geodes) MaterializeAround(geode.Min, geode.Max);
+            foreach (var cavern in grid.Layout.Caverns) MaterializeAround(cavern.Min, cavern.Max);
             foreach (var (min, max) in grid.LabBounds()) MaterializeAround(min, max);
         }
 

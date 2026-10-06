@@ -33,7 +33,7 @@ namespace SomethingDownThere.Editor
             // Taken by hand with Interact, never by digging or walking past (113: a chest's coins and ingots).
             public bool hand_picked;
             // Lines geodes only (110): its instances are the geodes' seats.
-            public bool geode;
+            public bool geode, cavern;
             public float required_exposure;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
             // Host ground: ground names (soil, backfill) and a density weight for each (unlisted ground is 1).

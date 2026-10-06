@@ -49,9 +49,20 @@ namespace SomethingDownThere
         private static TerrainGround.Stash[] Stashes(Bounds pocket) => pocket.size == Vector3.zero ? Array.Empty<TerrainGround.Stash>()
             : new[] { TerrainGround.MakeStash((Unity.Mathematics.float3)Local(LabStashAt), Unity.Mathematics.quaternion.RotateY(Mathf.PI / 2), pocket) };
 
-        // The lab's seeded ground: the backfill bay's chest and the geode bay's geode.
+        // A crystal cavern (115) as the site's deepest is made, dressed and lit, a few metres down under the plot's west
+        // edge: its roof lies under the plot, so it is dug into from above; the rest runs out under the permanent ground.
+        public static readonly TerrainGround.Cavern Cavern = TerrainGround.MakeCavern(
+            new[] { Local3(-17.6f, -5.2f, -4.6f), Local3(-17.3f, -5f, -1.5f), Local3(-17.7f, -4.9f, 1.5f), Local3(-17.4f, -5.1f, 4.6f) },
+            new[] { new Unity.Mathematics.float3(2.7f, 2.2f, 2.2f), new Unity.Mathematics.float3(3f, 2.5f, 2.3f),
+                new Unity.Mathematics.float3(2.9f, 2.4f, 2.2f), new Unity.Mathematics.float3(2.6f, 2.1f, 2.1f) },
+            Local3(0, -6.4f, 0).y, new[] { new Unity.Mathematics.float3(Local3(-18.4f, 0, .1f).x, Local3(-18.4f, 0, .1f).z, .55f) },
+            .7f, true, new Unity.Mathematics.float3(41, 7, 113));
+
+        private static Unity.Mathematics.float3 Local3(float x, float y, float z) => (Unity.Mathematics.float3)Local(new Vector3(x, y, z));
+
+        // The lab's seeded ground: the backfill bay's chest, the geode bay's geode and the crystal cavern.
         public static TerrainGround.GroundLayout Layout(Bounds stashPocket = default) => new TerrainGround.GroundLayout(
-            Array.Empty<TerrainGround.Pit>(), Stashes(stashPocket), new[] { Geode });
+            Array.Empty<TerrainGround.Pit>(), Stashes(stashPocket), new[] { Geode }, new[] { Cavern });
 
         public static Vector2 BayCentre(int bay) => new Vector2(Columns[bay % Columns.Length], Rows[bay / Columns.Length]);
 
@@ -94,6 +105,7 @@ namespace SomethingDownThere
                 }
             }
             TerrainGround.FillGeode(ids, size, cellSize, Geode);
+            TerrainGround.FillCavern(ids, size, cellSize, Cavern);
             foreach (var stash in Stashes(stashPocket)) TerrainGround.FillShell(ids, size, cellSize, stash, new Unity.Mathematics.float4(17, 31, 47, 59));
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
@@ -114,6 +126,9 @@ namespace SomethingDownThere
             if (crane != null) return crane;
             int bay = BayAt(world.x, world.z, out _, out _);
             string ground = "hitting " + hit;
+            var local = Local(world);
+            if (local.x >= Cavern.Min.x && local.x <= Cavern.Max.x && local.z >= Cavern.Min.z && local.z <= Cavern.Max.z)
+                return "Crystal cavern: about 2 m down at the plot's west edge, dig in from above  |  " + ground;
             return bay < 0 ? "Ground Lab  |  " + ground : $"{Bays[bay].Name}: {Bays[bay].Hint}  |  {ground}";
         }
     }

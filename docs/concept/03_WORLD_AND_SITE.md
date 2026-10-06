@@ -43,9 +43,11 @@ The lakebed excavation is a single contained worksite.
   never be seen from inside this volume is left out.
 - **Dimensions:** `SiteLayout` owns the opening, rim and subsurface allocation. The site is
   **150 m deep**, giving each of the four zones enough depth for its main ground to be learned
-  (§3); 200 m is the next step only if playtests say the shaft still feels short. The footprint
+  (§3); 200 m is the next step only if playtests say the shaft still feels short. The dig plot
   keeps its current width: it fits a few pits and geodes per zone and keeps sideways routes short
-  enough that nobody gets lost. The research names two risks of depth: a longer trip home (Keep
+  enough that nobody gets lost. Underground the site reaches several metres further east and west
+  than the plot (user, 2026-10-06: "underground it is wider so caves make more sense"), room for
+  the caverns (§5). The research names two risks of depth: a longer trip home (Keep
   Digging 2.0's 5,000 m map was called a slog) and visible save stutter (Meltopia's save freezes
   cost it trust). Jetpack progression and background saving must keep both invisible at full
   depth, and the extra depth must be filled with finds, never "big but empty" (One Man's Trash). Finds keep their
@@ -72,9 +74,9 @@ The lakebed excavation is a single contained worksite.
   shore foam and rippled canyon reflections. Neither refraction nor reflected light may turn
   the shore into a glowing white band; the lake remains scenery outside the play area.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
-- **No caves or tunnel networks:** every passage is one the player dug. The only pre-existing
-  air is the old chests' hollows and a few [geodes](#5-geodes), and the player always breaks
-  into them.
+- **No tunnel networks:** every passage is one the player dug. The only pre-existing air is the
+  old chests' hollows, a few [geodes](#5-geodes) and one sealed cavern in each zone (§5), single
+  rooms that never connect, and the player always breaks into them.
 - **Buried structures:** authored walls, machinery and filled interiors are allowed. The
   player digs every opening; no pre-dug passage network.
 - **Buried history & physical connections ("Follow the thing"):** Workshop, household and waterworks
@@ -261,11 +263,22 @@ Geodes keep that moment without cave networks.
   celestine and fluorite in the sediment, amethyst and citrine in the riverbed, apart from the gems
   loose in the ground.
 - Geodes never connect into passages and never form a maze.
+- **Caverns** (user, 2026-10-06: "areas where the user can walk more, like caves at some places"):
+  one in each zone, sideways off the plot, a chamber a few metres high and up to twenty long with a
+  floor to walk on, a domed roof and a stone pillar or two, in the same hard stone as a geode's
+  shell, so one tell says "a hollow is in there". Its near side lies under the plot's edge; the rest
+  runs out under the permanent ground. Sealed and dark until the player breaks in and lights it;
+  never connected to another. Minerals of its zone sit half-buried in its walls: a lamp shows them,
+  digging frees them.
+- **The crystal cavern**, the deepest: built from the Crystal Caverns demo's own pieces, rock
+  formations, boulders and big crystals that glow in the demo's colours and light the cavern
+  themselves (the user loved the demo's look). It is the one place underground that needs no lamp,
+  a reward for reaching the bottom. Its far end is kept for the ending's gate.
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
   digging"; Keep Digging players loved its hand-built caves. Meltopia's network of identical tunnels
-  got players lost, so there are no networks, and cave zones were rejected
-  ([Open Questions](13_OPEN_QUESTIONS.md#closed-ideas)).
+  got players lost, so there are no networks and caverns stay single sealed rooms; cave zones were
+  rejected ([Open Questions](13_OPEN_QUESTIONS.md#closed-ideas)).
 
 ## 6. Terrain technology and cleanup
 
@@ -318,11 +331,12 @@ Geodes keep that moment without cave networks.
   seams, visual tells and find silhouettes stay unreadable until light reaches them. Digging,
   movement and the felt tells (the ground suddenly digging easier) still work in the dark — light
   withholds information, not ability.
-- **Sealed hollows (geodes) are dark** until the player's own opening or a lamp lights them; no
-  daylight reaches them through solid ground.
+- **Sealed hollows (geodes, caverns) are dark** until the player's own opening or a lamp lights
+  them; no daylight reaches them through solid ground. The crystal cavern's crystals glow (§5).
 - **More sideways reasons, same short routes.** Tells and geodes pull players sideways, so the
   modest site width, lamps and marks keep every branch short and the way home readable.
-- **Placeable lamps are the light.** They are the only light underground: place them to work, reveal
+- **Placeable lamps are the light.** They are the only light underground, apart from the crystal
+  cavern's glow: place them to work, reveal
   finds and hold the route home. Owned lamps are reusable, repositionable and do not expire or drain
   charge; lost support leaves them recoverable nearby. Digging and C4 cannot destroy them.
 - **Diffuse all-around lamps:** a neutral lantern illuminates every direction. Nearby soil retains

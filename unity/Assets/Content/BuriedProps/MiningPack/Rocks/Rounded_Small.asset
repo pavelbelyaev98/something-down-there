@@ -160,7 +160,7 @@ Mesh:
   m_BakedTriangleCollisionMesh: 
   'm_MeshMetrics[0]': 7.2295957
   'm_MeshMetrics[1]': 8.617154
-  m_MeshOptimizationFlags: -1
+  m_MeshOptimizationFlags: 1
   m_StreamData:
     serializedVersion: 2
     offset: 0

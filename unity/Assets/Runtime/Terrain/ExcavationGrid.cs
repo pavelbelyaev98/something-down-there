@@ -124,12 +124,10 @@ namespace SomethingDownThere
 
         public void Reset()
         {
-            for (int z = 0; z <= Size.z; z++)
-            for (int y = 0; y <= Size.y; y++)
-            for (int x = 0; x <= Size.x; x++)
-                density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
+            density.Fill(strideY, strideZ, y => Mathf.Min(band, (Size.y - y) * CellSize));
             foreach (var stash in Layout.Stashes) if (stash.HasPocket) CarvePocket(stash);
             foreach (var geode in Layout.Geodes) CarveGeode(geode);
+            foreach (var cavern in Layout.Caverns) CarveCavern(cavern);
             if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
@@ -215,6 +213,25 @@ namespace SomethingDownThere
             Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)geode.Min / CellSize) - Vector3Int.one);
             Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)geode.Max / CellSize) + Vector3Int.one);
             using var field = TerrainGround.GeodeField(geode, CellSize, new Unity.Mathematics.int3(first.x, first.y, first.z),
+                new Unity.Mathematics.int3(last.x, last.y, last.z), false, Unity.Collections.Allocator.TempJob);
+            int sample = 0;
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++, sample++)
+            {
+                float outside = field[sample];
+                if (outside >= band) continue;
+                int index = x + y * strideY + z * strideZ;
+                density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
+            }
+        }
+
+        // A cavern's air (115): seeded inside its hollow; its stone stays solid.
+        private void CarveCavern(TerrainGround.Cavern cavern)
+        {
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)cavern.Min / CellSize) - Vector3Int.one);
+            Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)cavern.Max / CellSize) + Vector3Int.one);
+            using var field = TerrainGround.CavernField(cavern, CellSize, new Unity.Mathematics.int3(first.x, first.y, first.z),
                 new Unity.Mathematics.int3(last.x, last.y, last.z), false, Unity.Collections.Allocator.TempJob);
             int sample = 0;
             for (int z = first.z; z <= last.z; z++)
@@ -330,6 +347,7 @@ namespace SomethingDownThere
             {
                 float untouched = Mathf.Min(band, (Size.y - y) * CellSize);
                 int row = x0 + y * strideY + z * strideZ;
+                if (density.UniformRun(row, row + x1 - x0, untouched)) continue;
                 for (int x = x0; x <= x1; x++)
                     if (density[row + x - x0] != untouched) return true;
             }
