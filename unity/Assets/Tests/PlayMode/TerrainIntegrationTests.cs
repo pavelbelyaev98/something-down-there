@@ -120,15 +120,12 @@ namespace SomethingDownThere.Tests
             float energy = player.Battery.Charge, beforeStroke = terrain.RemovedVolume;
             // The weaker top tier may need a few paid strokes to cut the pillar through;
             // whichever stroke severs it must clear the column inside that same stroke.
-            int severingStrokes = 0, releases = 0;
-            float paidEnergy = 0, strokeReleased = 0;
-            // Thin soil left hanging may slump in the same stroke (its own commit and volume).
-            terrain.Released += (kind, volume, centre) => { releases++; strokeReleased += volume; };
+            int severingStrokes = 0;
+            float paidEnergy = 0;
             // Mixed deposits can shed a small chip before the crown itself detaches.
             while (terrain.IsSolid(crown) && severingStrokes < 10)
             {
                 beforeStroke = terrain.RemovedVolume;
-                strokeReleased = 0;
                 Assert.That(player.TryDig(), Is.True);
                 paidEnergy += player.EffectiveDigEnergy * EquipmentProgression.MaterialResponse(player.LastDigMaterial).Interval;
                 severingStrokes++;
@@ -140,8 +137,8 @@ namespace SomethingDownThere.Tests
             Assert.That(Hit(new Vector3(0, 2, 0), Vector3.down).point.y, Is.LessThan(-3),
                 "The crown's collider must disappear before the accepted dig returns.");
             Assert.That(player.Battery.Charge, Is.EqualTo(energy - paidEnergy).Within(.001f));
-            Assert.That(terrain.Revision, Is.EqualTo(revision + severingStrokes + releases));
-            Assert.That(terrain.RemovedVolume - beforeStroke, Is.EqualTo(player.LastScoopVolume + strokeReleased).Within(0.001f));
+            Assert.That(terrain.Revision, Is.EqualTo(revision + severingStrokes));
+            Assert.That(terrain.RemovedVolume - beforeStroke, Is.EqualTo(player.LastScoopVolume).Within(0.001f));
             Assert.That(terrain.GetComponentsInChildren<Rigidbody>(), Is.Empty);
             foreach (var collider in terrain.GetComponentsInChildren<MeshCollider>().Where(c => c.enabled))
                 Assert.That(collider.sharedMesh, Is.SameAs(collider.GetComponent<MeshFilter>().sharedMesh));
@@ -162,11 +159,9 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
             // A deep volume only materializes the top layer that owns the ground plane, plus seeded air's
-            // chunks (sealed rooms when the site holds places, stash chests' hollows) so it exists the
-            // moment the player reaches it.
+            // chunks (stash chests' hollows) so it exists the moment the player reaches it.
             var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
             Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
-            Assert.That(terrain.Rooms.Length > 0, Is.EqualTo((SiteLayout.Ground & TerrainGround.Features.Places) != 0));
             var hollows = terrain.GroundLayout.Stashes.Where(s => s.Hollow).ToArray();
             int surfaceLayer = (terrain.Dimensions.y - 1) / 16, deep = 0;
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
@@ -175,11 +170,10 @@ namespace SomethingDownThere.Tests
                 if (key[1] == surfaceLayer) continue;
                 deep++;
                 var centre = (new Vector3(key[0], key[1], key[2]) + Vector3.one * .5f) * SiteLayout.ChunkSize * SiteLayout.CellSize;
-                Assert.That(terrain.Rooms.Any(room => Vector3.Distance(centre, room.ToGrid(room.AirCentre)) < 8)
-                    || hollows.Any(stash => Vector3.Distance(centre, (Vector3)stash.Centre) < 4), Is.True,
+                Assert.That(hollows.Any(stash => Vector3.Distance(centre, (Vector3)stash.Centre) < 4), Is.True,
                     "Below the surface only seeded air is materialized.");
             }
-            Assert.That(deep > 0, Is.EqualTo(terrain.Rooms.Length > 0 || hollows.Length > 0));
+            Assert.That(deep > 0, Is.EqualTo(hollows.Length > 0));
             Assert.That(terrain.ChunkCount, Is.EqualTo(chunks.x * chunks.z + deep));
             Assert.That(terrain.Revision, Is.Zero);
             foreach (Vector3 origin in new[] { new Vector3(-7, 2, -7), new Vector3(0, 2, 0), new Vector3(7, 2, 7) })
@@ -783,16 +777,16 @@ namespace SomethingDownThere.Tests
             for (int z = 0; z <= snapshot.Size.z; z++)
             for (int y = snapshot.Size.y - 4; y <= snapshot.Size.y; y++)
             for (int x = 0; x <= snapshot.Size.x; x++)
-                ids[x + y * stride + z * plane] = (byte)Mathf.Min(2, x * 3 / snapshot.Size.x);
+                ids[x + y * stride + z * plane] = (byte)Mathf.Min(1, x * 2 / snapshot.Size.x);
             snapshot.Materials = TerrainMaterialSnapshot.CopyFrom(ids);
             yield return terrain.Restore(snapshot, terrain.ExcavationSeed);
             int notifications = 0;
             TerrainCutFeedback feedback = default;
             terrain.ToolCut += value => { notifications++; feedback = value; };
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++)
             {
-                // Well inside each third of the grid and inside the plot.
-                player.ViewCamera.transform.position = new Vector3(-10 + i * 10, 1.5f, -4);
+                // Well inside each half of the grid and inside the plot.
+                player.ViewCamera.transform.position = new Vector3(-7 + i * 14, 1.5f, -4);
                 player.ViewCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
                 Physics.SyncTransforms();
                 Assert.That(player.TryGetTarget(player.EffectiveDigReach, out var hit), Is.True);
@@ -822,57 +816,25 @@ namespace SomethingDownThere.Tests
             Vector3 cameraPosition = player.ViewCamera.transform.position;
             Quaternion cameraRotation = player.ViewCamera.transform.rotation;
             Assert.That(player.TryPrimaryAction(), Is.True);
-            Assert.That(notifications, Is.EqualTo(3), "A pressed shovel stroke cuts at its scoop, not on the press.");
+            Assert.That(notifications, Is.EqualTo(2), "A pressed shovel stroke cuts at its scoop, not on the press.");
             // The scoop lands a moment later.
             float scoop = ToolRigPresenter.ScoopDelay(player.LastDigInterval, player.LastDigMaterial);
             player.Tick(default, scoop);
-            Assert.That(notifications, Is.EqualTo(4));
+            Assert.That(notifications, Is.EqualTo(3));
             int strokes = player.SuccessfulStrokes;
-            player.Tick(default, player.EffectiveDigInterval * 1.05f - scoop);
+            player.Tick(default, player.LastDigInterval * .95f - scoop);
             player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
-            Assert.That(player.TryPrimaryAction(), Is.False, "Rock's slightly slower stroke outlasts the soil interval.");
+            Assert.That(player.TryPrimaryAction(), Is.False, "The ground's own stroke interval holds the next cut.");
             Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
-            player.Tick(default, player.EffectiveDigInterval * .2f);
+            player.Tick(default, player.LastDigInterval * .1f);
             player.ViewCamera.transform.SetPositionAndRotation(cameraPosition, cameraRotation);
-            Assert.That(player.TryPrimaryAction(), Is.True, "The next rock cut resumes automatically after its interval.");
+            Assert.That(player.TryPrimaryAction(), Is.True, "The next cut resumes automatically after its interval.");
             player.Tick(default, ToolRigPresenter.ScoopDelay(player.LastDigInterval, player.LastDigMaterial));
             float paid = player.Battery.Charge;
             player.OpenMenu(PlayerMenu.Pause);
             Assert.That(player.TryDig(), Is.False);
             Assert.That(player.Battery.Charge, Is.EqualTo(paid));
-            Assert.That(notifications, Is.EqualTo(5));
-        }
-
-        // Concept 03 §5 / 09 §4: the seeded room is closed and dark; digging through its wall opens it
-        // once, and dust drifts in.
-        [Explicit("Sealed rooms return to the site with its places (SiteLayout.Ground).")]
-        [UnityTest]
-        public IEnumerator BreakingThroughASealedRoomWallOpensItOnce()
-        {
-            if ((SiteLayout.Ground & TerrainGround.Features.Places) == 0) Assert.Ignore("Sealed rooms return with the site's places.");
-            var room = terrain.Rooms[0];
-            var grid = (ExcavationGrid)typeof(TerrainVolume).GetField("grid",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(terrain);
-            // A working pocket just outside one wall, leaving the wall whole.
-            var outside = room.ToGrid(new Unity.Mathematics.float3(room.OuterHalf.x + .55f, room.AirCentre.y, 0));
-            grid.RemoveSphere(outside, .45f, out _);
-            yield return terrain.Restore(grid.Capture(), terrain.ExcavationSeed);
-            var inside = terrain.transform.TransformPoint(room.ToGrid(room.AirCentre));
-            Assert.That(terrain.IsSolid(inside), Is.False, "The room holds air.");
-            int opened = 0;
-            terrain.BrokeIntoRoom += (index, point) => opened++;
-            var from = terrain.transform.TransformPoint(outside);
-            for (int i = 0; i < 160 && opened == 0; i++)
-            {
-                Physics.SyncTransforms();
-                if (!Physics.Raycast(from, (inside - from).normalized, out var hit, 3)) break;
-                terrain.TryToolCut(hit, .4f, false);
-            }
-            Assert.That(opened, Is.EqualTo(1), "Digging through the wall breaks into the room.");
-            Physics.SyncTransforms();
-            Assert.That(Physics.Raycast(from, (inside - from).normalized, out var through, 6), Is.True);
-            Assert.That(Vector3.Distance(through.point, from), Is.GreaterThan(Vector3.Distance(inside, from)), "The opening sees into the room.");
-            Assert.That(terrain.TryToolCut(through, .4f, false) && opened == 1, Is.True, "Opening only happens once.");
+            Assert.That(notifications, Is.EqualTo(4));
         }
 
         private void PlacePlayer(Vector3 position)

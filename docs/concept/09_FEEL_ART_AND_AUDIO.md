@@ -29,14 +29,13 @@ new generated ground patterns.
 
 - **Zones read instantly:** strong palettes per zone with gradual transitions; each zone's main
   ground is recognisable at a glance.
-- **One main ground, never one repeated wall:** colour bands, cracks, places and tells break up a
+- **One main ground, never one repeated wall:** pits, geodes, lenses and finds break up a
   zone so it never looks identical everywhere (Meltopia's same-looking tunnels got players lost).
   No glaring pale surfaces; a white rock layer strained Keep Digging players' eyes.
-- **Tells read by shape and grain, not only colour:** cracks are thin dark lines on cut faces,
-  backfill is a chunky mixed patch breaking the banding, gravel channels are loose stony bands.
-  All of them also feel different to dig.
+- **Tells read by shape and grain, not only colour:** backfill is a chunky mixed patch with stones
+  churned in, a geode's shell a curved face of dense stone. All of them also feel different to dig.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
-- Soil, gravel, clay, rock, concrete and backfill use distinct grain and relief patterns matching their saved deposits; texture scale stays consistent on floors, walls and ceilings.
+- Every ground uses its own grain and relief from its owned pack texture, matching its saved deposit; texture scale stays consistent on floors, walls and ceilings.
 - **Objects read by silhouette**, because recognition is the core reward.
 - Pure Nature 2: Mountains supplies the dig-ground textures and lakebed plants; Pure Nature 2:
   Highlands supplies the canyon, lake and lakebed around the dig area, with its demo's sky, haze and
@@ -54,8 +53,8 @@ new generated ground patterns.
 | Zone | Palette | Lighting mood |
 |---|---|---|
 | Recent fill | Warm browns, greens, rusty metal, bright sky | Warm daylight, open, hopeful; fading to black in its lower part |
-| Old sediment | Grey-blue, clay orange, dull steel | Darkness; the player's lamps light it, nostalgic |
-| Deep clay/stone | Dark grey rock with rust-red clay veins and pale crack lines | True darkness; only placed lamps light the ground |
+| Old sediment | Grey lake silt, dull steel | Darkness; the player's lamps light it, nostalgic |
+| Deep sediment | Sand and pebbles of an old riverbed, crystal glints in geodes | True darkness; only placed lamps light the ground |
 | Ancient constructed | Cold tones, unnatural smoothness, faint glow accents | Total darkness; only placed lamps show the surfaces |
 
 Darkness escalates from shade to true black; lit ground stays readable, and lamps are the only light underground.
@@ -88,13 +87,11 @@ Responsive shovel strokes develop into controlled continuous drilling:
   for the pickup animation. Held digging continues through collection.
 - The camera never shakes or jerks from digging. No motion effects are added just to have toggles
  for them.
-- Audio is per material: sand hisses, clay thumps, rock cracks, concrete grinds.
-- **Tell feedback:** hitting a crack, the band breaks loose along it with pale shards and a crisper
- sound; entering backfill, the tool suddenly sinks in with looser crumbs;
- undercutting gravel, a rushing slide and rattle ends in quiet and a small pile of finds. The change
- is felt in the hands first, so it works in the dark.
-- **Breaking into a sealed room:** the wall gives, dust drifts into darkness, and the first lamp
- reveals the silt floor with shapes half-sunk in it.
+- Audio is per material: soil thuds, silt thumps, gravel rattles, a geode's shell grinds.
+- **Tell feedback:** entering backfill or a geode's shell, the tool's bite and sound change at once.
+ The change is felt in the hands first, so it works in the dark.
+- **Breaking into a geode:** the wall gives, dust drifts into darkness, and the first lamp makes the
+ crystals on its inner walls glint.
 - The machine's behavior and sound improve with upgrades, so power is felt in the hands, not read
  from a stat screen.
 - Downward digging feels good with the starting shovel; upgrades make it feel ridiculous. Power
@@ -107,12 +104,11 @@ as [World and Site](03_WORLD_AND_SITE.md); the exact material list remains open:
 
 | Material | Bite | Residue | Sound |
 |---|---|---|---|
-| Loose earth (sand / soil) | Fast spilling / even cuts | Pours / crumbs | Soft hiss / dull thud |
-| Clay / sediment | Sticky or resistant, steady | Clumps / flat chips | Wet thump / muffled crunch |
-| Gravel | Trickles; pours when undercut | Loose stones | Rattle; rushing slide on a pour |
+| Soil | Even cuts | Crumbs | Dull thud |
+| Lake silt / clay | Steady, resistant | Clumps / flat chips | Wet thump / muffled crunch |
+| Sand and gravel | Spilling, grainy | Loose stones | Hiss and rattle |
 | Backfill (disturbed ground) | Loose, fast, mixed | Mixed crumbs and chunks | Soft, hollow give |
-| Rock | Small chipping bites at the tool's own pace | Shards | Sharp crack |
-| Diggable concrete | Smallest bites; early tools still make visible progress | Sparks, dust | Grinding screech |
+| Geode shell | Small chipping bites; seconds, not minutes | Shards | Grinding crack |
 
 **Impossibility signature:** ancient fabricated materials add one small, consistent response on top
 of the working groups — an unusually clean cut, a glass-like resonance, dust that settles too
@@ -127,8 +123,8 @@ Ambience and feedback only. **No music. No voice acting**.
 
 - **Zone ambience layers:** wind and distant water near the surface; drips and settling rock deeper;
  a low, almost-silent hum in the ancient zone. Layers crossfade with depth.
-- **Action feedback:** dig loops per material, crack runs, gravel pours, sealed-room break-throughs,
-  footsteps, jetpack thrust, C4 blast (bigger along cracks), yard cleaning spray, salvage release
+- **Action feedback:** dig loops per material, geode break-throughs,
+  footsteps, jetpack thrust, C4 blast, yard cleaning spray, salvage release
   sounds if a special release is adopted, machine interactions, pickup chimes, the computer's sale feedback.
 - **No audio-only clues.** Every sound that carries information has a visual counterpart, and every
   tell is also felt through bite size. The frozen detector is silent by design and readable while muted.
@@ -161,4 +157,4 @@ the way.
 
 The game should naturally produce absurd, striking screenshots: a ridiculous machine silhouetted in
 a deep hole, a gramophone half-buried in pale sediment, a car mid-yank on a cable, a warm lamp pool
-in a dim ancient zone, the first lamp in a sealed room, a freshly cleaned unique on its shelf. Photo mode (pause-only, HUD hidden) exists for exactly these moments.
+in a dim ancient zone, the first lamp in a geode, a freshly cleaned unique on its shelf. Photo mode (pause-only, HUD hidden) exists for exactly these moments.

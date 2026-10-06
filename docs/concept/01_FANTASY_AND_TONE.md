@@ -11,7 +11,7 @@ The site is believable as a place people once cared about and then forgot: water
 cliffs, stranded boulders, old waterworks and river junk in the mud. The excavation happens in the
 open air, in daylight, with the sky visible above the hole.
 
-**A buried place with a history**: drowned workshops, household remains and old waterworks.
+**A buried place with a history**: workshops, household remains and old waterworks.
 Objects belong together; an engine suggests more of the workshop nearby. These are content directions,
 not the final roster. The believable history makes deeper impossibilities stand out.
 

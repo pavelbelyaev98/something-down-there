@@ -23,12 +23,7 @@ namespace SomethingDownThere
         // (Content/GroundTextures): crumbs and clods show the ground they came out of.
         private static (Color dark, Color light) DebrisColors(TerrainMaterialId ground) => ground switch
         {
-            TerrainMaterialId.Clay => (new Color(.37f, .22f, .14f), new Color(.62f, .4f, .27f)),
-            TerrainMaterialId.PondClay => (new Color(.25f, .24f, .23f), new Color(.45f, .43f, .4f)),
-            TerrainMaterialId.Gravel => (new Color(.31f, .29f, .27f), new Color(.51f, .48f, .44f)),
-            TerrainMaterialId.Rock or TerrainMaterialId.FracturedRock => (new Color(.2f, .2f, .2f), new Color(.4f, .39f, .38f)),
-            TerrainMaterialId.Concrete or TerrainMaterialId.FracturedConcrete => (new Color(.5f, .5f, .5f), new Color(.63f, .63f, .62f)),
-            TerrainMaterialId.Backfill or TerrainMaterialId.Crack => (new Color(.25f, .19f, .13f), new Color(.45f, .36f, .27f)),
+            TerrainMaterialId.Backfill => (new Color(.25f, .19f, .13f), new Color(.45f, .36f, .27f)),
             _ => (new Color(.3f, .21f, .14f), new Color(.55f, .4f, .27f))
         };
 

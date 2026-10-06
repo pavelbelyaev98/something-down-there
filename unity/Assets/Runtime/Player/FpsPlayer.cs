@@ -786,7 +786,7 @@ namespace SomethingDownThere
             SpendEnergy(cost);
             SuccessfulStrokes++;
             if (startsStroke) StrokesStarted++;
-            LastScoopVolume = target is TerrainVolume volume ? volume.LastCutVolume : 0;
+            LastScoopVolume = target is TerrainVolume volume ? volume.LastRemovedVolume : 0;
             DigPulse = 1;
             RefreshTargetPrompt();
             TryAutomaticRescue();
@@ -873,8 +873,7 @@ namespace SomethingDownThere
             MenuChanged?.Invoke();
         }
 
-        // Finds ground tells on purpose: transparent ground with coloured markers for every ground
-        // that is not its zone's main ground (cracks, gravel, backfill, pond clay, concrete, ...).
+        // Finds ground tells on purpose: transparent ground with coloured markers for every tell ground (backfill).
         // Ground Lab sessions start with unlimited battery; everything else stays as in the game.
         public void BeginGroundLab()
         {
@@ -981,11 +980,7 @@ namespace SomethingDownThere
         // Developer ground tuning: dials one ground's bite for the session (EquipmentProgression overrides).
         public TerrainMaterialId AdminGround { get; private set; } = TerrainMaterialId.Soil;
         public bool HasAdminGroundTuning => AdminAvailable && EquipmentProgression.HasResponseOverrides;
-        public static readonly TerrainMaterialId[] TunableGrounds =
-        {
-            TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.Backfill, TerrainMaterialId.Clay, TerrainMaterialId.PondClay,
-            TerrainMaterialId.Rock, TerrainMaterialId.FracturedRock, TerrainMaterialId.Concrete, TerrainMaterialId.FracturedConcrete
-        };
+        public static readonly TerrainMaterialId[] TunableGrounds = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill };
 
         public void CycleAdminGround()
         {

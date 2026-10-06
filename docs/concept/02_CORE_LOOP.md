@@ -13,7 +13,7 @@ Rules for each beat:
 | Beat | What happens | Rule |
 |---|---|---|
 | **Dig** | Hold-to-dig bites chunks of voxel ground; dust and material fall; the tool adapts automatically to what it's biting | Always satisfying from the starting shovel, never requires clicking speed |
-| **Hint** | The ground hints: a crack line on the cut face, a loose mixed patch, a gravel channel, the tool suddenly biting easier ([tells](03_WORLD_AND_SITE.md#4-materials-and-their-tells)); an odd patch of ground around a special find. The frozen HUD detector still shows its aim-based bars until a playtest decides its fate | Presence, never value; quiet stretches between hints; can be ignored; felt in the dark, seen with a lamp |
+| **Hint** | The ground hints: a messy patch where someone dug before, a curved face of hard stone, the tool suddenly biting differently ([tells](03_WORLD_AND_SITE.md#4-grounds-and-their-tells)); an odd patch of ground around a special find. The frozen HUD detector still shows its aim-based bars until a playtest decides its fate | Presence, never value; quiet stretches between hints; can be ignored; felt in the dark, seen with a lamp |
 | **Investigate** | The player chooses to follow the hint, dig sideways, or keep going down | Hints suggest, never prescribe; ignoring one is never wasted work |
 | **Reveal** | Digging around an object exposes it little by little; shape becomes readable before identity | Deliberate exposure required for all finds (50–60%); no vacuum auto-collect through solid dirt |
 | **Recognize** | "Wait… is that a—" The object's silhouette resolves into identity | This moment is the game's core reward; objects must read at partial exposure |
@@ -25,8 +25,8 @@ Rules for each beat:
 ## 2. The session loop (30–60 min)
 
 1. **Plan (1 min):** check the uniques at camp, the fat wallet, the next upgrade. Pick an intention:
- "reach the rock zone", "follow that gravel channel", "afford the drill".
-2. **Dig (20–45 min):** descend, follow tells, break into a sealed room, explore sideways, discover, get greedy.
+ "reach the old sediment", "follow that pit down", "afford the drill".
+2. **Dig (20–45 min):** descend, follow tells, break into a geode, explore sideways, discover, get greedy.
 3. **Tension (optional):** the bag fills, the battery drops, the return warning turns orange.
 4. **Decide:** keep going for one more thing, or leave with everything. This decision is the game's
  entire risk.
@@ -40,9 +40,9 @@ return is as valid as pushing for one more find.
 
 | Phase | Zone | Experience |
 |---|---|---|
-| Hour 1 | **Recent fill** (soil) | Slow shovel, believable finds, first purchases, the first buried stash (a chest a few metres under the plot centre) and gravel channel teach that easier ground means something |
-| Hours 2–3 | **Old sediment** (clay) | Real capability jumps, clusters, bones in clay basins, first "too modern for this depth" oddity |
-| Hours 3–4 | **Deep clay/stone** (rock) | The drill arrives around here; cracks and ore veins, C4 on cracked concrete, lamps, connected major parts; growing power exceeds the tougher ground and the zone never feels like a restart |
+| Hour 1 | **Recent fill** (soil) | Slow shovel, believable finds, first purchases; the first buried stash (a chest a few metres under the plot centre) teaches that different ground means something |
+| Hours 2–3 | **Old sediment** (lake silt) | Real capability jumps, clusters, the first geodes, first "too modern for this depth" oddity |
+| Hours 3–4 | **Deep sediment** (old riverbed) | The drill arrives around here; richer geodes, C4, lamps, connected major parts; growing power exceeds the tougher ground and the zone never feels like a restart |
 | Hours 4–5 | **Ancient constructed** | Large, fast excavation; the final object reveals what the major finds were for; ending and Continue Playing |
 
 The last meaningful purchase should land near the end of the run so its power gets used (timing
@@ -61,8 +61,8 @@ prototype-tuned).
 - Novelty is never dumped early: strong finds are distributed across all four zones.
 - **No zone feels like a restart:** at the expected tool level on arrival, each zone's main ground
   digs no slower than the previous zone felt near its end ([zone rules](03_WORLD_AND_SITE.md#zone-rules)).
-- Each zone introduces its tell gently: the first crack, channel or backfill pit is near the main
-  shaft and pays off, so the player learns that easier ground means something.
+- Each zone introduces its tell gently: the first backfill pit or geode is near the main shaft and
+  pays off, so the player learns that different ground means something.
 - The 150 m depth keeps a roughly constant find rate to the bottom; extra depth never means empty
   ground.
 - These rules validate a candidate layout before it is accepted; an accepted population persists and
@@ -74,12 +74,11 @@ The reviewed failure: the optimal strategy becomes "ignore the game, dig straigh
 answers structurally, not with friction:
 
 1. **Clusters and tells pull sideways** — the best discoveries are rarely on the main shaft, and
- cracks, gravel channels and backfill run sideways as often as down. This is Keep Digging's
+ backfill pits, geodes and lenses lie sideways as often as down. This is Keep Digging's
  acknowledged design flaw (digging straight down beat the game), answered with reasons instead of walls.
 2. **Fixed value per type:** deeper zones can contain more valuable things, but a gold bar has the
  same price at every depth. Clusters make lateral discoveries worthwhile; compare earnings in play.
-3. **Ground places are optional and sideways**; the main descent is never hard-blocked, and every
- rock body has a soft path.
+3. **Geodes are optional and sideways**; the main descent is never hard-blocked.
 4. **Components and uniques live off-shaft**, so the ending and the display reward exploration.
  Related finds, trails and ground tells give required parts a discoverable path; no blind final
  hunt, and nothing required depends on the frozen detector.
@@ -89,12 +88,12 @@ answers structurally, not with friction:
 ## 6. The core test (if the prototype works, this happens repeatedly)
 
 > "I should probably go back…"
-> *the drill suddenly bites easier: a crack line runs off to the left*
+> *the drill suddenly grinds: a curved face of grey stone off to the left*
 > "…fuck it, one more thing."
 > Sideways. A weird shape. More exposure. Recognition. Collected.
 > Bag almost full. Battery uncomfortable. Barely make it home.
 > **SELL ALL.** Finally afford the ridiculous upgrade.
-> *remember the cracked concrete wall at 40 m*
+> *remember the hard stone ball at 40 m*
 > …and immediately go back down.
 
 A calm return followed by eagerness to use the upgrade also passes this test. Battery anxiety is not

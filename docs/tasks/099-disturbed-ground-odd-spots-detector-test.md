@@ -1,6 +1,9 @@
 # 099 — Disturbed Ground, Odd Spots & Detector-Off Test
 
-**Status:** build part complete; the detector-off playtest is the user's.
+**Status:** waiting for `112`. Its odd-spot ground was removed by `107` (asset-only grounds); the
+lenses around uniques in `112` replace it, and backfill pits remain. Then the detector-off playtest is
+the user's, and the user decides the detector's fate from the result (a pass no longer removes it
+automatically, user 2026-10-05). The body below is the original build record.
 
 ## Objective
 

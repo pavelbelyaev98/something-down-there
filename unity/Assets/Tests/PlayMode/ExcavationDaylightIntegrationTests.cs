@@ -65,7 +65,7 @@ namespace SomethingDownThere.Tests
             var root = new GameObject("Daylight rendering fixture");
             root.SetActive(false);
             var ground = new Material(UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(
-                "Assets/Content/GroundTextures/GardenGround.mat"));
+                "Assets/Content/Nature/ReservoirSediment.mat"));
             ground.SetFloat("_SurfaceHeight", 3);
             var find = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             find.SetColor("_BaseColor", new Color(.6f, .4f, .2f));

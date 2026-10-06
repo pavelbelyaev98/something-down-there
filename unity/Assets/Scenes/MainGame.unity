@@ -63657,8 +63657,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26d34133b61647689acdceacf52eaaff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.TerrainVolume
-  pourChipsMaterial: {fileID: 2100000, guid: e2863d070a64ca44195117c0b7bd6446, type: 2}
-  pourDustMaterial: {fileID: 2100000, guid: bbcaeb641866eaa46920602a2e659e14, type: 2}
   groundXrayMarker: {fileID: 2100000, guid: 8a97902bbd05f924badb906f5ce4d110, type: 2}
   dimensions: {x: 288, y: 1200, z: 208}
   cellSize: 0.125

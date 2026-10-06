@@ -41,66 +41,33 @@ namespace SomethingDownThere
         // Work lamps are not a track: New Game gives a few, every further lamp is bought once at a flat
         // price and kept for good. The cap bounds saves; only the nearest lamps shine at once.
         public const int StarterLamps = 4, MaximumLamps = 200, LampPrice = 20;
-        // Relative to the owned tool: every tier retains material character and all families remain
+        // Relative to the owned tool: every tier retains material character and every ground remains
         // diggable. Fuel follows cadence, so a slower stroke costs proportionally more.
         private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);
-        private static readonly MaterialToolResponse Clay = new MaterialToolResponse(.98f, .745f, .831f, 1.08f);
-        private static readonly MaterialToolResponse Rock = new MaterialToolResponse(.786f, .786f, .608f, 1.15f);
-        // Loose stones: a broad bite whose grainy edge and floor (ExcavationGrid) leave it a little slower than soil.
-        private static readonly MaterialToolResponse Gravel = new MaterialToolResponse(1.081f, .985f, .985f, 1.03f);
-        // Tough but never a wall: small, shallow chips still make visible progress.
-        private static readonly MaterialToolResponse Concrete = new MaterialToolResponse(.619f, .619f, .442f, 1.25f);
-        // Clay basins' old pond clay: clean, smooth shavings that bite clearly easier than clay (the tell).
-        private static readonly MaterialToolResponse PondClay = new MaterialToolResponse(.97f, .854f, .892f, 1.05f);
-        // Beside a crack: broken rock takes ~1.5x rock's bite, and a cut into the band breaks it
-        // loose along the crack (ExcavationGrid.TryRelease). Broken concrete ~2.4x concrete.
-        private static readonly MaterialToolResponse FracturedRock = new MaterialToolResponse(.94f, .828f, .828f, 1.04f);
-        private static readonly MaterialToolResponse FracturedConcrete = new MaterialToolResponse(.774f, .774f, .64f, 1.1f);
         // Backfill: loose, mixed refill; the tool suddenly sinks in (the disturbed-ground tell).
         private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.167f, 1.109f, 1.313f, .92f);
-        // Developer ground tuning: session-only replacements for the authored responses. A crack
-        // line follows its fractured band.
+        // Developer ground tuning: session-only replacements for the authored responses.
         private static readonly MaterialToolResponse?[] ResponseOverrides = new MaterialToolResponse?[(int)TerrainMaterialSnapshot.Last + 1];
         public static bool HasResponseOverrides => System.Array.Exists(ResponseOverrides, value => value.HasValue);
         public static void OverrideResponse(TerrainMaterialId material, MaterialToolResponse response) => ResponseOverrides[(int)material] = response;
         public static void ClearResponseOverrides() => System.Array.Clear(ResponseOverrides, 0, ResponseOverrides.Length);
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material)
-        {
-            var key = material == TerrainMaterialId.Crack ? TerrainMaterialId.FracturedRock : material;
-            return ResponseOverrides[(int)key] ?? AuthoredResponse(key);
-        }
+            => ResponseOverrides[(int)material] ?? AuthoredResponse(material);
         // What each ground does beyond its bite (concept 03 section 4), for the developer ground table.
         public static string GroundEffect(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => "Plain ground; never collapses",
-            TerrainMaterialId.Gravel => "Pours when undercut (3 m section); heavy finds",
-            TerrainMaterialId.Clay => "Steady narrow shavings; never collapses",
-            TerrainMaterialId.PondClay => "Basin and odd-spot tell: bites easier than clay",
-            TerrainMaterialId.Rock => "Small faceted chips; cracks and veins are its tells",
-            TerrainMaterialId.Concrete => "Smallest square chips; cracked walls lead into rooms",
-            TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack => "Crack band: a cut breaks it loose along the crack",
-            TerrainMaterialId.FracturedConcrete => "Cracked concrete: a cut breaks it loose along the crack",
-            TerrainMaterialId.Backfill => "Disturbed ground: sinks in; slumps when undercut (2 m)",
+            TerrainMaterialId.Backfill => "Disturbed ground: loose fill; never collapses",
             _ => ""
         };
         public static MaterialToolResponse AuthoredResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
-            TerrainMaterialId.Clay => Clay,
-            TerrainMaterialId.Rock => Rock,
-            TerrainMaterialId.Gravel => Gravel,
-            TerrainMaterialId.Concrete => Concrete,
-            TerrainMaterialId.PondClay => PondClay,
-            TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack => FracturedRock,
-            TerrainMaterialId.FracturedConcrete => FracturedConcrete,
             TerrainMaterialId.Backfill => Backfill,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
-        // Softest to hardest; each family keeps its resistance at every tier. Families sharing one
-        // response (fractured rock and its crack line) are one hardness class.
-        public static readonly TerrainMaterialId[] HardnessOrder =
-            { TerrainMaterialId.Backfill, TerrainMaterialId.Soil, TerrainMaterialId.Gravel, TerrainMaterialId.PondClay, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack,
-              TerrainMaterialId.Clay, TerrainMaterialId.FracturedConcrete, TerrainMaterialId.Rock, TerrainMaterialId.Concrete };
+        // Softest to hardest; each ground keeps its resistance at every tier.
+        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Backfill, TerrainMaterialId.Soil };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100, 1600, 2300 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40, 40, 40 };

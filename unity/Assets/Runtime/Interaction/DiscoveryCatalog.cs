@@ -142,8 +142,7 @@ namespace SomethingDownThere
         }
 
         // ground: grid-local material sampler (the excavation's immutable field); null ignores host ground.
-        // groundLayout: the excavation's rooms and pits; ordinary finds keep out of sealed structures, and a
-        // find settles at every seat (room silt, pit bottoms).
+        // groundLayout: the excavation's pits and stashes; a find settles at every seat (rubbish pit bottoms).
         public DiscoveryPlacement[] Generate(Vector3 extent, int seed, Func<Vector3, TerrainMaterialId> ground = null, TerrainGround.GroundLayout groundLayout = null)
         {
             Validate();
@@ -181,7 +180,7 @@ namespace SomethingDownThere
             for (int i = 0; i < Entries.Length; i++)
             {
                 var entry = Entries[i]; if (!entry.AuthoredPlacement) continue;
-                // Ordinary finds also keep out of the unique's odd spot (TerrainGround.OddSpotReach).
+                // Ordinary finds also keep out of the unique's space (TerrainGround.OddSpotReach).
                 Vector3 p = entry.AuthoredPosition; float r = entryRadii[i] + DiscoveryField.SoilClearance;
                 if (p.x < r || p.y < r || p.z < r || p.x > extent.x-r || p.y > extent.y-r || p.z > extent.z-r)
                     throw new InvalidDataException("Authored unique does not fit inside untouched soil.");
@@ -191,9 +190,9 @@ namespace SomethingDownThere
                 authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
             }
             // Each seat takes the next find whose depth band covers it and that fits, sunk a third of
-            // its size below the seat: counts and bands are unchanged. Room seats lie on the silt
-            // (concept 03 §5); rubbish pit seats wait at the bottom of disturbed ground and take junk
-            // (03 §4: every pit holds something). Ordinary finds keep out of every stash's chest.
+            // its size below the seat: counts and bands are unchanged. Rubbish pit seats wait at the bottom
+            // of disturbed ground and take junk (03 §4: every pit holds something). Ordinary finds keep out
+            // of every stash's chest.
             Vector3[] seats = null;
             var stashes = groundLayout != null && Chest != null ? groundLayout.Stashes : Array.Empty<TerrainGround.Stash>();
             var chestTurns = new Dictionary<int, Quaternion>();
@@ -201,7 +200,6 @@ namespace SomethingDownThere
             {
                 seats = new Vector3[radii.Length];
                 for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
-                reserved.AddRange(groundLayout.KeepOut());
                 foreach (var stash in stashes) reserved.Add(new DiscoveryReservation((Vector3)stash.Centre, Chest.Radius + DiscoveryField.SoilClearance));
                 foreach (var (seat, fits, junk) in groundLayout.Seats())
                 {
@@ -219,7 +217,7 @@ namespace SomethingDownThere
                 {
                     var entry = Entries[shallow[i]];
                     return entry.HostGrounds == null || entry.HostGrounds.Length == 0 ? 1
-                        : HostWeight(entry.HostGrounds, entry.HostWeights, ground, position, radii[i]);
+                        : HostWeight(entry.HostGrounds, entry.HostWeights, ground, position);
                 };
             var layout = DiscoveryField.Generate(extent, shallow.Count, seed, ShallowCount, radii, bands, covers, reserved.ToArray(),
                 SiteLayout.FindFootprint(extent), weight, seats);
@@ -275,27 +273,15 @@ namespace SomethingDownThere
             }
         }
 
-        // The ground at the find's centre decides, except that concrete also counts right beside
-        // its walls (axis probes just past the find's reach): "in and around concrete", since a
-        // find cannot sit inside a thin wall. Rock must not: veins beside rock would read as rock.
-        private static float HostWeight(TerrainMaterialId[] hosts, float[] weights, Func<Vector3, TerrainMaterialId> ground, Vector3 centre, float radius)
+        // The ground at the find's centre decides.
+        private static float HostWeight(TerrainMaterialId[] hosts, float[] weights, Func<Vector3, TerrainMaterialId> ground, Vector3 centre)
         {
             int host = Array.IndexOf(hosts, ground(centre));
-            float best = host >= 0 ? weights[host] : 1, reach = radius + .3f;
-            int concrete = Array.IndexOf(hosts, TerrainMaterialId.Concrete);
-            if (concrete >= 0 && weights[concrete] > best)
-                for (int probe = 1; probe < 7; probe++)
-                {
-                    Vector3 offset = (probe & 1) == 0 ? -Axis(probe) * reach : Axis(probe) * reach;
-                    if (ground(centre + offset) == TerrainMaterialId.Concrete) return weights[concrete];
-                }
-            return best;
+            return host >= 0 ? weights[host] : 1;
         }
 
-        private static Vector3 Axis(int probe) => probe <= 2 ? Vector3.right : probe <= 4 ? Vector3.up : Vector3.forward;
-
-        // Unique odd spots for the terrain (grid-local centre, envelope radius): the discovery sync
-        // copies them onto TerrainVolume so the ground shapes unlike-zone lenses around them.
+        // Uniques' spaces for the terrain (grid-local centre, envelope radius): the discovery sync copies them
+        // onto TerrainVolume so its pits keep clear of them.
         public Vector4[] OddSpots()
         {
             var spots = new List<Vector4>();

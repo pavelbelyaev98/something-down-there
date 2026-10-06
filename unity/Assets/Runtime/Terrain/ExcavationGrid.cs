@@ -33,10 +33,10 @@ namespace SomethingDownThere
         // ground into a thin roof. Lateral digging under the site starts below it.
         private float[] bankBeyond;
         private float bankDepth;
-        // The seeded ground's rooms, pits and odd spots; sealed rooms' air is part of untouched ground.
+        // The seeded ground's pits and stashes; a stash chest's hollow is part of untouched ground.
         public TerrainGround.GroundLayout Layout { get; private set; } = TerrainGround.GroundLayout.Empty;
-        // A developer lab's air (grid-local metres), carved on every reset like a sealed room's: boxes
-        // (Ground Lab hollows) and round-ended tubes (its crane scenes' pits, shafts and tunnels). Null for the site.
+        // A developer lab's air (grid-local metres), carved on every reset like a chest's hollow: boxes
+        // and round-ended tubes (the Ground Lab crane scenes' pockets, pits, shafts and tunnels). Null for the site.
         public readonly struct LabCarve
         {
             public readonly Vector3 A, B;
@@ -47,7 +47,6 @@ namespace SomethingDownThere
             public static LabCarve Tube(Vector3 a, Vector3 b, float radius) => new LabCarve(a, b, radius);
         }
         private List<LabCarve> labCarves;
-        public TerrainGround.Room[] Rooms => Layout.Rooms;
         public Vector3Int Size { get; }
         public float CellSize { get; }
         public Vector3 Extent => (Vector3)Size * CellSize;
@@ -129,7 +128,6 @@ namespace SomethingDownThere
             for (int y = 0; y <= Size.y; y++)
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
-            foreach (var room in Layout.Rooms) CarveRoom(room);
             foreach (var stash in Layout.Stashes) if (stash.Hollow) CarveHollow(stash);
             if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
             Revision = 0;
@@ -144,12 +142,12 @@ namespace SomethingDownThere
             ClearSupportSearch();
         }
 
-        // Developer Ground Lab: labelled bays of every ground instead of the seeded site.
+        // Developer Ground Lab: labelled bays of each ground instead of the seeded site.
         public void UseGroundLab()
         {
             materials = GroundLab.Materials(Size, CellSize);
             Layout = TerrainGround.GroundLayout.Empty;
-            labCarves = GroundLab.Cavities(Size, CellSize);
+            labCarves = GroundLab.Cavities();
             Reset();
         }
 
@@ -187,25 +185,6 @@ namespace SomethingDownThere
                     float t = length > 0 ? Mathf.Clamp01(Vector3.Dot(p - carve.A, axis) / length) : 0;
                     outside = Vector3.Distance(p, carve.A + axis * t) - carve.Radius;
                 }
-                if (outside >= band) continue;
-                int index = x + y * strideY + z * strideZ;
-                density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
-            }
-        }
-
-        // A sealed room's air: a smooth signed-distance box, inside its structure's shell.
-        private void CarveRoom(TerrainGround.Room room)
-        {
-            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)room.Min / CellSize));
-            Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)room.Max / CellSize));
-            for (int z = first.z; z <= last.z; z++)
-            for (int y = first.y; y <= last.y; y++)
-            for (int x = first.x; x <= last.x; x++)
-            {
-                var local = Unity.Mathematics.math.mul(room.ToLocal, new Unity.Mathematics.float3(x, y, z) * CellSize - room.Centre) - room.AirCentre;
-                var d = Unity.Mathematics.math.abs(local) - room.AirHalf;
-                float outside = Unity.Mathematics.math.length(Unity.Mathematics.math.max(d, 0))
-                    + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
                 if (outside >= band) continue;
                 int index = x + y * strideY + z * strideZ;
                 density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
@@ -469,20 +448,10 @@ namespace SomethingDownThere
 
                     if (boreLength > 0)
                     {
-                        // Back along the axis from the tip, and out from it in the ground's own cut shape: rock faceted,
-                        // concrete square, clays and broken rock elliptical, soil and backfill round.
+                        // Back along the axis from the tip, and out from it in a round cut the ground's bite stretches.
                         float height = Vector3.Dot(delta, normal);
-                        float spread = Mathf.Sqrt(Mathf.Max(0, delta.sqrMagnitude - height * height));
-                        if (material != TerrainMaterialId.Soil && material != TerrainMaterialId.Backfill)
-                        {
-                            float u = Vector3.Dot(delta, tangent) / response.Width, v = Vector3.Dot(delta, bitangent) / response.Length;
-                            spread = material == TerrainMaterialId.Rock
-                                ? Mathf.Max(Mathf.Abs(u), Mathf.Max(Mathf.Abs(u * .5f + v * .8660254f), Mathf.Abs(u * .5f - v * .8660254f)))
-                                : material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete ? Mathf.Max(Mathf.Abs(u), Mathf.Abs(v))
-                                : Mathf.Sqrt(u * u + v * v);
-                        }
-                        // Loose stones indent the edge, never widen it, so it stays pebbly under a held drill.
-                        if (material == TerrainMaterialId.Gravel) spread += Grain(index) * radius * .1f;
+                        float u = Vector3.Dot(delta, tangent) / response.Width, v = Vector3.Dot(delta, bitangent) / response.Length;
+                        float spread = Mathf.Sqrt(u * u + v * v);
                         cut = Mathf.Max(Bit(height, spread, radius, boreLength), height - boreLength - radius * .25f);
                     }
                     else if (shovel)
@@ -500,14 +469,7 @@ namespace SomethingDownThere
                         // The superellipse is at least max(a,b). Reject unchanged samples
                         // with that cheap bound before powers/noise, especially in deep pits.
                         if ((Mathf.Max(a, b) - 1) * length - amplitude >= before) continue;
-                        float side = material == TerrainMaterialId.Rock || material == TerrainMaterialId.Concrete || material == TerrainMaterialId.FracturedConcrete
-                            ? (Mathf.Max(a, b) - 1) * length
-                            // Clays and broken rock crumble into smooth elliptical cuts.
-                            : material == TerrainMaterialId.Clay || material == TerrainMaterialId.PondClay || material == TerrainMaterialId.FracturedRock
-                                || material == TerrainMaterialId.Crack ? (Mathf.Sqrt(a * a + b * b) - 1) * length
-                            : (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
-                        // Loose stones indent the scoop edge (never widen it, like the shave).
-                        if (material == TerrainMaterialId.Gravel) side += Grain(index) * length * .1f;
+                        float side = (Mathf.Pow(Mathf.Pow(a, 2.8f) + Mathf.Pow(b, 2.8f), 1f / 2.8f) - 1) * length;
                         side = Mathf.Max(side, (u * 0.72f + v * 0.69f - radius * 0.98f) * 0.9f);
                         side = Mathf.Max(side, (-u * 0.86f - v * 0.51f - radius * 0.94f) * 0.9f);
                         float join = Mathf.Max(bevel - Mathf.Abs(side - floor), 0) / bevel;
@@ -541,14 +503,6 @@ namespace SomethingDownThere
                 }
             }
             return CompleteRemoval(changedMin, changedMax, out changed);
-        }
-
-        // Stable per-sample grain for loose materials; independent of stroke seeds.
-        private static float Grain(int index)
-        {
-            uint h = unchecked((uint)index * 2654435761u);
-            h ^= h >> 15; h = unchecked(h * 2246822519u); h ^= h >> 13;
-            return (h & 0xffff) / 65536f;
         }
 
         private void ClearSupportSearch()

@@ -18,12 +18,12 @@ build curiosity about what they add up to.
 | Site | One diggable area, full voxel, boundaries visible (concrete + bedrock) |
 | Tool | One machine, 2–3 meaningful upgrade levels with visible bolt-on changes, hold/toggle digging, automatic material adaptation stub |
 | Jetpack | Stable and usable from the start; ordinary falls are harmless |
-| Materials | The zone-1 and zone-2 main grounds (soil, clay) with gravel channels, backfill pits and one rock mass with cracks, each with its tell and host finds |
+| Materials | Soil with backfill pits, then the zone-2 main ground and geodes, each from owned pack textures with its tell and host finds |
 | Detector | Frozen as built. The slice is also played with the detector off to test whether ground tells replace it |
 | Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and crane recovery |
 | Crane recovery | Hold Interact on the exposed computer; the crane parks over the hole, its rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks, and the crane sets it down at camp, preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
-| Ground places | One concrete structure with cracks and a sealed room, diggable by the current tool; cracks, upgrades or C4 are much faster |
+| Geodes | A few hard shells with crystal-lined hollows, diggable by the current tool in seconds; upgrades or C4 are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
 | Economy | Shared sell/upgrade computer, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
 | Display | Recovered uniques stand at camp where the crane set them, rereadable; no inventory screen |
@@ -45,22 +45,22 @@ and long-session validation before release.
 ## 3. Experiments (numbers to discover)
 
 - Voxel size vs. dig satisfaction and recognition readability.
-- Ground tells: do players notice and follow cracks, gravel channels and backfill unprompted? Is the
-  dig-speed change felt in the dark? Does a pour ever feel like a hazard?
+- Ground tells: do players notice and follow backfill pits, geodes and lenses unprompted? Is the
+  dig-speed change felt in the dark?
 - Detector-off run: on a fresh save with the detector disabled, do testers find every unique without
   help? This decides the detector ([Discoveries §2](05_DISCOVERIES.md#2-the-detector)).
 - Zone arrival: at the expected tool level, does any zone's main ground feel like a restart?
 - Return at depth: jetpack return time from typical working depths across the 150 m site.
 - Crane self-rescue vs automatic recovery at zero battery: which feels fairer and better?
 - Optional unique cleaning: do players enjoy it, and does anyone feel forced to do it?
-- Sealed rooms: does breaking in land as a moment, and do the half-sunk finds keep the reveal?
+- Geodes: does breaking in land as a moment, and do the crystals read before they are collected?
 - Starting shovel speed vs. frustration; ten meaningful upgrade levels, the shovel-to-drill milestone and output on familiar ground.
 - Battery drain per powered action vs. outing length; recovery frequency and empty-wallet restart.
 - Bag capacity vs. trip length; where the hard stop actually lands.
 - Recognition: exposure percentage at which players identify each of the five objects; test late
  wide cuts and C4 too. Full-bag overflow and interesting finds must survive.
 - Cluster spacing: how far players search after finding one related object.
-- Ground places: visible starting-tool progress vs. following cracks, using C4, or returning later for a much faster excavation.
+- Geodes: visible starting-tool progress through the shell vs. using C4 or returning later for a much faster excavation.
 - Rare find value: how many expeditions a "big find" should equal.
 - Station time: seconds spent in the yard per trip; nonblocking selling/upgrades and crane
  recovery without underground carrying.
@@ -101,7 +101,7 @@ and long-session validation before release.
 
 ## 5. The core test script (observe, don't explain)
 
-1. New player, no tutorial, unguided 20–30 minutes in a focused slice (two main grounds with their tells, common/distinctive finds, one connected lateral clue, one sealed room, one oversized salvage set piece, one major tool upgrade, complete loop). Run it once with the detector on and once with it off.
+1. New player, no tutorial, unguided 20–30 minutes in a focused slice (two main grounds with their tells, common/distinctive finds, one connected lateral clue, one geode, one oversized salvage set piece, one major tool upgrade, complete loop). Run it once with the detector on and once with it off.
 2. Observe key behavioral questions:
    - *Does digging feel good without an imminent reward?* (Digging must be inherently satisfying even during empty stretches).
    - *Do they voluntarily follow a lateral clue?* (Observe if the exposed cable/chain naturally pulls them sideways without a prompt).
@@ -116,10 +116,10 @@ and long-session validation before release.
 
 1. **Feel prototype:** dig, materials, cleanup, jetpack, battery, recovery. No economy, no art.
 2. **Loop prototype:** sell, upgrade, display, first object recognition (the detector was built here and is now frozen).
-3. **Ground that matters:** 150 m site, one main ground per zone, host ground, cracks, gravel pour, sealed rooms, disturbed ground and the detector-off test.
+3. **Ground that matters:** 150 m site, one main ground per zone from owned assets, host ground, disturbed ground, geodes, lenses around uniques and the detector-off test.
 4. **Slice:** all vertical-slice elements above with approved existing assets or original placeholder art.
 5. **Pacing pass:** multiple seeds, measure the metrics, tune generation rules.
-6. **Content production:** zones 2–4, coherent places, connected major finds, full rosters and ending.
+6. **Content production:** zones 2–4, coherent buried scenes, connected major finds, full rosters and ending.
  Validate part relationships and the final object before committing the full content set.
 7. **Polish and release prep:** comfort settings, achievements, verification passes.
 

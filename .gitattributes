@@ -45,7 +45,6 @@ unity/Assets/Scenes/**/OcclusionCullingData.asset filter=lfs diff=lfs merge=lfs 
 
 # Project texture copies retain the approved pack's binary storage policy.
 unity/Assets/Content/Nature/GroundTextures/Gravel_*.png filter=lfs diff=lfs merge=lfs -text
-unity/Assets/Content/Nature/GroundTextures/_RockDetail_*.png filter=lfs diff=lfs merge=lfs -text
 
 # Purchased Odin tooling: preserve vendor binaries in the private repository via LFS.
 unity/Assets/Plugins/Sirenix/**/*.dll filter=lfs diff=lfs merge=lfs -text

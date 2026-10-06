@@ -1,6 +1,6 @@
 # 096 — Cracks & Veins
 
-**Status:** complete. Seeded crack sheets in rock and concrete write a one-sample crack line inside a ~0.5 m fractured band (IDs 6–8, one byte per sample); the band crumbles ~1.5× faster than rock (concrete ~2.4×), renders as broken grain with a thin near-black line, and ore favours it three times over plain rock.
+**Status:** removed by 107 (asset-only grounds, 2026-10-05): cracks, veins and their fractured bands are gone. The body is kept as history so it is not re-run.
 
 ## Objective
 

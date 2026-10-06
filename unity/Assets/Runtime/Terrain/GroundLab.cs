@@ -5,8 +5,8 @@ using UnityEngine;
 namespace SomethingDownThere
 {
     // Developer Ground Lab (development builds, title menu): the site's grid refilled with labelled
-    // 3 x 3 m bays, 12 m deep, each one ground alone or a mix that shows one behaviour (a pour, a
-    // slump, a crack break, a zone change), plus the crane scenes around them (GroundLab.Crane).
+    // 3 x 3 m bays, 12 m deep, each one ground alone or a mix that shows one tell, plus the crane scenes
+    // around them (GroundLab.Crane).
     // Never saved; leaving reloads MainGame, restarting reloads it straight back into the lab.
     public static partial class GroundLab
     {
@@ -18,48 +18,19 @@ namespace SomethingDownThere
         {
             public readonly string Name, Hint;
             public readonly Func<float, float, float, TerrainMaterialId> Ground;
-            public readonly bool Cavity;
-            public Bay(string name, string hint, Func<float, float, float, TerrainMaterialId> ground, bool cavity = false)
-            { Name = name; Hint = hint; Ground = ground; Cavity = cavity; }
+            public Bay(string name, string hint, Func<float, float, float, TerrainMaterialId> ground)
+            { Name = name; Hint = hint; Ground = ground; }
         }
 
         private static Func<float, float, float, TerrainMaterialId> Only(TerrainMaterialId ground) => (u, d, v) => ground;
 
-        // A crack sheet: its line within 4 cm, its shattered band within 25 cm.
-        private static TerrainMaterialId? Crack(float distance, TerrainMaterialId band)
-            => Mathf.Abs(distance) < .04f ? TerrainMaterialId.Crack : Mathf.Abs(distance) < .25f ? band : (TerrainMaterialId?)null;
-
-        // Rows from the spawn (south) inward: single grounds, harder grounds, then mixes.
+        // From the spawn (south) inward: single grounds, then mixes.
         public static readonly Bay[] Bays =
         {
-            new Bay("Soil", "loose, broad cuts", Only(TerrainMaterialId.Soil)),
-            new Bay("Gravel", "grainy; pours when undercut", Only(TerrainMaterialId.Gravel)),
-            new Bay("Backfill", "loose fill; slumps when undercut", Only(TerrainMaterialId.Backfill)),
-            new Bay("Clay", "steady narrow shavings", Only(TerrainMaterialId.Clay)),
-            new Bay("Pond clay", "smooth; easier than clay", Only(TerrainMaterialId.PondClay)),
-            new Bay("Rock", "small faceted chips", Only(TerrainMaterialId.Rock)),
-
-            new Bay("Concrete", "smallest square chips", Only(TerrainMaterialId.Concrete)),
-            new Bay("Shattered rock", "a crack's band, all through", Only(TerrainMaterialId.FracturedRock)),
-            new Bay("Shattered concrete", "a crack's band in concrete", Only(TerrainMaterialId.FracturedConcrete)),
-            new Bay("Rock with cracks", "dig into a pale seam", (u, d, v) =>
-                Crack((u + .35f * v) / 1.06f, TerrainMaterialId.FracturedRock)
-                ?? Crack((.3f * u - .8f * (d - 5f) - .5f * v) / .99f, TerrainMaterialId.FracturedRock) ?? TerrainMaterialId.Rock),
-            new Bay("Concrete with crack", "dig into the seam", (u, d, v) =>
-                Crack((u - .3f * v) / 1.04f, TerrainMaterialId.FracturedConcrete) ?? TerrainMaterialId.Concrete),
-            new Bay("Rock with clay vein", "the soft path through rock", (u, d, v) =>
-                new Vector2(u - .8f * Mathf.Sin(d * .9f), v - .6f * Mathf.Cos(d * .7f)).magnitude < .55f ? TerrainMaterialId.Clay : TerrainMaterialId.Rock),
-
-            new Bay("Gravel under soil", "gravel 1.2-2.4 m: dig under it", (u, d, v) =>
-                d >= 1.2f && d <= 2.4f ? TerrainMaterialId.Gravel : TerrainMaterialId.Soil),
-            new Bay("Backfill pit", "1 m pit in clay: undercut it", (u, d, v) =>
-                Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Clay),
-            new Bay("Thin soil roof", "hollow under 0.6 m: soil holds", Only(TerrainMaterialId.Soil), cavity: true),
-            new Bay("Thin clay roof", "same hollow; clay holds", Only(TerrainMaterialId.Clay), cavity: true),
-            new Bay("Soil, clay, rock", "zone changes at 2 m and 4 m", (u, d, v) =>
-                d < 2f ? TerrainMaterialId.Soil : d < 4f ? TerrainMaterialId.Clay : TerrainMaterialId.Rock),
-            new Bay("Pond-clay lens", "an odd spot in clay", (u, d, v) =>
-                (u / 1.2f) * (u / 1.2f) + (v / 1.2f) * (v / 1.2f) + ((d - 1.8f) / .7f) * ((d - 1.8f) / .7f) < 1f ? TerrainMaterialId.PondClay : TerrainMaterialId.Clay),
+            new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil)),
+            new Bay("Backfill", "a refilled pit's loose fill", Only(TerrainMaterialId.Backfill)),
+            new Bay("Backfill pit", "1 m pit in soil, 5 m deep", (u, d, v) =>
+                Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil),
         };
 
         public static Vector2 BayCentre(int bay) => new Vector2(Columns[bay % Columns.Length], Rows[bay / Columns.Length]);
@@ -81,7 +52,7 @@ namespace SomethingDownThere
             return -1;
         }
 
-        // The lab's grounds for the shipped site grid: bays in soil to 12 m, rock below.
+        // The lab's grounds for the shipped site grid: bays in soil to 12 m, soil below.
         public static TerrainMaterialSnapshot Materials(Vector3Int size, float cellSize)
         {
             int strideY = size.x + 1, strideZ = strideY * (size.y + 1);
@@ -92,7 +63,7 @@ namespace SomethingDownThere
             {
                 int row = y * strideY + z * strideZ;
                 float depth = (size.y - y) * cellSize;
-                if (depth > BayDepth) { Array.Fill(ids, (byte)TerrainMaterialId.Rock, row, strideY); continue; }
+                if (depth > BayDepth) continue;
                 float wz = origin.z + z * cellSize;
                 for (int x = 0; x <= size.x; x++)
                 {
@@ -103,20 +74,12 @@ namespace SomethingDownThere
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
 
-        // The lab's air (grid-local metres): boxes under the thin-roof bays (2 x 2 m wide, 0.6-1.8 m
-        // down) and the crane scenes' pits, shafts and tunnels.
-        public static List<ExcavationGrid.LabCarve> Cavities(Vector3Int size, float cellSize)
+        // The lab's air (grid-local metres): the crane scenes' pockets, pits, shafts and tunnels.
+        public static List<ExcavationGrid.LabCarve> Cavities()
         {
-            var boxes = new List<ExcavationGrid.LabCarve>();
-            AddCraneCarves(boxes);
-            float top = size.y * cellSize;
-            for (int bay = 0; bay < Bays.Length; bay++)
-            {
-                if (!Bays[bay].Cavity) continue;
-                var centre = BayCentre(bay) - new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
-                boxes.Add(ExcavationGrid.LabCarve.Box(new Vector3(centre.x - 1, top - 1.8f, centre.y - 1), new Vector3(centre.x + 1, top - .6f, centre.y + 1)));
-            }
-            return boxes;
+            var carves = new List<ExcavationGrid.LabCarve>();
+            AddCraneCarves(carves);
+            return carves;
         }
 
         // The aim prompt names the bay or crane scene under the crosshair and the ground actually hit

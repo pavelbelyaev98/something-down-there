@@ -1,7 +1,7 @@
 # 109 — The Chest by Hand
 
 **Status:** planned after `108`. Spec written ahead (2026-10-05); re-check against the code when it
-starts. Plan and research: [107](107-asset-only-grounds.md).
+starts. Plan and research: [107](completed/107-asset-only-grounds.md).
 
 ## Objective
 

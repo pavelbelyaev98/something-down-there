@@ -12,12 +12,9 @@ namespace SomethingDownThere.Editor
     public static class GroundTextureSetup
     {
         public const string Folder = "Assets/Content/GroundTextures/";
-        public const string MaterialPath = Folder + "GardenGround.mat";
         public const string ShaderName = "Something Down There/Ground Triplanar";
         public const string SedimentPath = "Assets/Content/Nature/ReservoirSediment.mat";
         public const string PackTextureFolder = "Assets/Content/Nature/GroundTextures/";
-        // The original soil art's own mapping and relief.
-        public const float OriginalSoilTileMetres = 2, OriginalSoilRelief = .55f, OriginalStoneRelief = .9f;
         // Applied after opaques it also darkens sunlit creases; at 1.25 every crease between shovel bites
         // turned dug soil into dark-edged blocks. The user settled on 0.45: 0.3 too little, 0.6 too much
         // (2026-10-03). The Developer admin's Contact shading slider tries other values for the session.
@@ -54,14 +51,8 @@ namespace SomethingDownThere.Editor
             ConfigureDeposits(sediment);
             EditorUtility.SetDirty(sediment);
 
-            var camp = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
-            if (camp == null) throw new InvalidOperationException("Keep the existing camp material.");
-            Undo.RecordObject(camp, "Use the pack lakebed surface cap");
-            ConfigureSurfaceCap(camp, terrain.SurfaceHeight);
-            EditorUtility.SetDirty(camp);
             var settings = new SerializedObject(terrain);
             settings.FindProperty("soilMaterial").objectReferenceValue = sediment;
-            ConfigurePourFeedback(settings);
             ConfigureXrayMarker(settings);
             var preview = settings.FindProperty("untouchedPreview").objectReferenceValue as GameObject;
             if (preview == null) throw new InvalidOperationException("Keep the existing edit-mode preview.");
@@ -72,13 +63,6 @@ namespace SomethingDownThere.Editor
             Assign(root.Find("Surface/South rim")?.GetComponent<Renderer>(), sediment);
             ConfigureSunBias(root);
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
-        }
-
-        // Gravel pours (097) reuse the recovery crumb and dust particle materials.
-        public static void ConfigurePourFeedback(SerializedObject terrain)
-        {
-            terrain.FindProperty("pourChipsMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(Folder + "SoilCrumbs.mat");
-            terrain.FindProperty("pourDustMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(Folder + "SoilDust.mat");
         }
 
         // Developer ground X-ray markers: one instanced unlit material, coloured per ground at draw time.
@@ -128,48 +112,6 @@ namespace SomethingDownThere.Editor
 
         private static void ConfigureDeposits(Material material)
         {
-            // Fine packed grains read as sediment; fractured rock has its own relief.
-            material.SetTexture("_ClayAlbedo", PackTexture("Gravel", "Albedo"));
-            material.SetTexture("_ClayNormal", PackTexture("Gravel", "Normal"));
-            material.SetTexture("_ClayMask", PackTexture("Gravel", "Roughness"));
-            material.SetColor("_ClayTint", new Color(1.1f, .66f, .4f));
-            material.SetFloat("_ClayTileMetres", 2.8f);
-            material.SetFloat("_ClayNormalStrength", .22f);
-            material.SetTexture("_RockAlbedo", RockDetail("Albedo"));
-            material.SetTexture("_RockNormal", RockDetail("Normal"));
-            material.SetTexture("_RockMask", null);
-            material.SetColor("_RockTint", new Color(.4f, .4f, .4f));
-            material.SetFloat("_RockTileMetres", 3.2f);
-            material.SetFloat("_RockNormalStrength", .6f);
-            // Gravel and concrete: original generated surfaces (the packs have neither).
-            material.SetTexture("_GravelAlbedo", DepositTextures.Gravel("Albedo"));
-            material.SetTexture("_GravelNormal", DepositTextures.Gravel("Normal"));
-            material.SetTexture("_GravelMask", DepositTextures.Gravel("Roughness"));
-            material.SetColor("_GravelTint", Color.white);
-            material.SetFloat("_GravelTileMetres", 2.5f);
-            material.SetFloat("_GravelNormalStrength", .8f);
-            material.SetTexture("_ConcreteAlbedo", DepositTextures.Concrete("Albedo"));
-            material.SetTexture("_ConcreteNormal", DepositTextures.Concrete("Normal"));
-            material.SetTexture("_ConcreteMask", DepositTextures.Concrete("Roughness"));
-            // Pale but never glaring under a lamp, and never the boundary's bedrock look.
-            material.SetColor("_ConcreteTint", new Color(.8f, .79f, .76f));
-            material.SetFloat("_ConcreteTileMetres", 2f);
-            material.SetFloat("_ConcreteNormalStrength", .45f);
-            // Clay basins' old pond clay: the clay textures, grey-blue, larger and smoother.
-            material.SetColor("_PondClayTint", new Color(.68f, .74f, .8f));
-            material.SetFloat("_PondClayTileMetres", 3.6f);
-            material.SetFloat("_PondClayNormalStrength", .12f);
-            // Zone palettes (concept 09 §2): rust-red clay veins in the deep stone, cold ancient rock.
-            material.SetColor("_ClayDeepTint", new Color(.86f, .6f, .5f));
-            material.SetColor("_RockColdTint", new Color(.9f, .95f, 1.02f));
-            material.SetVector("_ZoneDepths", new Vector4(TerrainGround.ZoneBorders[1], TerrainGround.ZoneBorders[2], 3, 0));
-            material.SetFloat("_StrataStrength", .13f);
-            material.SetFloat("_StrataCool", .6f);
-            // Cracks (096): a paler band of angular shards beside a pale mineral line with dark edges.
-            material.SetFloat("_FractureTileMetres", .9f);
-            material.SetFloat("_FractureShardMetres", .16f);
-            material.SetFloat("_FractureLift", .35f);
-            material.SetColor("_CrackColour", new Color(.86f, .84f, .78f));
             // Backfill (106): the soil turned over with stones churned in, one texture set built from the packs' own
             // ground textures by art/pure-nature-highlands/make_backfill.py. Its soil repeats about as the dig ground's
             // does (the set holds 2 x 2 soil tiles); a stronger relief turned the lamp-lit clods' creases black.
@@ -192,17 +134,6 @@ namespace SomethingDownThere.Editor
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        private static Texture2D RockDetail(string channel)
-        {
-            string file = "_RockDetail_" + (channel == "Albedo" ? "a" : "n") + ".png";
-            string path = PackTextureFolder + file;
-            if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null && !AssetDatabase.CopyAsset(
-                "Assets/BK/PureNature_Mountains/Models/Rocks/Textures/" + file, path))
-                throw new InvalidOperationException("Missing approved rock texture: " + file);
-            ConfigureImport(path, channel, false);
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-        }
-
         public static Texture2D PackTexture(string surface, string channel)
         {
             string folder = PackTextureFolder.TrimEnd('/');
@@ -219,57 +150,15 @@ namespace SomethingDownThere.Editor
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        [MenuItem("Tools/Something Down There/Configure Original Soil")]
-        public static void Configure()
+        // The excavation's lighting: the sun's shadows, the contact shading and the daylight that reaches into holes.
+        public static void ConfigureExcavationLighting()
         {
             Scene scene = SceneManager.GetActiveScene();
             if (EditorApplication.isPlaying || scene.path != MainGameSceneBuilder.ScenePath && scene.name != "MainGame")
-                throw new InvalidOperationException("Open MainGame outside Play Mode to configure ground textures.");
+                throw new InvalidOperationException("Open MainGame outside Play Mode to configure the excavation lighting.");
             Transform root = scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").transform;
             var terrain = root.GetComponentInChildren<TerrainVolume>();
             if (terrain == null) throw new InvalidOperationException("MainGame needs its existing terrain.");
-            var shader = Shader.Find(ShaderName);
-            if (shader == null || ShaderUtil.ShaderHasError(shader))
-                throw new InvalidOperationException("The ground shader must compile before integration.");
-            // Validate the complete batch before changing any existing references.
-            foreach (string kind in new[] { "Soil" })
-            foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-                if (AssetImporter.GetAtPath(Folder + kind + "_" + channel + ".png") is not TextureImporter)
-                    throw new InvalidOperationException("Missing Blender ground export: " + kind + "_" + channel);
-
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
-            if (material == null)
-            {
-                material = new Material(shader) { name = "GardenGround" };
-                AssetDatabase.CreateAsset(material, MaterialPath);
-            }
-            Undo.RecordObject(material, "Configure original ground textures");
-            material.shader = shader;
-            foreach (string kind in new[] { "Soil" })
-            foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
-            {
-                string path = Folder + kind + "_" + channel + ".png";
-                ConfigureImport(path, channel);
-                material.SetTexture("_" + kind + channel, AssetDatabase.LoadAssetAtPath<Texture2D>(path));
-            }
-            ConfigureSurfaceCap(material, terrain.SurfaceHeight);
-            material.SetFloat("_MaskLayout", 0f); // Original: roughness R, contact G, stone coverage B.
-            material.SetFloat("_MaxSmoothness", .15f);
-            material.SetFloat("_SoilTileMetres", OriginalSoilTileMetres);
-            material.SetFloat("_NormalStrength", OriginalSoilRelief);
-            material.SetFloat("_StoneNormalStrength", OriginalStoneRelief);
-            material.SetFloat("_SurfaceHeight", terrain.SurfaceHeight);
-            material.SetFloat("_TurfDepth", .045f);
-            material.SetFloat("_MacroVariation", 0.06f);
-            EditorUtility.SetDirty(material);
-            var settings = new SerializedObject(terrain);
-            settings.FindProperty("soilMaterial").objectReferenceValue = material;
-            var preview = settings.FindProperty("untouchedPreview").objectReferenceValue as GameObject;
-            if (preview == null) throw new InvalidOperationException("Keep the existing edit-mode terrain preview.");
-            settings.ApplyModifiedProperties();
-            Assign(preview.GetComponent<Renderer>(), material);
-            foreach (string side in new[] { "North", "South", "East", "West" })
-                Assign(root.Find("Surface/" + side + " rim")?.GetComponent<Renderer>(), material);
             ConfigureLighting(root);
             if (terrain.GetComponent<ExcavationDaylight>() == null)
                 Undo.AddComponent<ExcavationDaylight>(terrain.gameObject);
@@ -352,7 +241,7 @@ namespace SomethingDownThere.Editor
         private static void Assign(Renderer renderer, Material material)
         {
             if (renderer == null) return;
-            Undo.RecordObject(renderer, "Assign original ground surface");
+            Undo.RecordObject(renderer, "Assign the dig ground");
             renderer.sharedMaterial = material;
             EditorUtility.SetDirty(renderer);
         }

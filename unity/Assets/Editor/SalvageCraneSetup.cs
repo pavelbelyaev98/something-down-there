@@ -385,8 +385,7 @@ namespace SomethingDownThere.Editor
             return material;
         }
 
-        // Rope ruptures and the gravel pour throw the same soil crumbs and dust (GroundTextureSetup wires the
-        // pour); rope ruptures also throw solid clods.
+        // Rope ruptures throw soil crumbs, dust and solid clods.
         private static Material SoilBreak(string name, bool dust, bool solid = false)
         {
             string path = GroundTextureSetup.Folder + name + ".mat";

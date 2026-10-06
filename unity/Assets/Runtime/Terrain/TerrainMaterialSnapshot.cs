@@ -4,12 +4,10 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Saved as bytes: append new families, never renumber. Hardness order is
+    // Saved as bytes: append new grounds, never renumber. Hardness order is
     // EquipmentProgression.HardnessOrder, not the declaration order.
-    // PondClay is the clay basins' soft old pond clay (and sealed rooms' settled silt).
-    // FracturedRock/FracturedConcrete are the bands beside a crack; Crack is the crack line.
-    // Backfill is the loose mixed ground of an old dug-and-refilled pit.
-    public enum TerrainMaterialId : byte { Soil, Clay, Rock, Gravel, Concrete, PondClay, FracturedRock, FracturedConcrete, Crack, Backfill }
+    // Backfill is the mixed ground of an old dug-and-refilled pit.
+    public enum TerrainMaterialId : byte { Soil, Backfill }
 
     // Immutable identities share the density lattice, including samples excavated into air.
     // Captures can share this object with the save worker without copying the world.
@@ -57,8 +55,8 @@ namespace SomethingDownThere
                 WorldSnapshot.Require(value <= (byte)Last, "Unknown ground material.");
         }
 
-        // Zones, edge bands, veins and places: see TerrainGround.
-        // Odd spots: grid-local unique centres (xyz) and envelope radii (w) the ground shapes around.
+        // Soil and backfill pits: see TerrainGround.
+        // Odd spots: grid-local unique centres (xyz) and envelope radii (w) that pits keep clear of.
         public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null,
             TerrainGround.Features features = TerrainGround.Features.All)
         {

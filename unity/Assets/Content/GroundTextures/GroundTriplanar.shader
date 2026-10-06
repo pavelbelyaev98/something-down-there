@@ -6,42 +6,6 @@ Shader "Something Down There/Ground Triplanar"
         [Normal] _SoilNormal("Soil normal", 2D) = "bump" {}
         _SoilRoughness("Soil mask (see mask layout)", 2D) = "white" {}
         _SoilTint("Soil tint", Color) = (1,1,1,1)
-        _ClayAlbedo("Clay colour", 2D) = "white" {}
-        [Normal] _ClayNormal("Clay normal", 2D) = "bump" {}
-        _ClayMask("Clay occlusion (G)", 2D) = "white" {}
-        _ClayTint("Clay tint", Color) = (1,1,1,1)
-        _ClayTileMetres("Clay tile metres", Float) = 3
-        _ClayNormalStrength("Clay relief", Range(0, 2)) = 0.25
-        _RockAlbedo("Rock colour", 2D) = "white" {}
-        [Normal] _RockNormal("Rock normal", 2D) = "bump" {}
-        _RockMask("Rock occlusion (G)", 2D) = "white" {}
-        _RockTint("Rock tint", Color) = (0.4,0.4,0.4,1)
-        _RockTileMetres("Rock tile metres", Float) = 3
-        _RockNormalStrength("Rock relief", Range(0, 2)) = 0.65
-        _GravelAlbedo("Gravel colour", 2D) = "white" {}
-        [Normal] _GravelNormal("Gravel normal", 2D) = "bump" {}
-        _GravelMask("Gravel occlusion (G)", 2D) = "white" {}
-        _GravelTint("Gravel tint", Color) = (1,1,1,1)
-        _GravelTileMetres("Gravel tile metres", Float) = 2
-        _GravelNormalStrength("Gravel relief", Range(0, 2)) = 0.5
-        _ConcreteAlbedo("Concrete colour", 2D) = "white" {}
-        [Normal] _ConcreteNormal("Concrete normal", 2D) = "bump" {}
-        _ConcreteMask("Concrete occlusion (G)", 2D) = "white" {}
-        _ConcreteTint("Concrete tint", Color) = (1,1,1,1)
-        _ConcreteTileMetres("Concrete tile metres", Float) = 2
-        _ConcreteNormalStrength("Concrete relief", Range(0, 2)) = 0.35
-        _PondClayTint("Pond clay tint (clay textures)", Color) = (0.6,0.66,0.72,1)
-        _PondClayTileMetres("Pond clay tile metres", Float) = 3.5
-        _PondClayNormalStrength("Pond clay relief", Range(0, 2)) = 0.12
-        _ClayDeepTint("Clay tint below the rock-zone border", Color) = (1,1,1,1)
-        _RockColdTint("Rock tint below the ancient-zone border", Color) = (1,1,1,1)
-        _ZoneDepths("Zone borders (rock, ancient) and blend half-width in metres", Vector) = (75,112.5,3,0)
-        _StrataStrength("Colour band strength", Range(0, 0.3)) = 0
-        _StrataCool("Grey-blue share of clay bands", Range(0, 1)) = 0
-        _FractureTileMetres("Fractured grain tile metres", Float) = 0.9
-        _FractureShardMetres("Fractured shard size metres", Float) = 0.16
-        _FractureLift("Fractured band paleness", Range(0, 1)) = 0.35
-        _CrackColour("Crack line mineral colour", Color) = (0.86, 0.84, 0.78, 1)
         _BackfillAlbedo("Backfill colour", 2D) = "white" {}
         [Normal] _BackfillNormal("Backfill normal", 2D) = "bump" {}
         _BackfillMask("Backfill occlusion (G)", 2D) = "white" {}
@@ -103,17 +67,9 @@ Shader "Something Down There/Ground Triplanar"
             float _TurfMaskLayout;
             float _MaxSmoothness;
             float _GroundOpacity;
-            float4 _ClayTint, _RockTint, _TurfTint, _SoilTint;
+            float4 _TurfTint, _SoilTint;
             float4 _BandTint, _BandMaskMin, _BandMaskMax, _DigEdgeRect;
             float _BandTileMetres, _BandNormalStrength, _BandBlend, _CapGrain, _CapGrainMetres, _RimMix;
-            float _ClayTileMetres, _RockTileMetres;
-            float _ClayNormalStrength, _RockNormalStrength;
-            float4 _GravelTint, _ConcreteTint;
-            float _GravelTileMetres, _ConcreteTileMetres, _GravelNormalStrength, _ConcreteNormalStrength;
-            float4 _PondClayTint, _ClayDeepTint, _RockColdTint, _ZoneDepths;
-            float _PondClayTileMetres, _PondClayNormalStrength, _StrataStrength, _StrataCool;
-            float _FractureTileMetres, _FractureShardMetres, _FractureLift;
-            half4 _CrackColour;
             float4 _BackfillTint;
             float _BackfillTileMetres, _BackfillNormalStrength;
         CBUFFER_END
@@ -128,10 +84,6 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_BandNormal); TEXTURE2D(_BandMask);
         TEXTURE2D(_DigEdge); SAMPLER(sampler_DigEdge);
         // Identical repeat/trilinear imports share sampler states across layers.
-        TEXTURE2D(_ClayAlbedo); TEXTURE2D(_ClayNormal); TEXTURE2D(_ClayMask);
-        TEXTURE2D(_RockAlbedo); TEXTURE2D(_RockNormal); TEXTURE2D(_RockMask);
-        TEXTURE2D(_GravelAlbedo); TEXTURE2D(_GravelNormal); TEXTURE2D(_GravelMask);
-        TEXTURE2D(_ConcreteAlbedo); TEXTURE2D(_ConcreteNormal); TEXTURE2D(_ConcreteMask);
         TEXTURE2D(_BackfillAlbedo); TEXTURE2D(_BackfillNormal); TEXTURE2D(_BackfillMask);
         #include "../../Runtime/Terrain/ExcavationDaylight.hlsl"
 
@@ -140,7 +92,6 @@ Shader "Something Down There/Ground Triplanar"
             float4 positionOS : POSITION;
             float3 normalOS : NORMAL;
             float4 materials : TEXCOORD2;
-            float4 materials2 : TEXCOORD3;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct GroundVaryings
@@ -150,7 +101,6 @@ Shader "Something Down There/Ground Triplanar"
             half3 normalWS : TEXCOORD1;
             half fogFactor : TEXCOORD2;
             half4 materials : TEXCOORD3;
-            half4 materials2 : TEXCOORD4;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -165,7 +115,6 @@ Shader "Something Down There/Ground Triplanar"
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             output.fogFactor = ComputeFogFactor(output.positionCS.z);
             output.materials = input.materials;
-            output.materials2 = input.materials2;
             return output;
         }
 
@@ -387,96 +336,21 @@ Shader "Something Down There/Ground Triplanar"
             normal = ProjectGroundNormal(n, weights, signs, nx, ny, nz);
         }
 
-        // Mesh weights (clay, rock, concrete, 1 - gravel) and (pond clay, ...); soil is the
-        // remainder. A missing stream reads (0,0,0,1), so meshes without weights render as soil.
-        void GroundSurface(float3 position, half3 geometricNormal, half4 materials, half4 materials2,
+        // Mesh weights (free, free, free, 1 - backfill) over soil. A missing stream reads (0,0,0,1), so meshes
+        // without weights render as soil.
+        void GroundSurface(float3 position, half3 geometricNormal, half4 materials,
             out half3 colour, out half3 normal, out half roughness, out half occlusion)
         {
-            half4 deposits = saturate(half4(materials.xyz, 1 - materials.w)); // clay, rock, concrete, gravel
-            half pond = saturate(materials2.x);
-            half3 weights = half3(saturate(1 - dot(deposits, 1.0) - pond), deposits.xy);
-            half total = max(dot(weights, 1.0) + deposits.z + deposits.w + pond, 0.0001);
-            weights /= total; deposits.zw /= total; pond /= total;
-            // Zone palettes follow depth: clay turns rust-red in the deep stone, rock cools in the
-            // ancient zone. The generated borders undulate; a soft blend covers them.
-            float depth = _SurfaceHeight - position.y;
-            half deepClay = smoothstep(_ZoneDepths.x - _ZoneDepths.z, _ZoneDepths.x + _ZoneDepths.z, depth);
-            half coldRock = smoothstep(_ZoneDepths.y - _ZoneDepths.z, _ZoneDepths.y + _ZoneDepths.z, depth);
             half3 n = normalize(geometricNormal);
             // Calculate gradients before the layer branches so boundary pixels keep stable mip levels.
             float3 dx = ddx(position), dy = ddy(position);
-            colour = 0; normal = 0; roughness = 0; occlusion = 0;
-            half3 layerColour, layerNormal; half layerRoughness, layerOcclusion;
-            [branch] if (weights.x > 0.0001)
-            {
-                SoilSurface(position, geometricNormal, dx, dy, layerColour, layerNormal, layerRoughness, layerOcclusion);
-                colour += layerColour * weights.x; normal += layerNormal * weights.x;
-                roughness += layerRoughness * weights.x; occlusion += layerOcclusion * weights.x;
-            }
-            [branch] if (weights.y > 0.0001)
-            {
-                DepositSurface(TEXTURE2D_ARGS(_ClayAlbedo, sampler_SoilAlbedo),
-                    TEXTURE2D_ARGS(_ClayNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ClayMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _ClayTileMetres, _ClayTint.rgb * lerp((half3)1, _ClayDeepTint.rgb, deepClay), _ClayNormalStrength,
-                    layerColour, layerNormal, layerOcclusion);
-                colour += layerColour * weights.y; normal += layerNormal * weights.y;
-                roughness += weights.y; occlusion += layerOcclusion * weights.y;
-            }
-            [branch] if (weights.z > 0.0001)
-            {
-                DepositSurface(TEXTURE2D_ARGS(_RockAlbedo, sampler_SoilAlbedo),
-                    TEXTURE2D_ARGS(_RockNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_RockMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _RockTileMetres, _RockTint.rgb * lerp((half3)1, _RockColdTint.rgb, coldRock), _RockNormalStrength,
-                    layerColour, layerNormal, layerOcclusion);
-                colour += layerColour * weights.z; normal += layerNormal * weights.z;
-                roughness += weights.z; occlusion += layerOcclusion * weights.z;
-            }
-            [branch] if (deposits.z > 0.0001)
-            {
-                DepositSurface(TEXTURE2D_ARGS(_ConcreteAlbedo, sampler_SoilAlbedo),
-                    TEXTURE2D_ARGS(_ConcreteNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ConcreteMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _ConcreteTileMetres, _ConcreteTint.rgb, _ConcreteNormalStrength,
-                    layerColour, layerNormal, layerOcclusion);
-                colour += layerColour * deposits.z; normal += layerNormal * deposits.z;
-                roughness += deposits.z; occlusion += layerOcclusion * deposits.z;
-            }
-            [branch] if (deposits.w > 0.0001)
-            {
-                DepositSurface(TEXTURE2D_ARGS(_GravelAlbedo, sampler_SoilAlbedo),
-                    TEXTURE2D_ARGS(_GravelNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_GravelMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _GravelTileMetres, _GravelTint.rgb, _GravelNormalStrength,
-                    layerColour, layerNormal, layerOcclusion);
-                colour += layerColour * deposits.w; normal += layerNormal * deposits.w;
-                roughness += deposits.w; occlusion += layerOcclusion * deposits.w;
-            }
-            [branch] if (pond > 0.0001)
-            {
-                // Old pond clay: the clay textures, smoother and grey-blue.
-                DepositSurface(TEXTURE2D_ARGS(_ClayAlbedo, sampler_SoilAlbedo),
-                    TEXTURE2D_ARGS(_ClayNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_ClayMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _PondClayTileMetres, _PondClayTint.rgb, _PondClayNormalStrength,
-                    layerColour, layerNormal, layerOcclusion);
-                colour += layerColour * pond; normal += layerNormal * pond;
-                roughness += pond; occlusion += layerOcclusion * pond;
-            }
-            normal = normalize(normal);
-            // Colour bands: gentle strata on a slightly undulating depth, so one main ground never
-            // reads as one repeated wall. Smooth sums of sines, never a sawtooth; the cap keeps its look.
-            float undulation = sin(position.x * 0.21 + position.z * 0.13) * 0.6 + sin(position.z * 0.17 - position.x * 0.07) * 0.4;
-            float strataDepth = depth + undulation;
-            half strata = sin(strataDepth * 2.3) * 0.5 + sin(strataDepth * 0.83 + 1.7) * 0.35 + sin(strataDepth * 5.9 + 0.4) * 0.15;
-            half below = saturate((depth - _TurfDepth) * 4);
-            // Old sediment is layered: the clay's darker bands turn grey-blue between orange ones.
-            colour = lerp(colour, colour * half3(0.72, 0.86, 1.05), saturate(-strata) * _StrataCool * weights.y * below);
-            colour *= 1 + strata * _StrataStrength * below;
-            // Cracks read by line and grain, not colour alone (the rock's own texture is full of dark
-            // hairlines): the band beside a crack is paler, broken into angular shards that catch the
-            // light differently; the crack itself is a pale mineral-filled line with thin dark edges.
-            // Backfill reads by grain: the soil turned over, lumpier and a little darker, with stones churned in.
-            // Its own texture set (art/pure-nature-highlands/make_backfill.py), never other grounds' textures.
-            half backfill = saturate(1 - materials2.w);
+            SoilSurface(position, geometricNormal, dx, dy, colour, normal, roughness, occlusion);
+            // Backfill reads by grain: the soil turned over, with stones churned in. Its own texture set
+            // (art/pure-nature-highlands/make_backfill.py), never other grounds' textures.
+            half backfill = saturate(1 - materials.w);
             [branch] if (backfill > 0.001)
             {
+                half3 layerColour, layerNormal; half layerOcclusion;
                 DepositSurface(TEXTURE2D_ARGS(_BackfillAlbedo, sampler_SoilAlbedo),
                     TEXTURE2D_ARGS(_BackfillNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_BackfillMask, sampler_SoilRoughness),
                     position, dx, dy, n, _BackfillTileMetres, _BackfillTint.rgb, _BackfillNormalStrength,
@@ -485,30 +359,6 @@ Shader "Something Down There/Ground Triplanar"
                 normal = normalize(lerp(normal, layerNormal, backfill));
                 occlusion = lerp(occlusion, layerOcclusion, backfill);
                 roughness = lerp(roughness, 1, backfill);
-            }
-            half fracture = saturate(materials2.y), crack = saturate(materials2.z);
-            [branch] if (fracture > 0.001)
-            {
-                DepositSurface(TEXTURE2D_ARGS(_RockAlbedo, sampler_SoilAlbedo),
-                    TEXTURE2D_ARGS(_RockNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_RockMask, sampler_SoilRoughness),
-                    position, dx, dy, n, _FractureTileMetres, (half3)1, _RockNormalStrength * 1.8,
-                    layerColour, layerNormal, layerOcclusion);
-                // Shards: warped cells, each tilted and lit on its own.
-                float3 q = position / max(_FractureShardMetres, 0.02);
-                q += sin(q.yzx * 1.3 + q.zxy * 0.7) * 0.45;
-                float3 cell = floor(q);
-                float3 h = frac(sin(float3(dot(cell, float3(12.9898, 78.233, 37.719)), dot(cell, float3(39.346, 11.135, 83.155)),
-                    dot(cell, float3(73.156, 52.235, 9.151)))) * 43758.5453);
-                half3 tilt = (half3)(h * 2 - 1) * 0.55;
-                half3 shardNormal = normalize(lerp(layerNormal, normalize(layerNormal + tilt), 0.8));
-                normal = normalize(lerp(normal, shardNormal, fracture * 0.9));
-                half shade = lerp(0.8, 1.2, (half)h.x);
-                half3 broken = lerp(layerColour, (half3)dot(layerColour, half3(0.3, 0.59, 0.11)), 0.5);
-                broken = saturate(broken * (1 + _FractureLift) * shade + _FractureLift * 0.12);
-                colour = lerp(colour, broken, fracture);
-                half core = smoothstep(0.38, 0.7, crack), rim = smoothstep(0.1, 0.38, crack) * (1 - core);
-                colour = lerp(colour * (1 - rim * 0.65), _CrackColour.rgb, core);
-                roughness = lerp(roughness, 1, max(core, fracture * 0.5));
             }
         }
         ENDHLSL
@@ -538,7 +388,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, input.materials, input.materials2, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
                 InputData lighting = (InputData)0;
                 lighting.positionWS = input.positionWS;
                 lighting.positionCS = input.positionCS;
@@ -612,7 +462,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, input.materials, input.materials2, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
                 #if defined(_GBUFFER_NORMALS_OCT)
                     float2 oct = PackNormalOctQuadEncode(normal);
                     return half4(PackFloat2To888(saturate(oct * 0.5 + 0.5)), 0);

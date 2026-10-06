@@ -78,7 +78,7 @@ namespace SomethingDownThere.Editor
             playerSettings.ApplyModifiedPropertiesWithoutUndo();
             ConfigureSurfaceRecharge();
             ConfigureDiscoveryContent();
-            GroundTextureSetup.Configure();
+            GroundTextureSetup.ConfigureExcavationLighting();
             NatureEnvironmentSetup.Configure();
             LakebedSiteSetup.Configure();
             EditorSceneManager.SaveScene(scene, ScenePath);

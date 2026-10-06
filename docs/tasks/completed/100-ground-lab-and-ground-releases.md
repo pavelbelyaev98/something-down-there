@@ -1,6 +1,6 @@
 # 100 — Ground Lab, Ground Releases & Tool Retune
 
-**Status:** complete. Development builds open a Ground Lab from the title (every ground in labelled bays plus behaviour mixes, never saved) while the site itself holds one plain ground; after a tool cut, crack bands break loose along the crack and undercut backfill slumps beside the gravel pour; every track has twelve levels, the tool ladder runs from the user's level 1 dial to their max dial at level 12 with the drill at 7, hardness is mostly bite size with a little stroke time, every stroke throws its ground's debris, and grounds can be dialled live in Developer admin.
+**Status:** complete. Development builds open a Ground Lab from the title (soil and backfill bays plus the crane scenes, never saved); every track has twelve levels, the tool ladder runs from the user's level 1 dial to their max dial at level 12 with the drill at 7, hardness is mostly bite size with a little stroke time, and grounds can be dialled live in Developer admin. Its ground releases were removed by 107.
 
 ## Objective
 

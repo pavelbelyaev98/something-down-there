@@ -1,7 +1,7 @@
 # 110 — Geodes
 
 **Status:** planned after `109`; `026` (C4) follows it. Spec written ahead (2026-10-05); re-check
-against the code when it starts. Plan and research: [107](107-asset-only-grounds.md). Two playtest
+against the code when it starts. Plan and research: [107](completed/107-asset-only-grounds.md). Two playtest
 steps: **110.1** shell, hollow and break-in; **110.2** crystals.
 
 ## Objective

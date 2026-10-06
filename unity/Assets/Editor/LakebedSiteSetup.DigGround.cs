@@ -111,7 +111,7 @@ namespace SomethingDownThere.Editor
             return texture;
         }
 
-        // Freshly cut topsoil: clay loam from the Mountains mud. Clay and rock keep their own textures.
+        // Freshly cut topsoil: clay loam from the Mountains mud.
         public static void ConfigureTopsoil(Material material)
         {
             var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(MountainMudLayerPath);

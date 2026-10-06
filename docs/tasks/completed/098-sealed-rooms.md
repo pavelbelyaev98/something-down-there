@@ -1,6 +1,6 @@
 # 098 — Sealed Break-Through Rooms
 
-**Status:** complete. The first concrete structure in zone 3 (sometimes a second) is a sealed room with ~1.9 m of dark air above a settled silt floor, carved into the seeded density; ordinary finds keep out and 2–5 finds sit half-sunk in the silt; the first tool cut through its cracked wall lets dust drift in.
+**Status:** removed by 107 (asset-only grounds, 2026-10-05): sealed rooms are gone; their break-in moment returns with the geodes (110). The body is kept as history so it is not re-run.
 
 ## Objective
 

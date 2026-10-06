@@ -122,11 +122,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(ground.GetFloat("_TurfMaskLayout"), Is.EqualTo(1));
                 Assert.That(ground.GetFloat("_MaxSmoothness"), Is.LessThanOrEqualTo(.15f));
                 Assert.That(preview.GetComponent<Renderer>().sharedMaterial, Is.SameAs(ground));
-                var camp = (Material)AssetDatabase.LoadAssetAtPath<Material>("Assets/Content/GroundTextures/GardenGround.mat");
-                foreach (string channel in new[] { "Albedo", "Normal", "Roughness" })
                 {
-                    Assert.That(camp.GetTexture("_Turf" + channel), Is.SameAs(ground.GetTexture("_Turf" + channel)),
-                        "Camp and excavation must use the same pack surface cap.");
                     // Project pack copies import masks as linear data; a cap wearing the band's own
                     // terrain texture keeps the vendor import so it reads exactly like the terrain.
                     string maskPath = AssetDatabase.GetAssetPath(ground.GetTexture("_TurfRoughness"));
@@ -149,7 +145,7 @@ namespace SomethingDownThere.Tests
                 var capMud = lakebed.terrainData.terrainLayers[capLayer];
                 Assert.That(capMud.diffuseTexture, Is.SameAs(band.diffuseTexture));
                 Assert.That(Vector4.Distance(ground.GetColor("_TurfTint").linear, capMud.diffuseRemapMax), Is.LessThan(.002f), "The terrain's cap matches the plot.");
-                foreach (var cap in new[] { ground, camp })
+                foreach (var cap in new[] { ground })
                 {
                     Assert.That(cap.GetFloat("_BandBlend"), Is.EqualTo(1), cap.name);
                     Assert.That(cap.GetTexture("_BandAlbedo"), Is.SameAs(band.diffuseTexture), cap.name);

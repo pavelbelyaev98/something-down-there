@@ -40,7 +40,7 @@ namespace SomethingDownThere
         private int shownLevel = -1, seenStrokes = -1;
         private float stroke = 1f, strokeSeconds = .3f, lowered = 1f, spinSpeed, spinAngle, sinceCut = 10f;
         private MotionFamily family;
-        private bool crisp, sink;
+        private bool sink;
         // Each stroke differs a little in depth, side and roll so held digging never looks mechanical.
         private float strokeDepth = 1f, strokeSide, strokeRoll;
 
@@ -58,13 +58,8 @@ namespace SomethingDownThere
             return from >= 1 && from <= to && to <= EquipmentProgression.LevelCount;
         }
 
-        public static MotionFamily Family(TerrainMaterialId material) => material switch
-        {
-            TerrainMaterialId.Clay or TerrainMaterialId.PondClay => MotionFamily.Bite,
-            TerrainMaterialId.Rock or TerrainMaterialId.Concrete or TerrainMaterialId.FracturedRock
-                or TerrainMaterialId.FracturedConcrete or TerrainMaterialId.Crack => MotionFamily.Hard,
-            _ => MotionFamily.Scoop
-        };
+        // Every current ground scoops; harder grounds bite or hammer.
+        public static MotionFamily Family(TerrainMaterialId material) => MotionFamily.Scoop;
 
         private void Awake()
         {
@@ -110,7 +105,7 @@ namespace SomethingDownThere
             {
                 stroke = Mathf.Min(1f, stroke + dt / strokeSeconds);
                 // Soft ground takes a longer push, hard ground a shorter one with a little shudder.
-                float reach = (sink ? 1.5f : 1f) * (crisp ? 1.1f : 1f) * power;
+                float reach = (sink ? 1.5f : 1f) * power;
                 float amount = (family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f) * reach * strokeDepth;
                 var (move, angles) = PryScoop(stroke, amount);
                 offset = Quaternion.Euler(restEuler) * move;
@@ -150,7 +145,6 @@ namespace SomethingDownThere
             sinceCut = 0f;
             var material = player.LastDigMaterial;
             family = Family(material);
-            crisp = material is TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack or TerrainMaterialId.FracturedConcrete;
             sink = material == TerrainMaterialId.Backfill;
             if (player.ShavingEnabled) return;
             stroke = 0f;
@@ -163,8 +157,7 @@ namespace SomethingDownThere
 
         private static float StrokeSeconds(float digInterval, TerrainMaterialId material)
         {
-            bool crisp = material is TerrainMaterialId.FracturedRock or TerrainMaterialId.Crack or TerrainMaterialId.FracturedConcrete;
-            return Mathf.Clamp(digInterval * .35f, .12f, .26f) * (crisp ? .8f : 1f) * (Family(material) == MotionFamily.Bite ? .9f : 1f)
+            return Mathf.Clamp(digInterval * .35f, .12f, .26f) * (Family(material) == MotionFamily.Bite ? .9f : 1f)
                 * ScoopLength;
         }
 

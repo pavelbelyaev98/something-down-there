@@ -1,6 +1,6 @@
 # 095 — Host Ground
 
-**Status:** complete. Source catalogs give each type host grounds with density weights; placement keeps every depth band and picks a find's lateral spot from a host group chosen in proportion to weight × candidates, so ore is ~3× denser in rock (and rock masses) than in clay, and plain rocks favour soil over gravel, with scatter everywhere.
+**Status:** complete. Source catalogs can give each type host grounds with density weights; placement keeps every depth band and picks a find's lateral spot from a host group chosen in proportion to weight × candidates. Since 107 the only hosts are soil and backfill, so the bias waits for the zone grounds.
 
 ## Objective
 

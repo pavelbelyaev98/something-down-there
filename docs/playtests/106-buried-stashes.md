@@ -13,6 +13,9 @@ X-ray** marks backfill magenta if you want to find the other pits.
 - Find a rubbish pit (they end below 8 m) and the two old TVs at its bottom; TVs are found only there
   now, and some are bigger.
 - Save and quit mid-way, then Continue: an opened chest stays open.
+- Undercut a pit's wall from the side: nothing lets go any more. Dig a while deeper: the soil may look
+  a touch flatter with depth now that the old procedural colour bands are gone.
+- Title menu → **Ground Lab**: only soil, backfill and a backfill pit remain, plus the crane scenes.
 
 **Good feels like:** "why did it just get easy? Someone dug here before me", then the lid swinging up
 on a few pieces of silver and gold. Clearing the lid feels like uncovering, not a chore. Every TV is
@@ -23,4 +26,5 @@ recognisable at a glance.
   weathered brown, or swap.
 - Whether clearing the lid space is too much or too little digging.
 - Whether the pits read in the wall, and if the chest's three pieces and the TV prices feel right.
+- Whether the soil looks too flat with depth.
 - Anything that clipped, floated or blocked you.

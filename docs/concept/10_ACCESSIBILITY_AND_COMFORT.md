@@ -44,7 +44,7 @@ Design rules:
 ## 3. Vision
 
 - **Colorblind palettes** for materials, tells, ore, UI and (while it exists) detector cues, plus a custom palette option.
-- **Tells never rely on colour alone:** cracks, backfill and gravel channels differ by line, grain and
+- **Tells never rely on colour alone:** backfill, geode shells and lenses differ by stones, grain and
   chunk shape, and the sudden change in dig speed is felt, so they work for colour-blind players and
   in the dark.
 - **Shape + label redundancy** everywhere: no information is color-only.

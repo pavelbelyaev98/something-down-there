@@ -1,7 +1,7 @@
 # 112 — Secret Areas Around Uniques
 
 **Status:** planned after `111`. Spec written ahead (2026-10-05); re-check against the code when it
-starts. Plan and research: [107](107-asset-only-grounds.md). `099`'s detector-off test follows it.
+starts. Plan and research: [107](completed/107-asset-only-grounds.md). `099`'s detector-off test follows it.
 Two steps: **112.1** the lens, **112.2** an optional trail, decided after 112.1's playtest.
 
 ## Objective

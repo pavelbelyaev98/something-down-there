@@ -1,6 +1,6 @@
 # 006 — Material Zones & Ground Places
 
-**Status:** complete. Four depth zones of one main ground each (soil with gravel lenses, orange clay with grey-blue sediment bands, grey rock veined with rust-red clay soft paths, and a colder zone-4 placeholder) join through short mixed bands, with seeded places per zone (rubble, open-topped concrete structures, rock masses, softer pond-clay basins as clay's tell); shovel levels grow evenly so one tool purchase always out-digs the next zone's main ground.
+**Status:** removed by 107 (asset-only grounds, 2026-10-05): its invented zone grounds and places are gone; zones remain plain depth bands. The body is kept as history so it is not re-run.
 
 ## Objective
 

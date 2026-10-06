@@ -40,7 +40,7 @@ Players have total freedom to invest in whichever tracks fit their personal play
 - No forced synchronization or locked track dependencies; all five tracks are independent, sequential, and additive.
 - **Power outpaces resistance:** Returning to earlier layers visibly demonstrates overwhelming cutting power, while deeper ground introduces distinct material behavior without ever resetting the player's speed back to square one.
 - **Final major tool timing:** The final major machine upgrade arrives around the last quarter of the campaign (about 75%), leaving substantial deep excavation to enjoy its full power.
-- **Tuned against the zones:** each zone's main ground is balanced with the tool level a player typically owns on arrival, so no zone feels like a restart; the drill milestone lands around the rock zone ([zone rules](03_WORLD_AND_SITE.md#zone-rules)).
+- **Tuned against the zones:** each zone's main ground is balanced with the tool level a player typically owns on arrival, so no zone feels like a restart; the drill milestone lands around the third zone ([zone rules](03_WORLD_AND_SITE.md#zone-rules)).
 
 ## 3. Money in
 

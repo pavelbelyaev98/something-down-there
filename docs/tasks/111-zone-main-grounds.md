@@ -1,7 +1,7 @@
 # 111 — Zone Main Grounds
 
 **Status:** planned after `026`. Spec written ahead (2026-10-05); re-check against the code when it
-starts. Plan and research: [107](107-asset-only-grounds.md). Two playtest steps: **111.1** zone 2's
+starts. Plan and research: [107](completed/107-asset-only-grounds.md). Two playtest steps: **111.1** zone 2's
 ground, **111.2** zone 3's ground. Zone 4's ancient material stays with `039`.
 
 ## Objective

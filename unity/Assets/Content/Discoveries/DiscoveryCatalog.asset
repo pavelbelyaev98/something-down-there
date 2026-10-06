@@ -53,11 +53,8 @@ MonoBehaviour:
     CoreShare: 0.9
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
-    HostWeights:
-    - 3
-    - 9
-    - 9
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_copper
     AuthoredPlacement: 0
@@ -76,12 +73,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02060803y
-    HostWeights:
-    - 3
-    - 9
-    - 9
-    - 4
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_iron
     AuthoredPlacement: 0
@@ -100,11 +93,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
-    HostWeights:
-    - 3
-    - 9
-    - 9
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_silver
     AuthoredPlacement: 0
@@ -123,12 +113,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02060803y
-    HostWeights:
-    - 3
-    - 9
-    - 9
-    - 4
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_gold
     AuthoredPlacement: 0
@@ -147,12 +133,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 02060803y
-    HostWeights:
-    - 3
-    - 9
-    - 9
-    - 4
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_emerald
     AuthoredPlacement: 0
@@ -171,11 +153,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
-    HostWeights:
-    - 3
-    - 9
-    - 9
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_ruby
     AuthoredPlacement: 0
@@ -194,11 +173,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
-    HostWeights:
-    - 3
-    - 9
-    - 9
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: mineral_diamond
     AuthoredPlacement: 0
@@ -217,11 +193,8 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
-    HostGrounds: 020608y
-    HostWeights:
-    - 3
-    - 9
-    - 9
+    HostGrounds: 
+    HostWeights: []
     Junk: 0
   - ItemId: unique_reservoir_computer
     AuthoredPlacement: 1

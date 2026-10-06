@@ -7,7 +7,7 @@ Delivered entirely through finds, never through NPCs or text popups:
 | Step | Zone | Examples | Player reaction |
 |---|---|---|---|
 | 1. Anachronistic junk | Old sediment | A soda can far too deep, a rubber duck in an ancient layer, a plastic bottle beside a fossil | "Ha, weird." |
-| 2. Visible impossibility | Deep clay/stone | A modern tool fused seamlessly into manufactured ancient stone; identical strange connectors on household appliances and stone blocks | "Wait. Those belong together, but they shouldn't." |
+| 2. Visible impossibility | Deep sediment | A modern tool fused seamlessly into manufactured ancient stone; identical strange connectors on household appliances and stone blocks | "Wait. Those belong together, but they shouldn't." |
 | 3. Constructed architecture | Ancient constructed | Massive machinery built from ancient materials with unmistakable modern functions | "This should not exist." |
 
 **Visible impossibility, not just depth**: A plastic bottle beside a fossil can look like mixed rubbish. Impossibility becomes undeniable when modern objects are visibly fused into intact ancient stone, or when the exact same strange modular connector appears on a 1980s washing machine and a deep subterranean megalith.

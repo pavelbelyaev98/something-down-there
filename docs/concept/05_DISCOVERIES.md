@@ -21,16 +21,15 @@ unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get thei
 
 ### Where finds sit
 
-- **Host ground:** each find type prefers the ground it belongs in: heavy coins, tokens and metal in
-  gravel, bones and organic things in clay, ore in rock veins, waterworks items in and
-  around concrete, rubbish in soil. It is a soft bias with scatter, and prices stay fixed per type
+- **Host ground:** each find type prefers the ground it belongs in (rubbish in soil; each zone
+  ground brings its own family). It is a soft bias with scatter, and prices stay fixed per type
   ([host ground](03_WORLD_AND_SITE.md#host-ground-each-ground-holds-its-own-kind-of-find)).
-- **Tells point toward finds:** cracks, gravel channels and backfill pits lead somewhere, though not
-  every crack or channel pays ([ground tells](03_WORLD_AND_SITE.md#the-one-rule-easier-ground-means-you-are-on-to-something)).
-- **Uniques sit in odd spots:** ground that does not match their zone, so the player can spot them
-  with their own eyes ([odd spots](03_WORLD_AND_SITE.md#odd-spots-for-special-finds)).
-- **Sealed rooms** hold finds half-sunk in their silt floor, never lying fully exposed
-  ([sealed rooms](03_WORLD_AND_SITE.md#sealed-rooms)).
+- **Tells point toward finds:** backfill pits and geodes lead somewhere
+  ([ground tells](03_WORLD_AND_SITE.md#the-one-rule-different-ground-means-you-are-on-to-something)).
+- **Uniques sit in lenses:** ground that does not match their zone, so the player can spot them
+  with their own eyes ([lenses](03_WORLD_AND_SITE.md#lenses-around-uniques)).
+- **Geodes** hold crystals on their inner walls, seen in the lamp's light before they are collected
+  ([geodes](03_WORLD_AND_SITE.md#5-geodes)).
 - **Buried on purpose:** a backfill pit holds what someone buried, a stash in a chest or rubbish
   (junk such as old TVs, found only there and priced as a reward for following the pit); what sank
   or was lost lies scattered ([disturbed ground](03_WORLD_AND_SITE.md#disturbed-ground-backfill)).
@@ -69,7 +68,7 @@ force finds deeper or farther apart than necessary.
 ## 2. The detector
 
 > **Status: frozen.** The detector stays exactly as built: no new features, no new dependencies,
-> no content that needs it. The ground tells ([03 §4](03_WORLD_AND_SITE.md#4-materials-and-their-tells))
+> no content that needs it. The ground tells ([03 §4](03_WORLD_AND_SITE.md#4-grounds-and-their-tells))
 > are the intended replacement. A detector-off playtest decides: if testers find **every unique
 > without help** and follow at least one tell unprompted, the detector is removed; otherwise it stays
 > frozen and the reason is recorded.
@@ -129,13 +128,12 @@ burial keeps them anchored. Their real colliders and gravity determine the resul
 
 **Buried connections: "Follow the thing"**:
 Extensions of the cluster system where discoveries physically connect through the ground:
-- A heavy cable leads away from a broken generator; a rusted chain disappears beneath a concrete slab; matching floor tiles outline a drowned workshop; an industrial pipe bends toward machinery not yet visible.
+- A heavy cable leads away from a broken generator; a rusted chain disappears beneath a concrete slab; matching floor tiles outline a buried workshop; an industrial pipe bends toward machinery not yet visible.
 - **The rule:** *The ground hints that something is near. The exposed world suggests what to do next.*
 - **Trails pay along the way:** small finds sit along a cable, pipe or vein, so following it rewards
   each step instead of asking for blind trust.
-- **Each zone has its own trail type:** chains and cables in recent fill, pipes and scattered machine
-  parts in old sediment, cracks and mineral veins in deep stone, matching grooves and fittings in
-  ancient ground.
+- **Each zone has its own trail type**, decided with its main ground: chains and cables in recent
+  fill, matching grooves and fittings in ancient ground.
 - This gives lateral exploration an immediate visual reason rather than asking players to trust random sideways digging blindly.
 - **Keep it simple:** No wiring puzzles, cable inventory, or repair chores. Following the connection means doing more of what is fun: digging.
 - Built from authored, fully buried arrangements with preserved relationships, seeded and oriented as units.

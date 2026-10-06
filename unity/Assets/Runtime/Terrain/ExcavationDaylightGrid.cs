@@ -283,7 +283,7 @@ namespace SomethingDownThere
                     if (z > 0) value = Math.Max(value, Lit(i - layer));
                     if (z < Size.z - 1) value = Math.Max(value, Lit(i + layer));
                 }
-                // Only connected air transports this light: sealed rooms stay unlit.
+                // Only connected air transports this light: sealed air (a chest's hollow) stays unlit.
                 computed[i] = (byte)Mathf.RoundToInt(255 * value);
                 if (++work % 512 == 0) yield return null;
             }

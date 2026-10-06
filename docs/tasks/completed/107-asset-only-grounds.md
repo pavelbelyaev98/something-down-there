@@ -1,20 +1,21 @@
 # 107 — Asset-Only Grounds: Remove the Invented Grounds
 
-**Status:** ready; waiting for the user's go. This spec also holds the overview and research for the
-whole ground plan (`107`–`112`). Each ticket ships its own build and playtest note, and work stops
-after each one for the user's test.
+**Status:** complete. Only soil and backfill, both built from owned pack textures, exist; every invented
+ground with its features (zone grounds, places, sealed rooms, channels, cracks, odd-spot lenses), the three
+releases, their textures and Ground Lab bays are gone, and the mesher and shader carry one weight stream with
+free slots for later grounds. This spec also holds the plan and research for `108`–`112`.
 
 ## The ground plan (107–112)
 
 | Ticket | What the player gets | Spec |
 | --- | --- | --- |
-| `107` Remove the invented grounds | The same site, no collapses, a clean Ground Lab | this file |
-| `108` Rubble backfill | Pits that dig at about half soil's speed and show their stones | [108](108-rubble-backfill.md) |
-| `109` The chest by hand | Hold E to force the lock; an emptied chest goes away | [109](109-chest-by-hand.md) |
-| `110` Geodes | Hard rock balls with crystal-lined hollows to break into | [110](110-geodes.md) |
+| `107` Remove the invented grounds | The same site, no collapses, a clean Ground Lab | [107](107-asset-only-grounds.md) |
+| `108` Rubble backfill | Pits that dig at about half soil's speed and show their stones | [108](../108-rubble-backfill.md) |
+| `109` The chest by hand | Hold E to force the lock; an emptied chest goes away | [109](../109-chest-by-hand.md) |
+| `110` Geodes | Hard rock balls with crystal-lined hollows to break into | [110](../110-geodes.md) |
 | `026` Sticky C4 | C4, whose natural target is a geode shell | queue |
-| `111` Zone main grounds | A new main ground per zone, one per playtest | [111](111-zone-main-grounds.md) |
-| `112` Secret areas | A distinct ground around each unique | [112](112-secret-areas-around-uniques.md) |
+| `111` Zone main grounds | A new main ground per zone, one per playtest | [111](../111-zone-main-grounds.md) |
+| `112` Secret areas | A distinct ground around each unique | [112](../112-secret-areas-around-uniques.md) |
 
 Specs `108`–`112` were written ahead at the user's request (2026-10-05). Each is re-checked against
 the code when it starts.
@@ -293,3 +294,15 @@ pit no longer collapses it, and the Ground Lab shows only what exists.
 New Game, dig the plot centre down to the first chest, then undercut a pit's wall: nothing lets go.
 The soil looks the same with depth, or flatter, which is expected without the old strata. The Ground
 Lab shows soil, backfill and the pit, plus the crane scenes.
+
+## Results
+
+- Built as designed. The Ground Lab keeps three bays (soil, backfill, a backfill pit) and the crane scenes; the
+  thin-roof bays went too, since nothing collapses any more (user, 2026-10-05).
+- The drill's cross-section is now round for every ground, stretched by each ground's bite width and length, as
+  the shovel's already was.
+- The old original soil art went with `GardenGround.mat`; the scene builder's step that also set up the
+  excavation lighting became `GroundTextureSetup.ConfigureExcavationLighting`.
+- After the job structs changed, the open Editor kept running stale Burst code (garbage material bytes, empty
+  meshes, a hung PlayMode run). Clearing `unity/Library/BurstCache` with the Editor closed fixed it; no code
+  change was needed.

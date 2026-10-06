@@ -17,8 +17,8 @@ namespace SomethingDownThere
         [SerializeField, Range(0f, 0.15f)] private float scoopVariation = 0.12f;
         [SerializeField, Range(0f, 0.08f)] private float scoopDepthVariation = 0.05f;
         [SerializeField] private int excavationSeed = 2718;
-        // Unique odd spots (099): grid-local centre and envelope radius, copied from the discovery
-        // catalog by the discovery sync; the seeded ground shapes unlike-zone lenses around them.
+        // Uniques' spaces: grid-local centre and envelope radius, copied from the discovery catalog by the
+        // discovery sync; the seeded ground's pits keep clear of them.
         [SerializeField] private Vector4[] oddSpots = Array.Empty<Vector4>();
         // The stash chest's hollow in its own frame (centre, half size), copied from the chest prefab by the
         // discovery sync; the seeded ground carves it in every stash pit (106).
@@ -48,9 +48,6 @@ namespace SomethingDownThere
         public float CellSize => cellSize;
         public float RemovedVolume => grid?.RemovedVolume ?? 0;
         public float LastRemovedVolume => grid?.LastRemovedVolume ?? 0;
-        // The last tool cut's own volume, before any ground it released (LastRemovedVolume then
-        // reports the release).
-        public float LastCutVolume { get; private set; }
         public float LastDetachedVolume => grid?.LastDetachedVolume ?? 0;
         public int LastDetachedSamples => grid?.LastDetachedSamples ?? 0;
         public int LastSupportVisitedSamples => grid?.LastSupportVisitedSamples ?? 0;
@@ -173,7 +170,6 @@ namespace SomethingDownThere
             {
                 grid.Restore(snapshot);
                 excavationSeed = seed;
-                roomsOpened = null;
                 foreach (var chunk in chunks.Values) chunk.Collider.enabled = false;
                 var slice = Stopwatch.StartNew();
                 int surfaceLayer = (dimensions.y - 1) / chunkSize;
@@ -291,18 +287,12 @@ namespace SomethingDownThere
             }
             else if (!grid.RemoveScoop(point, radius, normal, seed, scoopVariation, out changed, adaptMaterials)) return false;
             LastGridMilliseconds = timer.Elapsed.TotalMilliseconds;
-            LastCutVolume = LastRemovedVolume;
             CommitEdit(changed);
             LastMeshMilliseconds = timer.Elapsed.TotalMilliseconds - LastGridMilliseconds;
             timer.Stop();
             LastDigMilliseconds = timer.Elapsed.TotalMilliseconds;
             LastDiscoveryMilliseconds = LastDigMilliseconds - LastGridMilliseconds - LastMeshMilliseconds;
-            if (adaptMaterials)
-            {
-                ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
-                ReleaseGround(changed, radius);
-                CheckBreakIn(changed, hit.point);
-            }
+            if (adaptMaterials) ToolCut?.Invoke(new TerrainCutFeedback(material, hit.point, hit.normal, LastRemovedVolume));
             return true;
         }
 

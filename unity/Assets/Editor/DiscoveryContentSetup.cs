@@ -30,8 +30,7 @@ namespace SomethingDownThere.Editor
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
-            // Host ground: family names (soil, clay, rock, gravel, concrete, pond_clay, ...) and a
-            // density weight for each (unlisted ground is 1).
+            // Host ground: ground names (soil, backfill) and a density weight for each (unlisted ground is 1).
             public string[] host_grounds;
             public float[] host_weights;
             // Authored shrink applied to the prefab: smaller finds read as ordinary junk and
@@ -40,9 +39,8 @@ namespace SomethingDownThere.Editor
             public Maps textures;
         }
 
-        // Concept 03 §4 host ground. Every roster names it: rubbish and plain rocks soil; coins,
-        // tokens, beads and marbles gravel; bones and organics clay (and pond clay); ore rock;
-        // waterworks items concrete. No names means an unbiased type.
+        // Concept 03 §4 host ground: the ground a type prefers (rubbish and plain rocks soil). No names means an
+        // unbiased type.
         internal static TerrainMaterialId[] HostGrounds(string[] names, float[] weights)
         {
             if (names == null || names.Length == 0) return Array.Empty<TerrainMaterialId>();
@@ -144,7 +142,7 @@ namespace SomethingDownThere.Editor
             data.FindProperty("count").intValue = catalog.TotalCount;
             data.FindProperty("developmentContent").boolValue = false;
             data.ApplyModifiedPropertiesWithoutUndo();
-            // Unique odd spots follow the catalog's authored positions (099).
+            // Uniques' spaces follow the catalog's authored positions; pits keep clear of them.
             var ground = new SerializedObject(terrain);
             var spots = catalog.OddSpots(); var list = ground.FindProperty("oddSpots"); list.arraySize = spots.Length;
             for (int i = 0; i < spots.Length; i++) list.GetArrayElementAtIndex(i).vector4Value = spots[i];

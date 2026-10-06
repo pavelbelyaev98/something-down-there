@@ -1,6 +1,6 @@
 # 097 — Gravel Channels & Pour
 
-**Status:** complete. Seeded gravel riverbeds wind mostly sideways through the soil and clay zones (the first near the plot centre a few metres down), metal ores favour gravel, and a tool cut that leaves a real gravel ceiling pours the connected section within 3 m as debris, after which cleanup runs and its finds drop through their own release.
+**Status:** removed by 107 (asset-only grounds, 2026-10-05): gravel channels and the pour are gone. The body is kept as history so it is not re-run.
 
 ## Objective
 

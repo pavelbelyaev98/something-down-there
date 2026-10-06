@@ -4,7 +4,7 @@
 to preview every level.
 
 ## Try
-- Dig soil, gravel, clay, rock and concrete with the shovel, then with the drill (level 7+).
+- Dig soil and backfill with the shovel, then with the drill (level 7+).
 - Hold a find, place a lamp, mark a unique for recovery: the tool should get out of the way.
 - Start a shovel stroke and turn to another spot before the scoop: the dirt should come out where you look
   when the blade lifts, not where the stroke began.

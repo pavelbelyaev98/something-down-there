@@ -11,15 +11,11 @@ namespace SomethingDownThere.Tests
 {
     public sealed class TerrainMaterialTests
     {
-        // Mesh weights are (clay, rock, concrete, 1 - gravel); soil is the remainder.
+        // Mesh weights are (free, free, free, 1 - backfill); soil is the remainder.
         private static readonly Vector4 SoilWeight = new Vector4(0, 0, 0, 1);
 
-        [TestCase(TerrainMaterialId.Soil, 0, 0, 0, 1, 0, 0, 0, 0)] [TestCase(TerrainMaterialId.Clay, 1, 0, 0, 1, 0, 0, 0, 0)]
-        [TestCase(TerrainMaterialId.Rock, 0, 1, 0, 1, 0, 0, 0, 0)] [TestCase(TerrainMaterialId.Gravel, 0, 0, 0, 0, 0, 0, 0, 0)]
-        [TestCase(TerrainMaterialId.Concrete, 0, 0, 1, 1, 0, 0, 0, 0)] [TestCase(TerrainMaterialId.PondClay, 0, 0, 0, 1, 1, 0, 0, 0)]
-        [TestCase(TerrainMaterialId.FracturedRock, 0, 1, 0, 1, 0, 1, 0, 0)] [TestCase(TerrainMaterialId.FracturedConcrete, 0, 0, 1, 1, 0, 1, 0, 0)]
-        [TestCase(TerrainMaterialId.Crack, 0, 1, 0, 1, 0, 1, 1, 0)] [TestCase(TerrainMaterialId.Backfill, 0, 0, 0, 1, 0, 0, 0, 1)]
-        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float clay, float rock, float concrete, float notGravel, float pond, float fractured, float crack, float backfill)
+        [TestCase(TerrainMaterialId.Soil, 0)] [TestCase(TerrainMaterialId.Backfill, 1)]
+        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float backfill)
         {
             var grid = new ExcavationGrid(new Vector3Int(16, 16, 16), .2f);
             var saved = grid.Capture(); saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Materials.Length, material);
@@ -31,10 +27,10 @@ namespace SomethingDownThere.Tests
                 Assert.That(mesh.vertexCount, Is.GreaterThan(0));
                 var weights = Weights(mesh);
                 Assert.That(weights.Count, Is.EqualTo(mesh.vertexCount));
-                var expected = new Vector4(clay, rock, concrete, notGravel);
+                var expected = new Vector4(0, 0, 0, 1 - backfill);
                 foreach (var weight in weights) Assert.That((weight - expected).sqrMagnitude, Is.LessThan(1e-10f));
                 var second = new List<Vector4>(); mesh.GetUVs(3, second);
-                foreach (var weight in second) Assert.That((weight - new Vector4(pond, fractured, crack, 1 - backfill)).sqrMagnitude, Is.LessThan(1e-10f));
+                Assert.That(second, Is.Empty, "One weight stream.");
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
@@ -48,8 +44,7 @@ namespace SomethingDownThere.Tests
             for (int z = 0; z <= grid.Size.z; z++)
             for (int y = 0; y <= grid.Size.y; y++)
             for (int x = 0; x <= grid.Size.x; x++)
-                materials[index++] = (byte)(x < 12 ? (z < 6 ? TerrainMaterialId.Soil : TerrainMaterialId.Gravel)
-                    : z < 6 ? TerrainMaterialId.Clay : z < 9 ? TerrainMaterialId.Rock : TerrainMaterialId.Concrete);
+                materials[index++] = (byte)(x < 12 == z < 6 ? TerrainMaterialId.Soil : TerrainMaterialId.Backfill);
             saved.Materials = TerrainMaterialSnapshot.CopyFrom(materials); grid.Restore(saved);
             grid.RemoveSphere(new Vector3(2.4f, 3.7f, 1.3f), .9f, out _);
             var left = new Mesh(); var right = new Mesh(); var restored = new Mesh();
@@ -88,11 +83,11 @@ namespace SomethingDownThere.Tests
             {
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.True);
                 var vertices = mesh.vertices;
-                var rock = grid.Capture(); rock.Materials = TerrainMaterialSnapshot.Uniform(rock.Materials.Length, TerrainMaterialId.Rock);
-                grid.Restore(rock);
+                var backfill = grid.Capture(); backfill.Materials = TerrainMaterialSnapshot.Uniform(backfill.Materials.Length, TerrainMaterialId.Backfill);
+                grid.Restore(backfill);
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.True);
                 CollectionAssert.AreEqual(vertices, mesh.vertices);
-                Assert.That(Weights(mesh).All(w => w == new Vector4(0, 1, 0, 1)), Is.True);
+                Assert.That(Weights(mesh).All(w => w == Vector4.zero), Is.True);
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.False);
                 grid.Restore(original);
                 Assert.That(TerrainChunkMesh.Rebuild(mesh, grid, Vector3Int.zero, 12, workspace, cache), Is.True);
@@ -126,8 +121,7 @@ namespace SomethingDownThere.Tests
             CollectionAssert.AreEquivalent(Enum.GetValues(typeof(TerrainMaterialId)), EquipmentProgression.HardnessOrder);
             foreach (var profile in EquipmentProgression.ToolProfiles())
             {
-                // Families sharing one response (fractured rock and its crack line) form one class:
-                // each class stays below the slowest member of the softer class.
+                // Grounds sharing one response form one class: each class stays below the slowest member of the softer class.
                 float softerRate = float.MaxValue, classMinimum = float.MaxValue;
                 MaterialToolResponse? classResponse = null;
                 foreach (TerrainMaterialId material in EquipmentProgression.HardnessOrder)
@@ -151,9 +145,7 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Clay)] [TestCase(TerrainMaterialId.Rock)]
-        [TestCase(TerrainMaterialId.Gravel)] [TestCase(TerrainMaterialId.Concrete)] [TestCase(TerrainMaterialId.PondClay)]
-        [TestCase(TerrainMaterialId.FracturedRock)] [TestCase(TerrainMaterialId.FracturedConcrete)] [TestCase(TerrainMaterialId.Backfill)]
+        [TestCase(TerrainMaterialId.Soil)] [TestCase(TerrainMaterialId.Backfill)]
         public void AutomaticMotionImprovesFreshAndSustainedOutputAcrossTheDrillMilestone(TerrainMaterialId material)
         {
             float previousFresh = 0, previousSustained = 0;
@@ -165,32 +157,6 @@ namespace SomethingDownThere.Tests
                 Assert.That(first, Is.GreaterThan(previousFresh), $"{material} level {level} fresh-ground output");
                 Assert.That(sustained, Is.GreaterThan(previousSustained), $"{material} level {level} sustained output");
                 previousFresh = first; previousSustained = sustained;
-            }
-        }
-
-        // Concept 03 zone rule: arriving in a zone at the level a player typically owns there never
-        // feels like a restart. Clay is the working ground around levels 3-6 and rock arrives around
-        // the drill (levels 6-8); at those levels two purchases outpace the previous zone's main ground.
-        [Test]
-        public void OneLevelOutpacesTheNextZonesMainGround()
-        {
-            float[] Sustained(TerrainMaterialId material) => Enumerable.Range(1, EquipmentProgression.LevelCount)
-                .Select(level => Output(material, level).sustained).ToArray();
-            float[] soil = Sustained(TerrainMaterialId.Soil), clay = Sustained(TerrainMaterialId.Clay), rock = Sustained(TerrainMaterialId.Rock);
-            for (int level = 3; level <= 6; level++)
-                Assert.That(clay[level - 1], Is.GreaterThanOrEqualTo(soil[level - 3]), $"Clay at level {level} vs soil at {level - 2}");
-            for (int level = 6; level <= 8; level++)
-                Assert.That(rock[level - 1], Is.GreaterThanOrEqualTo(clay[level - 3]), $"Rock at level {level} vs clay at {level - 2}");
-            // Tells: basins bite clearly easier than the clay around them; the band beside a crack
-            // clearly easier than the rock or concrete it breaks, at every level.
-            float[] concrete = Sustained(TerrainMaterialId.Concrete);
-            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
-            {
-                Assert.That(Output(TerrainMaterialId.PondClay, level).sustained, Is.GreaterThan(clay[level - 1] * 1.15f), $"Pond clay at level {level}");
-                Assert.That(Output(TerrainMaterialId.FracturedRock, level).sustained, Is.GreaterThan(rock[level - 1] * 1.4f), $"Fractured rock at level {level}");
-                Assert.That(Output(TerrainMaterialId.FracturedConcrete, level).sustained, Is.GreaterThan(concrete[level - 1] * 2f), $"Fractured concrete at level {level}");
-                // Disturbed ground: the tool suddenly sinks in, even in the recent fill's soil.
-                Assert.That(Output(TerrainMaterialId.Backfill, level).sustained, Is.GreaterThan(soil[level - 1] * 1.3f), $"Backfill at level {level}");
             }
         }
 
@@ -278,16 +244,23 @@ namespace SomethingDownThere.Tests
             int i = 0;
             for (int z = 0; z <= mixed.Size.z; z++)
             for (int y = 0; y <= mixed.Size.y; y++)
-            for (int x = 0; x <= mixed.Size.x; x++) ids[i++] = (byte)(x >= 24 ? TerrainMaterialId.Rock : TerrainMaterialId.Soil);
+            for (int x = 0; x <= mixed.Size.x; x++) ids[i++] = (byte)(x >= 24 ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil);
             snapshot.Materials = TerrainMaterialSnapshot.CopyFrom(ids); mixed.Restore(snapshot);
-            var soil = Homogeneous(TerrainMaterialId.Soil); var rock = Homogeneous(TerrainMaterialId.Rock);
+            var soil = Homogeneous(TerrainMaterialId.Soil); var backfill = Homogeneous(TerrainMaterialId.Backfill);
             // The bit deep enough that its cone is wide at the surface.
-            foreach (var grid in new[] { mixed, soil, rock })
+            foreach (var grid in new[] { mixed, soil, backfill })
                 Assert.That(grid.RemoveBore(new Vector3(1.5f, 1.6f, 1.5f), .56f, Vector3.up, .56f * EquipmentProgression.DrillBoreLengthRatio, out _, true, 53), Is.True);
-            // At the surface the cone is ~0.38 m round in soil; rock's narrower footprint leaves 0.31 m from the axis.
-            Assert.That(mixed.Sample(29, 32, 24), Is.EqualTo(rock.Sample(29, 32, 24)).Within(.00001f));
-            Assert.That(mixed.Sample(29, 32, 24), Is.GreaterThan(soil.Sample(29, 32, 24)));
-            Assert.That(mixed.Sample(22, 32, 24), Is.EqualTo(soil.Sample(22, 32, 24)).Within(.00001f));
+            // Each side of the boundary is cut exactly as its own ground alone, and the two grounds cut differently.
+            int differing = 0;
+            for (int y = 16; y <= 32; y++)
+            for (int x = 0; x <= 40; x++)
+            {
+                if (x > 20 && x < 27) continue; // Clean-up of thin remnants may reach across the boundary.
+                var own = x >= 24 ? backfill : soil;
+                Assert.That(mixed.Sample(x, y, 24), Is.EqualTo(own.Sample(x, y, 24)).Within(.00001f), $"Sample {x},{y}");
+                if (x >= 24 && Mathf.Abs(backfill.Sample(x, y, 24) - soil.Sample(x, y, 24)) > .0001f) differing++;
+            }
+            Assert.That(differing, Is.GreaterThan(0), "Backfill cuts differently from soil.");
         }
 
         [Test]
@@ -298,24 +271,6 @@ namespace SomethingDownThere.Tests
             grid.Materials = TerrainMaterialSnapshot.Uniform(grid.Density.Length - 1);
             Assert.Throws<InvalidDataException>(() => grid.Validate());
             Assert.Throws<ArgumentOutOfRangeException>(() => new ExcavationGrid(new Vector3Int(2048, 2048, 2048), .125f));
-        }
-
-        [TestCase(TerrainMaterialId.Soil, false, false)]
-        [TestCase(TerrainMaterialId.Clay, false, true)]
-        [TestCase(TerrainMaterialId.Rock, true, false)]
-        public void HeldDrillRetainsDistinctContoursInsteadOfAveragingIntoRoundHoles(TerrainMaterialId material, bool solidX, bool solidZ)
-        {
-            var grid = Homogeneous(material);
-            var surface = new Vector3(1.5f, 2, 1.5f);
-            // Long enough for even rock's slower bit to reach full width at the lip.
-            for (int i = 0; i < 60; i++)
-            {
-                surface.y -= .028f * EquipmentProgression.MaterialResponse(material).Penetration;
-                Assert.That(grid.RemoveBore(surface, .56f, Vector3.up, .56f * EquipmentProgression.DrillBoreLengthRatio, out _, true, i * 486187739), Is.True);
-            }
-            var lip = new Vector3(1.5f, 1.93f, 1.5f);
-            Assert.That(grid.IsSolid(lip + Vector3.right * .45f), Is.EqualTo(solidX));
-            Assert.That(grid.IsSolid(lip + Vector3.forward * .45f), Is.EqualTo(solidZ));
         }
 
         [TestCase("id")] [TestCase("count")] [TestCase("truncated")]

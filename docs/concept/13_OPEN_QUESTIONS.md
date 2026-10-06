@@ -12,7 +12,7 @@ so they are not proposed again without new evidence.
 | Detector | Keep the frozen HUD detector / remove it in favour of ground tells | Frozen as built: no new features or dependencies. A detector-off playtest on a fresh save decides. Pass: testers find **every unique without help** and follow at least one tell unprompted, and the detector is removed (HUD, code, concept references). Fail: it stays frozen and the reason is recorded. See [Discoveries §2](05_DISCOVERIES.md#2-the-detector) |
 | Crane self-rescue | Current automatic recovery / the salvage crane's rope hauls the player up their own hole | To test alongside recovery fees and debt: at zero battery (or "I'm stuck" in pause) the crane parks over the hole, lowers its rope, hooks the player and hauls them up the dug route; fee on arrival. Keep whichever feels better. See [Progression §5](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery) |
 | Hook's tunnel ride | The hook rides the smart rope's end on its own (built) / thrusters steering the hook / creatures carrying it | The user may make the hook's way through a tunnel more believable later. Whatever moves it, the crane's cable, route, haul and crane stay as they are ([Discoveries](05_DISCOVERIES.md)) |
-| Sealed rooms | How many, how large | Start with one or two small rooms per zone; tune from playtest. Never connected into passages ([World §5](03_WORLD_AND_SITE.md#sealed-rooms)) |
+| Geodes | How many, how large | Start with two or three small ones per zone in zones 2–3; tune from playtest. Never connected into passages ([World §5](03_WORLD_AND_SITE.md#5-geodes)) |
 | Find rosters | Exact common and distinctive object lists | Keep the 20–30 / 30–50 type targets, organised by zone and host ground; new silhouettes keep appearing to the bottom of the 150 m site. Uniques and ending parts consume zero bag slots |
 | Mystery payoff | Ancient junk-making machine / one huge buried structure / parts collected to open something (possibly at ground level) | Undecided, no leaning. Decide before the mystery and ending work; earlier finds only need to be able to carry fragments of whichever is chosen |
 | Final meaningful purchase | Exact point in the campaign | Test around 75% of first completion, leaving substantial deep excavation for the final machine |
@@ -46,16 +46,15 @@ Decided against. Reopen only with new evidence, and say what changed.
 
 | Idea | Why not |
 |---|---|
-| **Seam cleaving / boulder fields** (cut along a seam so a whole slab or boulder comes loose) | The only payoff was saved time: "a boulder comes loose, for what?" Tool upgrades and C4 already cover hard ground. Cracks now give the same "read the ground" choice with a real reward: faster digging *and* a direction ([World §4](03_WORLD_AND_SITE.md#cracks-and-veins-rock-concrete)) |
-| **Clay lifting out as clean blocks** | Same problem as seam cleaving: speed without a reason to care |
+| **Seam cleaving / boulder fields** (cut along a seam so a whole slab or boulder comes loose) | The only payoff was saved time: "a boulder comes loose, for what?" Tool upgrades and C4 already cover hard ground. Tells give the "read the ground" choice with a real reward: a direction and something at its end ([World §4](03_WORLD_AND_SITE.md#4-grounds-and-their-tells)) |
 | **Stuck machinery** (dig away the dirt jamming a flap or hatch so it swings open) | Hard to understand underground, hand-built per object and close to a puzzle. Crackable containers give the second reveal more simply |
-| **Cave zones or tunnel networks** | They break "the hole is yours", mean less digging, show finds fully exposed (skipping the reveal) and recreate Meltopia's getting-lost complaint. Small sealed rooms keep the break-through moment ([World §5](03_WORLD_AND_SITE.md#sealed-rooms)) |
-| **C4 weak in clay** (or against any common ground) | Keep Digging's dynamite was "beyond useless"; Meltopia's dynamite nerf against dirt made its shovel hated. C4 is strong everywhere and stronger on cracks ([Tool §8](04_TOOL_AND_MOVEMENT.md#8-c4)) |
-| **Tells that always lead to treasure** | That is a radar in disguise. Some cracks and channels fade out; backfill pits always hold *something*, not necessarily something valuable |
+| **Cave zones or tunnel networks** | They break "the hole is yours", mean less digging, show finds fully exposed (skipping the reveal) and recreate Meltopia's getting-lost complaint. Small geodes keep the break-through moment ([World §5](03_WORLD_AND_SITE.md#5-geodes)) |
+| **C4 weak in clay** (or against any common ground) | Keep Digging's dynamite was "beyond useless"; Meltopia's dynamite nerf against dirt made its shovel hated. C4 is strong everywhere and the natural answer to a geode's shell ([Tool §8](04_TOOL_AND_MOVEMENT.md#8-c4)) |
+| **Tells that always lead to treasure** | That is a radar in disguise. Backfill pits always hold *something*, not necessarily something valuable |
 | **Ending timelapse** | Needs every cut recorded from the save's first minute, all for about twenty seconds at the end. Before-and-after shows the same scale cheaply |
 | **Paid surface recharge** | A tax with no decision that punishes battery upgrades (Keep Digging's backlash); the battery's job is trip length |
 | **Digging your own way out at zero battery** | At 150 m it is long, punishing survival friction of the kind reviewers hated in A Game About Digging a Hole. The crane self-rescue is tested instead |
-| **A wider site** | Not needed: the current width fits a few places per zone and keeps sideways routes short enough that nobody gets lost. Revisit only if places crowd each other |
+| **A wider site** | Not needed: the current width fits a few pits and geodes per zone and keeps sideways routes short enough that nobody gets lost. Revisit only if they crowd each other |
 | **Putting dirt back** (Keep Digging's fill, One Man's Trash's dirt-spitting) | Loved in both games, but the jetpack already solves getting back up, and building would be a second verb. Not now |
 | **Detector upgrades** (range, direction) | Would turn the hint into a value radar; the detector is frozen anyway |
 

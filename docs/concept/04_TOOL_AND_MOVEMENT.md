@@ -18,7 +18,7 @@ absurdity. The player never switches tools; upgrades bolt onto the same object.
  payoff is what the machine can do, not just how it looks.
 - **No zone resets your speed:** the tool ladder is tuned against the zones' main grounds
  ([zone rules](03_WORLD_AND_SITE.md#zone-rules)). Arriving in a new zone at the expected level never
- feels slower than the zone before; the drill (level seven) arrives around the rock zone. Meltopia's
+ feels slower than the zone before; the drill (level seven) arrives around the third zone. Meltopia's
  second tool and its "blue snow" did the opposite and became the game's most common reason for a
  negative review: the player felt their whole investment had been wasted.
 - **Late-game excavation vs silhouette reveal:** Powerful late-game cutters clear large volumes quickly. For small common items (bottles, ore), this is a benefit that skips tedious cleaning. For massive machinery or buried structures, even a huge cutting head exposes only a fraction, preserving the silhouette discovery loop. Precision crouch allows narrowing the cutting footprint when delicate carving is desired.
@@ -56,8 +56,8 @@ behavior automatically:
  turn every material into the same vacuum action.
 - **Upgrades improve all behaviors at once** — one shared tool upgrade level. No separate
  upgrade economy for a second tool.
-- **Following a tell** uses these same automatic responses: digging along a crack or into loose
- backfill is just digging where the ground is easier ([ground tells](03_WORLD_AND_SITE.md#4-materials-and-their-tells)).
+- **Following a tell** uses these same automatic responses: digging into backfill or a geode's shell
+ is just digging where the ground is different ([ground tells](03_WORLD_AND_SITE.md#4-grounds-and-their-tells)).
  No extra mode, input or required technique.
 
 ## 4. Upgrade tracks and the tool
@@ -112,10 +112,8 @@ C4 arrives late in the progression as an optional excavation accelerator.
 - Charges cost money, not battery; C4 is an optional accelerator, never the only way past anything.
 - **Material reactions** make *where* to stick a charge a decision:
   - every ground gets a big, satisfying blast; C4 is never weak against a common material;
-  - on a crack, rock breaks along the crack, well beyond the blast itself;
-  - on cracked concrete, the slab between cracks breaks apart: the natural answer to a concrete
-    structure;
-  - under gravel, the section pours out with its finds ([the pour](03_WORLD_AND_SITE.md#gravel-channels-and-the-pour)).
+  - a geode's hard shell cracks open under a charge: its natural target, far faster than the drill
+    ([geodes](03_WORLD_AND_SITE.md#5-geodes)).
 - *Why:* Keep Digging's dynamite was called "beyond useless" (two clicks did more), and Meltopia
  deliberately weakened dynamite against dirt so its shovel would matter, which made the shovel
  hated. A Game About Digging a Hole's dynamite bounced, clipped or vanished; charges here stick.

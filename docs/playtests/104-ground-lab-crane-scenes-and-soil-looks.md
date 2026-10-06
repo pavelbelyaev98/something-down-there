@@ -12,4 +12,4 @@ build). Nothing here is saved. Esc → **Restart Ground Lab** puts every compute
 you like, next to every ground.
 
 **Tell the agent:**
-- Any scene you want added or changed (a deeper tunnel, a ceiling to break through, clay or gravel)?
+- Any scene you want added or changed (a deeper tunnel, a ceiling to break through)?

@@ -32,9 +32,9 @@ namespace SomethingDownThere.Tests
         // The shipped ground (MainGame's excavation seed), shared by every layout.
         private const int ExcavationSeed = 2718;
         private static TerrainMaterialSnapshot site;
-        private static TerrainMaterialSnapshot Site => site ??= TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
+        private static TerrainMaterialSnapshot Site => site ??= TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots(), SiteLayout.Ground);
         private static TerrainGround.GroundLayout groundLayout;
-        private static TerrainGround.GroundLayout GroundLayout => groundLayout ??= TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots());
+        private static TerrainGround.GroundLayout GroundLayout => groundLayout ??= TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots(), SiteLayout.Ground);
         private static TerrainMaterialId Ground(Vector3 local)
         {
             var sample = Vector3Int.Min(Vector3Int.Max(Vector3Int.RoundToInt(local / SiteLayout.CellSize), Vector3Int.zero), SiteLayout.Size);
@@ -204,7 +204,6 @@ namespace SomethingDownThere.Tests
         public void SitePitsKeepClearOfTheUniques()
         {
             var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, ExcavationSeed, Catalog.OddSpots(), SiteLayout.Ground);
-            Assert.That(layout.OddSpots, Is.Empty, "No odd-spot ground on the site yet.");
             foreach (var entry in Catalog.Entries.Where(e => e.AuthoredPlacement))
                 foreach (var pit in layout.Pits)
                 {
@@ -416,114 +415,37 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        // Concept 03 §4 host ground: where both exist at a depth, host ground holds clearly more of
-        // a type than other ground; every type still turns up outside it (scatter).
+        // Every seat (the bottom of every rubbish pit) holds exactly one find, sunk a third of its own radius.
         [TestCase(90127)] [TestCase(12)]
-        public void HostGroundHoldsMoreOfItsTypesWithoutEmptyingOtherGround(int seed)
-        {
-            var catalog = Catalog;
-            var layout = Layout(seed);
-            var ores = catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).Select(e => Array.IndexOf(catalog.Entries, e)).ToArray();
-            int rockIndex = Array.FindIndex(catalog.Entries, e => e.ItemId == "common_rock");
-            Assert.That(catalog.Entries[ores[0]].HostGrounds, Is.EqualTo(new[] { TerrainMaterialId.Rock, TerrainMaterialId.FracturedRock, TerrainMaterialId.Crack }));
-            Assert.That(catalog.Entries[rockIndex].HostGrounds, Is.EqualTo(new[] { TerrainMaterialId.Soil }));
-            // Density in and out of the host per depth window: finds per sampled ground volume.
-            float Ratio(int[] types, TerrainMaterialId host, float from, float to, out int outside, TerrainMaterialId? also = null, TerrainMaterialId? other = null)
-            {
-                bool InHost(TerrainMaterialId id) => id == host || id == also;
-                bool Counted(TerrainMaterialId id) => other == null || InHost(id) || id == other;
-                int inHostFinds = 0, otherFinds = 0; long hostSamples = 0, otherSamples = 0;
-                foreach (var p in layout)
-                {
-                    float depth = SiteLayout.Extent.y - p.Position.y;
-                    if (depth < from || depth >= to || Array.IndexOf(types, p.PrefabIndex) < 0 || !Counted(Ground(p.Position))) continue;
-                    if (InHost(Ground(p.Position))) inHostFinds++; else otherFinds++;
-                }
-                for (float z = .5f; z < SiteLayout.Extent.z; z += 1)
-                for (float x = .5f; x < SiteLayout.Extent.x; x += 1)
-                {
-                    if (SiteLayout.BeyondFootprint(new Vector2(SiteLayout.Origin.x + x, SiteLayout.Origin.z + z)) >= 0) continue;
-                    for (float y = SiteLayout.Extent.y - to; y < SiteLayout.Extent.y - from; y += .5f)
-                    {
-                        var id = Ground(new Vector3(x, y, z));
-                        if (!Counted(id)) continue;
-                        if (InHost(id)) hostSamples++; else otherSamples++;
-                    }
-                }
-                outside = otherFinds;
-                Assert.That(hostSamples, Is.GreaterThan(0));
-                return (inHostFinds / (float)hostSamples) / Mathf.Max(1e-6f, otherFinds / (float)otherSamples);
-            }
-            float zone2 = Ratio(ores, TerrainMaterialId.Rock, 40, 73, out int clayOres, TerrainMaterialId.FracturedRock, TerrainMaterialId.Clay);
-            // Metal settles in the old riverbeds: gravel channels through the clay are richer too.
-            float riverbeds = Ratio(ores, TerrainMaterialId.Gravel, 40, 73, out _, null, TerrainMaterialId.Clay);
-            float deep = Ratio(ores, TerrainMaterialId.Rock, 78, 149, out int veinOres, TerrainMaterialId.FracturedRock, TerrainMaterialId.Clay);
-            // Cracks are richer than the rock they break: some open into ore (never all of them).
-            float cracks = Ratio(ores, TerrainMaterialId.FracturedRock, 78, 149, out int plainRockOres, TerrainMaterialId.Crack, TerrainMaterialId.Rock);
-            float plain = Ratio(new[] { rockIndex }, TerrainMaterialId.Soil, 2.5f, 14, out int gravelRocks);
-            Debug.Log($"Seed {seed}: ore in zone-2 rock masses x{zone2:F1}, ore in deep rock x{deep:F1}, ore in cracks x{cracks:F1}, ore in riverbeds x{riverbeds:F1}, plain rocks in soil x{plain:F1}");
-            Assert.That(zone2, Is.GreaterThan(2), "Rock masses in the clay hold more ore.");
-            Assert.That(deep, Is.GreaterThan(2), "Deep ore favours rock over the clay veins.");
-            Assert.That(cracks, Is.GreaterThan(2), "Cracks hold more ore than plain rock.");
-            Assert.That(riverbeds, Is.GreaterThan(1.5f), "Gravel channels in the clay hold more metal.");
-            Assert.That(plainRockOres, Is.GreaterThan(0));
-            Assert.That(plain, Is.GreaterThan(1.5f), "Plain rocks favour soil over gravel lenses.");
-            Assert.That(clayOres, Is.GreaterThan(0)); Assert.That(veinOres, Is.GreaterThan(0)); Assert.That(gravelRocks, Is.GreaterThan(0));
-        }
-
-        // Concept 03 §5: sealed rooms hold finds half-sunk in their silt, and no ordinary find
-        // reaches into a sealed structure (it would open or fill the room).
-        [TestCase(90127)] [TestCase(12)]
-        public void SealedRoomsHoldHalfSunkFindsAndNothingElse(int seed)
+        public void EverySeatHoldsOneHalfSunkFind(int seed)
         {
             var catalog = Catalog;
             var layout = Layout(seed);
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
-            // A find sits right under every seat, sunk a third of its own radius into the silt.
             bool Seated(DiscoveryPlacement p, Vector3 seat) => new Vector2(p.Position.x - seat.x, p.Position.z - seat.z).sqrMagnitude < 1e-6f
                 && Mathf.Abs(seat.y - p.Position.y - radii[p.PrefabIndex] * TerrainGround.SeatSink) < 1e-4f;
-            // Every seat holds a find: room silt, and the bottom of every backfill pit.
+            Assert.That(GroundLayout.Seats(), Is.Not.Empty);
             foreach (var (seat, _, _) in GroundLayout.Seats())
                 Assert.That(layout.Count(p => Seated(p, seat)), Is.EqualTo(1), $"Seed {seed}: a find waits at every seat.");
-            foreach (var room in GroundLayout.Rooms)
-            {
-                foreach (var p in layout)
-                {
-                    if (TerrainGround.Seats(room).Any(seat => Seated(p, seat))) continue;
-                    var local = Unity.Mathematics.math.abs(Unity.Mathematics.math.mul(room.ToLocal, (Unity.Mathematics.float3)p.Position - room.Centre));
-                    var gap = local - room.OuterHalf;
-                    float distance = Unity.Mathematics.math.length(Unity.Mathematics.math.max(gap, 0));
-                    Assert.That(distance, Is.GreaterThan(radii[p.PrefabIndex]), $"Seed {seed}: an ordinary find reaches into a sealed structure.");
-                }
-            }
         }
 
-        // Concept 03 §4 odd spots: every unique sits in ground unlike its zone, shaped around its
-        // envelope, and no ordinary find sits inside that lens.
+        // No ordinary find crowds a unique: each keeps out of the unique's space.
         [Test]
-        public void EveryUniqueSitsInAnOddSpotUnlikeItsZone()
+        public void NoOrdinaryFindCrowdsAUnique()
         {
             var catalog = Catalog;
             var layout = Layout(90127);
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             var uniques = catalog.Entries.Where(e => e.AuthoredPlacement).ToArray();
-            Assert.That(GroundLayout.OddSpots.Length, Is.EqualTo(uniques.Length));
+            Assert.That(uniques, Is.Not.Empty);
             foreach (var entry in uniques)
             {
                 var centre = entry.AuthoredPosition;
-                float depth = SiteLayout.Extent.y - centre.y, reach = entry.PlacementRadius + DiscoveryField.SoilClearance + .35f;
-                var main = TerrainGround.ZoneAt(depth) switch { 0 => TerrainMaterialId.Soil, 1 => TerrainMaterialId.Clay, _ => TerrainMaterialId.Rock };
-                foreach (var side in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back })
-                {
-                    var ground = Ground(centre + side * reach);
-                    Assert.That(ground, Is.Not.EqualTo(main), $"{entry.ItemId}: the ground around it is its zone's own.");
-                    Assert.That(ground, Is.EqualTo(Ground(centre + Vector3.right * reach)), $"{entry.ItemId}: one lens around the unique.");
-                }
                 int index = Array.IndexOf(catalog.Entries, entry);
                 foreach (var p in layout)
                     if (p.PrefabIndex != index)
                         Assert.That(Vector3.Distance(p.Position, centre) - radii[p.PrefabIndex], Is.GreaterThan(entry.PlacementRadius + TerrainGround.OddSpotReach * .9f),
-                            $"{entry.ItemId}: an ordinary find sits in its odd spot.");
+                            $"{entry.ItemId}: an ordinary find sits in its space.");
             }
         }
 
