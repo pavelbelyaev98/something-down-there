@@ -44,8 +44,9 @@ namespace SomethingDownThere
         // Relative to the owned tool: every tier retains material character and every ground remains
         // diggable. Fuel follows cadence, so a slower stroke costs proportionally more.
         private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);
-        // Backfill: loose, mixed refill; the tool suddenly sinks in (the disturbed-ground tell).
-        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(1.167f, 1.109f, 1.313f, .92f);
+        // Backfill: a pit refilled with rubble (108). Smaller, shallower bites at a slightly slower stroke: about half
+        // soil's rate, felt at once and never a wall (user, 2026-10-05).
+        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(.82f, .82f, .8f, 1.12f);
         // Developer ground tuning: session-only replacements for the authored responses.
         private static readonly MaterialToolResponse?[] ResponseOverrides = new MaterialToolResponse?[(int)TerrainMaterialSnapshot.Last + 1];
         public static bool HasResponseOverrides => System.Array.Exists(ResponseOverrides, value => value.HasValue);
@@ -57,7 +58,7 @@ namespace SomethingDownThere
         public static string GroundEffect(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => "Plain ground; never collapses",
-            TerrainMaterialId.Backfill => "Disturbed ground: loose fill; never collapses",
+            TerrainMaterialId.Backfill => "Rubble fill: stony and hard; never collapses",
             _ => ""
         };
         public static MaterialToolResponse AuthoredResponse(TerrainMaterialId material) => material switch
@@ -67,7 +68,7 @@ namespace SomethingDownThere
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
         // Softest to hardest; each ground keeps its resistance at every tier.
-        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Backfill, TerrainMaterialId.Soil };
+        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100, 1600, 2300 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40, 40, 40 };

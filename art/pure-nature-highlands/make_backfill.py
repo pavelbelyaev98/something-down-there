@@ -1,6 +1,6 @@
-"""Writes the backfill ground's texture set from the approved packs' own ground textures (106): the site's soil
+"""Writes the backfill ground's texture set from the approved packs' own ground textures (106, 108): the site's soil
 (Mountains Mud01, carrying the dig ground's clay-loam tint) turned over with Highlands Mud_rubble's lumpy mud, a
-little darker, and a scatter of that texture's stones churned in. One tileable set (colour, normal, occlusion in G)
+little darker, with that texture's stones churned in so the rubble fill reads as stony and hard. One tileable set (colour, normal, occlusion in G)
 covering 2 x 2 soil tiles and one rubble tile; the ground shader draws backfill from it alone.
 Run from the repository root (needs Pillow and numpy) after reimporting either pack."""
 from pathlib import Path
@@ -15,8 +15,11 @@ size = 2048
 # The dig ground's soil tint (LakebedSiteSetup.ClayLoamTint, linear): baked into the dirt, never the stones.
 soil_tint = np.array([.62, .98, 1.25])
 # Stirred-up fill reads a little darker and damper than settled soil; the rubble's mud gives it lumps, and its
-# stones keep most of their own colour, so the churned-in rubble shows.
-dirt_shade, rubble_mud_share, stone_dirt = .84, .35, .12
+# stones keep most of their own colour under a film of dirt, so the churned-in rubble shows without glaring.
+dirt_shade, rubble_mud_share, stone_dirt = .84, .35, .5
+# The rubble's stones are its pale parts; after the 2048 reduction they sit around grey 125-140 (above 145 there
+# are none). stone_level picks the stones churned in, a little lower keeps every stone out of the mud.
+stone_level = 126
 
 
 def load(path, mode):
@@ -71,10 +74,12 @@ rubble = np.asarray(rubble_image, dtype=np.float64) / 255
 rubble_n = normals(rubble_size(load(highlands / 'Mud_rubble_n.png', 'RGB')))
 rubble_ao = np.asarray(rubble_size(load(highlands / 'Mud_rubble_mask.png', 'RGBA')), dtype=np.float64)[..., 1] / 255
 
-# The rubble's stones are its pale parts: every stone (to keep them out of the mud) and the larger ones (churned in).
+# Every stone (to keep them out of the mud) and the stones churned in, filled solid (a closing removes the specks
+# a threshold leaves inside them).
 grey = rubble_image.convert('L')
-all_stones = wrapped(grey.point(lambda v: 255 if v > 140 else 0), ImageFilter.MaxFilter(3), ImageFilter.GaussianBlur(1))
-churned = wrapped(grey.point(lambda v: 255 if v > 145 else 0), ImageFilter.MinFilter(3), ImageFilter.GaussianBlur(1))
+all_stones = wrapped(grey.point(lambda v: 255 if v > stone_level - 6 else 0), ImageFilter.MaxFilter(3), ImageFilter.GaussianBlur(1))
+churned = wrapped(grey.point(lambda v: 255 if v > stone_level else 0), ImageFilter.MaxFilter(3), ImageFilter.MinFilter(3),
+                  ImageFilter.GaussianBlur(1))
 all_stones = np.asarray(all_stones, dtype=np.float64)[..., None] / 255
 churned = np.asarray(churned, dtype=np.float64)[..., None] / 255
 

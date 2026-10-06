@@ -40,7 +40,6 @@ namespace SomethingDownThere
         private int shownLevel = -1, seenStrokes = -1;
         private float stroke = 1f, strokeSeconds = .3f, lowered = 1f, spinSpeed, spinAngle, sinceCut = 10f;
         private MotionFamily family;
-        private bool sink;
         // Each stroke differs a little in depth, side and roll so held digging never looks mechanical.
         private float strokeDepth = 1f, strokeSide, strokeRoll;
 
@@ -58,8 +57,8 @@ namespace SomethingDownThere
             return from >= 1 && from <= to && to <= EquipmentProgression.LevelCount;
         }
 
-        // Every current ground scoops; harder grounds bite or hammer.
-        public static MotionFamily Family(TerrainMaterialId material) => MotionFamily.Scoop;
+        // Soil scoops; rubble backfill takes the shorter, harder bite.
+        public static MotionFamily Family(TerrainMaterialId material) => material == TerrainMaterialId.Backfill ? MotionFamily.Bite : MotionFamily.Scoop;
 
         private void Awake()
         {
@@ -105,8 +104,7 @@ namespace SomethingDownThere
             {
                 stroke = Mathf.Min(1f, stroke + dt / strokeSeconds);
                 // Soft ground takes a longer push, hard ground a shorter one with a little shudder.
-                float reach = (sink ? 1.5f : 1f) * power;
-                float amount = (family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f) * reach * strokeDepth;
+                float amount = (family == MotionFamily.Scoop ? .02f : family == MotionFamily.Bite ? .016f : .012f) * power * strokeDepth;
                 var (move, angles) = PryScoop(stroke, amount);
                 offset = Quaternion.Euler(restEuler) * move;
                 turn = angles;
@@ -145,7 +143,6 @@ namespace SomethingDownThere
             sinceCut = 0f;
             var material = player.LastDigMaterial;
             family = Family(material);
-            sink = material == TerrainMaterialId.Backfill;
             if (player.ShavingEnabled) return;
             stroke = 0f;
             strokeSeconds = StrokeSeconds(player.LastDigInterval, material);

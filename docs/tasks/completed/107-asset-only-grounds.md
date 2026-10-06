@@ -10,7 +10,7 @@ free slots for later grounds. This spec also holds the plan and research for `10
 | Ticket | What the player gets | Spec |
 | --- | --- | --- |
 | `107` Remove the invented grounds | The same site, no collapses, a clean Ground Lab | [107](107-asset-only-grounds.md) |
-| `108` Rubble backfill | Pits that dig at about half soil's speed and show their stones | [108](../108-rubble-backfill.md) |
+| `108` Rubble backfill | Pits that dig at about half soil's speed and show their stones | [108](108-rubble-backfill.md) |
 | `109` The chest by hand | Hold E to force the lock; an emptied chest goes away | [109](../109-chest-by-hand.md) |
 | `110` Geodes | Hard rock balls with crystal-lined hollows to break into | [110](../110-geodes.md) |
 | `026` Sticky C4 | C4, whose natural target is a geode shell | queue |

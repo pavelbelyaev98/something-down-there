@@ -160,6 +160,18 @@ namespace SomethingDownThere.Tests
             }
         }
 
+        // Rubble backfill (108): about half soil's rate at every tool level, shovel and drill, felt at once and never a wall.
+        [Test]
+        public void RubbleBackfillDigsAboutHalfSoilsRateAtEveryLevel()
+        {
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
+            {
+                float ratio = Output(TerrainMaterialId.Backfill, level).sustained / Output(TerrainMaterialId.Soil, level).sustained;
+                TestContext.WriteLine($"Level {level}: backfill digs {ratio:P0} of soil's rate");
+                Assert.That(ratio, Is.InRange(.35f, .65f), $"Level {level}");
+            }
+        }
+
         // Fresh (the first second) and sustained (four seconds) output (m3/s) of the automatic motion held straight down.
         private static (float first, float sustained) Output(TerrainMaterialId material, int level)
         {

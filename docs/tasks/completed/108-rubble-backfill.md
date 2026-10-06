@@ -1,7 +1,8 @@
 # 108 — Rubble Backfill
 
-**Status:** planned after `107`. Spec written ahead (2026-10-05); re-check against the code when it
-starts. Plan and research: [107](completed/107-asset-only-grounds.md).
+**Status:** complete. Backfill is rubble fill: it digs at about half soil's rate at every tool level (47–55%,
+with the tool's shorter bite motion), and its texture churns the rubble's dirty stones into the turned-over soil,
+so the pit reads as a stony column in the wall. Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
 
@@ -93,3 +94,15 @@ once, never a wall.
   3. Clear the chest's lid space.
 - **Good feels like:** "this ground is different; someone filled this in." It should cost seconds,
   not feel like a chore.
+
+## Results
+
+- Response `(.82, .82, .8, 1.12)` (width, length, penetration, interval): 55% of soil's rate at level 1, about
+  50% through the shovel levels and 47–48% with the drill (`RubbleBackfillDigsAboutHalfSoilsRateAtEveryLevel`).
+- The old stone thresholds (grey above 140/145) caught almost no stones after the 2048 reduction; the rubble's
+  stones sit around grey 125–140. `stone_level` 126 with a closing fills them; `stone_dirt` .5 keeps them a dirty
+  grey-brown instead of glaring.
+- The presenter's "sink" push is gone; backfill uses the existing shorter "Bite" motion.
+- Checked in the Ground Lab: a shaft beside the pit bay shows the column as a band of dirty rubble in the red-brown
+  soil under daylight from above. Captures from a camera without URP post-processing glare white; copy the view
+  camera's `UniversalAdditionalCameraData` too.

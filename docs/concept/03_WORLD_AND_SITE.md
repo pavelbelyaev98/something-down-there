@@ -162,7 +162,7 @@ cut's shape carry it. Nothing in the ground collapses: no pours, slumps or break
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
 | Soil     | Fast, broad rounded cuts; plain ground         | —                                      | Rubbish, junk, plain rocks                          |
-| Backfill | Loose and mixed; digs fast                     | It *is* the tell                       | Whatever someone buried                             |
+| Backfill | Rubble fill: small, hard bites, about half soil's speed | It *is* the tell              | Whatever someone buried                             |
 
 Zone grounds, geode shells and lenses join this table as they are added. The ancient zone adds its
 own material with its contact signature ([Ending and Mystery](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)).
@@ -197,15 +197,17 @@ Shared rules for all tells:
 
 - When something was buried, a hole was dug and filled again. Above and around selected buried
   things, the generator leaves a pit or column of backfill that cuts across the soil.
-- It reads in the wall as a messy, chunky patch, and the tool feels the change at once. Follow it
-  down or sideways and something waits at the bottom.
+- It is refilled with rubble: it reads in the wall as a stony patch cutting across the soil, and the
+  tool takes small, hard bites at once (about half soil's speed). Follow it down or sideways and
+  something waits at the bottom. It costs seconds, never minutes: a toll the player chooses.
 - Only what was buried on purpose leaves a pit: a **stash** (an old chest, opened where it lies; see
   [finds inside finds](05_DISCOVERIES.md#3-the-reveal-and-recognition-loop)) or **rubbish** (junk
   such as old TVs, found only in rubbish pits). Things that sank or were lost leave none and lie
   scattered, so ordinary digging keeps its own surprises. Every pit holds something, never an empty
   decoy, and pays well for following it: a rock-priced find at the bottom would be a letdown.
-- It reads by grain, not a colour jump: the same soil turned over, lumpier and a little darker, with
-  stones churned in, drawn from its own texture made from the packs' soil and rubble.
+- It reads by grain, not a colour jump: the same soil turned over, a little darker, with dirty stones
+  churned in, drawn from its own texture made from the packs' soil and rubble. What the eye sees is
+  what the tool feels.
 - Pits stay in the recent fill for now: a refilled hole far down needs a story first. The first one
   lies a few metres under the plot centre, where an early shaft meets it in daylight.
 - *Feel:* "this ground is different; someone dug here before me."

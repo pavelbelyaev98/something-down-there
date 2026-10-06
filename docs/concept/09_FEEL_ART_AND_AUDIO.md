@@ -107,7 +107,7 @@ as [World and Site](03_WORLD_AND_SITE.md); the exact material list remains open:
 | Soil | Even cuts | Crumbs | Dull thud |
 | Lake silt / clay | Steady, resistant | Clumps / flat chips | Wet thump / muffled crunch |
 | Sand and gravel | Spilling, grainy | Loose stones | Hiss and rattle |
-| Backfill (disturbed ground) | Loose, fast, mixed | Mixed crumbs and chunks | Soft, hollow give |
+| Backfill (rubble fill) | Small, hard bites | Stones and crumbs | Stony grind |
 | Geode shell | Small chipping bites; seconds, not minutes | Shards | Grinding crack |
 
 **Impossibility signature:** ancient fabricated materials add one small, consistent response on top

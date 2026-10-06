@@ -28,8 +28,8 @@ namespace SomethingDownThere
         public static readonly Bay[] Bays =
         {
             new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil)),
-            new Bay("Backfill", "a refilled pit's loose fill", Only(TerrainMaterialId.Backfill)),
-            new Bay("Backfill pit", "1 m pit in soil, 5 m deep", (u, d, v) =>
+            new Bay("Backfill", "rubble fill: about half soil's speed", Only(TerrainMaterialId.Backfill)),
+            new Bay("Backfill pit", "1 m rubble pit in soil, 5 m deep", (u, d, v) =>
                 Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil),
         };
 

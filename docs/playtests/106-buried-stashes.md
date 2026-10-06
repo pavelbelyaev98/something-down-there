@@ -5,8 +5,9 @@ load). The first chest lies 4–6 m under the middle of the taped plot. Develope
 X-ray** marks backfill magenta if you want to find the other pits.
 
 **Try:**
-- Dig down near the middle of the plot until the ground turns lumpy and stony and the tool sinks in faster.
-  Follow that loose ground down to the old chest.
+- Dig down near the middle of the plot until the ground turns stony and the tool suddenly takes small,
+  hard bites (about half soil's speed). Follow that rubble fill down to the old chest, with the first
+  shovel and again with the drill (Ctrl+Shift+7).
 - Aim at the chest before clearing it, then dig out the space above and behind its lid until the
   prompt says you can break the lock. Strike it once and watch it open.
 - Collect what's inside and sell it. Stand on the empty chest; dig under one to see it drop.
@@ -17,7 +18,7 @@ X-ray** marks backfill magenta if you want to find the other pits.
   a touch flatter with depth now that the old procedural colour bands are gone.
 - Title menu → **Ground Lab**: only soil, backfill and a backfill pit remain, plus the crane scenes.
 
-**Good feels like:** "why did it just get easy? Someone dug here before me", then the lid swinging up
+**Good feels like:** "this ground is different; someone filled this in", then the lid swinging up
 on a few pieces of silver and gold. Clearing the lid feels like uncovering, not a chore. Every TV is
 recognisable at a glance.
 
@@ -25,6 +26,7 @@ recognisable at a glance.
 - How the chest looks next to the TVs (the green paint reads a bit fairy-tale): keep, darken to
   weathered brown, or swap.
 - Whether clearing the lid space is too much or too little digging.
-- Whether the pits read in the wall, and if the chest's three pieces and the TV prices feel right.
+- Whether the pits read in the wall, whether the rubble's hardness feels right or like a chore, and if
+  the chest's three pieces and the TV prices feel right.
 - Whether the soil looks too flat with depth.
 - Anything that clipped, floated or blocked you.
