@@ -22,10 +22,22 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _DustTex:
+        m_Texture: {fileID: 2800000, guid: 867056c518324cf4b2b41c39f319c012, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SoilTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _Dust: 1
+    - _Flipbook: 1
+    - _Glow: 0
+    - _SoilDetail: 0
+    - _SoilMean: 0.083
     - _Solid: 0
     m_Colors: []
   m_BuildTextureStacks: []

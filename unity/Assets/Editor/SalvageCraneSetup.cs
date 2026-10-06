@@ -90,8 +90,7 @@ namespace SomethingDownThere.Editor
                 tuning.FindProperty("restYaw").floatValue = 0; tuning.FindProperty("restReach").floatValue = rest.magnitude;
                 tuning.ApplyModifiedPropertiesWithoutUndo();
             }
-            Set(salvage, "soilChipsMaterial", SoilBreak("SoilCrumbs", false)); Set(salvage, "soilDustMaterial", SoilBreak("SoilDust", true));
-            Set(salvage, "soilClodsMaterial", SoilBreak("SoilClods", false, true));
+            Set(salvage, "soilDustMaterial", SoilBreak("SoilDust", true)); Set(salvage, "soilClodsMaterial", SoilBreak("SoilClods", false, true));
             SetArray(salvage, "setDownSpots", spots);
             Set(player, "crane", salvage);
             EditorSceneManager.MarkSceneDirty(scene); AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
@@ -385,7 +384,9 @@ namespace SomethingDownThere.Editor
             return material;
         }
 
-        // Rope ruptures throw soil crumbs, dust and solid clods.
+        // Rope ruptures throw clods and crumbs of earth (solid, the backfill's grain on their faces) and dust (the
+        // Crystal Caverns pack's dust flipbook).
+        private const float SoilGrain = .6f, SoilGrainMean = .083f;
         private static Material SoilBreak(string name, bool dust, bool solid = false)
         {
             string path = GroundTextureSetup.Folder + name + ".mat";
@@ -396,7 +397,12 @@ namespace SomethingDownThere.Editor
                 if (shader == null) throw new InvalidOperationException("Missing soil-break shader.");
                 material = new Material(shader); AssetDatabase.CreateAsset(material, path);
             }
-            material.SetFloat("_Dust", dust ? 1 : 0); material.SetFloat("_Solid", solid ? 1 : 0); EditorUtility.SetDirty(material);
+            material.SetFloat("_Dust", dust ? 1 : 0); material.SetFloat("_Solid", solid ? 1 : 0);
+            material.SetFloat("_Flipbook", dust ? 1 : 0);
+            material.SetTexture("_DustTex", dust ? CavernSetup.Capped("Assets/BK/PureNature_CrystalCaverns/Textures/Fx/Dust_a.png", 1024) : null);
+            material.SetTexture("_SoilTex", solid ? AssetDatabase.LoadAssetAtPath<Texture2D>(GroundTextureSetup.Folder + "Backfill_Albedo.png") : null);
+            material.SetFloat("_SoilMean", SoilGrainMean); material.SetFloat("_SoilDetail", solid ? SoilGrain : 0);
+            EditorUtility.SetDirty(material);
             return material;
         }
 

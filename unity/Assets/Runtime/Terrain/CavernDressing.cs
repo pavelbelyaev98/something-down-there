@@ -1,17 +1,25 @@
+using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace SomethingDownThere
 {
-    // What the crystal cavern's groves are made of (115), built by Configure Caverns from Crystal Caverns' demo pieces
-    // (URP copies in Content/BuriedProps/CrystalCaverns/Cavern): its tall crystals for a grove's columns, its smaller
-    // ones for the sprays on the wall, a shard material for the flecks they throw when chipped and broken, and a bloom
-    // while the player is inside. CavernScenery colours and sizes them.
+    // What the crystal cavern's areas are made of (115), built by Configure Caverns from the Crystal Caverns demo's own
+    // pieces (URP copies in Content/BuriedProps/CrystalCaverns/Cavern), one set per area (TerrainGround.CavernArea):
+    // its big formations and the smaller clusters the tool breaks. Also the cracks a breaking cluster shows, the shards,
+    // glints and dust it throws, and the bloom while the player is inside.
     [CreateAssetMenu(menuName = "Something Down There/Cavern dressing")]
     public sealed class CavernDressing : ScriptableObject
     {
-        public GameObject[] Columns = new GameObject[0], Sprays = new GameObject[0];
-        public Material Shards;
+        [Serializable]
+        public sealed class Area
+        {
+            public GameObject[] Formations = new GameObject[0], Clusters = new GameObject[0];
+            // Glowing crystal (tinted per area at run time) or plain stone (the cubic blocks).
+            public bool Glows = true;
+        }
+        public Area[] Areas = new Area[0];
+        public Material Cracks, Shards, Glints, Dust;
         public VolumeProfile Bloom;
     }
 }

@@ -34,7 +34,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 00y
     HostWeights:
     - 3
@@ -58,7 +58,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_copper
@@ -81,7 +81,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_iron
@@ -104,7 +104,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_silver
@@ -127,7 +127,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_gold
@@ -150,7 +150,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_emerald
@@ -173,7 +173,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_ruby
@@ -196,7 +196,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_diamond
@@ -219,7 +219,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cavern: 1
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_reservoir_computer
@@ -241,7 +241,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_survey_computer
@@ -263,7 +263,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_pump_computer
@@ -285,7 +285,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: junk_tv_portable
@@ -307,7 +307,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -330,7 +330,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -353,7 +353,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -376,7 +376,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -399,7 +399,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -423,7 +423,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_ingot_silver
@@ -446,7 +446,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_ingot_gold
@@ -469,7 +469,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_pyrite
@@ -492,7 +492,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_celestine
@@ -515,7 +515,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_fluorite
@@ -538,7 +538,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_amethyst
@@ -561,7 +561,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_citrine
@@ -584,17 +584,17 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cavern: 0
-    CavernGlow: -1
+    CavernArea: -1
     HostGrounds: 
     HostWeights: []
-  - ItemId: cavern_crystal_blue
+  - ItemId: cavern_crystal_hex
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 7287597662839023345, guid: cba4939d49957944484e34362f307b1d, type: 3}
+    Prefab: {fileID: 3543164030028273446, guid: 635e137b171262048ba04144b2a58291, type: 3}
     AppearanceVariants:
-    - {fileID: 1196577939990760658, guid: 97b4dec590ff52e4cba3350b92e1531d, type: 3}
-    Count: 38
+    - {fileID: 6683359711227529219, guid: 7e8bc8b794df2c5428a9257785434984, type: 3}
+    Count: 20
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -607,17 +607,17 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: 0
+    CavernArea: 0
     HostGrounds: 
     HostWeights: []
-  - ItemId: cavern_crystal_green
+  - ItemId: cavern_crystal_quartz
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 4022511318572505901, guid: ca1211713fa1b31458a91581e5fb94e5, type: 3}
+    Prefab: {fileID: 2158884730792400387, guid: 8ebe8a02ec58ddc44894b9cd301d2a20, type: 3}
     AppearanceVariants:
-    - {fileID: 6132056809501320247, guid: 793969dc014f83448a8cc713878a8d95, type: 3}
-    Count: 38
+    - {fileID: 4477424380330072612, guid: 29105cde57b3a92419847e6a7dbb42a0, type: 3}
+    Count: 10
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -630,17 +630,17 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: 1
+    CavernArea: 1
     HostGrounds: 
     HostWeights: []
-  - ItemId: cavern_crystal_red
+  - ItemId: cavern_crystal_ruby
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 1308539414360574040, guid: 9d9b09bf153536e419053b3f8773972b, type: 3}
+    Prefab: {fileID: 215846474585435695, guid: 3a927267f931c7d449390625f86cc4a4, type: 3}
     AppearanceVariants:
-    - {fileID: 7201425484373976296, guid: 8b1ad439880e8bb429f4338ad0db7949, type: 3}
-    Count: 38
+    - {fileID: 8206533570877994474, guid: 85bbb06116ea5aa4ca0f10242a5e066d, type: 3}
+    Count: 20
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -653,7 +653,30 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cavern: 0
-    CavernGlow: 2
+    CavernArea: 2
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: cavern_crystal_cubes
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 5381945955458567792, guid: bbbfbe91323c86043b48964507331b01, type: 3}
+    AppearanceVariants:
+    - {fileID: 3887916209354319806, guid: ab40bf32dfcd5624db85960a1a39786a, type: 3}
+    Count: 10
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 112.5
+    MaxDepth: 150
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cavern: 0
+    CavernArea: 3
     HostGrounds: 
     HostWeights: []
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}

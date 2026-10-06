@@ -3,9 +3,9 @@
 **Status:** complete:
 - Underground the site is 50 m wide, about 8 m more than the plot on each side.
 - One sealed cavern per zone lies beside the plot, east and west in turn: a walkable chamber in geode stone with
-  minerals half-buried in its walls. The deepest is the crystal cavern: groves of the Crystal Caverns demo's big
-  crystals, one colour to an area and lit in it. The tool breaks them into glow crystals sealed inside, and more of
-  those lie half-buried in its floor.
+  minerals half-buried in its walls. The deepest is the crystal cavern: the Crystal Caverns demo's four areas, one
+  to a chamber, their big formations standing from floor, walls and roof, lighting it and never breaking. The tool
+  cracks and bursts the smaller clusters among them for the crystals sealed inside; more lie half-buried round them.
 - Untouched solid ground is one shared page in memory and in saves.
 
 Concept: [03 §1, §5, §7](../../concept/03_WORLD_AND_SITE.md), [05 §1](../../concept/05_DISCOVERIES.md),
@@ -197,3 +197,35 @@ anything, which kills the vibe ... I want to break anything with purpose, break 
   crystal, released by `DiscoveryField.UnsealWithin`. A crystal is made again only while it still seals a piece, so
   broken crystals stay broken across loads with no save record of their own.
 - **Props live under their own root:** under the terrain, the tool's contract lookup took them for ground.
+
+## Iteration 2 (user, 2026-10-06, after a second look)
+
+"They shrink when I hit, I'd prefer cracking ... the particles we use everywhere are too low quality ... some crystals
+stick out as a stick, and once dug turn into pretty crystals of another type ... do it exactly as in the demo: areas
+of only one type, sticking out from top and bottom, larger things ... think about whether everything should be
+pickable, so the player doesn't get rich too fast ... maybe make them undiggable so they are for light, with
+diggable things around them."
+
+- **Four areas, as in the demo:** hex (green BigHex columns, prism clusters), quartz (blue quartz and beryl), ruby
+  (the big red monoliths and slabs, chunky ruby clusters) and cubes (the pack's big stone blocks, amber pyrite
+  clusters). `TerrainGround.AreaOf` gives each chamber one, in runs (two hex, one quartz, two ruby, one cube) in a
+  seeded order; a cavern of fewer chambers (the Ground Lab's four) gets one each. A grove is 6 floor, 4 wall and
+  4 roof formations, 3 clusters and 4 shards, each piece kept to the chamber whose ellipsoid it lies deepest in, so
+  areas don't reach into each other.
+- **Economy:** formations are scenery and light (`CavernFormation`, "Too big to break: dig the crystals and stone
+  round it"). Only clusters (2 sealed pieces each) and shards hold finds, about ten a chamber; `cavern.json`'s
+  counts match the chambers' seats, and any seat a tight chamber lacks goes to its area's walls instead of loose
+  soil. Prices stay in the catalog.
+- **Cracks, not shrinking:** a cluster carries a crack overlay (its own meshes again, a hair larger, in
+  `CrystalCracks.mat`), clipped at a threshold that falls with the work done, so fractures from
+  `art/crystal-cracks/make_cracks.py` spread and branch, glowing, until it bursts.
+- **Look:** glow maps derived from each pack crystal's alpha (where the pack's crystal shader glows), normalised to
+  one mean brightness; each area's glow scaled by its colour's luminance so green and amber keep their hue; deep
+  saturated colours after the demo.
+- **Particles everywhere:** `CavernShatter` throws faceted shard meshes in the crystal's colour, the pack's sparkle as
+  additive glints (`GlowParticles.shader`) and its dust flipbook. The crane's crumbs are now small 3D lumps (four
+  clod shapes with the backfill's grain on their faces, `SoilBreak.shader` `_SoilTex`), its dust and shaft motes the
+  same flipbook; `SoilCrumbs.mat` went.
+- **Rejected:** shrinking while cracking; the crystals' colour map as their glow (flat, plastic); the pack's own
+  emissive contrasts (hex white-hot, rubies dark); the pale palette (washed out under tonemapping); single prisms and
+  slabs as clusters (ruby 3, 4, 7, 8 and the long red sprays), which read as sticks.

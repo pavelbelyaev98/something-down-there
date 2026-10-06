@@ -51,7 +51,7 @@ namespace SomethingDownThere
             && settings != null && settings.Valid && ropeView != null && ropeView.Configured
             && setDownSpots != null && setDownSpots.Length > 0 && setDownSpots.Length <= ExtractionSnapshot.MaximumSpots
             && Array.TrueForAll(setDownSpots, s => s != null) && markMaterial != null && liftingEye != null
-            && soilChipsMaterial != null && soilDustMaterial != null && soilClodsMaterial != null;
+            && soilDustMaterial != null && soilClodsMaterial != null;
         public string Prompt => job == null ? "" : job.Phase switch
         {
             ExtractionPhase.Planning => "Preparing rope route…",
@@ -129,7 +129,7 @@ namespace SomethingDownThere
             AimEye();
         }
         private void OnDisable() { SuspendLoad(); mark?.Hide(); }
-        private void OnDestroy() { (search as IDisposable)?.Dispose(); ReleaseRig(); mark?.Dispose(); if (clodMesh != null) Destroy(clodMesh); }
+        private void OnDestroy() { (search as IDisposable)?.Dispose(); ReleaseRig(); mark?.Dispose(); }
 
         public bool TryMark(BuriedFind find, Vector3 hit, Vector3 normal)
         {

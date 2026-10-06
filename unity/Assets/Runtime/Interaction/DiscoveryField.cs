@@ -254,8 +254,8 @@ namespace SomethingDownThere
             }
         }
 
-        // The Ground Lab's crystal cavern (115), as the site's are made: each grove's pieces sealed in its crystals, its
-        // shards in the floor.
+        // The Ground Lab's crystal cavern (115), as the site's are made: each area's pieces sealed in its clusters, its
+        // shards in the stone.
         private void SpawnLabCavern()
         {
             var cavern = GroundLab.Cavern;
@@ -264,7 +264,7 @@ namespace SomethingDownThere
             for (int chamber = 0; chamber < cavern.Centres.Length; chamber++)
                 foreach (var crystal in TerrainGround.Grove(cavern, chamber))
                 {
-                    var entry = Array.Find(catalog.Entries, e => e.CavernGlow == crystal.Glow);
+                    var entry = Array.Find(catalog.Entries, e => e.CavernArea == (int)crystal.Area);
                     if (entry == null) continue;
                     for (int j = 0; j < crystal.Pieces; j++)
                     {

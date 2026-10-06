@@ -33,9 +33,9 @@ namespace SomethingDownThere
             // Shows in caverns' walls too (115): some of its instances whose band covers a cavern sit half-buried in its
             // walls (SeatCaverns); the rest lie in the ground as ever.
             public bool Cavern;
-            // A crystal cavern's crystal of this glow colour (115, TerrainGround.Grove): its instances are the groves'
-            // pieces and shards (-1: none).
-            public int CavernGlow = -1;
+            // A crystal cavern area's crystal (115, TerrainGround.CavernArea): its instances are that area's clusters'
+            // sealed pieces and its shards (-1: none).
+            public int CavernArea = -1;
             // Host ground (concept 03 §4): at the same depth, ground listed here carries its weight
             // times the find density of unlisted ground (weight 1). Soft bias with scatter; the
             // depth bands and prices never change.
@@ -459,31 +459,41 @@ namespace SomethingDownThere
             }
         }
 
-        // A crystal cavern's groves (TerrainGround.Grove): each column and spray seals its pieces along its length, the
-        // next unseated instances of its glow's type, which fall out when it breaks; each shard is one, half-buried in the
-        // floor. A grove whose type has run out keeps what it got.
+        // A crystal cavern's areas (TerrainGround.Grove): each cluster seals its pieces along its length, the next unseated
+        // instances of its area's type, which fall out when it breaks; each shard is one, half-buried in the floor or a
+        // wall. Formations hold none. An area whose type has run out keeps what it got; instances left over (a chamber
+        // too tight for all its clusters) sit in their area's walls like a plain cavern's minerals, never loose in the soil.
         private void SeatGroves(TerrainGround.Cavern cavern, float depth, List<int> order, Vector2[] bands, Vector3[] seats,
             Dictionary<int, Quaternion> turns, HashSet<int> sealedSeats, System.Random random)
         {
-            int Next(int glow)
+            int Next(TerrainGround.CavernArea area)
             {
                 for (int i = ShallowCount; i < seats.Length; i++)
-                    if (Entries[order[i]].CavernGlow == glow && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y) return i;
+                    if (Entries[order[i]].CavernArea == (int)area && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y) return i;
                 return -1;
             }
             for (int chamber = 0; chamber < cavern.Centres.Length; chamber++)
                 foreach (var crystal in TerrainGround.Grove(cavern, chamber))
                     for (int j = 0; j < crystal.Pieces; j++)
                     {
-                        int seated = Next(crystal.Glow);
+                        int seated = Next(crystal.Area);
                         if (seated < 0) break;
                         (seats[seated], turns[seated]) = GroveSeat(crystal, j, Entries[order[seated]], random);
                         if (crystal.Kind != TerrainGround.GroveKind.Shard) sealedSeats.Add(seated);
                     }
+            for (int area = 0; area < TerrainGround.CavernAreaCount; area++)
+            {
+                var chambers = new List<int>();
+                for (int chamber = 0; chamber < cavern.Centres.Length; chamber++)
+                    if ((int)TerrainGround.AreaOf(cavern, chamber) == area) chambers.Add(chamber);
+                if (chambers.Count == 0) continue;
+                for (int n = 0, seated; (seated = Next((TerrainGround.CavernArea)area)) >= 0; n++)
+                    (seats[seated], turns[seated]) = CavernSeat(cavern, chambers[n % chambers.Count], Entries[order[seated]], random);
+            }
         }
 
-        // The jth find's seat in a grove crystal (grid-local): a column's or spray's pieces lie along its middle, sealed;
-        // a shard stands in the floor, sunk CavernSink of its height.
+        // The jth find's seat in a grove crystal (grid-local): a cluster's pieces lie along its middle, sealed; a shard
+        // stands in the stone, sunk CavernSink of its height.
         internal static (Vector3 position, Quaternion rotation) GroveSeat(TerrainGround.GroveCrystal crystal, int j, Entry entry, System.Random random)
         {
             Vector3 up = crystal.Up, foot = crystal.Foot;

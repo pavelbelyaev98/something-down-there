@@ -4,6 +4,16 @@ Shader "Something Down There/Soil Break"
     {
         _Dust("Soft dust", Range(0, 1)) = 0
         _Solid("Solid clods (mesh normals)", Range(0, 1)) = 0
+        // Dust drawn from a flipbook (the Crystal Caverns pack's dust puff, its frames picked by the particle system's
+        // texture sheet), not the plain round puff; a glow for crystal shards, their colour lit from within.
+        _DustTex("Dust flipbook", 2D) = "white" {}
+        _Flipbook("Dust from the flipbook", Range(0, 1)) = 0
+        _Glow("Glow", Range(0, 4)) = 0
+        // A clod's faces show the soil's grain: the ground texture's light and dark (its brightness over _SoilMean, its
+        // mean linear luminance) on the particle's colour.
+        _SoilTex("Soil grain", 2D) = "white" {}
+        _SoilMean("Soil grain mean luminance", Float) = 1
+        _SoilDetail("Soil grain strength", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -27,8 +37,11 @@ Shader "Something Down There/Soil Break"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "ExcavationLighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
-                half _Dust, _Solid;
+                half _Dust, _Solid, _Flipbook, _Glow, _SoilMean, _SoilDetail;
+                float4 _DustTex_ST, _SoilTex_ST;
             CBUFFER_END
+            TEXTURE2D(_DustTex); SAMPLER(sampler_DustTex);
+            TEXTURE2D(_SoilTex); SAMPLER(sampler_SoilTex);
             struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; half4 color : COLOR; float2 uv : TEXCOORD0; };
             struct Varyings
             {
@@ -76,11 +89,14 @@ Shader "Something Down There/Soil Break"
             half4 Frag(Varyings input) : SV_Target
             {
                 half alpha = input.color.a;
+                half3 tint = input.color.rgb;
                 half3 normal;
                 if (_Solid > 0.5)
                 {
-                    // A clod mesh: its own normals.
+                    // A clod mesh: its own normals, and the soil's grain on its faces.
                     normal = normalize(input.normalWS);
+                    half grain = dot(SAMPLE_TEXTURE2D(_SoilTex, sampler_SoilTex, input.uv).rgb, half3(.2126, .7152, .0722)) / max(_SoilMean, .001);
+                    tint *= lerp(1, clamp(grain, .55, 1.5), _SoilDetail);
                 }
                 else
                 {
@@ -89,16 +105,18 @@ Shader "Something Down There/Soil Break"
                     float2 p = input.uv * 2 - 1;
                     float edge = max(max(abs(p.x), abs(p.y)), abs(p.x * .7 + p.y * .6));
                     half chip = saturate((.9 - edge) / max(fwidth(edge), .015));
-                    half dust = pow(saturate(1 - dot(p, p)), 2);
+                    half dust = _Flipbook > .5 ? SAMPLE_TEXTURE2D(_DustTex, sampler_DustTex, input.uv).a : pow(saturate(1 - dot(p, p)), 2);
                     alpha *= lerp(chip, dust, _Dust);
                     // A dust puff thins out where it meets the ground instead of cutting a hard line.
                     float scene = LinearEyeDepth(SampleSceneDepth(GetNormalizedScreenSpaceUV(input.positionCS)), _ZBufferParams);
                     alpha *= lerp(1, saturate((scene - LinearEyeDepth(input.positionCS.z, _ZBufferParams)) / .25), _Dust);
                     float3 toCamera = normalize(_WorldSpaceCameraPos - input.positionWS);
-                    float bulge = sqrt(saturate(1 - dot(p, p))) + lerp(.15, .9, _Dust);
+                    // A flipbook frame's own position is not known: its puff is lit as a soft ball facing the eye.
+                    float bulge = (_Flipbook > .5 ? 1 : sqrt(saturate(1 - dot(p, p)))) + lerp(.15, .9, _Dust);
+                    p *= 1 - _Flipbook;
                     normal = normalize(UNITY_MATRIX_V[0].xyz * p.x + UNITY_MATRIX_V[1].xyz * p.y + toCamera * bulge);
                 }
-                half3 color = input.color.rgb * SoilLight(input.positionWS, normal, input.positionCS, lerp(.15, .8, _Dust));
+                half3 color = tint * (SoilLight(input.positionWS, normal, input.positionCS, lerp(.15, .8, _Dust)) + _Glow);
                 return half4(MixFog(color, input.fog), alpha);
             }
             ENDHLSL

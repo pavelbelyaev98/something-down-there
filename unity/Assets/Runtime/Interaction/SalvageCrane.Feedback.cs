@@ -6,14 +6,18 @@ namespace SomethingDownThere
 {
     // Soil torn out by the rope, only where ground is actually removed: tumbling clods that crumble where
     // they land, a spray of fine crumbs that end where they meet the ground, a short dust puff that slows
-    // and thins out, and a brief trickle from the broken face. All are coloured by the ground there and lit like it;
+    // and thins out, and a brief trickle from the broken face. Clods and crumbs are lumps of earth in a few shapes
+    // with the soil's grain on their faces, the dust the Crystal Caverns pack's billowing flipbook (user, 2026-10-06:
+    // "higher quality, not just cheap blocks"). All are coloured by the ground there and lit like it;
     // bigger breaks and a harder-driven machine throw more. Visual only: nothing collides.
     // The finest dust hangs in the passage for a few seconds after breaks.
     public sealed partial class SalvageCrane
     {
-        [SerializeField] private Material soilChipsMaterial, soilDustMaterial, soilClodsMaterial;
+        [SerializeField] private Material soilDustMaterial, soilClodsMaterial;
         private ParticleSystem soilChips, soilDust, soilClods, shaftMotes;
-        private Mesh clodMesh;
+        private static Mesh[] clodMeshes;
+        // The dust flipbook's frames a side.
+        private const int DustFrames = 8;
         private readonly System.Random breakRandom = new System.Random(1873);
         // Particles due later: a clod crumbling where it lands, crumbs trickling off the break.
         private readonly List<(float time, ParticleSystem system, ParticleSystem.EmitParams emit)> debrisDue
@@ -30,7 +34,7 @@ namespace SomethingDownThere
 
         private void InitializeBreakFeedback()
         {
-            if (soilChips == null && soilChipsMaterial != null) soilChips = CreateBreakParticles("Recovery soil crumbs", soilChipsMaterial, Debris.Crumbs);
+            if (soilChips == null && soilClodsMaterial != null) soilChips = CreateBreakParticles("Recovery soil crumbs", soilClodsMaterial, Debris.Crumbs);
             if (soilDust == null && soilDustMaterial != null) soilDust = CreateBreakParticles("Recovery soil dust", soilDustMaterial, Debris.Dust);
             if (soilClods == null && soilClodsMaterial != null) soilClods = CreateBreakParticles("Recovery soil clods", soilClodsMaterial, Debris.Clods);
             if (shaftMotes == null && soilDustMaterial != null) shaftMotes = CreateBreakParticles("Recovery shaft dust", soilDustMaterial, Debris.Shaft);
@@ -40,7 +44,7 @@ namespace SomethingDownThere
 
         private ParticleSystem CreateBreakParticles(string label, Material material, Debris kind)
         {
-            bool clod = kind == Debris.Clods;
+            bool clod = kind == Debris.Clods || kind == Debris.Crumbs;
             var root = new GameObject(label) { hideFlags = HideFlags.DontSave };
             root.transform.SetParent(transform, false);
             var particles = root.AddComponent<ParticleSystem>();
@@ -64,6 +68,13 @@ namespace SomethingDownThere
             // Air stops dust almost at once: a puff bursts out, slows and hangs while it thins.
             var drag = particles.limitVelocityOverLifetime; drag.enabled = kind == Debris.Dust || kind == Debris.Shaft;
             drag.limit = 100; drag.dampen = 0; drag.drag = kind == Debris.Dust ? 4f : 1.5f;
+            // A puff billows through the flipbook as it lives; a mote of hanging dust keeps one frame.
+            var sheet = particles.textureSheetAnimation;
+            sheet.enabled = kind == Debris.Dust || kind == Debris.Shaft;
+            sheet.numTilesX = sheet.numTilesY = DustFrames;
+            sheet.animation = ParticleSystemAnimationType.WholeSheet;
+            sheet.frameOverTime = kind == Debris.Dust ? new ParticleSystem.MinMaxCurve(1, AnimationCurve.Linear(0, 0, 1, 1)) : new ParticleSystem.MinMaxCurve(0);
+            sheet.startFrame = kind == Debris.Shaft ? new ParticleSystem.MinMaxCurve(0, DustFrames * DustFrames - .01f) : new ParticleSystem.MinMaxCurve(0);
             var color = particles.colorOverLifetime;
             color.enabled = kind != Debris.Clods;
             var fade = new Gradient();
@@ -85,14 +96,16 @@ namespace SomethingDownThere
                 _ => new ParticleSystem.MinMaxCurve(1, AnimationCurve.Linear(0, 1, 1, .7f))
             };
             var rotation = particles.rotationOverLifetime; rotation.enabled = kind == Debris.Crumbs;
-            rotation.z = new ParticleSystem.MinMaxCurve(-3f, 3f);
+            rotation.separateAxes = true;
+            rotation.x = rotation.y = rotation.z = new ParticleSystem.MinMaxCurve(-9f, 9f);
             var renderer = particles.GetComponent<ParticleSystemRenderer>();
             renderer.sharedMaterial = material;
             if (clod)
             {
-                clodMesh ??= ClodMesh();
+                clodMeshes ??= new[] { ClodMesh(4021, .72f), ClodMesh(977, .55f), ClodMesh(3313, .9f), ClodMesh(1609, .65f) };
                 renderer.renderMode = ParticleSystemRenderMode.Mesh;
-                renderer.mesh = clodMesh;
+                renderer.SetMeshes(clodMeshes);
+                renderer.meshDistribution = ParticleSystemMeshDistribution.UniformRandom;
                 renderer.sortMode = ParticleSystemSortMode.Distance;
                 renderer.alignment = ParticleSystemRenderSpace.World;
             }
@@ -110,8 +123,10 @@ namespace SomethingDownThere
         }
 
         // A lumpy, flattened clod of earth: a once-subdivided icosahedron with its corners pushed in and
-        // out (art/soil-debris). Particles size, turn and stretch it, so one shape reads as many.
-        private static Mesh ClodMesh()
+        // out by `seed`, `squash` as tall as it is wide (art/soil-debris). Each face takes the soil grain straight on
+        // from its own side. Particles size, turn and stretch it, so a few shapes read as many.
+        private const float ClodGrain = .18f;
+        private static Mesh ClodMesh(int seed, float squash)
         {
             float t = (1 + Mathf.Sqrt(5)) / 2;
             var vertices = new List<Vector3>
@@ -139,15 +154,22 @@ namespace SomethingDownThere
                 int a = faces[i], b = faces[i + 1], c = faces[i + 2], ab = Middle(a, b), bc = Middle(b, c), ca = Middle(c, a);
                 triangles.AddRange(new[] { a, ab, ca, b, bc, ab, c, ca, bc, ab, bc, ca });
             }
-            var lumps = new System.Random(4021);
-            var flat = new List<Vector3>(); var flatTriangles = new List<int>();
+            var lumps = new System.Random(seed);
+            var flat = new List<Vector3>(); var flatTriangles = new List<int>(); var uvs = new List<Vector2>();
             var radius = new float[vertices.Count];
             for (int i = 0; i < radius.Length; i++) radius[i] = .5f * (.72f + .5f * (float)lumps.NextDouble());
-            Vector3 Corner(int i) { var v = vertices[i].normalized * radius[i]; v.y *= .72f; return v; }
+            Vector3 Corner(int i) { var v = vertices[i].normalized * radius[i]; v.y *= squash; return v; }
+            var offset = new Vector2((float)lumps.NextDouble(), (float)lumps.NextDouble());
             // Facetted: each face its own normal, so the clod reads as broken earth, not a pebble.
-            for (int i = 0; i < triangles.Count; i++) { flat.Add(Corner(triangles[i])); flatTriangles.Add(i); }
+            for (int i = 0; i < triangles.Count; i += 3)
+            {
+                Vector3 a = Corner(triangles[i]), b = Corner(triangles[i + 1]), c = Corner(triangles[i + 2]);
+                var n = Vector3.Cross(b - a, c - a); n = new Vector3(Mathf.Abs(n.x), Mathf.Abs(n.y), Mathf.Abs(n.z));
+                Vector2 Grain(Vector3 v) => offset + (n.x >= n.y && n.x >= n.z ? new Vector2(v.z, v.y) : n.y >= n.z ? new Vector2(v.x, v.z) : new Vector2(v.x, v.y)) * ClodGrain;
+                foreach (var v in new[] { a, b, c }) { flat.Add(v); uvs.Add(Grain(v)); flatTriangles.Add(flat.Count - 1); }
+            }
             var mesh = new Mesh { name = "Soil clod", hideFlags = HideFlags.DontSave };
-            mesh.SetVertices(flat); mesh.SetTriangles(flatTriangles, 0);
+            mesh.SetVertices(flat); mesh.SetUVs(0, uvs); mesh.SetTriangles(flatTriangles, 0);
             mesh.RecalculateNormals(); mesh.RecalculateBounds();
             return mesh;
         }
@@ -212,7 +234,7 @@ namespace SomethingDownThere
                     velocity = velocity,
                     startLifetime = CrumbLife(from, velocity, BreakRandom(.6f, 1f)),
                     startSize = BreakRandom(.025f, .06f),
-                    rotation = BreakRandom(0, 360),
+                    rotation3D = new Vector3(BreakRandom(0, 360), BreakRandom(0, 360), BreakRandom(0, 360)),
                     startColor = Color.Lerp(dark, light, BreakRandom(0, 1))
                 }, 1);
             }
@@ -248,7 +270,7 @@ namespace SomethingDownThere
                     velocity = velocity,
                     startLifetime = CrumbLife(from, velocity, BreakRandom(.5f, .8f)),
                     startSize = BreakRandom(.015f, .04f),
-                    rotation = BreakRandom(0, 360),
+                    rotation3D = new Vector3(BreakRandom(0, 360), BreakRandom(0, 360), BreakRandom(0, 360)),
                     startColor = Color.Lerp(dark, light, BreakRandom(0, 1))
                 }));
             }
@@ -300,7 +322,7 @@ namespace SomethingDownThere
                     velocity = velocity,
                     startLifetime = CrumbLife(from, velocity, BreakRandom(.3f, .5f)),
                     startSize = size * BreakRandom(.25f, .45f),
-                    rotation = BreakRandom(0, 360),
+                    rotation3D = new Vector3(BreakRandom(0, 360), BreakRandom(0, 360), BreakRandom(0, 360)),
                     startColor = Color.Lerp(color, Color.black, BreakRandom(0, .15f))
                 }));
             }

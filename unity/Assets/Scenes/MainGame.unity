@@ -22787,7 +22787,7 @@ MonoBehaviour:
   prefabs: []
   catalog: {fileID: 11400000, guid: d167a5aee9521d54eb852204c85f19cc, type: 2}
   seed: 90127
-  count: 16033
+  count: 15979
   developmentContent: 0
 --- !u!1001 &204904520
 PrefabInstance:
@@ -39032,7 +39032,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fceca495f8653c34db717d289dd1668c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.SalvageCrane
-  soilChipsMaterial: {fileID: 2100000, guid: e2863d070a64ca44195117c0b7bd6446, type: 2}
   soilDustMaterial: {fileID: 2100000, guid: bbcaeb641866eaa46920602a2e659e14, type: 2}
   soilClodsMaterial: {fileID: 2100000, guid: 25d0f4fcdc75a1d42ba8fd36e4c9bd84, type: 2}
   terrain: {fileID: 486403993}

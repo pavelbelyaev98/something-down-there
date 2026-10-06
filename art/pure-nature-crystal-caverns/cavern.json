@@ -2,14 +2,14 @@
   "schema_version": 1,
   "finds": [
     {
-      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Quartz_3_blue.prefab",
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Prism_3_hex.prefab",
       "mass_kg": 1.0,
       "find": {
-        "content_id": "cavern_crystal_blue",
-        "display_name": "Blue glow crystal",
+        "content_id": "cavern_crystal_hex",
+        "display_name": "Green hex crystal",
         "tier": "common",
         "recovery": "bag",
-        "instances": 38,
+        "instances": 20,
         "shallow_instances": 0,
         "sale_value": 40,
         "slots": 1,
@@ -18,24 +18,24 @@
         "minimum_depth_m": 112.5,
         "maximum_depth_m": 150,
         "model_scale": 0.22,
-        "cavern_glow": "blue",
+        "cavern_area": "hex",
         "prop_looks": [
           {
-            "content_id": "cavern_crystal_blue_b",
-            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Prism_3_blue.prefab"
+            "content_id": "cavern_crystal_hex_b",
+            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Prism_4_hex.prefab"
           }
         ]
       }
     },
     {
-      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Quartz_3_green.prefab",
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Beryl_03_quartz.prefab",
       "mass_kg": 1.0,
       "find": {
-        "content_id": "cavern_crystal_green",
-        "display_name": "Green glow crystal",
+        "content_id": "cavern_crystal_quartz",
+        "display_name": "Blue quartz crystal",
         "tier": "common",
         "recovery": "bag",
-        "instances": 38,
+        "instances": 10,
         "shallow_instances": 0,
         "sale_value": 45,
         "slots": 1,
@@ -44,24 +44,24 @@
         "minimum_depth_m": 112.5,
         "maximum_depth_m": 150,
         "model_scale": 0.22,
-        "cavern_glow": "green",
+        "cavern_area": "quartz",
         "prop_looks": [
           {
-            "content_id": "cavern_crystal_green_b",
-            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Prism_3_green.prefab"
+            "content_id": "cavern_crystal_quartz_b",
+            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Beryl_05_quartz.prefab"
           }
         ]
       }
     },
     {
-      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Quartz_3_red.prefab",
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Ruby_5_ruby.prefab",
       "mass_kg": 1.0,
       "find": {
-        "content_id": "cavern_crystal_red",
-        "display_name": "Red glow crystal",
+        "content_id": "cavern_crystal_ruby",
+        "display_name": "Ruby crystal",
         "tier": "common",
         "recovery": "bag",
-        "instances": 38,
+        "instances": 20,
         "shallow_instances": 0,
         "sale_value": 55,
         "slots": 1,
@@ -70,11 +70,37 @@
         "minimum_depth_m": 112.5,
         "maximum_depth_m": 150,
         "model_scale": 0.22,
-        "cavern_glow": "red",
+        "cavern_area": "ruby",
         "prop_looks": [
           {
-            "content_id": "cavern_crystal_red_b",
-            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Prism_3_red.prefab"
+            "content_id": "cavern_crystal_ruby_b",
+            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Ruby_9_ruby.prefab"
+          }
+        ]
+      }
+    },
+    {
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Pyrite_6_cubes.prefab",
+      "mass_kg": 1.0,
+      "find": {
+        "content_id": "cavern_crystal_cubes",
+        "display_name": "Amber cube crystal",
+        "tier": "common",
+        "recovery": "bag",
+        "instances": 10,
+        "shallow_instances": 0,
+        "sale_value": 35,
+        "slots": 1,
+        "detector_eligible": false,
+        "required_exposure": 0.6,
+        "minimum_depth_m": 112.5,
+        "maximum_depth_m": 150,
+        "model_scale": 0.22,
+        "cavern_area": "cubes",
+        "prop_looks": [
+          {
+            "content_id": "cavern_crystal_cubes_b",
+            "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Cavern/Crystal_Pyrite_8_cubes.prefab"
           }
         ]
       }

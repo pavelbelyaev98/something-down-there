@@ -270,13 +270,18 @@ Geodes keep that moment without cave networks.
   runs out under the permanent ground. Sealed and dark until the player breaks in and lights it;
   never connected to another. Minerals of its zone sit half-buried in its walls: a lamp shows them,
   digging frees them.
-- **The crystal cavern**, the deepest: groves of the Crystal Caverns demo's big crystals, one
-  colour to an area as in the demo (blue, then green, then red), crowded round a spot by a wall and
-  lighting it in their colour (the user loved the demo's look). It is the one place underground that
-  needs no lamp, a reward for reaching the bottom. Nothing in it is only to look at (user,
-  2026-10-06: "I don't want a static cave to look at but something to interact with"): the tool
-  breaks the big crystals, which shatter into small crystals to take, and more small ones lie
-  half-buried in its floor. Its far end is kept for the ending's gate.
+- **The crystal cavern**, the deepest: the Crystal Caverns demo's four areas, one to a chamber
+  (user, 2026-10-06: "exactly as in the demo: areas of only one type, sticking out from top and
+  bottom, larger things"): a forest of green hexagonal columns, a blue grotto of quartz, red ruby
+  and amber cubic blocks. Each area's big formations stand from the floor, jut from the walls and
+  hang from the roof, glowing in its colour and lighting it. It is the one place underground that
+  needs no lamp, a reward for reaching the bottom. The formations are too big to break and stay as
+  they are, so the cave keeps its look. Among them stand smaller clusters of the same crystal that
+  the tool cracks, glowing fractures spreading over them, until they burst and the small crystals
+  sealed inside fall out (user: "I don't want a static cave to look at but something to interact
+  with"; "don't shrink, crack"). More small ones lie half-buried in the floor and walls. The take is
+  a handful of crystals a chamber, so the bottom pays for the trip without making the player rich at
+  once. Its far end is kept for the ending's gate.
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
   digging"; Keep Digging players loved its hand-built caves. Meltopia's network of identical tunnels
