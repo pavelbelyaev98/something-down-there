@@ -108,14 +108,39 @@ namespace SomethingDownThere
             }
         }
 
+        // One more C4 charge at the kit's price, up to its pack size. Bound to the kit's revision, so a stale offer never
+        // buys a second charge or one at an old price.
+        public sealed class ChargeOffer
+        {
+            internal readonly StationTrade Owner;
+            internal readonly long WalletRevision, KitRevision;
+            internal bool Used;
+            public int Owned { get; }
+            public int PackSize { get; }
+            public int Cost { get; }
+            public bool Full { get; }
+
+            internal ChargeOffer(StationTrade owner)
+            {
+                Owner = owner;
+                WalletRevision = owner.wallet.Revision;
+                KitRevision = owner.charges.Revision;
+                Owned = owner.charges.Owned;
+                PackSize = owner.charges.Current.PackSize;
+                Full = owner.charges.Full;
+                Cost = Full ? 0 : owner.charges.Current.ChargePrice;
+            }
+        }
+
         private readonly SessionInventory inventory;
         private readonly SessionWallet wallet;
         private readonly ShovelState shovel;
         private readonly Battery battery;
         private readonly JetpackState jetpack;
         private readonly LampKit lamps;
+        private readonly ChargeKit charges;
         public StationTrade(SessionInventory inventory, SessionWallet wallet, ShovelState shovel, Battery battery = null,
-            JetpackState jetpack = null, LampKit lamps = null)
+            JetpackState jetpack = null, LampKit lamps = null, ChargeKit charges = null)
         {
             this.inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
             this.wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
@@ -123,22 +148,25 @@ namespace SomethingDownThere
             this.battery = battery;
             this.jetpack = jetpack;
             this.lamps = lamps;
+            this.charges = charges;
         }
 
         public SaleOffer OfferSale(string instanceId = null) => new SaleOffer(this, instanceId);
         public UpgradeOffer OfferUpgrade(EquipmentKind kind = EquipmentKind.Shovel)
         {
-            if (kind < EquipmentKind.Shovel || kind > EquipmentKind.Jetpack) throw new ArgumentOutOfRangeException(nameof(kind));
+            if (kind < EquipmentKind.Shovel || kind > EquipmentKind.C4) throw new ArgumentOutOfRangeException(nameof(kind));
+            if (kind == EquipmentKind.C4 && charges == null) throw new InvalidOperationException("C4 upgrades require the session charge kit.");
             if (kind == EquipmentKind.Fuel && battery == null) throw new InvalidOperationException("Fuel upgrades require the session battery.");
             if (kind == EquipmentKind.Jetpack && jetpack == null) throw new InvalidOperationException("Jetpack upgrades require the session jetpack.");
             return new UpgradeOffer(this, kind);
         }
         public RefillOffer OfferRefill() => battery == null ? throw new InvalidOperationException("Refills require the session battery.") : new RefillOffer(this);
         public LampOffer OfferLamp() => lamps == null ? throw new InvalidOperationException("Lamp sales require the session lamp kit.") : new LampOffer(this);
+        public ChargeOffer OfferCharge() => charges == null ? throw new InvalidOperationException("C4 sales require the session charge kit.") : new ChargeOffer(this);
         private int Level(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Level : kind == EquipmentKind.Fuel ? battery.Level
-            : kind == EquipmentKind.Jetpack ? jetpack.Level : shovel.Level;
+            : kind == EquipmentKind.Jetpack ? jetpack.Level : kind == EquipmentKind.C4 ? charges.Level : shovel.Level;
         private long EquipmentRevision(EquipmentKind kind) => kind == EquipmentKind.Inventory ? inventory.Revision : kind == EquipmentKind.Fuel ? battery.Revision
-            : kind == EquipmentKind.Jetpack ? jetpack.Level : shovel.Level;
+            : kind == EquipmentKind.Jetpack ? jetpack.Level : kind == EquipmentKind.C4 ? charges.Revision : shovel.Level;
 
         public TradeResult Check(SaleOffer offer)
         {
@@ -173,6 +201,7 @@ namespace SomethingDownThere
             if (offer.Kind == EquipmentKind.Inventory) inventory.TryUpgradeTo(offer.NextLevel);
             else if (offer.Kind == EquipmentKind.Fuel) battery.TryUpgradeTo(offer.NextLevel);
             else if (offer.Kind == EquipmentKind.Jetpack) jetpack.TryUpgradeTo(offer.NextLevel);
+            else if (offer.Kind == EquipmentKind.C4) charges.TryUpgradeTo(offer.NextLevel);
             else shovel.TryUpgradeTo(offer.NextLevel);
             return true;
         }
@@ -191,6 +220,23 @@ namespace SomethingDownThere
             offer.Used = true;
             wallet.TrySpend(offer.Cost);
             lamps.TryAdd();
+            return true;
+        }
+
+        public TradeResult Check(ChargeOffer offer)
+        {
+            if (offer == null || offer.Owner != this || offer.Used || offer.WalletRevision != wallet.Revision
+                || offer.KitRevision != charges.Revision) return TradeResult.Changed;
+            if (offer.Full) return TradeResult.Complete;
+            return wallet.Balance < offer.Cost ? TradeResult.Unaffordable : TradeResult.Ready;
+        }
+
+        public bool TryBuyCharge(ChargeOffer offer)
+        {
+            if (Check(offer) != TradeResult.Ready) return false;
+            offer.Used = true;
+            wallet.TrySpend(offer.Cost);
+            charges.TryAdd();
             return true;
         }
 

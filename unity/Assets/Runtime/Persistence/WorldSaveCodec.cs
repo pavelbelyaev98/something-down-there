@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 21;
+        public const int Version = 22;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.
@@ -75,6 +75,9 @@ namespace SomethingDownThere
                 w.Write(s.Chests.Length);
                 foreach (var chest in s.Chests)
                 { Write(w, chest.Position); Write(w, chest.Rotation); w.Write(chest.Released); w.Write(chest.Opened); w.Write(chest.Breached); }
+                w.Write(s.C4Level); w.Write(s.ChargesOwned);
+                w.Write(s.Worksite.Charges.Length);
+                foreach (var charge in s.Worksite.Charges) { Write(w, charge.Position); Write(w, charge.Rotation); w.Write(charge.Stuck); }
             }
             using var hash = SHA256.Create();
             byte[] payload = packed.ToArray();
@@ -155,6 +158,10 @@ namespace SomethingDownThere
             for (int i = 0; i < s.Chests.Length; i++)
                 s.Chests[i] = new ChestSnapshot { Position = ReadVector(r), Rotation = ReadRotation(r), Released = r.ReadBoolean(), Opened = r.ReadBoolean(),
                     Breached = r.ReadBoolean() };
+            s.C4Level = r.ReadInt32(); s.ChargesOwned = r.ReadInt32();
+            s.Worksite.Charges = new ChargeSnapshot[Count(r, EquipmentProgression.MaximumCharges)];
+            for (int i = 0; i < s.Worksite.Charges.Length; i++)
+                s.Worksite.Charges[i] = new ChargeSnapshot { Position = ReadVector(r), Rotation = ReadRotation(r), Stuck = r.ReadBoolean() };
             WorldSnapshot.Require(zip.ReadByte() == -1, "Unexpected checkpoint fields.");
             s.Validate();
             return s;

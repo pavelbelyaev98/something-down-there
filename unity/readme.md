@@ -144,5 +144,6 @@ Runtime folder ownership is documented in [docs/architecture.md](../docs/archite
 
 - **L** previews a reusable work lamp; **M** previews/cycles a route symbol; **R** rotates. Primary places, secondary cancels, and Interact retrieves a lamp or erases an aimed mark. All actions appear in Controls.
 - `Tools > Something Down There > Configure Work Lamps and Markings` refreshes the MainGame kit references and original Blender-derived assets under `Assets/Content/WorksiteTools`; the source recipe and license card live in `art/work-lamps`.
+- `Tools > Something Down There > Configure C4 Charges` (after the lamps) builds the charge prefab and blast preview material in `Assets/Content/C4` and wires them into MainGame's worksite tools (`art/c4-charge`).
 - The save format includes equipment ownership, physics and route marks with terrain. Older development checkpoints require New Game; tools never convert or silently replace them.
 - Lanterns emit soft local light in every direction, retaining ground occlusion with sun shadows Off. Setup sizes the existing URP additional-light atlas for the kit and merges geometry by material; no extra render package is required.

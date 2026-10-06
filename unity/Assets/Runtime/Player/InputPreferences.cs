@@ -7,14 +7,14 @@ using UnityEngine.InputSystem;
 
 namespace SomethingDownThere
 {
-    public enum PlayerBinding { Forward, Backward, Left, Right, Dig, Jump, Crouch, Interact, Inventory, Pause, Sprint, CancelPlacement, Lamp, Mark, RotatePlacement }
+    public enum PlayerBinding { Forward, Backward, Left, Right, Dig, Jump, Crouch, Interact, Inventory, Pause, Sprint, CancelPlacement, Lamp, Mark, RotatePlacement, Charge, Detonate }
 
     public sealed class InputPreferences
     {
-        public const int BindingCount = 15;
-        private static readonly string[] ids = { "forward", "backward", "left", "right", "dig", "jump", "crouch", "interact", "inventory", "pause", "sprint", "cancelPlacement", "lamp", "mark", "rotatePlacement" };
-        private static readonly string[] labels = { "Move forward", "Move backward", "Move left", "Move right", "Dig / collect / place", "Jump / jetpack", "Hold to crouch", "Interact / retrieve", "Inventory", "Pause", "Hold to sprint", "Cancel placement", "Place work lamp", "Mark / next symbol", "Rotate placement" };
-        private static readonly string[] defaults = { "<Keyboard>/w", "<Keyboard>/s", "<Keyboard>/a", "<Keyboard>/d", "<Mouse>/leftButton", "<Keyboard>/space", "<Keyboard>/leftCtrl", "<Keyboard>/e", "<Keyboard>/tab", "<Keyboard>/escape", "<Keyboard>/leftShift", "<Mouse>/rightButton", "<Keyboard>/l", "<Keyboard>/m", "<Keyboard>/r" };
+        public const int BindingCount = 17;
+        private static readonly string[] ids = { "forward", "backward", "left", "right", "dig", "jump", "crouch", "interact", "inventory", "pause", "sprint", "cancelPlacement", "lamp", "mark", "rotatePlacement", "charge", "detonate" };
+        private static readonly string[] labels = { "Move forward", "Move backward", "Move left", "Move right", "Dig / collect / place", "Jump / jetpack", "Hold to crouch", "Interact / retrieve", "Inventory", "Pause", "Hold to sprint", "Cancel placement", "Place work lamp", "Mark / next symbol", "Rotate placement", "Place C4 charge", "Detonate C4" };
+        private static readonly string[] defaults = { "<Keyboard>/w", "<Keyboard>/s", "<Keyboard>/a", "<Keyboard>/d", "<Mouse>/leftButton", "<Keyboard>/space", "<Keyboard>/leftCtrl", "<Keyboard>/e", "<Keyboard>/tab", "<Keyboard>/escape", "<Keyboard>/leftShift", "<Mouse>/rightButton", "<Keyboard>/l", "<Keyboard>/m", "<Keyboard>/r", "<Keyboard>/g", "<Keyboard>/b" };
         private static readonly Dictionary<string, string> supportedPaths = CreatePaths();
         private readonly IDevicePreferencesStore store;
         private string[] paths = (string[])defaults.Clone();

@@ -305,6 +305,17 @@ namespace SomethingDownThere
             return true;
         }
 
+        // A C4 blast (026, ExcavationGrid.RemoveBlast): true when it took ground.
+        public bool Blast(Vector3 centre, float radius, float shellRadius, int seed)
+        {
+            using var profile = BlastMarker.Auto();
+            if (!CanDig || IsRestoring) return false;
+            LastRebuiltChunkCount = 0;
+            if (!grid.RemoveBlast(transform.InverseTransformPoint(centre), radius, shellRadius, seed, out var changed)) return false;
+            CommitEdit(changed);
+            return grid.LastRemovedVolume > 0;
+        }
+
         public bool ClearLoadSweep(Vector3 from, Vector3 to, Quaternion rotation, Vector3 halfExtents)
         {
             using var profile = LoadSweepMarker.Auto();
@@ -390,6 +401,7 @@ namespace SomethingDownThere
         }
 
         private static readonly Unity.Profiling.ProfilerMarker LoadSweepMarker = new Unity.Profiling.ProfilerMarker("Excavation.LoadSweep");
+        private static readonly Unity.Profiling.ProfilerMarker BlastMarker = new Unity.Profiling.ProfilerMarker("Excavation.Blast");
         private static readonly Unity.Profiling.ProfilerMarker CommitMarker = new Unity.Profiling.ProfilerMarker("Excavation.Commit");
         private static readonly Unity.Profiling.ProfilerMarker NotifyMarker = new Unity.Profiling.ProfilerMarker("Excavation.Notify");
         private static readonly Unity.Profiling.ProfilerMarker MeshMarker = new Unity.Profiling.ProfilerMarker("Excavation.Mesh");

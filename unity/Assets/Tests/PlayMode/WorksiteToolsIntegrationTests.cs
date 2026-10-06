@@ -40,6 +40,40 @@ namespace SomethingDownThere.Tests
             devices?.TearDown(); Time.timeScale = 1;
         }
 
+        // C4 (026): an empty kit places nothing; a charge sticks exactly where aimed; detonating takes about its ball of
+        // ground through the dig pipeline, spends one charge and no battery, and a lamp beside it survives (it falls).
+        [UnityTest]
+        public IEnumerator ChargesStickAndBlastTheirBallWithoutTakingLampsOrBattery()
+        {
+            Assert.That(Physics.Raycast(new Vector3(-3, 2, -3), Vector3.down, out var ground, 4), Is.True);
+            var pose = new ChargeSnapshot { Position = ground.point, Rotation = Quaternion.LookRotation(Vector3.forward, ground.normal), Stuck = true };
+            Assert.That(player.Charges.Owned, Is.Zero, "New Game brings no charges.");
+            Assert.That(tools.PlaceCharge(pose), Is.Null, "An empty kit places nothing and spends nothing.");
+            player.FillAdminCharges();
+            int owned = player.Charges.Owned;
+            Assert.That(owned, Is.EqualTo(EquipmentProgression.C4(1).PackSize));
+            var lamp = tools.PlaceLamp(tools.SolveLamp(ground.point + new Vector3(.7f, 1, 0), Vector3.down, 3, 0));
+            var charge = tools.PlaceCharge(pose);
+            Assert.That(charge, Is.Not.Null); Assert.That(charge.Stuck, Is.True);
+            Assert.That(Vector3.Distance(charge.transform.position, ground.point), Is.LessThan(.001f), "It sticks where aimed.");
+            Assert.That(tools.ArmedCharges, Is.EqualTo(1)); Assert.That(tools.AvailableCharges, Is.EqualTo(owned - 1));
+            yield return null;
+            float battery = player.Battery.Charge, radius = player.Charges.Current.BlastRadius;
+            var centre = WorksiteTools.BlastCentre(ground.point, ground.normal, radius);
+            Assert.That(tools.Detonate(), Is.True);
+            yield return null;
+            float below = radius * (1 - EquipmentProgression.BlastSink);
+            float expected = 4f / 3 * Mathf.PI * radius * radius * radius - Mathf.PI * (radius - radius * EquipmentProgression.BlastSink)
+                * (radius - radius * EquipmentProgression.BlastSink) * (2 * radius + radius * EquipmentProgression.BlastSink) / 3;
+            Assert.That(terrain.LastRemovedVolume, Is.EqualTo(expected).Within(expected * .25f), "About the previewed ball below the ground.");
+            Assert.That(terrain.IsSolid(centre), Is.False); Assert.That(terrain.IsSolid(centre - ground.normal * below * .8f), Is.False);
+            Assert.That(player.Charges.Owned, Is.EqualTo(owned - 1)); Assert.That(tools.ArmedCharges, Is.Zero);
+            Assert.That(player.Battery.Charge, Is.EqualTo(battery), "C4 costs no battery.");
+            Assert.That(lamp != null && System.Linq.Enumerable.Contains(tools.Lamps, lamp), Is.True, "The lamp survives the blast.");
+            Assert.That(lamp.Anchored, Is.False, "Its ground went, so it fell.");
+            Assert.That(tools.Detonate(), Is.False, "Nothing armed, nothing to set off.");
+        }
+
         [UnityTest]
         public IEnumerator PlacementIsBoundedLampsFallPauseReloadAndReturnToKit()
         {

@@ -47,7 +47,7 @@ namespace SomethingDownThere.Tests
         [Test]
         public void AllBindingsRoundTripAndConflictsSwapWithoutLosingAnAction()
         {
-            var keys = new[] { "i", "k", "j", "l", "q", "r", "c", "f", "b", "p", "o", "u", "h", "n", "v" };
+            var keys = new[] { "i", "k", "j", "l", "q", "r", "c", "f", "b", "p", "o", "u", "h", "n", "v", "g", "y" };
             for (int i = 0; i < InputPreferences.BindingCount; i++) Assert.That(settings.Bind((PlayerBinding)i, "<Keyboard>/" + keys[i], true), Is.True);
             Assert.That(settings.Bind(PlayerBinding.Dig, "<Keyboard>/r"), Is.False);
             Assert.That(settings.Bind(PlayerBinding.Dig, "<Keyboard>/r", true), Is.True);

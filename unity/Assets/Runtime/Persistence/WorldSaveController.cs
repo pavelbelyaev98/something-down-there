@@ -50,13 +50,13 @@ namespace SomethingDownThere
 
         private struct StateStamp
         {
-            public long Terrain, Inventory, Wallet, Finds, Battery, Extraction, Worksite;
+            public long Terrain, Inventory, Wallet, Finds, Battery, Extraction, Worksite, Charges;
             public int Shovel, Strokes, Lamps;
             public float Charge, Pitch, VerticalSpeed, CrouchAmount;
             public Vector3 Position;
             public Quaternion Rotation;
             public bool Same(StateStamp b) => Terrain == b.Terrain && Inventory == b.Inventory && Wallet == b.Wallet && Finds == b.Finds
-                && Worksite == b.Worksite && Extraction == b.Extraction && Battery == b.Battery && Shovel == b.Shovel && Lamps == b.Lamps && Strokes == b.Strokes && Charge == b.Charge && Pitch == b.Pitch && VerticalSpeed == b.VerticalSpeed
+                && Worksite == b.Worksite && Extraction == b.Extraction && Battery == b.Battery && Shovel == b.Shovel && Lamps == b.Lamps && Charges == b.Charges && Strokes == b.Strokes && Charge == b.Charge && Pitch == b.Pitch && VerticalSpeed == b.VerticalSpeed
                 && CrouchAmount == b.CrouchAmount && Position.Equals(b.Position) && Rotation.Equals(b.Rotation);
         }
 
@@ -179,7 +179,7 @@ namespace SomethingDownThere
         }
 
         private StateStamp Observe() => new StateStamp { Terrain = terrain.StateRevision, Finds = discoveries.MotionRevision, Inventory = player.Inventory.Revision,
-            Wallet = player.Wallet.Revision, Extraction = player.Crane != null ? player.Crane.Revision : 0, Battery = player.Battery.Revision, Shovel = player.Shovel.Level, Lamps = player.LampKit.Owned, Strokes = player.SuccessfulStrokes, Charge = player.Battery.Charge,
+            Wallet = player.Wallet.Revision, Extraction = player.Crane != null ? player.Crane.Revision : 0, Battery = player.Battery.Revision, Shovel = player.Shovel.Level, Lamps = player.LampKit.Owned, Charges = player.Charges.Revision, Strokes = player.SuccessfulStrokes, Charge = player.Battery.Charge,
             Position = player.transform.position, Rotation = player.transform.rotation, Pitch = player.Pitch, VerticalSpeed = player.VerticalSpeed,
             CrouchAmount = player.CrouchAmount, Worksite = player.WorksiteTools != null ? player.WorksiteTools.Revision : 0 };
 

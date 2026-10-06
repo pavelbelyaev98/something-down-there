@@ -203117,6 +203117,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6adc64ca909016479034b14c1cfbfe1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.WorksiteTools
+  chargePrefab: {fileID: 24039886822559039, guid: cc01240bfdc3e1846ac6f1b7716c7279, type: 3}
+  blastPreview: {fileID: 2100000, guid: 8869fda2a6dae2646851ecaa8ba5b08d, type: 2}
   player: {fileID: 1869448863}
   terrain: {fileID: 486403993}
   lampPrefab: {fileID: 158167026668418868, guid: 538b7e77830abc24ca10b2760c3561b6, type: 3}

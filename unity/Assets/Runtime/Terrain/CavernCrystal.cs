@@ -41,6 +41,15 @@ namespace SomethingDownThere
             return true;
         }
 
+        // A C4 blast (026) reaching its middle bursts it at once, its pieces falling out as when the tool breaks it.
+        internal bool Blast(Vector3 point, float radius)
+        {
+            if (!CanDig || (centre - point).sqrMagnitude > radius * radius) return false;
+            work = needed;
+            scenery.Broke(this, area, centre, reach, colour);
+            return true;
+        }
+
         private void Crack()
         {
             block ??= new MaterialPropertyBlock();

@@ -142,6 +142,7 @@ namespace SomethingDownThere
         public ShovelState Shovel { get; private set; }
         public JetpackState Jetpack { get; private set; }
         public LampKit LampKit { get; private set; }
+        public ChargeKit Charges { get; private set; }
         // Unity 6.6 uses managed code variants; DEVELOPMENT_BUILD is deprecated.
         // This engine-owned build flag is true in the Editor/development players.
         public static bool AdminBuild => Debug.isDebugBuild;
@@ -230,7 +231,8 @@ namespace SomethingDownThere
             Shovel = new ShovelState(shovelLevels);
             Jetpack = new JetpackState();
             LampKit = new LampKit();
-            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
+            Charges = new ChargeKit();
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit, Charges);
             pitch = Mathf.DeltaAngle(0f, viewCamera.transform.localEulerAngles.x);
             if (InputSettings == null)
                 ConfigureInputPreferences(new DevicePreferencesFile(System.IO.Path.Combine(Application.persistentDataPath,
@@ -303,6 +305,8 @@ namespace SomethingDownThere
             snapshot.FuelLevel = Battery.Level;
             snapshot.JetpackLevel = Jetpack.Level;
             snapshot.LampsOwned = LampKit.Owned;
+            snapshot.C4Level = Charges.Level;
+            snapshot.ChargesOwned = Charges.Owned;
             snapshot.Inventory = new ItemSnapshot[Inventory.Count];
             for (int i = 0; i < Inventory.Count; i++) snapshot.Inventory[i] = ItemSnapshot.Capture(Inventory.Items[i]);
             snapshot.Credits = Wallet.WholeCredits;
@@ -345,7 +349,8 @@ namespace SomethingDownThere
             Battery = battery;
             Jetpack = jetpack;
             LampKit = new LampKit(snapshot.LampsOwned);
-            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
+            Charges = new ChargeKit(snapshot.C4Level, snapshot.ChargesOwned);
+            Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit, Charges);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
             unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = adminBreakInDust = false;
@@ -945,6 +950,15 @@ namespace SomethingDownThere
             if (!focused || !AdminAvailable) return;
             Wallet.TryCredit(500);
             ShowFeedback("+$500 test money");
+            MenuChanged?.Invoke();
+        }
+
+        // Testing convenience: a full C4 pack at the owned track level.
+        public void FillAdminCharges()
+        {
+            if (!focused || !AdminAvailable) return;
+            Charges.Fill();
+            ShowFeedback($"C4 pack filled: {Charges.Owned} charges");
             MenuChanged?.Invoke();
         }
 

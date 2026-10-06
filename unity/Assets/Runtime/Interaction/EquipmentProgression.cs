@@ -1,6 +1,6 @@
 namespace SomethingDownThere
 {
-    public enum EquipmentKind { Shovel, Inventory, Fuel, Jetpack }
+    public enum EquipmentKind { Shovel, Inventory, Fuel, Jetpack, C4 }
 
     // How one ground shapes the tool's bite. Hardness shows mostly as bite size (width, length,
     // depth) and a little as cadence (Interval, relative to the tool's own stroke time).
@@ -18,6 +18,14 @@ namespace SomethingDownThere
         public JetpackProfile(float maxAscentSpeed, float acceleration, float energyPerSecond, bool hoverHold)
         { MaxAscentSpeed = maxAscentSpeed; Acceleration = acceleration; EnergyPerSecond = energyPerSecond; HoverHold = hoverHold; }
         public float EnergyPerMetre => EnergyPerSecond / MaxAscentSpeed;
+    }
+
+    public readonly struct C4Profile
+    {
+        public readonly float BlastRadius;
+        public readonly int PackSize, ChargePrice;
+        public C4Profile(float blastRadius, int packSize, int chargePrice)
+        { BlastRadius = blastRadius; PackSize = packSize; ChargePrice = chargePrice; }
     }
 
     public static class EquipmentProgression
@@ -103,6 +111,19 @@ namespace SomethingDownThere
         public static JetpackProfile Jetpack(int level) => level >= 1 && level <= LevelCount
             ? new JetpackProfile(AscentSpeeds[level - 1], 30f + 18f * (level - 1) / (LevelCount - 1), AscentEnergy[level - 1], level >= HoverLevel)
             : throw new System.ArgumentOutOfRangeException(nameof(level));
+        // C4 (026, concept 04 section 8): a charge is stuck within ChargeReach and set off remotely. Its blast takes a ball of
+        // ground of the track's radius in every ground, centred BlastSink of a radius inside the face it was stuck to, and
+        // geode shell ShellReach times as far (its natural target). Each level blasts wider, packs more charges and makes a
+        // charge cheaper; level 1 is the starter kit, empty until charges are bought. A charge costs about two lamps at
+        // first, so C4 arrives once hauls can spare it.
+        public const float ChargeReach = 8f, BlastSink = .3f, ShellReach = 1.3f;
+        public const int MaximumCharges = 10;
+        private static readonly float[] BlastRadii = { 1.5f, 1.6f, 1.7f, 1.8f, 1.9f, 2f, 2.15f, 2.3f, 2.45f, 2.6f, 2.8f, 3f };
+        private static readonly int[] PackSizes = { 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 8, MaximumCharges };
+        private static readonly int[] ChargePrices = { 40, 38, 36, 34, 32, 30, 28, 26, 24, 22, 20, 18 };
+        public static C4Profile C4(int level) => level >= 1 && level <= LevelCount
+            ? new C4Profile(BlastRadii[level - 1], PackSizes[level - 1], ChargePrices[level - 1])
+            : throw new System.ArgumentOutOfRangeException(nameof(level));
         public static bool UsesDrill(int level) => level >= DrillLevel;
         public static string ToolName(int level) => UsesDrill(level) ? "Drill" : "Shovel";
         public static int Price(int ownedLevel) => TierPrices[UpgradeIndex(ownedLevel)];
@@ -111,6 +132,6 @@ namespace SomethingDownThere
         private static int UpgradeIndex(int ownedLevel) => ownedLevel >= 1 && ownedLevel < LevelCount
             ? ownedLevel - 1 : throw new System.ArgumentOutOfRangeException(nameof(ownedLevel));
         public static string Name(EquipmentKind kind) => kind == EquipmentKind.Inventory ? "Backpack"
-            : kind == EquipmentKind.Fuel ? "Fuel tank" : kind == EquipmentKind.Jetpack ? "Jetpack" : "Tool";
+            : kind == EquipmentKind.Fuel ? "Fuel tank" : kind == EquipmentKind.Jetpack ? "Jetpack" : kind == EquipmentKind.C4 ? "C4" : "Tool";
     }
 }
