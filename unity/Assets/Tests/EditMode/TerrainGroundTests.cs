@@ -102,6 +102,24 @@ namespace SomethingDownThere.Tests
             Assert.That(grid.IsSolid((Vector3)stashes[0].Centre + (Quaternion)stashes[0].Rotation * hollow.center), Is.False, "Reset carves the hollow again.");
         }
 
+        // The Ground Lab lays every bay out in its own ground on the shipped grid; unused slots and the ground below stay soil.
+        [Test]
+        public void GroundLabLaysOutEveryBay()
+        {
+            var ids = GroundLab.Materials(SiteLayout.Size, SiteLayout.CellSize).ToArray();
+            int y = SiteLayout.Size.y - Mathf.RoundToInt(2f / SiteLayout.CellSize);
+            for (int bay = 0; bay < GroundLab.Bays.Length; bay++)
+            {
+                var centre = GroundLab.BayCentre(bay);
+                int x = Mathf.RoundToInt((centre.x - SiteLayout.Origin.x) / SiteLayout.CellSize);
+                int z = Mathf.RoundToInt((centre.y - SiteLayout.Origin.z) / SiteLayout.CellSize);
+                Assert.That((TerrainMaterialId)ids[Index(x, y, z)], Is.EqualTo(GroundLab.Bays[bay].Ground(0, 2f, 0)), GroundLab.Bays[bay].Name);
+            }
+            var unused = GroundLab.BayCentre(GroundLab.Bays.Length);
+            Assert.That((TerrainMaterialId)ids[Index(Mathf.RoundToInt((unused.x - SiteLayout.Origin.x) / SiteLayout.CellSize), y,
+                Mathf.RoundToInt((unused.y - SiteLayout.Origin.z) / SiteLayout.CellSize))], Is.EqualTo(TerrainMaterialId.Soil));
+        }
+
         [Test]
         public void FullSiteGenerationStaysFastAndRepeatable()
         {

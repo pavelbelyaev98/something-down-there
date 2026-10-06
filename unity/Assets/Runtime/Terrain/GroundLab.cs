@@ -35,7 +35,7 @@ namespace SomethingDownThere
 
         public static Vector2 BayCentre(int bay) => new Vector2(Columns[bay % Columns.Length], Rows[bay / Columns.Length]);
 
-        // Which bay holds a world x/z (null between bays), with the position inside it.
+        // Which bay holds a world x/z (-1 between bays and on unused slots), with the position inside it.
         private static int BayAt(float x, float z, out float u, out float v)
         {
             u = v = 0;
@@ -45,8 +45,10 @@ namespace SomethingDownThere
                 for (int column = 0; column < Columns.Length; column++)
                 {
                     if (Mathf.Abs(x - Columns[column]) > BayHalf) continue;
+                    int bay = row * Columns.Length + column;
+                    if (bay >= Bays.Length) return -1;
                     u = x - Columns[column]; v = z - Rows[row];
-                    return row * Columns.Length + column;
+                    return bay;
                 }
             }
             return -1;
