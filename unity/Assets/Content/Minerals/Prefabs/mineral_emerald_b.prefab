@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f6924af556580cd4aa4f037cbf8a88ac, type: 2}
+  - {fileID: 2100000, guid: b1f1ba4928ba5544daabb660c9dc1a80, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Emerald
   minor: 1
   detectorEligible: 0
-  saleValue: 20
+  saleValue: 30
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.05703404, y: 0.34981102, z: -0.12315318}

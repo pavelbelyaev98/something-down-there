@@ -111,7 +111,9 @@ namespace SomethingDownThere.Tests
                 Assert.That(physical.Released, Is.True, find.SaveContentId);
                 yield return WaitForSimulation(1.8f);
                 Assert.That(physical.Body.position.y, Is.LessThan(initial.y - .4f));
-                Assert.That(find.WorldBounds.min.y, Is.InRange(terrain.SurfaceHeight - .04f, terrain.SurfaceHeight + .06f));
+                // Its lowest point rests on the ground: a turned renderer's bounds box reaches below a rounded find.
+                float lowest = find.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => find.transform.TransformPoint(v).y);
+                Assert.That(lowest, Is.InRange(terrain.SurfaceHeight - .04f, terrain.SurfaceHeight + .06f), find.SaveContentId);
                 Assert.That(physical.Body.linearVelocity.magnitude, Is.LessThan(.1f));
                 Assert.That(find.Item.InstanceId, Is.EqualTo(id)); Assert.That(find.Collected, Is.False);
                 Assert.That(find.Collectible, Is.True);

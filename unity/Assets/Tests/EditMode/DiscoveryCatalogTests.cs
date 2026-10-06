@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,4,3,3,3,3,2}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,6,4,3,2,2,1,150}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -98,7 +98,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(640));
-            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
             foreach (int seed in Seeds(sweep))
             {
                 var layout = Layout(seed);
@@ -173,8 +173,8 @@ namespace SomethingDownThere.Tests
         }
 
         // Concept 05 §3 finds inside finds (106, 113): every stash's chest holds ChestItems of its contents (ingots and
-        // crystals, taken by hand), lying level on its floor inside its hollow; nothing else sits in a chest or its pocket of
-        // air; the treasure lies nowhere else; counts are unchanged.
+        // crystals, taken by hand), heaped inside its hollow no higher than its rim, tipped at most ChestTip; nothing else
+        // sits in a chest or its pocket of air; the treasure lies nowhere else; counts are unchanged.
         [TestCase(90127)] [TestCase(12)]
         public void EveryStashChestHoldsItsContentsAndNothingElse(int seed)
         {
@@ -192,9 +192,10 @@ namespace SomethingDownThere.Tests
                 {
                     Assert.That(contents, Does.Contain(p.PrefabIndex), "Only the chest's contents lie in it.");
                     Assert.That(catalog.Entries[p.PrefabIndex].Appearance(p.AppearanceIndex).HandPicked, Is.True, "Taken by hand.");
-                    Assert.That(Vector3.Angle(p.Rotation * Vector3.up, Vector3.up), Is.LessThan(.5f), "Lying level.");
+                    Assert.That(Vector3.Angle(p.Rotation * Vector3.up, Vector3.up), Is.LessThan(DiscoveryCatalog.ChestTip + .5f), "Tipped no further than a heap.");
                     var local = Quaternion.Inverse(stashes[s].Rotation) * (p.Position - (Vector3)stashes[s].Centre);
                     Assert.That(hollow.Contains(local), Is.True, "Inside the hollow.");
+                    Assert.That(local.y, Is.LessThan(catalog.Chest.Rim), "Below the rim.");
                 }
             }
             Assert.That(layout.Count(p => contents.Contains(p.PrefabIndex)), Is.EqualTo(stashes.Length * catalog.ChestItems),
@@ -391,9 +392,10 @@ namespace SomethingDownThere.Tests
         public void MineralBandsHaveIncreasingValuesAndLateralCoverageAcrossSeeds(bool sweep)
         {
             var catalog = Catalog;
-            var minerals = catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).ToArray();
+            // Pyrite (114) sits outside the ladder: fool's gold, priced like rock.
+            var minerals = catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_") && e.ItemId != "mineral_pyrite").ToArray();
             CollectionAssert.AreEqual(new[] { "Coal", "Copper", "Iron", "Silver", "Gold", "Emerald", "Ruby", "Diamond" }, minerals.Select(e => e.Prefab.DisplayName));
-            CollectionAssert.AreEqual(new[] { 4, 5, 6, 9, 13, 20, 30, 45 }, minerals.Select(e => e.Prefab.SaleValue));
+            CollectionAssert.AreEqual(new[] { 4, 5, 8, 12, 16, 30, 45, 70 }, minerals.Select(e => e.Prefab.SaleValue));
             foreach (int seed in Seeds(sweep))
             {
                 var layout = Layout(seed);

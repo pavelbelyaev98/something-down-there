@@ -5,28 +5,34 @@
   "items": 6,
   "contents": [
     {
-      "content_id": "treasure_ingot_copper",
-      "weight": 4
+      "content_id": "treasure_ingot_bronze",
+      "shallow_weight": 6,
+      "deep_weight": 1
     },
     {
       "content_id": "treasure_ingot_silver",
-      "weight": 3
+      "shallow_weight": 3,
+      "deep_weight": 3
     },
     {
       "content_id": "treasure_ingot_gold",
-      "weight": 3
+      "shallow_weight": 1,
+      "deep_weight": 4
     },
     {
       "content_id": "treasure_crystal_emerald",
-      "weight": 3
+      "shallow_weight": 0,
+      "deep_weight": 2
     },
     {
       "content_id": "treasure_crystal_ruby",
-      "weight": 3
+      "shallow_weight": 0,
+      "deep_weight": 2
     },
     {
       "content_id": "treasure_crystal_diamond",
-      "weight": 2
+      "shallow_weight": 0,
+      "deep_weight": 1
     }
   ]
 }

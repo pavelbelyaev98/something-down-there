@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Emerald crystal
   minor: 1
   detectorEligible: 0
-  saleValue: 90
+  saleValue: 25
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.05703404, y: 0.34981102, z: -0.12315318}

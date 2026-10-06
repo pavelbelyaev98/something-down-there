@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Ruby crystal
   minor: 1
   detectorEligible: 0
-  saleValue: 130
+  saleValue: 38
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.29761988, y: -0.5381185, z: 0.0020711517}

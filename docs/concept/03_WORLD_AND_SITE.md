@@ -157,12 +157,12 @@ digs, what it hides and how it points somewhere**. Hardness shows mostly as **bi
 little as rhythm: harder ground takes smaller, shallower bites at a slightly slower stroke. Strokes
 throw no particles (user, 2026-09-30, kept for the drill 2026-10-05); the ground's own look and the
 cut's shape carry it. Nothing in the ground collapses: no pours, slumps or breaks (user,
-2026-10-05).
+2026-10-05). The one exception is breaking into an old chest's pocket (below).
 
 | Ground   | How it digs                                    | Its tell                               | What it tends to hold                               |
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
 | Soil     | Fast, broad rounded cuts; plain ground         | —                                      | Rubbish, junk, plain rocks                          |
-| Backfill | Rubble fill: small, hard bites, about half soil's speed | It *is* the tell              | Whatever someone buried                             |
+| Backfill | Rubble fill: small, hard bites, about three quarters of soil's speed | It *is* the tell              | Whatever someone buried                             |
 
 Zone grounds, geode shells and lenses join this table as they are added. The ancient zone adds its
 own material with its contact signature ([Ending and Mystery](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)).
@@ -198,7 +198,7 @@ Shared rules for all tells:
 - When something was buried, a hole was dug and filled again. Above and around selected buried
   things, the generator leaves a pit or column of backfill that cuts across the soil.
 - It is refilled with rubble: it reads in the wall as a stony patch cutting across the soil, and the
-  tool takes small, hard bites at once (about half soil's speed). Follow it down or sideways and
+  tool takes small, hard bites at once (about three quarters of soil's speed; half was a chore early on, user 2026-10-06). Follow it down or sideways and
   something waits at the bottom. It costs seconds, never minutes: a toll the player chooses.
 - Only a **stash** leaves a pit: an old chest, opened where it lies (see
   [finds inside finds](05_DISCOVERIES.md#3-the-reveal-and-recognition-loop)). Backfill holds only
@@ -209,6 +209,9 @@ Shared rules for all tells:
   above its lid's swing, with room to stand in front of its lock, so the shaft breaks into an open
   space with the chest in it, and its lid can be forced the moment the player reaches it. The ground
   all round the pocket is fill too (user, 2026-10-06).
+- Breaking into the pocket is a moment (user, 2026-10-06: "I like collapses"): the fill around the
+  breach gives way and a slab of its roof or wall drops into the pocket with clods and dust, once.
+  It is an A/B against a quieter fall of crumbs and dust only.
 - It reads by grain and colour: the soil turned over, darker and greyer than the warm settled soil
   (user, 2026-10-06), with dirty stones churned in, drawn from its own texture made from the packs'
   soil and rubble. What the eye sees is what the tool feels.
@@ -347,8 +350,8 @@ Geodes keep that moment without cave networks.
 No lava, gas, oxygen, hunger, earthquakes, temperature damage, or monsters. The only pressure
 is the shared battery, the bag's capacity, and the player's own greed — all soft, all fair, all
 recoverable (see [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md)). Nothing in the ground
-collapses, and C4 removes only the ground it was set to remove: it never harms, buries or traps the
-player.
+collapses beyond a chest pocket's small cave-in, which only opens ground, and C4 removes only the
+ground it was set to remove: it never harms, buries or traps the player.
 
 *Why:* in the research, survival friction is the steadiest complaint: A Game About Digging a
 Hole's fall damage and exploding battery, One Man's Trash's worms, Keep Digging 2.0 "patched in

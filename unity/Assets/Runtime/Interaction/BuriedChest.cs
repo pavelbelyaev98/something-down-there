@@ -17,8 +17,10 @@ namespace SomethingDownThere
         // pocket of air it stands in, the seats on its floor, the space its lid sweeps opening and points just under its base.
         [SerializeField] private Vector3 hollowCentre, hollowHalf, pocketCentre, pocketHalf;
         [SerializeField] private Vector3[] contentSeats = Array.Empty<Vector3>();
-        // The way its lock faces (its lid's free edge), in its own frame.
+        // The way its lock faces (its lid's free edge), in its own frame, and the height of its walls' top: its contents
+        // heap no higher (DiscoveryCatalog.ChestHeap).
         [SerializeField] private Vector3 front = Vector3.right;
+        [SerializeField] private float rim;
         [SerializeField] private Vector3[] lidSpace = Array.Empty<Vector3>(), footing = Array.Empty<Vector3>();
         // Reach of the chest's pocket from its pivot (ordinary finds keep out of PocketReserves).
         [SerializeField, Min(.1f)] private float radius = .85f;
@@ -35,6 +37,8 @@ namespace SomethingDownThere
         public string DisplayName => displayName;
         public Bounds Hollow => new Bounds(hollowCentre, hollowHalf * 2);
         public Bounds Pocket => new Bounds(pocketCentre, pocketHalf * 2);
+        public Vector3 Front => front;
+        public float Rim => rim;
 
         // The space ordinary finds keep out of, in the chest's frame: a sphere around each quarter of its pocket (split
         // across its floor), which hugs the wide, low pocket far closer than one sphere around it all, so the rock layer
@@ -52,6 +56,8 @@ namespace SomethingDownThere
         public float Radius => radius;
         public bool Opened { get; private set; }
         public bool Released { get; private set; }
+        // Its pocket has been broken into (saved, so it caves in once).
+        public bool Breached { get; private set; }
         public Rigidbody Body => body;
 
         private TerrainVolume terrain;
@@ -87,7 +93,7 @@ namespace SomethingDownThere
         public ChestSnapshot Capture() => new ChestSnapshot {
             Position = terrain.transform.InverseTransformPoint(Released ? body.position : transform.position),
             Rotation = Quaternion.Inverse(terrain.transform.rotation) * (Released ? body.rotation : transform.rotation),
-            Released = Released, Opened = Opened };
+            Released = Released, Opened = Opened, Breached = Breached };
 
         public void Restore(ChestSnapshot state)
         {
@@ -95,6 +101,7 @@ namespace SomethingDownThere
             transform.SetPositionAndRotation(terrain.transform.TransformPoint(state.Position), terrain.transform.rotation * state.Rotation);
             body.position = transform.position; body.rotation = transform.rotation;
             Opened = state.Opened;
+            Breached = state.Breached;
             Pose(Opened);
             if (state.Released) Release();
             observedPosition = transform.position; observedRotation = transform.rotation;
@@ -153,7 +160,51 @@ namespace SomethingDownThere
         private void HandleExcavationChanged(Bounds changed)
         {
             var reach = new Bounds(transform.position, Vector3.one * (radius * 2 + .5f));
-            if (changed.Intersects(reach)) supportDirty = true;
+            if (!changed.Intersects(reach)) return;
+            supportDirty = true;
+            if (!Breached && !terrain.IsRestoring) CheckBreach(changed);
+        }
+
+        // Breaking into the pocket (user, 2026-10-06: "I like collapses"): the first cut whose open ground reaches the
+        // pocket's air sets off the break-in, a part of the pocket's roof or wall caving in with clods and dust
+        // (FpsPlayer.BreakInCollapses), or a fall of crumbs and dust only. The way from the cut to the nearest point of the
+        // pocket must be open, so digging beside it does nothing.
+        private const float BreakInStep = .08f, CollapseDepth = .35f;
+        private static readonly Vector3 CollapseHalf = new Vector3(.5f, .4f, .5f);
+
+        private void CheckBreach(Bounds changed)
+        {
+            var local = transform.InverseTransformPoint(changed.center);
+            var pocket = Pocket;
+            if (pocket.Contains(local)) return;
+            var nearest = pocket.ClosestPoint(local);
+            if ((local - nearest).magnitude > changed.extents.magnitude + .3f) return;
+            Vector3 from = changed.center, to = transform.TransformPoint(nearest);
+            float length = Vector3.Distance(from, to);
+            for (float t = 0; t <= length; t += BreakInStep)
+                if (terrain.IsSolid(Vector3.Lerp(from, to, t / Mathf.Max(length, 1e-4f)))) return;
+            Breached = true;
+            // On the next frame: the cave-in cuts the ground, which this change event is still reporting.
+            pendingBreak = (to, length > 1e-4f ? (to - from) / length : Vector3.down);
+            field?.NotifyMotion();
+        }
+
+        private (Vector3 point, Vector3 inward)? pendingBreak;
+
+        private void BreakIn(Vector3 point, Vector3 inward)
+        {
+            var viewer = FindViewer();
+            bool collapse = viewer == null || viewer.BreakInCollapses;
+            if (collapse)
+            {
+                // The fill around the breach gives way: a slab of roof or wall drops into the pocket.
+                var slab = point - inward * CollapseDepth + Vector3.up * .15f;
+                terrain.ClearLoadSweep(slab, slab, Quaternion.LookRotation(inward, Mathf.Abs(Vector3.Dot(inward, Vector3.up)) > .9f ? transform.forward : Vector3.up), CollapseHalf);
+            }
+            var crane = viewer != null ? viewer.Crane : null;
+            if (crane == null) return;
+            crane.EmitGroundBreak(point, inward, collapse ? .3f : .05f, collapse ? .7f : .35f, collapse ? 1.6f : .7f);
+            if (collapse) crane.EmitGroundBreak(point + Vector3.up * .3f, inward, .2f, .5f, 1f);
         }
 
         private void FixedUpdate()
@@ -180,6 +231,12 @@ namespace SomethingDownThere
         // An opened, emptied chest goes once out of sight and untouched (user, 2026-10-05).
         private void Update()
         {
+            if (pendingBreak.HasValue && terrain != null && !terrain.IsRestoring)
+            {
+                var (point, inward) = pendingBreak.Value;
+                pendingBreak = null;
+                BreakIn(point, inward);
+            }
             if (!Opened || field == null || terrain == null || terrain.IsRestoring || opening.isPlaying) return;
             if ((goneCheck -= Time.deltaTime) > 0) return;
             goneCheck = GoneCheckSeconds;
@@ -262,6 +319,6 @@ namespace SomethingDownThere
     {
         public Vector3 Position;
         public Quaternion Rotation;
-        public bool Released, Opened;
+        public bool Released, Opened, Breached;
     }
 }

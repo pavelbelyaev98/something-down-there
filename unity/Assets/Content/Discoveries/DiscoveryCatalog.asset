@@ -68,7 +68,7 @@ MonoBehaviour:
     MinDepth: 1.1
     MaxDepth: 60
     CoreMinDepth: 5
-    CoreMaxDepth: 27
+    CoreMaxDepth: 37
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
@@ -86,9 +86,9 @@ MonoBehaviour:
     ShallowMinCover: 0
     ShallowMaxCover: 0
     MinDepth: 3
-    MaxDepth: 80
-    CoreMinDepth: 25
-    CoreMaxDepth: 47
+    MaxDepth: 85
+    CoreMinDepth: 36
+    CoreMaxDepth: 58
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
@@ -107,8 +107,8 @@ MonoBehaviour:
     ShallowMaxCover: 0
     MinDepth: 3
     MaxDepth: 100
-    CoreMinDepth: 45
-    CoreMaxDepth: 69
+    CoreMinDepth: 56
+    CoreMaxDepth: 76
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
@@ -127,8 +127,8 @@ MonoBehaviour:
     ShallowMaxCover: 0
     MinDepth: 4
     MaxDepth: 125
-    CoreMinDepth: 67
-    CoreMaxDepth: 93
+    CoreMinDepth: 75
+    CoreMaxDepth: 98
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
@@ -147,9 +147,9 @@ MonoBehaviour:
     ShallowMaxCover: 0
     MinDepth: 6
     MaxDepth: 149.2
-    CoreMinDepth: 91
-    CoreMaxDepth: 115
-    CoreShare: 0.86
+    CoreMinDepth: 96
+    CoreMaxDepth: 113
+    CoreShare: 0.95
     LayOnSide: 0
     RandomOrientation: 1
     HostGrounds: 
@@ -167,9 +167,9 @@ MonoBehaviour:
     ShallowMaxCover: 0
     MinDepth: 8
     MaxDepth: 149.2
-    CoreMinDepth: 113
-    CoreMaxDepth: 133
-    CoreShare: 0.86
+    CoreMinDepth: 112
+    CoreMaxDepth: 132
+    CoreShare: 0.95
     LayOnSide: 0
     RandomOrientation: 1
     HostGrounds: 
@@ -189,7 +189,7 @@ MonoBehaviour:
     MaxDepth: 149.2
     CoreMinDepth: 131
     CoreMaxDepth: 149.2
-    CoreShare: 0.86
+    CoreShare: 0.95
     LayOnSide: 0
     RandomOrientation: 1
     HostGrounds: 
@@ -351,14 +351,14 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-  - ItemId: treasure_ingot_copper
+  - ItemId: treasure_ingot_bronze
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 1519585528931462753, guid: d019cefa3c1f30242954271887a8be35, type: 3}
+    Prefab: {fileID: 6329413978238984095, guid: 8bbcae2a222326b439140224677b1883, type: 3}
     AppearanceVariants:
-    - {fileID: 5971219111663248406, guid: 56d2a248ea715bd49bd73fb7fa90d873, type: 3}
-    Count: 4
+    - {fileID: 2388083526001396382, guid: dd338e75bd215134bab1ee5b29f3e312, type: 3}
+    Count: 6
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -378,7 +378,7 @@ MonoBehaviour:
     Prefab: {fileID: 6121914866324238277, guid: 96e4dd7ca355cf7458d9c9c4c3cfd366, type: 3}
     AppearanceVariants:
     - {fileID: 4407781966802062575, guid: 7e45b2f22fc90f048bd7c8bf9912d092, type: 3}
-    Count: 3
+    Count: 4
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -418,7 +418,7 @@ MonoBehaviour:
     Prefab: {fileID: 6589374323264401479, guid: ce138c0619980754e833d5ceebc39cda, type: 3}
     AppearanceVariants:
     - {fileID: 8478080413224632738, guid: 645d6092eeb0a164e8343b1a8bae2980, type: 3}
-    Count: 3
+    Count: 2
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -438,7 +438,7 @@ MonoBehaviour:
     Prefab: {fileID: 4583801216564935326, guid: 7f1dd13ab0aa5934289afecd610bd66d, type: 3}
     AppearanceVariants:
     - {fileID: 4203522914614432247, guid: ab470b25d1e5e0b4ba03d92ecb22521c, type: 3}
-    Count: 3
+    Count: 2
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -458,7 +458,7 @@ MonoBehaviour:
     Prefab: {fileID: 4825057123851874062, guid: 5ccc6f92ce0136d478bd3e75c46430c0, type: 3}
     AppearanceVariants:
     - {fileID: 2668993875281045146, guid: 4f2ce1fcd4c173f47a24429b8df12151, type: 3}
-    Count: 2
+    Count: 1
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -471,18 +471,44 @@ MonoBehaviour:
     RandomOrientation: 0
     HostGrounds: 
     HostWeights: []
+  - ItemId: mineral_pyrite
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 1977836855829534356, guid: 3a965e1dc62670640ae1f4967a3b9dda, type: 3}
+    AppearanceVariants:
+    - {fileID: 312843050145784247, guid: 29676d8f8d016434ebd758d9f9be92d2, type: 3}
+    Count: 150
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 37.5
+    MaxDepth: 75
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}
   ChestItems: 6
   ChestContents:
-  - ItemId: treasure_ingot_copper
-    Weight: 4
+  - ItemId: treasure_ingot_bronze
+    ShallowWeight: 6
+    DeepWeight: 1
   - ItemId: treasure_ingot_silver
-    Weight: 3
+    ShallowWeight: 3
+    DeepWeight: 3
   - ItemId: treasure_ingot_gold
-    Weight: 3
+    ShallowWeight: 1
+    DeepWeight: 4
   - ItemId: treasure_crystal_emerald
-    Weight: 3
+    ShallowWeight: 0
+    DeepWeight: 2
   - ItemId: treasure_crystal_ruby
-    Weight: 3
+    ShallowWeight: 0
+    DeepWeight: 2
   - ItemId: treasure_crystal_diamond
-    Weight: 2
+    ShallowWeight: 0
+    DeepWeight: 1

@@ -207,12 +207,13 @@ namespace SomethingDownThere
                 if (kind != null) kinds.Add(kind);
             }
             kinds.Sort((a, b) => b.Prefab.SaleValue.CompareTo(a.Prefab.SaleValue));
+            var heap = new DiscoveryCatalog.ChestHeap(chest, random);
             for (int k = 0; k < kinds.Count && k < catalog.ChestItems && k < chest.ContentSeats.Length; k++)
             {
                 var entry = kinds[k];
-                var seat = chest.transform.TransformPoint(chest.ContentSeats[k]) + Vector3.up * (entry.RestingHalfHeight + .01f);
-                var turn = chest.transform.rotation * Quaternion.Euler(0, (float)(random.NextDouble() - .5) * 24, 0);
-                var find = Instantiate(entry.Appearance(random.Next(entry.AppearanceCount)), seat, turn, transform);
+                var (at, lie) = heap.Place(chest.ContentSeats[k], entry);
+                var find = Instantiate(entry.Appearance(random.Next(entry.AppearanceCount)), chest.transform.TransformPoint(at),
+                    chest.transform.rotation * lie, transform);
                 find.Initialize(terrain, $"ground-lab-chest-{k}", this);
                 find.name = find.Item.DisplayName + " (lab chest " + k + ")";
                 finds.Add(find);

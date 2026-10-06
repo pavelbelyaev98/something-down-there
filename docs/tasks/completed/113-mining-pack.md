@@ -3,8 +3,8 @@
 **Status:** complete:
 - Copper, iron, silver and gold are the bought Mining Tools, Ore & Ingots ore chunks; emerald, ruby and diamond
   are Crystal Caverns crystals in project colours, two looks each.
-- The old chests hold the pack's ingots and gem crystals, taken one at a time with Interact; digging and walking
-  never take them.
+- The old chests hold the pack's bronze, silver and gold ingots and clean gem crystals, heaped at the back and
+  richer the deeper the chest, taken one at a time with Interact; digging and walking never take them.
 - The Ground Lab sets out every find's looks to compare.
 - Only the pack files the game uses are committed; its installers are ignored. The pack's coins and its shovel
   were tried and dropped.
@@ -131,3 +131,20 @@ items. AGENTS.md "Bought Before Made" now says so.
 - **Ground Lab chest:** "also add an openable chest with valuables inside." `DiscoveryField.SpawnLabChest`
   stands an old chest on the surface west of the open pit, its lock to the south, its base 2 cm into the ground so
   its footing holds. It holds one each of the chest contents' most valuable kinds, as real finds taken by hand.
+
+## Iteration 2 (user, 2026-10-06)
+
+- "When opening, items are placed with equal spacing and some are hard to see; I'd prefer to clutter items at the
+  back of the chest." The six seats sit at the back: three along the back wall, two over the gaps between them, one
+  before those. `DiscoveryCatalog.ChestHeap` sets each piece on the pieces already under it (by footprint), tipped
+  up to 20°, no higher than the chest's rim (`BuriedChest.Rim`), stepping toward the lock when it would be and lying
+  level on the floor when no stack fits (the chest is only about a crystal deep inside). Physics
+  settles them into a pile. Tried first: a second row lifted 12 cm in front of the first. It was too far apart to
+  land on it, so it lay flat in a 2 x 3 grid.
+- "Earlier chests have bronze primarily, some silver and maybe some gold, while deeper chests have more gold and
+  crystals." Each content type has a shallow and a deep weight (`old-chest/catalog.json`), blended by the chest's
+  depth through the recent fill. Shallow chests run bronze 6, silver 3, gold 1. Deep chests run bronze 1,
+  silver 3, gold 4, emerald 2, ruby 2, diamond 1.
+- Bronze ingots replace copper ones: copper read too close to gold.
+- "It's weird smaller crystals cost more than bigger crystals." The chests' clean crystals are now cheaper than the
+  big, dirty ground gems of `114`.

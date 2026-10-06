@@ -5,10 +5,14 @@
   - rubble, lava and water;
   - tiling `_RockDetail1/2` and `GroundDirt` surface maps;
   - crystal, layered-emissive and lava shaders.
-- **Purpose:** The deep gems: emerald, ruby and diamond are its beryl, ruby and quartz crystals in project colours (113, `Content/BuriedProps/CrystalCaverns`); the same crystals at chest size are old-chest treasure (`catalog.json`, taken by hand). Later perhaps the geodes (`110`). Its lava and water are not used.
+- **Purpose:**
+  - The deep gems: emerald, ruby and diamond are its beryl, ruby and quartz crystals in project colours, caked in soil (`Content/BuriedProps/CrystalCaverns/Dirty`; the maps `<family>_Dirty.png` are written by `make_dirty.py` from its maps and Mountains' Mud01).
+  - Pyrite, fool's gold: its pyrite crystals, dirty and brassy (`ground.json`, a prop find).
+  - The same crystals clean and smaller are old-chest treasure (`catalog.json`, taken by hand).
+  - Later the geodes (`110`) and the crystal cavern (`115`). Its lava and water are not used.
 - **Source/License:** User-purchased BK Asset Store pack (2026-10-05), Unity Asset Store EULA (Extension Asset, single entity); keep source access restricted.
 - **Unity Path:** `unity/Assets/BK/PureNature_CrystalCaverns/`, plus `BK_Crystal`, `BK_Lava` and `BK_StandardLayer_Emissive` in the shared `Pure_Common/Shaders`.
 - **Status/workflow:**
-  - Approved and imported; its crystals are in the game as the gems.
+  - Approved and imported; its crystals are in the game as the gems and pyrite (`114`).
   - The import overwrites the shared `Pure_Common` files with older copies (pre-6.1 URP API). Keep the committed Highlands versions: restore them with `git checkout HEAD -- unity/Assets/BK/Pure_Common` after any reimport.
   - Its three new shaders still use the deprecated `_FORWARD_PLUS` and `UnityGBuffer.hlsl`, so they warn when compiled. Patch any shader the game uses to the current macros first.

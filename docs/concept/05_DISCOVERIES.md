@@ -11,8 +11,13 @@
 | **Oversized Salvage** | Handful of set pieces | Signals | Crane set-down spot at camp | Huge payday | **0 slots** (claimed via tag/clamp) |
 
 Commons include the mineral ladder (coal → copper → iron → silver → gold → emerald → ruby → diamond),
-bottles, plain stones, commonplace scrap, packaging and rubbish. Which minerals lie at which depths,
-and how each looks, is still open (task `114`); so far only the plain rock's design is settled. "Common" means routine to find
+bottles, plain stones, commonplace scrap, packaging and rubbish. Each zone has its own pair of
+minerals (`114`): coal and copper in the recent fill, iron and silver in the sediment, gold and
+emerald in the third zone, ruby and diamond in the deep stone. Pyrite, fool's gold, is a cheap
+aside in the sediment: it looks like gold and sells like rock. Every mineral looks like the plain
+rock the user approved: plain, matte stone, never glossy or finely detailed (user, 2026-10-06).
+Gems dug out of the ground are big, dirty crystals; the clean ones in old chests are smaller and
+worth less (user, 2026-10-06: "weird smaller crystals cost more"). "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
 During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.
@@ -158,9 +163,11 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
 pit into the pocket of air its old chest stands in, hold Interact to force its rusted lock, and the
-lid opens on what it holds: a prospector's ingots of copper, silver and gold and a few gem crystals,
+lid opens on what it holds: a prospector's ingots of bronze, silver and gold and a few gem crystals,
 worth far more than anything loose in the soil around it, each taken by hand. The lock is forced from
-in front of it (user, 2026-10-06).
+in front of it (user, 2026-10-06). The deeper the chest, the richer: a shallow one holds mostly bronze,
+some silver and the odd gold ingot, a deep one mostly gold and gems. The pieces lie heaped at the back
+as if tossed in, never laid out in rows (user, 2026-10-06).
 The outside gives a clue; the contents deliver a second reveal and a small piece of buried history.
 
 - Use a few selected objects, not every box or appliance. Contents fit the container and its scene.

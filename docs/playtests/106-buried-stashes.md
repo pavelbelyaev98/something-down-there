@@ -1,30 +1,29 @@
-# 106–113 — Buried Stashes: Rubble Pits, the Old Chest, Treasure and Ores
+# 106–114 — Buried Stashes and the Mineral Lineup
 
 **Build & start:** fresh `builds/windows/SomethingDownThere.exe`, **New Game** (older saves no longer
 load). The first chest lies 4–6 m under the middle of the taped plot. Developer admin → **Ground
 X-ray** marks backfill magenta if you want to find the other two pits.
 
 **Try:**
-- Dig down near the plot's middle until the ground turns grey-brown and stony and the tool takes small,
-  hard bites. With the drill (Ctrl+Shift+7) the bit visibly slows in it and speeds up again in soil.
-- Break into the wide open space the chest stands in (stony fill all round it, room in front of the lock), go
-  round to its lock and hold E to force it (from behind or the side it says to go round).
-- Inside are six pieces: bigger ingots and gem crystals. Aim at each and press E to take it; digging or walking over them
-  never picks them up. Sell them at the computer.
-- Empty it, turn away and look back: the chest is gone (it stays while you look at it or stand on it).
-- Old TVs now lie loose in the soil between 6 and 36 m, like any find.
-- Copper, iron, silver and gold are now the new pack's ore chunks (two looks each); emerald, ruby and
-  diamond are the Crystal Caverns crystals (deep: use admin level and X-ray to see them).
-- Title menu → **Ground Lab**: every find's looks stand in rows north of the bays (minerals, chest
-  treasure, TVs); aim at one for its name, price and depth. An old chest stands west of the open pit to
-  try opening and emptying without digging (Restart Ground Lab brings it back).
-- Save and quit, then Continue: an opened chest stays open, an emptied one stays gone.
+- Dig down near the plot's middle into the grey-brown, stony fill. It now digs at about three quarters
+  of soil's speed (it was half); the drill's bit still visibly slows in it.
+- Break into the chest's pocket: a piece of its roof or wall caves in with clods and dust.
+- Go round to its lock and hold E. Six pieces lie heaped at the back. The deeper the chest, the richer it is:
+  mostly bronze near the top, more gold and gems deeper. Aim and press E to take each one.
+- Title menu → **Ground Lab**: the gallery north of the bays shows every look. Coal is now your rock in
+  black, the ores are plainer and duller, ground gems are caked in soil, and pyrite (fool's gold) is new.
+  The lab chest west of the open pit shows the heap.
+- Minerals by zone (admin level and X-ray help): coal and copper to 37 m; iron, silver and pyrite to 75 m;
+  gold and emerald to 112 m; ruby and diamond at the bottom.
 
-**Good feels like:** breaking into a dark space with the old chest standing in it, and the lid swinging
-up on a glint of gold and silver worth the detour.
+**Good feels like:** breaking into a dark space as the fill gives way, the old chest standing in it,
+and the lid swinging up on a tumble of metal and stones worth the detour.
+
+**Compare (A/B):** Developer admin → **Break-in: collapse / dust only**. Break into one pocket
+with each (the other two pits are under Ground X-ray).
 
 **Tell the agent:**
-- Whether the drill's slowdown and the backfill's colour read clearly enough.
-- The pocket's size, opening from the lock side, five pieces per chest and whether they feel like a real reward.
-- The ores and the crystals: the crystals are more cartoonish than the ores; keep, retint or swap?
-- Whether the ingots now read as old metal and the crystals as coloured stones, not glowing or white.
+- Break-in: collapse or dust only.
+- Whether the heap looks tossed in, and whether deeper chests feel worth more.
+- Coal, the ores and the dirty gems next to your rock: closer now, or still off?
+- Pyrite: keep or drop. Whether the backfill is easy enough early on.

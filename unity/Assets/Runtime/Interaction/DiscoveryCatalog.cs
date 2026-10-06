@@ -43,6 +43,16 @@ namespace SomethingDownThere
                     return filter.sharedMesh.bounds.extents.y * Mathf.Abs(filter.transform.localScale.y);
                 }
             }
+            // Half the find's footprint lying level, corner to corner: how far it reaches across a chest's floor.
+            public float RestingReach
+            {
+                get
+                {
+                    var filter = Prefab.GetComponent<MeshFilter>();
+                    var extents = Vector3.Scale(filter.sharedMesh.bounds.extents, filter.transform.localScale);
+                    return new Vector2(extents.x, extents.z).magnitude;
+                }
+            }
             public BuriedFind Appearance(int index) => index == 0 ? Prefab : AppearanceVariants[index - 1];
             public float PlacementRadius
             {
@@ -70,7 +80,14 @@ namespace SomethingDownThere
         }
         public Entry[] Entries = Array.Empty<Entry>();
         // The stash pits' old chest (106) and what it holds: ChestItems finds per chest, each drawn by weight.
-        [Serializable] public sealed class ChestContent { public string ItemId; public int Weight = 1; }
+        // A chest's draw weight for a content type at the top of the recent fill (ShallowWeight) and at its bottom
+        // (DeepWeight), in between by depth: the deeper a chest, the richer (user, 2026-10-06).
+        [Serializable] public sealed class ChestContent
+        {
+            public string ItemId; public float ShallowWeight = 1, DeepWeight = 1;
+            public float WeightAt(float depth) => Mathf.Lerp(ShallowWeight, DeepWeight, Mathf.InverseLerp(TerrainGround.PitTop,
+                TerrainGround.ZoneBorders[0] - TerrainGround.PitMargin, depth));
+        }
         public BuriedChest Chest;
         public int ChestItems;
         public ChestContent[] ChestContents = Array.Empty<ChestContent>();
@@ -124,7 +141,8 @@ namespace SomethingDownThere
             }
             if (TotalCount > DiscoveryField.MaximumPopulation || shallow < 1) throw new InvalidDataException("Starter allocation requires shallow finds and a supported total.");
             if (Chest != null && (ChestItems < 1 || ChestItems > Chest.ContentSeats.Length || ChestContents == null || ChestContents.Length == 0
-                || Array.Exists(ChestContents, c => c == null || c.Weight < 1 || ContentIndex(c.ItemId) < 0
+                || Array.Exists(ChestContents, c => c == null || c.ShallowWeight < 0 || c.DeepWeight < 0 || c.ShallowWeight + c.DeepWeight <= 0
+                    || ContentIndex(c.ItemId) < 0
                     || Entries[ContentIndex(c.ItemId)].Prefab.Kind != DiscoveryKind.Common)))
                 throw new InvalidDataException("Invalid chest contents.");
         }
@@ -232,33 +250,80 @@ namespace SomethingDownThere
             var result = new List<DiscoveryPlacement>(layout); result.AddRange(authored); return result.ToArray();
         }
 
-        // What each stash's chest holds (106): its floor seats take ChestItems finds of a type drawn by weight, like any
-        // seat the next of that type whose depth band covers the chest (another content type when none does), so counts
-        // never change. They lie level at a little seeded turn in the chest's seeded hollow, loose from New Game.
+        // What each stash's chest holds (106): its seats take ChestItems finds of a type drawn by its weight at the chest's
+        // depth, like any seat the next of that type whose depth band covers the chest (another content type when none does),
+        // so counts never change. They lie heaped (ChestHeap) in the chest's seeded hollow, loose from New Game.
         private void SeatChests(TerrainGround.Stash[] stashes, Vector3 extent, int seed, List<int> order, Vector2[] bands,
             Vector3[] seats, Dictionary<int, Quaternion> turns)
         {
             var random = new System.Random(unchecked(seed ^ 0x5C4E5713));
-            int total = 0; foreach (var content in ChestContents) total += content.Weight;
             foreach (var stash in stashes)
             {
                 Quaternion chest = stash.Rotation;
                 float depth = extent.y - stash.Centre.y;
+                float total = 0; foreach (var content in ChestContents) total += content.WeightAt(depth);
+                var heap = new ChestHeap(Chest, random);
                 for (int k = 0; k < ChestItems; k++)
                 {
-                    int pick = random.Next(total), choice = 0;
-                    while (pick >= ChestContents[choice].Weight) pick -= ChestContents[choice++].Weight;
-                    var turn = chest * Quaternion.Euler(0, (float)(random.NextDouble() - .5) * 24, 0);
+                    float pick = (float)random.NextDouble() * total; int choice = 0;
+                    while (choice < ChestContents.Length - 1 && pick >= ChestContents[choice].WeightAt(depth)) pick -= ChestContents[choice++].WeightAt(depth);
                     for (int attempt = 0; attempt < ChestContents.Length; attempt++)
                     {
                         int entry = ContentIndex(ChestContents[(choice + attempt) % ChestContents.Length].ItemId), seated = -1;
                         for (int i = ShallowCount; i < seats.Length && seated < 0; i++)
                             if (order[i] == entry && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y) seated = i;
                         if (seated < 0) continue;
-                        seats[seated] = (Vector3)stash.Centre + chest * Chest.ContentSeats[k] + Vector3.up * (Entries[entry].RestingHalfHeight + .01f);
-                        turns[seated] = turn;
+                        var (at, lie) = heap.Place(Chest.ContentSeats[k], Entries[entry]);
+                        seats[seated] = (Vector3)stash.Centre + chest * at;
+                        turns[seated] = chest * lie;
                         break;
                     }
+                }
+            }
+        }
+
+        // A chest's contents heaped at its back (user, 2026-10-06: evenly spaced looked laid out). Each find takes its seat
+        // on the floor turned up to ChestTurn; one that reaches over finds already lying there rests on the highest of them,
+        // tipped up to ChestTip, so it settles leaning on them. One that would stand above the walls' rim lies further
+        // toward the lock, HeapStep at a time; after HeapSteps it lies level on the floor there, and the others make room
+        // as they settle (the chest is only about a crystal deep inside).
+        public const float ChestTurn = 80f, ChestTip = 20f;
+        private const float HeapStep = .06f;
+        private const int HeapSteps = 5;
+
+        internal sealed class ChestHeap
+        {
+            private readonly BuriedChest chest;
+            private readonly System.Random random;
+            private readonly List<(Vector2 at, float reach, float top)> placed = new List<(Vector2, float, float)>();
+
+            public ChestHeap(BuriedChest chest, System.Random random) { this.chest = chest; this.random = random; }
+
+            // The find's position and turn in the chest's frame, seated at `seat` on the floor.
+            public (Vector3 position, Quaternion lie) Place(Vector3 seat, Entry entry)
+            {
+                float half = entry.RestingHalfHeight, reach = entry.RestingReach;
+                var turn = Quaternion.Euler(0, (float)(random.NextDouble() - .5) * ChestTurn, 0);
+                float tipAround = (float)random.NextDouble() * 360, tip = (float)random.NextDouble() * ChestTip;
+                var tipped = Quaternion.AngleAxis(tip, Quaternion.Euler(0, tipAround, 0) * Vector3.right) * turn;
+                // How far a tipped find reaches below and above its centre at most.
+                float tippedHalf = half + reach * Mathf.Sin(tip * Mathf.Deg2Rad);
+                var ahead = new Vector2(chest.Front.x, chest.Front.z).normalized;
+                for (int step = 0; ; step++)
+                {
+                    var at = new Vector2(seat.x, seat.z) + ahead * (step * HeapStep);
+                    float under = seat.y;
+                    foreach (var p in placed)
+                        if ((p.at - at).magnitude < p.reach + reach) under = Mathf.Max(under, p.top);
+                    bool resting = under > seat.y;
+                    float rise = (resting ? tippedHalf : half) + .01f;
+                    if (under + 2 * rise > chest.Rim)
+                    {
+                        if (step < HeapSteps) continue;
+                        under = seat.y; resting = false; rise = half + .01f;
+                    }
+                    placed.Add((at, reach, under + 2 * rise));
+                    return (new Vector3(at.x, under + rise, at.y), resting ? tipped : turn);
                 }
             }
         }

@@ -44,9 +44,9 @@ namespace SomethingDownThere
         // Relative to the owned tool: every tier retains material character and every ground remains
         // diggable. Fuel follows cadence, so a slower stroke costs proportionally more.
         private static readonly MaterialToolResponse Soil = new MaterialToolResponse(1f, 1f, 1f, 1f);
-        // Backfill: a pit refilled with rubble (108). Smaller, shallower bites at a slightly slower stroke: about half
-        // soil's rate, felt at once and never a wall (user, 2026-10-05).
-        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(.82f, .82f, .8f, 1.12f);
+        // Backfill: a pit refilled with rubble (108). Smaller, shallower bites at a slightly slower stroke: about three
+        // quarters of soil's rate, felt at once and never a wall; half was a chore early on (user, 2026-10-06).
+        private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(.92f, .92f, .9f, 1.05f);
         // Developer ground tuning: session-only replacements for the authored responses.
         private static readonly MaterialToolResponse?[] ResponseOverrides = new MaterialToolResponse?[(int)TerrainMaterialSnapshot.Last + 1];
         public static bool HasResponseOverrides => System.Array.Exists(ResponseOverrides, value => value.HasValue);

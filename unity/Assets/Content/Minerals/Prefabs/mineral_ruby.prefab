@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 177ddff2b5e5ec5439a82dd743b7a0eb, type: 2}
+  - {fileID: 2100000, guid: 56477dd2e3cbb1a4f9e150de4aa88fa0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Ruby
   minor: 1
   detectorEligible: 0
-  saleValue: 30
+  saleValue: 45
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.29761988, y: -0.5381185, z: 0.0020711517}

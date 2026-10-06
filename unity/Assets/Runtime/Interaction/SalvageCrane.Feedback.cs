@@ -152,19 +152,30 @@ namespace SomethingDownThere
         }
 
         private void EmitSoilBreak(Vector3 point, Vector3 normal, float removed)
+            => EmitBreak(point, normal, removed, LoadBody.linearVelocity * .15f, Throttle01, settings.ContactBreakDepth, settings.ContactBreakRadius, 1, true);
+
+        // Ground giving way without the rope (109: a chest's pocket broken into): the same clods, crumbs, dust puff and
+        // trickle off a face `reach` across, `intensity` times as many; no shaft dust, which follows a haul.
+        internal void EmitGroundBreak(Vector3 point, Vector3 normal, float removed, float reach, float intensity)
+            => EmitBreak(point, normal, removed, Vector3.zero, 0, terrain.CellSize, reach, intensity, false);
+
+        private void EmitBreak(Vector3 point, Vector3 normal, float removed, Vector3 inherited, float throttle, float depth, float reach,
+            float intensity, bool shaftDust)
         {
             if (removed <= 0 || settings.BreakParticleIntensity <= 0) return;
             InitializeBreakFeedback();
             if (soilChips == null || soilDust == null || soilClods == null) return;
-            float amount = Mathf.Clamp(Mathf.Sqrt(removed / .08f), .5f, 1.6f) * settings.BreakParticleIntensity * (1 + .4f * Throttle01);
-            var (dark, light) = DebrisColors(terrain.MaterialAt(point - normal * (settings.ContactBreakDepth + terrain.CellSize)));
+            float amount = Mathf.Clamp(Mathf.Sqrt(removed / .08f), .5f, 1.6f) * settings.BreakParticleIntensity * intensity * (1 + .4f * throttle);
+            var (dark, light) = DebrisColors(terrain.MaterialAt(point - normal * (depth + terrain.CellSize)));
             // Dust is the same earth, paler and greyer as a fine cloud.
             Color dustColor = Color.Lerp(Color.Lerp(dark, light, .7f), new Color(.5f, .48f, .45f), .35f);
-            shaftDustLevel = Mathf.Min(MaximumShaftDust, shaftDustLevel + .45f * amount);
-            // The finest dust, the part that stays aloft, is paler still.
-            shaftDustColor = Color.Lerp(dustColor, new Color(.72f, .67f, .6f), .4f); shaftDustFloor = job.Progress;
+            if (shaftDust)
+            {
+                shaftDustLevel = Mathf.Min(MaximumShaftDust, shaftDustLevel + .45f * amount);
+                // The finest dust, the part that stays aloft, is paler still.
+                shaftDustColor = Color.Lerp(dustColor, new Color(.72f, .67f, .6f), .4f); shaftDustFloor = job.Progress;
+            }
             Quaternion face = Quaternion.LookRotation(normal);
-            Vector3 inherited = LoadBody.linearVelocity * .15f;
             float now = Time.time;
 
             // Clods thrown off the break; each crumbles where its flight first meets the ground.
@@ -172,7 +183,7 @@ namespace SomethingDownThere
             for (int i = 0; i < clods; i++)
             {
                 Vector3 spread = face * new Vector3(BreakRandom(-1, 1), BreakRandom(-1, 1), 0);
-                float size = BreakRandom(.04f, .11f) * Mathf.Lerp(1, 1.35f, Throttle01);
+                float size = BreakRandom(.04f, .11f) * Mathf.Lerp(1, 1.35f, throttle);
                 var emit = new ParticleSystem.EmitParams
                 {
                     position = point + normal * (.05f + size) + spread * .2f,
@@ -225,7 +236,6 @@ namespace SomethingDownThere
             int trickle = Mathf.RoundToInt(14 * amount);
             Vector3 across = Vector3.ProjectOnPlane(Vector3.up, normal).sqrMagnitude > .01f ? Vector3.ProjectOnPlane(Vector3.up, normal).normalized : face * Vector3.up;
             Vector3 along = Vector3.Cross(normal, across);
-            float reach = settings.ContactBreakRadius;
             for (int i = 0; i < trickle; i++)
             {
                 // From the upper part of the broken patch, falling away from the face.

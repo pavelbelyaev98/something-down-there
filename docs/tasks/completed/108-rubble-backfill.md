@@ -1,7 +1,7 @@
 # 108 — Rubble Backfill
 
-**Status:** complete. Backfill is rubble fill: it digs at about half soil's rate at every tool level (47–55%,
-with the tool's shorter bite motion), and the drill's bit turns at about half speed in it; its texture churns the
+**Status:** complete. Backfill is rubble fill: it digs at about three quarters of soil's rate at every tool level
+(with the tool's shorter bite motion), and the drill's bit turns that much slower in it; its texture churns the
 rubble's dirty stones into turned-over soil, darker and greyer than the warm soil, so the pit reads as a stony
 column in the wall. Plan and research: [107](107-asset-only-grounds.md).
 
@@ -117,3 +117,9 @@ once, never a wall.
   out of the dirt (`dirt_grey` .5), darkens it (`dirt_shade` .8) and mixes more of the rubble's mud (.5): grey-brown
   (mean sRGB .35/.31/.27) against the soil's warm brown (.42/.32/.20). Under the lamp it still reads brown, but cooler,
   with the pale stones.
+
+## Iteration 2 (user, 2026-10-06)
+
+- "The backfill might be better easier to dig, especially early game." Its bite is now 0.92 x 0.92 x 0.9 of soil's
+  at 1.05 of the stroke (`EquipmentProgression`), about 73% of soil's rate at every level (half was 47–55%). The
+  drill's bit follows, at about three quarters speed.

@@ -27,7 +27,7 @@ namespace SomethingDownThere.Tests
             state.Terrain = grid.Capture();
             // Stash chests keep their pose, fall and opened lid (106).
             state.Chests = new[] { new ChestSnapshot { Position = new Vector3(1.5f, 2.2f, 1.1f), Rotation = Quaternion.Euler(0, 37, 0) },
-                new ChestSnapshot { Position = new Vector3(2.5f, 1.9f, 3.1f), Rotation = Quaternion.Euler(4, 210, -2), Released = true, Opened = true } };
+                new ChestSnapshot { Position = new Vector3(2.5f, 1.9f, 3.1f), Rotation = Quaternion.Euler(4, 210, -2), Released = true, Opened = true, Breached = true } };
             using var memory = new MemoryStream();
             WorldSaveCodec.Write(memory, state);
             memory.Position = 0;
@@ -379,8 +379,8 @@ namespace SomethingDownThere.Tests
             Assert.That(actual.Inventory.Select(i => (i.Id, i.Name, i.Value)), Is.EqualTo(expected.Inventory.Select(i => (i.Id, i.Name, i.Value))));
             Assert.That(actual.Finds.Select(f => (f.ContentId, f.Item.Id, f.Collected, f.Position, f.Rotation, f.Scale, f.PhysicsReleased)),
                 Is.EqualTo(expected.Finds.Select(f => (f.ContentId, f.Item.Id, f.Collected, f.Position, f.Rotation, f.Scale, f.PhysicsReleased))));
-            Assert.That(actual.Chests.Select(c => (c.Position, c.Rotation, c.Released, c.Opened)),
-                Is.EqualTo(expected.Chests.Select(c => (c.Position, c.Rotation, c.Released, c.Opened))));
+            Assert.That(actual.Chests.Select(c => (c.Position, c.Rotation, c.Released, c.Opened, c.Breached)),
+                Is.EqualTo(expected.Chests.Select(c => (c.Position, c.Rotation, c.Released, c.Opened, c.Breached))));
         }
 
         [Test]

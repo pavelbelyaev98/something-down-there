@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Iron
   minor: 1
   detectorEligible: 0
-  saleValue: 6
+  saleValue: 8
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.097925365, y: -0.05182468, z: 0.032354042}

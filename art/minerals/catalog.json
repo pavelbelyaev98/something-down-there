@@ -9,9 +9,9 @@
       "fbx": "coal/Coal.fbx",
       "collision_fbx": "coal/Coal_collision.fbx",
       "dimensions_m": [
-        0.6,
-        0.44,
-        0.4
+        0.7,
+        0.55,
+        0.45
       ],
       "instances": 1200,
       "shallow_instances": 0,
@@ -25,7 +25,7 @@
       "core_minimum_depth_m": 1,
       "core_maximum_depth_m": 5.5,
       "core_share": 0.9,
-      "model_scale": 0.7,
+      "model_scale": 0.6,
       "textures": {
         "BaseColor": "coal/BaseColor.png",
         "Normal": "coal/Normal.png",
@@ -53,7 +53,7 @@
       "minimum_depth_m": 1.1,
       "maximum_depth_m": 60,
       "core_minimum_depth_m": 5,
-      "core_maximum_depth_m": 27,
+      "core_maximum_depth_m": 37,
       "core_share": 0.86,
       "model_scale": 1.5
     },
@@ -70,15 +70,15 @@
       ],
       "instances": 1280,
       "shallow_instances": 0,
-      "sale_value": 6,
+      "sale_value": 8,
       "slots": 1,
       "detector_eligible": false,
       "lay_on_side": false,
       "required_exposure": 0.6,
       "minimum_depth_m": 3,
-      "maximum_depth_m": 80,
-      "core_minimum_depth_m": 25,
-      "core_maximum_depth_m": 47,
+      "maximum_depth_m": 85,
+      "core_minimum_depth_m": 36,
+      "core_maximum_depth_m": 58,
       "core_share": 0.86,
       "model_scale": 1.5
     },
@@ -95,15 +95,15 @@
       ],
       "instances": 1400,
       "shallow_instances": 0,
-      "sale_value": 9,
+      "sale_value": 12,
       "slots": 1,
       "detector_eligible": false,
       "lay_on_side": false,
       "required_exposure": 0.6,
       "minimum_depth_m": 3,
       "maximum_depth_m": 100,
-      "core_minimum_depth_m": 45,
-      "core_maximum_depth_m": 69,
+      "core_minimum_depth_m": 56,
+      "core_maximum_depth_m": 76,
       "core_share": 0.86,
       "model_scale": 1.5
     },
@@ -120,15 +120,15 @@
       ],
       "instances": 1510,
       "shallow_instances": 0,
-      "sale_value": 13,
+      "sale_value": 16,
       "slots": 1,
       "detector_eligible": false,
       "lay_on_side": false,
       "required_exposure": 0.6,
       "minimum_depth_m": 4,
       "maximum_depth_m": 125,
-      "core_minimum_depth_m": 67,
-      "core_maximum_depth_m": 93,
+      "core_minimum_depth_m": 75,
+      "core_maximum_depth_m": 98,
       "core_share": 0.86,
       "model_scale": 1.5
     },
@@ -136,66 +136,66 @@
       "content_id": "mineral_emerald",
       "display_name": "Emerald",
       "tier": "common",
-      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Beryl_01.prefab",
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Beryl_01.prefab",
       "prop_looks": [
         {
           "content_id": "mineral_emerald_b",
-          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Beryl_02.prefab"
+          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Beryl_02.prefab"
         }
       ],
       "instances": 1400,
-      "shallow_instances": 0,
-      "sale_value": 20,
-      "slots": 1,
-      "detector_eligible": false,
-      "lay_on_side": false,
-      "required_exposure": 0.6,
-      "minimum_depth_m": 6,
-      "maximum_depth_m": 149.2,
-      "core_minimum_depth_m": 91,
-      "core_maximum_depth_m": 115,
-      "core_share": 0.86,
-      "model_scale": 0.3
-    },
-    {
-      "content_id": "mineral_ruby",
-      "display_name": "Ruby",
-      "tier": "common",
-      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Ruby_1.prefab",
-      "prop_looks": [
-        {
-          "content_id": "mineral_ruby_b",
-          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Ruby_2.prefab"
-        }
-      ],
-      "instances": 1160,
       "shallow_instances": 0,
       "sale_value": 30,
       "slots": 1,
       "detector_eligible": false,
       "lay_on_side": false,
       "required_exposure": 0.6,
+      "minimum_depth_m": 6,
+      "maximum_depth_m": 149.2,
+      "core_minimum_depth_m": 96,
+      "core_maximum_depth_m": 113,
+      "core_share": 0.95,
+      "model_scale": 0.3
+    },
+    {
+      "content_id": "mineral_ruby",
+      "display_name": "Ruby",
+      "tier": "common",
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Ruby_1.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_ruby_b",
+          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Ruby_2.prefab"
+        }
+      ],
+      "instances": 1160,
+      "shallow_instances": 0,
+      "sale_value": 45,
+      "slots": 1,
+      "detector_eligible": false,
+      "lay_on_side": false,
+      "required_exposure": 0.6,
       "minimum_depth_m": 8,
       "maximum_depth_m": 149.2,
-      "core_minimum_depth_m": 113,
-      "core_maximum_depth_m": 133,
-      "core_share": 0.86,
+      "core_minimum_depth_m": 112,
+      "core_maximum_depth_m": 132,
+      "core_share": 0.95,
       "model_scale": 0.25
     },
     {
       "content_id": "mineral_diamond",
       "display_name": "Diamond",
       "tier": "common",
-      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Quartz_1.prefab",
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Quartz_1.prefab",
       "prop_looks": [
         {
           "content_id": "mineral_diamond_b",
-          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Quartz_2.prefab"
+          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Quartz_2.prefab"
         }
       ],
       "instances": 1060,
       "shallow_instances": 0,
-      "sale_value": 45,
+      "sale_value": 70,
       "slots": 1,
       "detector_eligible": false,
       "lay_on_side": false,
@@ -204,7 +204,7 @@
       "maximum_depth_m": 149.2,
       "core_minimum_depth_m": 131,
       "core_maximum_depth_m": 149.2,
-      "core_share": 0.86,
+      "core_share": 0.95,
       "model_scale": 0.18
     }
   ]

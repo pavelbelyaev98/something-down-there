@@ -2,16 +2,16 @@
   "schema_version": 1,
   "finds": [
     {
-      "prefab": "Assets/Content/BuriedProps/MiningPack/Ingot_Copper_Flat.prefab",
+      "prefab": "Assets/Content/BuriedProps/MiningPack/Ingot_Bronze_Flat.prefab",
       "mass_kg": 2,
       "find": {
-        "content_id": "treasure_ingot_copper",
-        "display_name": "Copper ingot",
+        "content_id": "treasure_ingot_bronze",
+        "display_name": "Bronze ingot",
         "tier": "common",
         "recovery": "bag",
-        "instances": 4,
+        "instances": 6,
         "shallow_instances": 0,
-        "sale_value": 60,
+        "sale_value": 45,
         "slots": 1,
         "detector_eligible": false,
         "required_exposure": 0.6,
@@ -21,8 +21,8 @@
         "hand_picked": true,
         "prop_looks": [
           {
-            "content_id": "treasure_ingot_copper_b",
-            "prefab": "Assets/Content/BuriedProps/MiningPack/Ingot_Copper_Thin.prefab"
+            "content_id": "treasure_ingot_bronze_b",
+            "prefab": "Assets/Content/BuriedProps/MiningPack/Ingot_Bronze_Thin.prefab"
           }
         ]
       }
@@ -35,7 +35,7 @@
         "display_name": "Silver ingot",
         "tier": "common",
         "recovery": "bag",
-        "instances": 3,
+        "instances": 4,
         "shallow_instances": 0,
         "sale_value": 110,
         "slots": 1,

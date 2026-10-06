@@ -3,7 +3,8 @@
 **Status:** complete. Holding Interact for 1.5 s forces the old chest's rusted lock (one `HoldInteraction` shared
 with the crane mark through `IHoldTarget`); an opened chest with nothing left in its hollow goes the next time it is
 out of the player's sight and untouched, and is no longer saved. The chest stands in a wide pocket of air, and its
-lock is forced only from in front of it. A first version, open to change after the playtest.
+lock is forced only from in front of it. Breaking into the pocket caves part of it in once, an A/B against a fall
+of crumbs and dust only. A first version, open to change after the playtest.
 Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
@@ -200,3 +201,16 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
 - Ordinary finds keep out of the pocket by a sphere around each quarter of it (`BuriedChest.PocketReserves`). One
   sphere around the wider pocket reached about 3 m up and would have emptied the rock layer over the first chest,
   under the plot centre.
+
+## Iteration 3 (user, 2026-10-06): the break-in
+
+- "I like collapses: when people reach the air space it should partly collapse, or have some particles falling
+  with slight dust." Both are built as an A/B (admin **Break-in: collapse / dust only**, default collapse):
+  - `BuriedChest` watches excavation changes near it. The first cut whose open ground reaches the pocket (the
+    segment from the cut to the pocket's nearest point is air, sampled every 8 cm) breaks in, once.
+  - Collapse: a 1 x 0.8 x 1 m slab of the fill just outside the breach clears (`ClearLoadSweep`), so a piece of
+    roof or wall is gone, with clods, crumbs and a dust puff from the crane's ground-break effects
+    (`SalvageCrane.EmitGroundBreak`, split out of its soil break).
+  - Dust only: a lighter fall of crumbs and dust at the breach.
+  - `ChestSnapshot.Breached` keeps it from happening twice (save format 19).
+- Digging beside the pocket never sets it off. Restoring a save never replays it.

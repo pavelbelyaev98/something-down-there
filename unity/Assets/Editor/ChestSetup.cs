@@ -26,13 +26,14 @@ namespace SomethingDownThere.Editor
         // In front of its lock the pocket reaches PocketFront further, room to stand there and open it (user, 2026-10-06).
         private const float PocketFront = .8f;
         [Serializable] private sealed class Source { public int schema_version; public string prefab, display_name; public int items; public Content[] contents; }
-        [Serializable] private sealed class Content { public string content_id; public int weight; }
+        [Serializable] private sealed class Content { public string content_id; public float shallow_weight, deep_weight; }
 
         internal static void Configure(DiscoveryCatalog catalog)
         {
             var source = JsonUtility.FromJson<Source>(File.ReadAllText(Path.GetFullPath(Path.Combine(Application.dataPath, "../../art/old-chest/catalog.json"))));
             if (source == null || source.schema_version != 1 || string.IsNullOrWhiteSpace(source.display_name) || source.items < 1
-                || source.contents == null || source.contents.Length == 0 || source.contents.Any(c => c == null || c.weight < 1 || string.IsNullOrWhiteSpace(c.content_id)))
+                || source.contents == null || source.contents.Length == 0 || source.contents.Any(c => c == null || c.shallow_weight < 0 || c.deep_weight < 0 || c.shallow_weight + c.deep_weight <= 0
+                    || string.IsNullOrWhiteSpace(c.content_id)))
                 throw new InvalidDataException("Invalid old chest source.");
             var basePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(source.prefab);
             if (basePrefab == null) throw new InvalidDataException("Missing " + source.prefab + " (run Configure Buried Props).");
@@ -119,10 +120,13 @@ namespace SomethingDownThere.Editor
                 float hollowTop = outer.max.y + HollowMargin, hollowBottom = (outer.min.y + floor) * .5f;
                 var hollowHalf = new Vector3(outer.extents.x + HollowMargin, (hollowTop - hollowBottom) * .5f, outer.extents.z + HollowMargin);
                 var hollowCentre = new Vector3(outer.center.x, (hollowTop + hollowBottom) * .5f, outer.center.z);
-                // Six seats on the floor in two rows of three (user, 2026-10-06: bigger ingots, more of them), so a turned ingot
-                // keeps clear of its neighbours and the walls.
-                var seats = new[] { -.62f, 0f, .62f }.SelectMany(z => new[] { new Vector2(-.5f, z), new Vector2(.5f, z) })
-                    .Select(s => new Vector3(s.x * innerX, floor, s.y * innerZ)).ToArray();
+                // Six seats at the back, away from the lock (user, 2026-10-06: equal spacing looked laid out): three along
+                // the back wall, two over the gaps between them and one before those. DiscoveryCatalog.ChestHeap sets each
+                // find on those already under it, so the contents settle into a heap. front is the lock's side, measured below.
+                float lockSide = Mathf.Sign(outer.center.x - root.transform.InverseTransformPoint(hinge.position).x + 1e-4f);
+                var seats = new[] { new Vector2(-.62f, -.5f), new Vector2(-.62f, .05f), new Vector2(-.62f, .6f),
+                        new Vector2(-.42f, -.22f), new Vector2(-.42f, .33f), new Vector2(-.2f, .08f) }
+                    .Select(s => new Vector3(s.x * lockSide * innerX, floor, s.y * innerZ)).ToArray();
                 if (source.items > seats.Length) throw new InvalidDataException($"The old chest seats {seats.Length} items at most.");
                 var pivot = root.transform.InverseTransformPoint(hinge.position);
                 float reach = vertices.Where((v, i) => BoneOf(i) == Lid).Max(v => new Vector2(v.x - pivot.x, v.y - pivot.y).magnitude);
@@ -161,6 +165,7 @@ namespace SomethingDownThere.Editor
                 data.FindProperty("pocketCentre").vector3Value = pocketCentre;
                 data.FindProperty("pocketHalf").vector3Value = pocketHalf;
                 data.FindProperty("front").vector3Value = new Vector3(front, 0, 0);
+                data.FindProperty("rim").floatValue = body.max.y;
                 // Ordinary finds keep out of the whole pocket, not only the wood.
                 data.FindProperty("radius").floatValue = pocketHalf.magnitude + pocketCentre.magnitude + .02f;
                 Write(data.FindProperty("contentSeats"), seats);
@@ -171,7 +176,8 @@ namespace SomethingDownThere.Editor
                 var saved = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
                 catalog.Chest = saved.GetComponent<BuriedChest>();
                 catalog.ChestItems = source.items;
-                catalog.ChestContents = source.contents.Select(c => new DiscoveryCatalog.ChestContent { ItemId = c.content_id, Weight = c.weight }).ToArray();
+                catalog.ChestContents = source.contents.Select(c => new DiscoveryCatalog.ChestContent
+                    { ItemId = c.content_id, ShallowWeight = c.shallow_weight, DeepWeight = c.deep_weight }).ToArray();
                 Debug.Log($"Old chest: outer {outer.size:F3}, inner floor {floor:F3}, inner walls x {innerX:F3} z {innerZ:F3}, hinge {pivot:F3}, lid reach {reach:F2}, pocket {pocketCentre:F2} half {pocketHalf:F2}.");
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }

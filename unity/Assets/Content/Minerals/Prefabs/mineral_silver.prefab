@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Silver
   minor: 1
   detectorEligible: 0
-  saleValue: 9
+  saleValue: 12
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.06680852, y: -0.050520543, z: -0.11486609}
