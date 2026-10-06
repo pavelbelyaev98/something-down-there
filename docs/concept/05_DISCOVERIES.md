@@ -154,16 +154,18 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 **Moving discoveries**: objects, including uniques waiting for the crane, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
-pit to the old chest at its bottom, clear the space its lid swings through, strike its rusted lock
-with the tool, and the lid opens on what it holds (a prospector's few pieces of silver and gold).
+pit to the old chest at its bottom, clear the space its lid swings through, hold Interact to force
+its rusted lock, and the lid opens on what it holds (a prospector's few pieces of silver and gold).
 The outside gives a clue; the contents deliver a second reveal and a small piece of buried history.
 
 - Use a few selected objects, not every box or appliance. Contents fit the container and its scene.
-- Opening happens in the world with the same tool; no lockpicking, extra keys or inventory search: a
-  lock buried for decades is rusted shut, and it breaks. A key far from its lock is a blind search,
-  and one beside it adds nothing.
-- A container too big for the bag opens where it lies and stays there, solid, after it is emptied;
-  it is never craned or sold.
+- Opening happens in the world by hand: hold Interact on it, the same hold that marks a unique for
+  the crane; no lockpicking, extra keys or inventory search. A lock buried for decades is rusted
+  shut, and it gives. A key far from its lock is a blind search, and one beside it adds nothing.
+- A container too big for the bag opens where it lies; it is never craned or sold. Once emptied it
+  goes the next time it is out of the player's sight and untouched, so the pits do not fill with
+  empty chests and nothing pops away in front of the player or from under their feet (user,
+  2026-10-05; a first version).
 - Contents become visible before normal collection. Ordinary valuables sell; special exhibits keep
  their existing display/story role. The container's own collection must not hide or lose its contents.
 - Contents belong to the save's finite find population; opening or reloading never rerolls or

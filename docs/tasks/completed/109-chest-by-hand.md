@@ -1,7 +1,9 @@
 # 109 — The Chest by Hand
 
-**Status:** planned after `108`. Spec written ahead (2026-10-05); re-check against the code when it
-starts. Plan and research: [107](completed/107-asset-only-grounds.md).
+**Status:** complete. Holding Interact for 1.5 s forces the old chest's rusted lock (one `HoldInteraction` shared
+with the crane mark through `IHoldTarget`); an opened chest with nothing left in its hollow goes the next time it is
+out of the player's sight and untouched, and is no longer saved. A first version, open to change after the playtest.
+Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
 
@@ -161,3 +163,11 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
   - whether the hold length feels right;
   - whether the quiet despawn feels right or should change (stay until the tool breaks it, or
     crumble in view).
+
+## Results
+
+- Built as designed. The prompt percentage now follows any hold, not only the crane mark.
+- "Out of sight" is the camera frustum test plus two line-of-sight rays (centre and near the top); soil in between
+  counts as out of sight, anything else (the chest itself, finds, lamps) as seen.
+- `StashChestIntegrationTests` cover opening by hold, a dig never opening it, and the empty chest staying while
+  anything is inside, in sight or touched, then going and staying gone after a load.

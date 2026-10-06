@@ -16,6 +16,15 @@ namespace SomethingDownThere
         bool TryInteract(FpsPlayer player);
     }
 
+    // Holding Interact on it completes an action (concept 05 §3): the crane's lifting eye on a unique, a chest's rusted
+    // lock. HoldInteraction owns the timing; releasing or losing the target cancels.
+    public interface IHoldTarget
+    {
+        bool CanHold(FpsPlayer player);
+        float HoldSeconds(FpsPlayer player);
+        bool CompleteHold(FpsPlayer player, RaycastHit hit);
+    }
+
     public abstract class StationTarget : MonoBehaviour, IInteractionTarget
     {
         public abstract string Title { get; }

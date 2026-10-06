@@ -409,7 +409,7 @@ namespace SomethingDownThere
                 else mark.Show(payload, job.AttachLocal, Vector3.zero, 1, true);
             }
             else if (player != null && player.TryGetRecoveryMark(out var find, out var hit))
-                mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.ExtractionMarkProgress, false);
+                mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.HoldProgress, false);
             else mark.Hide();
         }
 

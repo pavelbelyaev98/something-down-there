@@ -449,7 +449,7 @@ namespace SomethingDownThere.Tests
             Assert.That(mark.gameObject.activeSelf, Is.False, "A blocked ray cannot preview a buried or hidden point.");
             occluder.SetActive(false); UnityEngine.Object.Destroy(occluder);
             winch.SendMessage("RefreshMark");
-            var holding = new FindExtractionInteraction(player);
+            var holding = new HoldInteraction(player);
             holding.Tick(default, .1f);
             holding.Tick(new FpsInputFrame { InteractHeld = true }, winch.Settings.MarkSeconds * .5f);
             Assert.That(winch.Busy, Is.False);

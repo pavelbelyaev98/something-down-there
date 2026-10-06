@@ -55,13 +55,17 @@ namespace SomethingDownThere
         [SerializeField] private SalvageCrane crane;
         [SerializeField] private WorksiteTools worksiteTools;
         public WorksiteTools WorksiteTools => worksiteTools;
-        private FindExtractionInteraction extractionInteraction;
+        private HoldInteraction holdInteraction;
         public SalvageCrane Crane => crane;
-        public float ExtractionMarkProgress => extractionInteraction?.Progress ?? 0;
+        // How far the current hold of Interact has come (0 when none): marking a unique for the crane, forcing a chest's lock.
+        public float HoldProgress => holdInteraction?.Progress ?? 0;
+        // The unique the hold would mark for the crane now, for the mark preview.
         internal bool TryGetRecoveryMark(out BuriedFind find, out RaycastHit hit)
         {
-            find=null; hit=default;
-            return extractionInteraction!=null && extractionInteraction.TryGetTarget(out find, out hit);
+            find = null; hit = default;
+            if (holdInteraction == null || !holdInteraction.TryGetTarget(out var held, out hit)) return false;
+            find = held as BuriedFind;
+            return find != null;
         }
         private FindProximityCollection proximityCollection;
         private LoadRide loadRide;
@@ -229,7 +233,7 @@ namespace SomethingDownThere
                     Application.isEditor ? "EditorPreferences" : "Preferences", "input-v1.ini")));
             input = new FpsInput(InputSettings);
             Detector = new FindDetector(this);
-            extractionInteraction = new FindExtractionInteraction(this);
+            holdInteraction = new HoldInteraction(this);
             proximityCollection = new FindProximityCollection(this, motor, worldMask);
             loadRide = new LoadRide(motor, worldMask);
             pickupPresentation = new FindPickupPresentation(transform, viewCamera);
@@ -356,7 +360,7 @@ namespace SomethingDownThere
             motor.enabled = true;
             Physics.SyncTransforms();
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
             worksiteTools?.Restore(snapshot.Worksite);
         }
 
@@ -371,7 +375,7 @@ namespace SomethingDownThere
             {
                 Menu = menu;
                 input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
                 transitionFrame = Time.frameCount;
                 MenuChanged?.Invoke();
             }
@@ -417,8 +421,8 @@ namespace SomethingDownThere
         public void Tick(FpsInputFrame frame, float deltaTime)
         {
             if (!GameplayActive) worksiteTools?.Cancel();
-            if (!GameplayActive) extractionInteraction?.Reset();
-            if (BindingCapture != null && BindingCapture.BlocksInput) { extractionInteraction?.Reset(); return; }
+            if (!GameplayActive) holdInteraction?.Reset();
+            if (BindingCapture != null && BindingCapture.BlocksInput) { holdInteraction?.Reset(); return; }
             if (Persistence != null && Persistence.BlocksPlay)
             {
                 if (focused && frame.BackPressed && transitionFrame != Time.frameCount)
@@ -475,7 +479,7 @@ namespace SomethingDownThere
             if (!frame.DigHeld || frame.DigPressed) digCooldown = Mathf.Max(0f, digCooldown);
             RefreshTargetPrompt();
             if (worksiteTools != null && worksiteTools.HandleInput(frame)) { RefreshTargetPrompt(); return; }
-            if (extractionInteraction.Tick(frame, deltaTime)) { RefreshTargetPrompt(); return; }
+            if (holdInteraction.Tick(frame, deltaTime)) { RefreshTargetPrompt(); return; }
             // Interaction wins a simultaneous press so opening a station cannot also dig.
             if (frame.InteractPressed)
             {
@@ -590,7 +594,7 @@ namespace SomethingDownThere
 
         private Ray AimRay => new Ray(viewCamera.transform.position, viewCamera.transform.forward);
 
-        private static T Contract<T>(Collider collider) where T : class
+        internal static T Contract<T>(Collider collider) where T : class
         {
             foreach (var component in collider.GetComponentsInParent<MonoBehaviour>())
                 if (component.isActiveAndEnabled && component is T target) return target;
@@ -606,12 +610,10 @@ namespace SomethingDownThere
             var find = Contract<BuriedFind>(hit.collider);
             var interactable = Contract<IInteractionTarget>(hit.collider);
             if (find != null && hit.distance <= PickupReach(find))
-            {
                 TargetPrompt = find.GetPrompt(this);
-                if (find.CanMark && ExtractionMarkProgress > 0) TargetPrompt += $"  {Mathf.CeilToInt(ExtractionMarkProgress * 100)}%";
-            }
             else if (hit.distance <= tuning.InteractReach && interactable != null)
                 TargetPrompt = interactable.GetPrompt(this);
+            if (HoldProgress > 0 && !string.IsNullOrEmpty(TargetPrompt)) TargetPrompt += $"  {Mathf.CeilToInt(HoldProgress * 100)}%";
             else if (hit.distance <= EffectiveDigReach && Contract<IDigTarget>(hit.collider) is IDigTarget target && !target.CanDig)
                 TargetPrompt = target.DigPrompt;
             if (find == null && interactable == null && worksiteTools != null)
@@ -627,7 +629,7 @@ namespace SomethingDownThere
 
         internal void SuppressWorldActions()
         {
-            input?.SuppressHeldActions(); extractionInteraction?.Reset();
+            input?.SuppressHeldActions(); holdInteraction?.Reset();
             blockedPickup = null; digCooldown = 0; pendingScoop = -1f;
         }
 
@@ -826,7 +828,7 @@ namespace SomethingDownThere
             digCooldown = DigPulse = 0; pendingScoop = -1f;
             blockedPickup = null;
             input?.SuppressDig();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
         }
 
         public void ToggleAdminHover()
@@ -1116,7 +1118,7 @@ namespace SomethingDownThere
             motor.enabled = true;
             Physics.SyncTransforms();
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
         }
 
         private bool TryAutomaticRescue()
@@ -1238,7 +1240,7 @@ namespace SomethingDownThere
             Time.timeScale = 0f;
             ResetJetpackHold();
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
             transitionFrame = Time.frameCount;
             TargetPrompt = "";
             Cursor.lockState = CursorLockMode.None;
@@ -1260,7 +1262,7 @@ namespace SomethingDownThere
             StationNotice = "";
             Time.timeScale = savedTimeScale;
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
             transitionFrame = Time.frameCount;
             SetGameplayCursor();
             MenuChanged?.Invoke();
@@ -1279,7 +1281,7 @@ namespace SomethingDownThere
             Menu = category == SettingsCategory.Accessibility ? PlayerMenu.CameraComfort
                 : category == SettingsCategory.Controls ? PlayerMenu.InputSettings : PlayerMenu.DeviceSettings;
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
             transitionFrame = Time.frameCount;
             MenuChanged?.Invoke();
         }
@@ -1296,7 +1298,7 @@ namespace SomethingDownThere
             CameraSettings.Flush(); InputSettings.Flush(); GameSettings.Flush();
             Menu = Persistence != null && Persistence.AwaitingGameChoice ? PlayerMenu.MainMenu : PlayerMenu.Pause;
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
             transitionFrame = Time.frameCount;
             MenuChanged?.Invoke();
         }
@@ -1327,7 +1329,7 @@ namespace SomethingDownThere
             focused = hasFocus;
             ResetJetpackHold();
             input?.SuppressHeldActions();
-            extractionInteraction?.Reset();
+            holdInteraction?.Reset();
             if (!hasFocus && !IsMenuOpen) OpenMenu(PlayerMenu.Pause);
         }
 

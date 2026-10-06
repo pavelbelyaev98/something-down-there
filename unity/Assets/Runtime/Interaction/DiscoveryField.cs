@@ -254,6 +254,14 @@ namespace SomethingDownThere
             return chest;
         }
 
+        // An emptied chest goes for good (109): it simply stops being captured, so a load never brings it back.
+        internal void RemoveChest(BuriedChest chest)
+        {
+            if (!chests.Remove(chest)) return;
+            Destroy(chest.gameObject);
+            NotifyMotion();
+        }
+
         private void ClearChests()
         {
             foreach (var chest in chests) { chest.gameObject.SetActive(false); Destroy(chest.gameObject); }

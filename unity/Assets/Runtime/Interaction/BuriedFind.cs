@@ -4,7 +4,7 @@ namespace SomethingDownThere
 {
     // Authored meshes carry real surface samples. Ellipsoid fallback is legacy fixture support.
     [DisallowMultipleComponent, RequireComponent(typeof(MeshRenderer), typeof(MeshCollider))]
-    public sealed class BuriedFind : MonoBehaviour, IInteractionTarget
+    public sealed class BuriedFind : MonoBehaviour, IInteractionTarget, IHoldTarget
     {
         [SerializeField] private string saveContentId;
         public string SaveContentId => saveContentId;
@@ -46,6 +46,10 @@ namespace SomethingDownThere
         public bool ExposureReady => Item != null && State == FindState.World && Exposure >= RequiredExposure;
         public bool Collectible => !RopeTarget && ExposureReady;
         public bool CanMark => RopeTarget && ExposureReady;
+        // Holding Interact on an exposed unique bolts the crane's lifting eye on where the player aims (concept 05 §3).
+        public bool CanHold(FpsPlayer player) => isActiveAndEnabled && CanMark && player.Crane != null && player.Crane.Configured && !player.Crane.Busy;
+        public float HoldSeconds(FpsPlayer player) => player.Crane.Settings.MarkSeconds;
+        public bool CompleteHold(FpsPlayer player, RaycastHit hit) => player.Crane.TryMark(this, hit.point, hit.normal);
         public Bounds LocalHull => hitCollider.sharedMesh.bounds;
         // Released convex bodies can rest slightly inside the sampled
         // field's smooth collider. Permit only shallow contact on a free item;
