@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,4,3,2,3,2,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,3,2,2,3,3,2}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -173,8 +173,8 @@ namespace SomethingDownThere.Tests
             return -1;
         }
 
-        // Concept 05 §3 finds inside finds (106, 113): every stash's chest holds ChestItems of its contents (coins and
-        // ingots, taken by hand), lying level on its floor inside its hollow; nothing else sits in a chest or its pocket of
+        // Concept 05 §3 finds inside finds (106, 113): every stash's chest holds ChestItems of its contents (ingots and
+        // crystals, taken by hand), lying level on its floor inside its hollow; nothing else sits in a chest or its pocket of
         // air; the treasure lies nowhere else; counts are unchanged.
         [TestCase(90127)] [TestCase(12)]
         public void EveryStashChestHoldsItsContentsAndNothingElse(int seed)

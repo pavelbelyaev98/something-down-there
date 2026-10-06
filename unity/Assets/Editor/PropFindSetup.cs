@@ -7,8 +7,8 @@ using UnityEngine;
 namespace SomethingDownThere.Editor
 {
     // Finds made from bought prop prefabs (BuriedPropsSetup): rubbish (106: art/tv-set, art/big-old-tv), which lies loose
-    // in the soil in its depth band like any find, and a chest's treasure (113: art/mining-pack, coins and ingots the old
-    // chests hold, taken by hand). Each source names its props and their find policy; a find can take further
+    // in the soil in its depth band like any find, and a chest's treasure (113: the ingots in art/mining-pack and the gem
+    // crystals in art/pure-nature-crystal-caverns that the old chests hold, taken by hand). Each source names its props and their find policy; a find can take further
     // appearances, each its own prop. The props bake to centred meshes (PropBake); the find prefab, surface samples and
     // detail levels come from the shared discovery import.
     public static class PropFindSetup
@@ -18,6 +18,7 @@ namespace SomethingDownThere.Editor
             ("art/tv-set/catalog.json", "Assets/Content/Discoveries/Junk", true),
             ("art/big-old-tv/catalog.json", "Assets/Content/Discoveries/Junk", true),
             ("art/mining-pack/catalog.json", "Assets/Content/Discoveries/Treasure", false),
+            ("art/pure-nature-crystal-caverns/catalog.json", "Assets/Content/Discoveries/Treasure", false),
         };
         [Serializable] private sealed class Source { public int schema_version; public PropFind[] finds; }
         [Serializable] private sealed class PropFind { public string prefab; public float mass_kg; public DiscoveryContentSetup.SourceEntry find; }

@@ -5,7 +5,7 @@
   - rubble, lava and water;
   - tiling `_RockDetail1/2` and `GroundDirt` surface maps;
   - crystal, layered-emissive and lava shaders.
-- **Purpose:** The deep gems: emerald, ruby and diamond are its beryl, ruby and quartz crystals in project colours (113, `Content/BuriedProps/CrystalCaverns`). Later perhaps the geodes (`110`). Its lava and water are not used.
+- **Purpose:** The deep gems: emerald, ruby and diamond are its beryl, ruby and quartz crystals in project colours (113, `Content/BuriedProps/CrystalCaverns`); the same crystals at chest size are old-chest treasure (`catalog.json`, taken by hand). Later perhaps the geodes (`110`). Its lava and water are not used.
 - **Source/License:** User-purchased BK Asset Store pack (2026-10-05), Unity Asset Store EULA (Extension Asset, single entity); keep source access restricted.
 - **Unity Path:** `unity/Assets/BK/PureNature_CrystalCaverns/`, plus `BK_Crystal`, `BK_Lava` and `BK_StandardLayer_Emissive` in the shared `Pure_Common/Shaders`.
 - **Status/workflow:**

@@ -45,6 +45,15 @@ namespace SomethingDownThere.Tests
 
         private BuriedChest FirstChest() => field.Chests.OrderBy(c => terrain.SurfaceHeight - c.transform.position.y).First();
 
+        // The player's eye a metre in front of the chest's lock (or behind it), looking at it.
+        private void Stand(BuriedChest chest, float side)
+        {
+            var camera = player.ViewCamera.transform;
+            camera.position = chest.transform.TransformPoint(new Vector3(side, .6f, 0));
+            camera.LookAt(chest.transform.position);
+            Physics.SyncTransforms();
+        }
+
         private BuriedFind[] Contents(BuriedChest chest)
             => field.Finds.Where(f => !f.Collected && Vector3.Distance(f.transform.position, chest.transform.position) < chest.Radius).ToArray();
 
@@ -73,8 +82,12 @@ namespace SomethingDownThere.Tests
             Physics.SyncTransforms();
             Assert.That(Physics.Raycast(eye, (item - eye).normalized, out var blocked, 3) && blocked.collider.GetComponentInParent<BuriedChest>() == chest,
                 Is.True, "The closed lid hides what it holds.");
+            Stand(chest, -1);
+            Assert.That(chest.CanHold(player), Is.False, "Not from behind it.");
+            Assert.That(chest.GetPrompt(player), Does.Contain("Go round to its lock"));
+            Stand(chest, 1);
             Assert.That(chest.GetPrompt(player), Does.Contain("Hold").And.Contain("rusted lock"));
-            Assert.That(chest.CanHold(player), Is.True);
+            Assert.That(chest.CanHold(player), Is.True, "From in front of its lock.");
             Assert.That(chest.HoldSeconds(player), Is.EqualTo(BuriedChest.LockSeconds));
             Assert.That(typeof(IDigTarget).IsAssignableFrom(chest.GetType()), Is.False, "The tool never opens it.");
 
@@ -108,6 +121,7 @@ namespace SomethingDownThere.Tests
             yield return new WaitForSeconds(1.5f);
             var contents = Contents(chest);
             Assert.That(contents.Length, Is.EqualTo(field.Catalog.ChestItems));
+            Stand(chest, 1);
             Assert.That(chest.CompleteHold(player, default), Is.True);
             yield return new WaitForSeconds(3.5f);
             var camera = player.ViewCamera.transform;
@@ -148,8 +162,8 @@ namespace SomethingDownThere.Tests
             Assert.That(field.Chests.Count, Is.EqualTo(2), "A load keeps it gone.");
         }
 
-        // What it holds (113: coins and ingots) is taken by hand, one piece per Interact; neither the dig action nor walking
-        // past takes it.
+        // What it holds (113: ingots and crystals) is taken by hand, one piece per Interact; neither the dig action nor
+        // walking past takes it.
         [UnityTest]
         public IEnumerator ItsTreasureIsTakenByHandOnePieceAtATime()
         {
@@ -158,11 +172,12 @@ namespace SomethingDownThere.Tests
             var chest = FirstChest();
             var t = chest.transform;
             yield return new WaitForSeconds(1.5f);
+            Stand(chest, 1);
             Assert.That(chest.CompleteHold(player, default), Is.True);
             yield return new WaitForSeconds(3.5f);
             var contents = Contents(chest);
             Assert.That(contents.Length, Is.EqualTo(field.Catalog.ChestItems));
-            Assert.That(contents.All(f => f.HandPicked && f.Collectible), Is.True, "Coins and ingots, free to take.");
+            Assert.That(contents.All(f => f.HandPicked && f.Collectible), Is.True, "Ingots and crystals, free to take.");
             var find = contents[0];
             var camera = player.ViewCamera.transform;
             camera.position = t.TransformPoint(new Vector3(.1f, .9f, 0));

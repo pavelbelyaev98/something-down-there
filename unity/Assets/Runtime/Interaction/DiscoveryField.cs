@@ -181,9 +181,49 @@ namespace SomethingDownThere
                 finds.Add(find);
             }
             foreach (var find in finds) find.RefreshExposure();
+            SpawnGallery();
             clearsStored = true;
             initialized = true;
             PopulationRevision++;
+        }
+
+        // The Ground Lab's find gallery (user, 2026-10-06): every look of every common find set out on the surface north of
+        // the bays, a row each for the minerals, a chest's treasure and the rest, so their looks can be compared in
+        // daylight. Copies with the find's parts removed: solid scenery that names itself, never taken.
+        private const float GalleryStart = -9f, GalleryGap = .45f;
+        private static readonly float[] GalleryRows = { -.8f, 1.2f, 3.2f };
+
+        private void SpawnGallery()
+        {
+            var root = new GameObject("Find gallery");
+            root.SetActive(false);
+            root.transform.SetParent(transform, false);
+            var ends = new float[GalleryRows.Length];
+            for (int i = 0; i < ends.Length; i++) ends[i] = GalleryStart;
+            foreach (var entry in catalog.Entries)
+            {
+                if (entry.Prefab.Kind != DiscoveryKind.Common) continue;
+                int row = entry.Prefab.HandPicked ? 1 : entry.ItemId.StartsWith("junk_", StringComparison.Ordinal) ? 2 : 0;
+                string band = entry.Prefab.HandPicked ? "in old chests"
+                    : entry.CoreShare > 0 ? $"mostly {entry.CoreMinDepth:0}-{entry.CoreMaxDepth:0} m" : $"{entry.MinDepth:0}-{entry.MaxDepth:0} m";
+                for (int look = 0; look < entry.AppearanceCount; look++)
+                {
+                    var source = entry.Appearance(look);
+                    var filter = source.GetComponent<MeshFilter>();
+                    var size = Vector3.Scale(filter.sharedMesh.bounds.extents, source.transform.localScale);
+                    float x = ends[row] + size.x;
+                    ends[row] = x + size.x + GalleryGap;
+                    var piece = Instantiate(source.gameObject, root.transform);
+                    piece.transform.SetPositionAndRotation(new Vector3(x, terrain.SurfaceHeight + size.y + .02f, GalleryRows[row]), Quaternion.identity);
+                    DestroyImmediate(piece.GetComponent<FindPhysics>());
+                    DestroyImmediate(piece.GetComponent<BuriedFind>());
+                    piece.GetComponent<MeshRenderer>().enabled = true;
+                    piece.name = source.DisplayName + " " + (look + 1);
+                    piece.AddComponent<LabExhibit>().Describe(
+                        $"{source.DisplayName}  |  look {look + 1} of {entry.AppearanceCount}  |  ${source.SaleValue}  |  {band}");
+                }
+            }
+            root.SetActive(true);
         }
 
         private void ClearStored()

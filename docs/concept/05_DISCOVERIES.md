@@ -123,8 +123,8 @@ Automatic collection also reaches nearby, clearly uncovered ordinary finds in fr
 walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
 Soil, walls and partial burial still block it; a full bag stops all pickup (see §9).
-There is no carrying or throwing finds by hand: a find is dug out, bagged or craned. A chest's coins
-and ingots are taken into the bag by hand instead: each piece waits for Interact while aimed at it,
+There is no carrying or throwing finds by hand: a find is dug out, bagged or craned. A chest's ingots
+and crystals are taken into the bag by hand instead: each piece waits for Interact while aimed at it,
 one at a time, and neither digging nor walking past ever takes one (user, 2026-10-06).
 Nearly excavated rocks break loose when only shallow surface contacts remain; substantial inner
 burial keeps them anchored. Their real colliders and gravity determine the resulting motion.
@@ -158,8 +158,9 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
 pit into the pocket of air its old chest stands in, hold Interact to force its rusted lock, and the
-lid opens on what it holds: a prospector's coins and ingots of copper, silver and gold, worth far more
-than anything loose in the soil around it, each taken by hand.
+lid opens on what it holds: a prospector's ingots of copper, silver and gold and a few gem crystals,
+worth far more than anything loose in the soil around it, each taken by hand. The lock is forced from
+in front of it (user, 2026-10-06).
 The outside gives a clue; the contents deliver a second reveal and a small piece of buried history.
 
 - Use a few selected objects, not every box or appliance. Contents fit the container and its scene.

@@ -17,6 +17,8 @@ namespace SomethingDownThere
         // pocket of air it stands in, the seats on its floor, the space its lid sweeps opening and points just under its base.
         [SerializeField] private Vector3 hollowCentre, hollowHalf, pocketCentre, pocketHalf;
         [SerializeField] private Vector3[] contentSeats = Array.Empty<Vector3>();
+        // The way its lock faces (its lid's free edge), in its own frame.
+        [SerializeField] private Vector3 front = Vector3.right;
         [SerializeField] private Vector3[] lidSpace = Array.Empty<Vector3>(), footing = Array.Empty<Vector3>();
         // Reach of the chest's pocket from its pivot; ordinary finds keep out of it.
         [SerializeField, Min(.1f)] private float radius = .85f;
@@ -24,8 +26,9 @@ namespace SomethingDownThere
         // once no more than FootingHeld of its footing points rest on soil.
         public const float LidSoilAllowance = .15f;
         public const int FootingHeld = 2;
-        // Forcing a lock rusted shut takes a little longer than bolting on the crane's lifting eye.
-        public const float LockSeconds = 1.5f;
+        // Forcing a lock rusted shut takes a little longer than bolting on the crane's lifting eye; it is forced from in
+        // front of the lock, the eye within FrontAngle of the way it faces (user, 2026-10-06).
+        public const float LockSeconds = 1.5f, FrontAngle = 55f;
         // How often an emptied chest looks whether it can go, and how much past its hollow a find still counts as inside.
         private const float GoneCheckSeconds = .25f, InsideMargin = .05f;
 
@@ -101,7 +104,16 @@ namespace SomethingDownThere
             return solid <= lidSpace.Length * LidSoilAllowance;
         }
 
-        public bool CanHold(FpsPlayer holder) => isActiveAndEnabled && terrain != null && !terrain.IsRestoring && !Opened && LidHasRoom();
+        public bool CanHold(FpsPlayer holder) => isActiveAndEnabled && terrain != null && !terrain.IsRestoring && !Opened && LidHasRoom()
+            && FacesLock(holder);
+
+        // Whether the player's eye is in front of the lock, seen from above.
+        public bool FacesLock(FpsPlayer holder)
+        {
+            if (holder == null || holder.ViewCamera == null) return false;
+            var eye = transform.InverseTransformPoint(holder.ViewCamera.transform.position);
+            return Vector2.Angle(new Vector2(eye.x, eye.z), new Vector2(front.x, front.z)) < FrontAngle;
+        }
         public float HoldSeconds(FpsPlayer holder) => LockSeconds;
 
         // The rusted lock gives and the lid swings open.
@@ -119,6 +131,7 @@ namespace SomethingDownThere
         {
             if (Opened) return displayName;
             if (!LidHasRoom()) return $"{displayName}  |  Clear the soil above its lid";
+            if (!FacesLock(viewer)) return $"{displayName}  |  Go round to its lock";
             return $"{displayName}  |  Hold {viewer.InputSettings.Display(PlayerBinding.Interact)} to force the rusted lock";
         }
 

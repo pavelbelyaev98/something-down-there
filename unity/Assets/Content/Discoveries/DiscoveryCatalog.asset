@@ -351,66 +351,6 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-  - ItemId: treasure_coin_copper
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 8937178477075514568, guid: f514dc9341ab1a94ca106b73088a88e1, type: 3}
-    AppearanceVariants:
-    - {fileID: 1904526323183719875, guid: 65a6aafba28a0e94dbf8802f794fcf10, type: 3}
-    Count: 4
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 1
-    MaxDepth: 37
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    HostGrounds: 
-    HostWeights: []
-  - ItemId: treasure_coin_silver
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 7396396720571468543, guid: c9a1506f2ef111a48ad668d9f28805e4, type: 3}
-    AppearanceVariants:
-    - {fileID: 2678101783681667888, guid: ce8bd99cb6879e8408404e823ec19979, type: 3}
-    Count: 3
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 1
-    MaxDepth: 37
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    HostGrounds: 
-    HostWeights: []
-  - ItemId: treasure_coin_gold
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 2874719503386324339, guid: a9ca5fdbd66af5d4fb9df0eba2bcfc37, type: 3}
-    AppearanceVariants:
-    - {fileID: 3079681070611488800, guid: a24e60830fb058c43adeb40a8868266b, type: 3}
-    Count: 2
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 1
-    MaxDepth: 37
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    HostGrounds: 
-    HostWeights: []
   - ItemId: treasure_ingot_copper
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -458,7 +398,67 @@ MonoBehaviour:
     Prefab: {fileID: 3106832568637923618, guid: 43605f8e3a851ba44b35e678f8e5f234, type: 3}
     AppearanceVariants:
     - {fileID: 2088103132838309429, guid: f8294784bbe080642acd5884aa3b96d0, type: 3}
-    Count: 1
+    Count: 2
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_crystal_emerald
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 6589374323264401479, guid: ce138c0619980754e833d5ceebc39cda, type: 3}
+    AppearanceVariants:
+    - {fileID: 8478080413224632738, guid: 645d6092eeb0a164e8343b1a8bae2980, type: 3}
+    Count: 3
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_crystal_ruby
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 4583801216564935326, guid: 7f1dd13ab0aa5934289afecd610bd66d, type: 3}
+    AppearanceVariants:
+    - {fileID: 4203522914614432247, guid: ab470b25d1e5e0b4ba03d92ecb22521c, type: 3}
+    Count: 3
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_crystal_diamond
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 4825057123851874062, guid: 5ccc6f92ce0136d478bd3e75c46430c0, type: 3}
+    AppearanceVariants:
+    - {fileID: 2668993875281045146, guid: 4f2ce1fcd4c173f47a24429b8df12151, type: 3}
+    Count: 2
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -474,15 +474,15 @@ MonoBehaviour:
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}
   ChestItems: 5
   ChestContents:
-  - ItemId: treasure_coin_copper
-    Weight: 4
-  - ItemId: treasure_coin_silver
-    Weight: 3
-  - ItemId: treasure_coin_gold
-    Weight: 2
   - ItemId: treasure_ingot_copper
     Weight: 3
   - ItemId: treasure_ingot_silver
     Weight: 2
   - ItemId: treasure_ingot_gold
-    Weight: 1
+    Weight: 2
+  - ItemId: treasure_crystal_emerald
+    Weight: 3
+  - ItemId: treasure_crystal_ruby
+    Weight: 3
+  - ItemId: treasure_crystal_diamond
+    Weight: 2

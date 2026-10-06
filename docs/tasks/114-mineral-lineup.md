@@ -56,18 +56,17 @@ at the bottom, and cut in the old chests.
    crystal cavern (`115`, below) holds the ruby and diamond.
    - Their wall crystals are finds.
    - Big crystals and hexagons are the scenery.
-3. **Cut gems in the old chests:** chest-only treasure like the coins and ingots.
-   - The Crystal Caverns gemstone cuts in the three gem colours: a cut emerald, ruby and diamond.
-   - Rare: about one chest in three holds one.
-   - Each is worth more than the rough stone of its kind and more than a chest's coins.
-   - Taken by hand with E.
+3. **In the old chests (built in `113`, user 2026-10-06: "only ingots and crystals"):** emerald, ruby and diamond
+   crystals at chest size beside the ingots, chest-only treasure taken by hand with E. They share the gem looks
+   and are priced as treasure. This task settles whether a deep gem and a chest crystal of one kind are one item
+   at one price.
 
 ## Assets
 
 - **Used as they are:**
   - photo rock;
   - the Mining pack's ore chunks A/B;
-  - Crystal Caverns beryl, ruby, quartz and pyrite crystals, gemstone cuts, big crystals and hexagons (pocket
+  - Crystal Caverns beryl, ruby, quartz and pyrite crystals, big crystals and hexagons (pocket
     lining), and rubble.
 - **Project edits (texture reuse, no new modelling):**
   - **Coal:** the ore chunk meshes with a coal-black map derived from `T_Ore_Iron_BC`/`_Mask` (darkened,
@@ -88,12 +87,9 @@ at the bottom, and cut in the old chests.
   - re-centred bands;
   - coal takes `prefab` and `prop_looks` (the coal chunk variants);
   - `MineralSetup`'s checks stay (eight names, rising value and core depth).
-- **`BuriedPropsSetup`:** a coal material and coal variants of the ore chunks; gemstone-cut variants in the three
-  gem tints.
-- **Treasure:**
-  - `art/mining-pack/catalog.json`, or a crystal treasure source, gains the three cut gems;
-  - `art/old-chest/catalog.json` lists them;
-  - chest seats and treasure instances still add up exactly.
+- **`BuriedPropsSetup`:** a coal material and coal variants of the ore chunks.
+- **Treasure:** the chest crystals (`art/pure-nature-crystal-caverns/catalog.json`) and the deep gems share one
+  item and price per kind, or stay apart, as decided here; chest seats and treasure instances still add up exactly.
 - **Pyrite** (if taken): a prop find source with its own band.
 - **Tests:**
   - `DiscoveryCatalogTests` count lists;
@@ -105,16 +101,15 @@ at the bottom, and cut in the old chests.
 ## Picks for the user
 
 1. Pyrite as zone 2's cheap "fool's gold": in or out? (Agent: in.)
-2. The three gemstone cuts. The agent proposes `Crystal_Gemstone_2` (round brilliant) for diamond, `_4` (oval
-   brilliant) for ruby and `_5` (step cut, the classic emerald cut) for emerald.
+2. Deep gems and chest crystals: one item per kind (a ruby is a ruby, one price) or apart (chest crystals worth
+   more). Agent: one item; the chest's are simply ones someone already dug up.
 3. The crystal cavern (`115`) as its own task after `110`, sharing the geode's break-in (agent: yes).
 
 ## Acceptance
 
 - The catalog bands match the zone table, and each zone's pair makes up most of its finds.
-- Every mineral, rough gem, cut gem and pyrite has a bought look or a project edit of one, with LODs and a hull
-  in budget.
-- Chests sometimes hold one cut gem; treasure lies nowhere else.
+- Every mineral, gem and pyrite has a bought look or a project edit of one, with LODs and a hull in budget.
+- The chests' treasure lies nowhere else.
 - Tests pass; a playtest walks one shaft through all four zones (with admin depth help).
 
 ## The crystal cavern at the bottom (new task `115`, after `110`)

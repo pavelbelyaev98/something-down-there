@@ -22,13 +22,12 @@ namespace SomethingDownThere.Editor
         private const string ChestVendor = "Assets/NOT_Lonely/OldChest", OldTvVendor = "Assets/JustPlay/Old TV", TvSetVendor = "Assets/_Television_set";
         private const string CrystalVendor = "Assets/BK/PureNature_CrystalCaverns";
         public static readonly string[] TvEras = { "70", "80", "90", "00" };
-        // The pack props finds are made from: ores, ingots and octagon coins (the user's pick over the round ones) in
-        // copper, silver and gold, iron ore, and the crystals the gems take (beryl for emerald, ruby, quartz for diamond).
+        // The pack props finds are made from: ores and ingots in copper, silver and gold, iron ore, and the crystals the
+        // gems take (beryl for emerald, ruby, quartz for diamond). The coins went (user, 2026-10-06: messy).
         public static readonly string[] MiningProps =
         {
             "Ore_CopperA", "Ore_CopperB", "Ore_IronA", "Ore_IronB", "Ore_SilverA", "Ore_SilverB", "Ore_GoldA", "Ore_GoldB",
             "Ingot_Copper_Flat", "Ingot_Copper_Thin", "Ingot_Silver_Flat", "Ingot_Silver_Thin", "Ingot_Gold_Flat", "Ingot_Gold_Thin",
-            "Coin_Copper_OctagonA", "Coin_Copper_OctagonB", "Coin_Silver_OctagonA", "Coin_Silver_OctagonB", "Coin_Gold_OctagonA", "Coin_Gold_OctagonB",
         };
         public static readonly string[] CrystalProps =
         {
@@ -44,8 +43,8 @@ namespace SomethingDownThere.Editor
         };
         // Small props seen from a metre or two in a stylized game: their maps import no larger than this.
         private const int PackMapSize = 1024;
-        // Coins and ingots after decades in the ground are tarnished, not mirror-bright: this share of the pack's
-        // smoothness. Mirror silver at the bottom of an open shaft read sky blue.
+        // Ingots after decades in the ground are tarnished, not mirror-bright: this share of the pack's smoothness.
+        // Mirror silver at the bottom of an open shaft read sky blue.
         private const float Tarnish = .55f;
 
         [MenuItem("Tools/Something Down There/Configure Buried Props")]

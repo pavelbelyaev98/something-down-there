@@ -20,9 +20,9 @@ namespace SomethingDownThere.Editor
         // instead of letting it fall. The lid opens with this much of its space measured above it.
         private const float HollowMargin = .09f, LidClearance = .02f;
         // The pocket of air the chest stands in (user, 2026-10-06) takes in the hollow and the lid's whole swing, PocketSide
-        // past them sideways and PocketHeadroom above; its floor lies PocketFloor above the chest's base, so the base sits
-        // that little way in the ground and the footing under it stays solid.
-        private const float PocketSide = .3f, PocketHeadroom = .2f, PocketFloor = .02f;
+        // past them sideways (room to stand beside it) and PocketHeadroom above; its floor lies PocketFloor above the
+        // chest's base, so the base sits that little way in the ground and the footing under it stays solid.
+        private const float PocketSide = .75f, PocketHeadroom = .5f, PocketFloor = .02f;
         [Serializable] private sealed class Source { public int schema_version; public string prefab, display_name; public int items; public Content[] contents; }
         [Serializable] private sealed class Content { public string content_id; public int weight; }
 
@@ -156,6 +156,7 @@ namespace SomethingDownThere.Editor
                 data.FindProperty("hollowHalf").vector3Value = hollowHalf;
                 data.FindProperty("pocketCentre").vector3Value = pocketCentre;
                 data.FindProperty("pocketHalf").vector3Value = pocketHalf;
+                data.FindProperty("front").vector3Value = new Vector3(front, 0, 0);
                 // Ordinary finds keep out of the whole pocket, not only the wood.
                 data.FindProperty("radius").floatValue = pocketHalf.magnitude + pocketCentre.magnitude + .02f;
                 Write(data.FindProperty("contentSeats"), seats);

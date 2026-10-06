@@ -2,8 +2,8 @@
 
 **Status:** complete. Holding Interact for 1.5 s forces the old chest's rusted lock (one `HoldInteraction` shared
 with the crane mark through `IHoldTarget`); an opened chest with nothing left in its hollow goes the next time it is
-out of the player's sight and untouched, and is no longer saved. The chest stands in a pocket of air, so its lid can
-be forced the moment it is reached. A first version, open to change after the playtest.
+out of the player's sight and untouched, and is no longer saved. The chest stands in a wide pocket of air, and its
+lock is forced only from in front of it. A first version, open to change after the playtest.
 Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
@@ -183,3 +183,11 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
   finds' reservation, covers the pocket.
 - The shovel no longer clears the lid space; the "clear the soil above its lid" prompt stays for ground that was put
   back.
+
+## Iteration 2 (user, 2026-10-06, after a first look)
+
+- "Make more space around the chest": the pocket reaches 0.75 m past the chest and its lid's swing each side and
+  0.5 m above (about 2.5 x 1.6 x 3 m), room to stand beside it.
+- "I can open it only when facing the opening and holding E": `BuriedChest.FacesLock` asks for the eye within 55°
+  of the way the lock faces (`front`, measured by `ChestSetup` from the hinge). From behind or the side the prompt
+  says to go round to its lock.

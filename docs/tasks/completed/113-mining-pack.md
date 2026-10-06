@@ -3,10 +3,11 @@
 **Status:** complete:
 - Copper, iron, silver and gold are the bought Mining Tools, Ore & Ingots ore chunks; emerald, ruby and diamond
   are Crystal Caverns crystals in project colours, two looks each.
-- The old chests hold the pack's coins and ingots, taken one at a time with Interact; digging and walking never
-  take them.
-- Developer admin switches the level 1–6 shovel between the Western one and the pack's.
-- Only the pack files the game uses are committed; its installers are ignored.
+- The old chests hold the pack's ingots and gem crystals, taken one at a time with Interact; digging and walking
+  never take them.
+- The Ground Lab sets out every find's looks to compare.
+- Only the pack files the game uses are committed; its installers are ignored. The pack's coins and its shovel
+  were tried and dropped.
 
 ## Objective
 
@@ -99,8 +100,24 @@ items. AGENTS.md "Bought Before Made" now says so.
 
 1. Copper, iron, silver and gold show the pack's chunks and emerald, ruby and diamond the crystals, two looks
    each. They are checked in previews and in a wall under the game's lighting.
-2. Each chest holds five coins or ingots and nothing else; the treasure lies nowhere else
+2. Each chest holds five ingots or crystals and nothing else; the treasure lies nowhere else
    (`EveryStashChestHoldsItsContentsAndNothingElse`). E takes each piece; digging and walking never do
-   (`ItsTreasureIsTakenByHandOnePieceAtATime`).
-3. Developer admin switches the shovel look for levels 1–6 (checked in first person) (`ToolRigTests`).
+   (`ItsTreasureIsTakenByHandOnePieceAtATime`, `WalkingCollectsEveryUncoveredAppearanceWithoutAimOrDig`).
+3. The shovel A/B ran and ended (the Western shovel stays); the Ground Lab gallery shows every find's looks.
 4. The used pack maps import at 1024 px; installers are ignored and only used files are committed.
+
+## Iteration (user, 2026-10-06, after a first look)
+
+- **Shovel A/B:** "I prefer the Western shovel; the other one is bad, remove it and the admin option." The pack
+  shovel part, `FpsPlayer`'s look flag and toggle, and the presenter's look suffixes are gone. Its files are no longer
+  committed.
+- **Coins:** "Remove the individual coins, this is messy." Chests hold only ingots and crystals (see also `109`).
+  - The crystals are the gem crystals at chest size, a new treasure source on the Crystal Caverns card
+    (`art/pure-nature-crystal-caverns/catalog.json`), taken by hand.
+  - The counts still match the chests' seats.
+  - The coin assets are deleted and their vendor files untracked.
+- **Ground Lab gallery:** "Add all minerals as non-pickable somewhere in the Ground Lab so I can look at them."
+  - `DiscoveryField.SpawnGallery` copies every look of every common find onto the lab's surface north of the bays:
+    a row of minerals, a row of chest treasure and a row of TVs.
+  - It strips each copy's `BuriedFind` and `FindPhysics`, so it stays solid but is never taken.
+  - `LabExhibit` names the look on aim, with its price and depth.
