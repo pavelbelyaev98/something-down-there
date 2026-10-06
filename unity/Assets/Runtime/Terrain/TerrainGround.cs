@@ -8,8 +8,9 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // The seeded ground: soil, with backfill pits someone dug and refilled in the recent fill. Written once per
-    // session into the one-byte material field; saves store the bytes, so nothing here is saved separately.
+    // The seeded ground: soil, with backfill pits someone dug and refilled in the recent fill and a few geodes deeper
+    // down. Written once per session into the one-byte material field; saves store the bytes, so nothing here is saved
+    // separately.
     public static class TerrainGround
     {
         // Metres below the surface: even quarters of the 150 m site. Absolute depths, so a
@@ -20,7 +21,7 @@ namespace SomethingDownThere
         public const float SurfaceSoil = 1.1f, PitTop = 3f, PitMargin = 3f;
 
         // What the generator lays down. The site admits grounds one at a time (SiteLayout.Ground).
-        [Flags] public enum Features { None = 0, Pits = 1, All = Pits }
+        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, All = Pits | Geodes }
         private static bool Has(Features features, Features feature) => (features & feature) != 0;
 
         // Disturbed ground (099, 106): a column of backfill someone dug and refilled, from Top down to the old chest
@@ -46,6 +47,23 @@ namespace SomethingDownThere
             public bool HasPocket => math.all(PocketHalf > 0);
         }
         public const float StashLift = .12f;
+
+        // A geode (110): a hollow ellipsoid of air (Radii, in its own frame) inside a shell of hard stone Shell thick, its
+        // outer face lumpy and its inner one nearly smooth. Sealed until the player breaks in; its crystals line the hollow.
+        public struct Geode
+        {
+            public float3 Centre, Radii, Min, Max;
+            public float Shell;
+            public float3x3 ToLocal;
+            public quaternion Rotation;
+            // The farthest the shell reaches from the centre, lumps included.
+            public float Reach => math.cmax(Radii) + Shell + GeodeOuterLumps;
+        }
+        // Two in the old lake sediment, three in the old riverbed (110); the deep stone's hollow is the crystal cavern (115).
+        public static readonly int[] GeodesPerZone = { 0, 2, 3, 0 };
+        public const float GeodeOuterLumps = .15f, GeodeInnerLumps = .04f;
+        // Clearance from pits and stashes, from uniques' spaces, and between geodes (beyond their shells).
+        private const float GeodePitClearance = 1.5f, GeodeSpotClearance = 1f, GeodeSpacing = 6f;
 
         // A unique's space: its reserved envelope plus OddSpotReach sideways and OddSpotRise up and down,
         // which pits keep clear of.
@@ -124,20 +142,85 @@ namespace SomethingDownThere
             return stashes;
         }
 
-        // What find placement needs from the seeded ground: the pits and their chests.
-        public sealed class GroundLayout
+        // Seeded geodes, each wholly inside its zone and the find footprint, clear of pits, uniques' spaces and each other.
+        public static Geode[] Geodes(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots = null, Features features = Features.All)
         {
-            public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Pit>(), Array.Empty<Stash>());
-            public readonly Pit[] Pits; public readonly Stash[] Stashes;
-            public GroundLayout(Pit[] pits, Stash[] stashes) { Pits = pits; Stashes = stashes; }
+            if (!Has(features, Features.Geodes)) return Array.Empty<Geode>();
+            var extent = (Vector3)size * cellSize;
+            var footprint = SiteLayout.FindFootprint(extent);
+            uint state = unchecked((uint)seed * 2246822519u ^ 0x7feb352du);
+            float Next() => TerrainMaterialSnapshot.NextUnit(ref state);
+            float Range(float a, float b) => a + (b - a) * Next();
+            var geodes = new List<Geode>();
+            for (int zone = 0; zone < GeodesPerZone.Length; zone++)
+            {
+                float zoneTop = zone == 0 ? 0 : ZoneBorders[zone - 1], zoneBottom = zone < ZoneBorders.Length ? ZoneBorders[zone] : extent.y;
+                for (int n = 0; n < GeodesPerZone[zone]; n++)
+                    for (int attempt = 0; attempt < 200; attempt++)
+                    {
+                        float radius = Range(.9f, 1.3f);
+                        var geode = Make(float3.zero, new float3(radius, radius * Range(.75f, .9f), radius * Range(.9f, 1.1f)), Range(.6f, .9f),
+                            Range(0, 2 * math.PI), Range(-.26f, .26f));
+                        float reach = geode.Reach;
+                        float top = zoneTop + reach + .5f, bottom = math.min(zoneBottom, extent.y - 1) - reach - .5f;
+                        if (bottom <= top) break;
+                        var centre = new float3(Range(reach + 1, extent.x - reach - 1), extent.y - Range(top, bottom), Range(reach + 1, extent.z - reach - 1));
+                        geode = Make(centre, geode.Radii, geode.Shell, geode.Rotation);
+                        if (footprint != null && !Inside(footprint, centre, reach + .5f)) continue;
+                        bool clear = true;
+                        foreach (var pit in pits) clear &= math.any(geode.Min > pit.Max + GeodePitClearance) || math.any(pit.Min > geode.Max + GeodePitClearance);
+                        if (spots != null) foreach (var spot in spots) clear &= math.any(geode.Min > spot.Max + GeodeSpotClearance) || math.any(spot.Min > geode.Max + GeodeSpotClearance);
+                        foreach (var other in geodes) clear &= math.distance(other.Centre, centre) > other.Reach + reach + GeodeSpacing;
+                        if (!clear) continue;
+                        geodes.Add(geode);
+                        break;
+                    }
+            }
+            return geodes.ToArray();
         }
 
-        // Pits keep clear of every unique's space.
+        // A geode at centre (grid-local metres), turned by yaw about up and tipped by tilt about its own x.
+        public static Geode Make(float3 centre, float3 radii, float shell, float yaw, float tilt)
+            => Make(centre, radii, shell, math.mul(quaternion.RotateY(yaw), quaternion.RotateX(tilt)));
+
+        private static Geode Make(float3 centre, float3 radii, float shell, quaternion rotation)
+        {
+            var geode = new Geode { Centre = centre, Radii = radii, Shell = shell, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)) };
+            float reach = geode.Reach;
+            geode.Min = centre - reach; geode.Max = centre + reach;
+            return geode;
+        }
+
+        // Signed distance (approximate, metres) from a geode-local point to an ellipsoid of these radii: negative inside.
+        public static float Ellipsoid(float3 local, float3 radii)
+        {
+            float k0 = math.length(local / radii), k1 = math.length(local / (radii * radii));
+            return k1 > 1e-6f ? k0 * (k0 - 1) / k1 : -math.cmin(radii);
+        }
+
+        // Signed distance to a geode's hollow (negative in its air) and to its shell's outer face (negative inside the
+        // stone or the hollow), lumps included.
+        public static float HollowDistance(Geode geode, float3 p)
+            => Ellipsoid(math.mul(geode.ToLocal, p - geode.Centre), geode.Radii) + GeodeInnerLumps * noise.snoise(p * 2.6f + geode.Centre);
+
+        public static float OuterDistance(Geode geode, float3 p)
+            => Ellipsoid(math.mul(geode.ToLocal, p - geode.Centre), geode.Radii + geode.Shell) + GeodeOuterLumps * noise.snoise(p * .9f + geode.Centre * .37f);
+
+        // What find placement needs from the seeded ground: the pits and their chests, and the geodes.
+        public sealed class GroundLayout
+        {
+            public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Pit>(), Array.Empty<Stash>(), Array.Empty<Geode>());
+            public readonly Pit[] Pits; public readonly Stash[] Stashes; public readonly Geode[] Geodes;
+            public GroundLayout(Pit[] pits, Stash[] stashes, Geode[] geodes) { Pits = pits; Stashes = stashes; Geodes = geodes; }
+        }
+
+        // Pits and geodes keep clear of every unique's space.
         public static GroundLayout Layout(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null, Features features = Features.All,
             Bounds stashPocket = default)
         {
-            var pits = Pits(size, cellSize, seed, OddSpots(oddSpots), features);
-            return new GroundLayout(pits, Stashes(pits, seed, stashPocket));
+            var spots = OddSpots(oddSpots);
+            var pits = Pits(size, cellSize, seed, spots, features);
+            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), Geodes(size, cellSize, seed, pits, spots, features));
         }
 
         private static bool Inside(Func<Vector2, bool> footprint, float3 centre, float reach)
@@ -154,7 +237,8 @@ namespace SomethingDownThere
             Bounds stashPocket = default)
         {
             int stride = size.x + 1, plane = stride * (size.y + 1);
-            var pits = Pits(size, cellSize, seed, OddSpots(oddSpots), features);
+            var spots = OddSpots(oddSpots);
+            var pits = Pits(size, cellSize, seed, spots, features);
             uint hash = unchecked((uint)seed * 747796405u + 2891336453u);
             var offsets = new float4(hash & 1023, (hash >> 10) & 1023, (hash >> 20) & 1023, (hash >> 5) & 1023) * .37f;
             using var output = new NativeArray<byte>(plane * (size.z + 1), Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -163,7 +247,21 @@ namespace SomethingDownThere
                 .Schedule(size.z + 1, 1).Complete();
             var ids = output.ToArray();
             foreach (var stash in Stashes(pits, seed, stashPocket)) if (stash.HasPocket) FillShell(ids, size, cellSize, stash, offsets);
+            foreach (var geode in Geodes(size, cellSize, seed, pits, spots, features)) FillGeode(ids, size, cellSize, geode);
             return ids;
+        }
+
+        // A geode's stone: everything inside its outer face, its hollow's samples too, so the hollow's walls read as
+        // shell. On the main thread after the ground job, like FillShell.
+        public static void FillGeode(byte[] ids, Vector3Int size, float cellSize, Geode geode)
+        {
+            int stride = size.x + 1, plane = stride * (size.y + 1);
+            var first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)geode.Min / cellSize));
+            var last = Vector3Int.Min(size, Vector3Int.CeilToInt((Vector3)geode.Max / cellSize));
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+                if (OuterDistance(geode, new float3(x, y, z) * cellSize) < 0) ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.GeodeShell;
         }
 
         // The fill around a chest (user, 2026-10-06: "all ground around it"): its pocket's walls, floor and roof are

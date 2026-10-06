@@ -166,6 +166,7 @@ namespace SomethingDownThere.Editor
                 data.FindProperty("pocketHalf").vector3Value = pocketHalf;
                 data.FindProperty("front").vector3Value = new Vector3(front, 0, 0);
                 data.FindProperty("rim").floatValue = body.max.y;
+                data.FindProperty("floorHalf").vector2Value = new Vector2(innerX, innerZ);
                 // Ordinary finds keep out of the whole pocket, not only the wood.
                 data.FindProperty("radius").floatValue = pocketHalf.magnitude + pocketCentre.magnitude + .02f;
                 Write(data.FindProperty("contentSeats"), seats);

@@ -32,6 +32,7 @@ MonoBehaviour:
     CoreShare: 0.92
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 00y
     HostWeights:
     - 3
@@ -52,6 +53,7 @@ MonoBehaviour:
     CoreShare: 0.9
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_copper
@@ -72,6 +74,7 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_iron
@@ -87,11 +90,12 @@ MonoBehaviour:
     ShallowMaxCover: 0
     MinDepth: 3
     MaxDepth: 85
-    CoreMinDepth: 36
+    CoreMinDepth: 34
     CoreMaxDepth: 58
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_silver
@@ -112,6 +116,7 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_gold
@@ -132,6 +137,7 @@ MonoBehaviour:
     CoreShare: 0.86
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_emerald
@@ -152,6 +158,7 @@ MonoBehaviour:
     CoreShare: 0.95
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_ruby
@@ -172,6 +179,7 @@ MonoBehaviour:
     CoreShare: 0.95
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_diamond
@@ -192,6 +200,7 @@ MonoBehaviour:
     CoreShare: 0.95
     LayOnSide: 0
     RandomOrientation: 1
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_reservoir_computer
@@ -211,6 +220,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_survey_computer
@@ -230,6 +240,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_pump_computer
@@ -249,6 +260,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: junk_tv_portable
@@ -268,6 +280,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -288,6 +301,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -308,6 +322,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -328,6 +343,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -348,6 +364,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -369,6 +386,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_ingot_silver
@@ -389,6 +407,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_ingot_gold
@@ -409,6 +428,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_crystal_emerald
@@ -429,6 +449,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_crystal_ruby
@@ -449,6 +470,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_crystal_diamond
@@ -469,6 +491,7 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_pyrite
@@ -489,6 +512,91 @@ MonoBehaviour:
     CoreShare: 0
     LayOnSide: 0
     RandomOrientation: 0
+    Geode: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: geode_celestine
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 3471135678283433236, guid: 0861ce86a63c41a479e4888fe251c320, type: 3}
+    AppearanceVariants:
+    - {fileID: 6499642286929261914, guid: 9a7238f5f0d0846458fc9396700a1b1d, type: 3}
+    Count: 7
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 37.5
+    MaxDepth: 75
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 1
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: geode_fluorite
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 7674035815106315012, guid: bfc0535b89a01fe4594ee7e99c4d7689, type: 3}
+    AppearanceVariants:
+    - {fileID: 673661669777665024, guid: 3dd218da79365f64f985be2fb9e8d556, type: 3}
+    Count: 5
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 37.5
+    MaxDepth: 75
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 1
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: geode_amethyst
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 3231336519082527753, guid: 8d73d2d54f15d6b40b9767203f98d322, type: 3}
+    AppearanceVariants:
+    - {fileID: 7692080274387417109, guid: 0e7f0ed25e8f7a340bdfcaba44df256d, type: 3}
+    Count: 10
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 75
+    MaxDepth: 112.5
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 1
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: geode_citrine
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 3236398565471483190, guid: 11716654689146246a02733b8df7bd73, type: 3}
+    AppearanceVariants:
+    - {fileID: 4305353514304060016, guid: 17cc41841a33dd548a169d10b2d503d5, type: 3}
+    Count: 8
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 75
+    MaxDepth: 112.5
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 1
     HostGrounds: 
     HostWeights: []
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}

@@ -77,7 +77,7 @@
       "required_exposure": 0.6,
       "minimum_depth_m": 3,
       "maximum_depth_m": 85,
-      "core_minimum_depth_m": 36,
+      "core_minimum_depth_m": 34,
       "core_maximum_depth_m": 58,
       "core_share": 0.86,
       "model_scale": 1.5

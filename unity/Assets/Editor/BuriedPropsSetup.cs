@@ -39,6 +39,22 @@ namespace SomethingDownThere.Editor
             "Crystal_Beryl_01", "Crystal_Beryl_02", "Crystal_Ruby_1", "Crystal_Ruby_2", "Crystal_Quartz_1", "Crystal_Quartz_2",
             "Crystal_Pyrite_1", "Crystal_Pyrite_2",
         };
+        // The geodes' crystals (110), from the pack's families the ground and the chests leave unused, clean (they grew in
+        // air), each with the mineral it dresses: cobalt clusters for celestine, fluorite's octahedra, and prism clusters for
+        // amethyst and citrine, both quartz. (Its gemstones are cut stones, not crystals.)
+        public static readonly (string prop, string mineral)[] GeodeCrystalProps =
+        {
+            ("Crystal_Cobalt_01", "Celestine"), ("Crystal_Cobalt_02", "Celestine"), ("Crystal_Fluorite_01", "Fluorite"), ("Crystal_Fluorite_2", "Fluorite"),
+            ("Crystal_Prism_1", "Amethyst"), ("Crystal_Prism_2", "Amethyst"), ("Crystal_Prism_3", "Citrine"), ("Crystal_Prism_4", "Citrine"),
+        };
+        // Real geode minerals' colours: celestine's pale sky blue, fluorite's sea green, amethyst's purple, citrine's honey.
+        // Glossier than the chests' (GeodeGloss) so they sparkle under a lamp; emission on at black for the glow A/B.
+        private static readonly Dictionary<string, Color> GeodeTints = new Dictionary<string, Color>
+        {
+            ["Celestine"] = new Color(.42f, .58f, .78f), ["Fluorite"] = new Color(.24f, .58f, .46f),
+            ["Amethyst"] = new Color(.42f, .2f, .6f), ["Citrine"] = new Color(.82f, .52f, .14f),
+        };
+        private const float GeodeGloss = .8f, GeodeEmissionFloor = .01f;
         // Crystal colours of our own on the pack's maps (any bought pack's textures may dress new items): its beryl is
         // aquamarine and its quartz pale blue, so emerald takes a deep green, diamond a cool grey-blue and ruby a deep red.
         // Dark enough that sunlight down a shaft shades them instead of burning them white (user, 2026-10-06: the near-
@@ -101,6 +117,10 @@ namespace SomethingDownThere.Editor
             foreach (var name in GroundCrystalProps)
                 PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CrystalFolder}/Dirty/{name}.prefab",
                     vendor => FromCrystal(vendor, $"{CrystalFolder}/Dirty/{vendor.name}_Dirty.mat", true));
+            if (!AssetDatabase.IsValidFolder(CrystalFolder + "/Geode")) AssetDatabase.CreateFolder(CrystalFolder, "Geode");
+            foreach (var (prop, mineral) in GeodeCrystalProps)
+                PackVariant($"{CrystalVendor}/Prefabs/Crystals/{prop}.prefab", $"{CrystalFolder}/Geode/{prop}.prefab",
+                    vendor => FromGeodeCrystal(vendor, $"{CrystalFolder}/Geode/{mineral}.mat", GeodeTints[mineral]));
             AssetDatabase.SaveAssets();
         }
 
@@ -164,6 +184,21 @@ namespace SomethingDownThere.Editor
             material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
             material.SetFloat("_Metallic", vendor.name.Contains("Pyrite") ? PyriteMetal : 0);
             material.SetFloat("_Smoothness", dirty ? DirtyGloss : Mathf.Min(CrystalGloss, floats["_Smoothness"]));
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        // A geode crystal (110): the clean crystal in its geode colour, glossier, with emission on so the admin glow A/B can
+        // light it through a property block (DiscoveryField.SetGeodeGlow). URP's material validation turns emission off
+        // when its colour is black, so it is GeodeEmissionFloor of the tint: far too dim to see.
+        private static Material FromGeodeCrystal(Material vendor, string path, Color tint)
+        {
+            var material = FromCrystal(vendor, path, false);
+            material.SetColor("_BaseColor", tint);
+            material.SetFloat("_Smoothness", GeodeGloss);
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", tint * GeodeEmissionFloor);
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             EditorUtility.SetDirty(material);
             return material;
         }

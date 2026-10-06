@@ -10,9 +10,8 @@ namespace SomethingDownThere
     {
         public const float CellSize = 0.125f;
         // Grounds return to the site one at a time as the user redesigns them in the Ground Lab: soil
-        // everywhere, plus backfill pits in the recent fill (106). The rest of the layered generator
-        // (TerrainGround) waits for its turn.
-        public const TerrainGround.Features Ground = TerrainGround.Features.Pits;
+        // everywhere, plus backfill pits in the recent fill (106) and geodes in the middle zones (110).
+        public const TerrainGround.Features Ground = TerrainGround.Features.Pits | TerrainGround.Features.Geodes;
         // Other grids (fixtures, benchmarks, test scenes) stay plain soil.
         public static TerrainGround.Features GroundFor(Vector3Int size, float cellSize)
             => size == Size && Mathf.Approximately(cellSize, CellSize) ? Ground : TerrainGround.Features.None;

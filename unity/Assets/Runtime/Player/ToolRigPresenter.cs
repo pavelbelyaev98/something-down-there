@@ -61,7 +61,12 @@ namespace SomethingDownThere
         }
 
         // Soil scoops; rubble backfill takes the shorter, harder bite.
-        public static MotionFamily Family(TerrainMaterialId material) => material == TerrainMaterialId.Backfill ? MotionFamily.Bite : MotionFamily.Scoop;
+        public static MotionFamily Family(TerrainMaterialId material) => material switch
+        {
+            TerrainMaterialId.Backfill => MotionFamily.Bite,
+            TerrainMaterialId.GeodeShell => MotionFamily.Hard,
+            _ => MotionFamily.Scoop
+        };
 
         private void Awake()
         {

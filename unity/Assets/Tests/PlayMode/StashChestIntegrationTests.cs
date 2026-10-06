@@ -78,7 +78,9 @@ namespace SomethingDownThere.Tests
             Assert.That(contents.All(f => f.IsReleased), Is.True, "The contents lie loose inside.");
             Assert.That(chest.Released, Is.False, "Its footing holds the chest.");
             var eye = t.position + Vector3.up * 1.15f;
-            var item = contents[0].transform.position;
+            // The top of the heap (113), which nothing else covers.
+            var top = contents.OrderByDescending(f => f.WorldBounds.max.y).First();
+            var item = top.transform.position;
             Physics.SyncTransforms();
             Assert.That(Physics.Raycast(eye, (item - eye).normalized, out var blocked, 3) && blocked.collider.GetComponentInParent<BuriedChest>() == chest,
                 Is.True, "The closed lid hides what it holds.");
@@ -96,7 +98,7 @@ namespace SomethingDownThere.Tests
             Assert.That(chest.CanHold(player), Is.False, "It opens once.");
             yield return new WaitForSeconds(3.5f);
             Physics.SyncTransforms();
-            Assert.That(Physics.Raycast(eye, (item - eye).normalized, out var seen, 3) && seen.collider.GetComponentInParent<BuriedFind>() == contents[0],
+            Assert.That(Physics.Raycast(eye, (item - eye).normalized, out var seen, 3) && seen.collider.GetComponentInParent<BuriedFind>() == top,
                 Is.True, "The open chest shows what it holds.");
             Assert.That(contents.All(f => f.Collectible), Is.True, "Its contents are ordinary finds now.");
             Assert.That(field.Chests.Contains(chest), Is.True, "With its contents inside it stays.");
@@ -178,7 +180,8 @@ namespace SomethingDownThere.Tests
             var contents = Contents(chest);
             Assert.That(contents.Length, Is.EqualTo(field.Catalog.ChestItems));
             Assert.That(contents.All(f => f.HandPicked && f.Collectible), Is.True, "Ingots and crystals, free to take.");
-            var find = contents[0];
+            // The top of the heap (113), which nothing else covers.
+            var find = contents.OrderByDescending(f => f.WorldBounds.max.y).First();
             var camera = player.ViewCamera.transform;
             camera.position = t.TransformPoint(new Vector3(.1f, .9f, 0));
             camera.LookAt(find.WorldBounds.center);
@@ -191,7 +194,7 @@ namespace SomethingDownThere.Tests
             Assert.That(find.TryInteract(player), Is.True, "Interact takes it.");
             Assert.That(find.Collected, Is.True);
             Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
-            Assert.That(contents.Skip(1).Any(f => f.Collected), Is.False, "One piece at a time.");
+            Assert.That(contents.Where(f => f != find).Any(f => f.Collected), Is.False, "One piece at a time.");
         }
 
         // Dug out under and around its lower half, the chest falls and settles; a save keeps where it fell.

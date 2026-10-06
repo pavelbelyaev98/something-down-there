@@ -7,13 +7,13 @@ namespace SomethingDownThere
     // Saved as bytes: append new grounds, never renumber. Hardness order is
     // EquipmentProgression.HardnessOrder, not the declaration order.
     // Backfill is the mixed ground of an old dug-and-refilled pit.
-    public enum TerrainMaterialId : byte { Soil, Backfill }
+    public enum TerrainMaterialId : byte { Soil, Backfill, GeodeShell }
 
     // Immutable identities share the density lattice, including samples excavated into air.
     // Captures can share this object with the save worker without copying the world.
     public sealed class TerrainMaterialSnapshot
     {
-        public const TerrainMaterialId Last = TerrainMaterialId.Backfill;
+        public const TerrainMaterialId Last = TerrainMaterialId.GeodeShell;
         private readonly byte[] samples;
         public int Length => samples.Length;
         public TerrainMaterialId this[int index] => (TerrainMaterialId)samples[index];

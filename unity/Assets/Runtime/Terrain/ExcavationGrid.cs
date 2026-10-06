@@ -129,6 +129,7 @@ namespace SomethingDownThere
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
             foreach (var stash in Layout.Stashes) if (stash.HasPocket) CarvePocket(stash);
+            foreach (var geode in Layout.Geodes) CarveGeode(geode);
             if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
@@ -142,11 +143,11 @@ namespace SomethingDownThere
             ClearSupportSearch();
         }
 
-        // Developer Ground Lab: labelled bays of each ground instead of the seeded site.
+        // Developer Ground Lab: labelled bays of each ground instead of the seeded site, with the geode bay's geode.
         public void UseGroundLab()
         {
             materials = GroundLab.Materials(Size, CellSize);
-            Layout = TerrainGround.GroundLayout.Empty;
+            Layout = GroundLab.Layout();
             labCarves = GroundLab.Cavities();
             Reset();
         }
@@ -213,6 +214,22 @@ namespace SomethingDownThere
                     + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0) - round;
                 float lumps = Mathf.Clamp01((local.y + half.y) / PocketFloorBand);
                 outside += lumps * PocketRough * (.5f + .5f * Unity.Mathematics.noise.snoise(position * 2.2f + stash.Centre * .37f));
+                if (outside >= band) continue;
+                int index = x + y * strideY + z * strideZ;
+                density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));
+            }
+        }
+
+        // A geode's hollow (110): seeded air inside its inner face; the shell around it stays solid.
+        private void CarveGeode(TerrainGround.Geode geode)
+        {
+            Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)geode.Min / CellSize) - Vector3Int.one);
+            Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)geode.Max / CellSize) + Vector3Int.one);
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            for (int x = first.x; x <= last.x; x++)
+            {
+                float outside = TerrainGround.HollowDistance(geode, new Unity.Mathematics.float3(x, y, z) * CellSize);
                 if (outside >= band) continue;
                 int index = x + y * strideY + z * strideZ;
                 density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));

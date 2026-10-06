@@ -132,6 +132,8 @@ namespace SomethingDownThere
                 find.name = state.Item.Name + " " + state.Item.Id;
                 finds.Add(find);
             }
+            DeriveGeodes();
+            ApplyGeodeGlow();
             initialized = true;
             PopulationRevision++;
         }
@@ -181,8 +183,11 @@ namespace SomethingDownThere
                 finds.Add(find);
             }
             SpawnLabChest();
+            SpawnLabGeode();
             foreach (var find in finds) find.RefreshExposure();
             SpawnGallery();
+            DeriveGeodes();
+            ApplyGeodeGlow();
             clearsStored = true;
             initialized = true;
             PopulationRevision++;
@@ -220,6 +225,26 @@ namespace SomethingDownThere
             }
         }
 
+        // The Ground Lab's geode (110, its own bay): one crystal of each geode kind, the dearest first, then the dearest
+        // again, lining its hollow as in the site's.
+        private void SpawnLabGeode()
+        {
+            var kinds = new List<DiscoveryCatalog.Entry>(Array.FindAll(catalog.Entries, e => e.Geode));
+            if (kinds.Count == 0) return;
+            kinds.Sort((a, b) => b.Prefab.SaleValue.CompareTo(a.Prefab.SaleValue));
+            var random = new System.Random(7);
+            for (int k = 0; k < DiscoveryCatalog.GeodeCrystals; k++)
+            {
+                var entry = kinds[k % kinds.Count];
+                var (position, rotation) = DiscoveryCatalog.GeodeSeat(GroundLab.Geode, k, entry, random);
+                var find = Instantiate(entry.Appearance(k / kinds.Count % entry.AppearanceCount), terrain.transform.TransformPoint(position),
+                    terrain.transform.rotation * rotation, transform);
+                find.Initialize(terrain, $"ground-lab-geode-{k}", this);
+                find.name = find.Item.DisplayName + " (lab geode " + k + ")";
+                finds.Add(find);
+            }
+        }
+
         // The Ground Lab's find gallery (user, 2026-10-06): every look of every common find set out on the surface north of
         // the bays, a row each for the minerals, a chest's treasure and the rest, so their looks can be compared in
         // daylight. Copies with the find's parts removed: solid scenery that names itself, never taken.
@@ -236,8 +261,8 @@ namespace SomethingDownThere
             foreach (var entry in catalog.Entries)
             {
                 if (entry.Prefab.Kind != DiscoveryKind.Common) continue;
-                int row = entry.Prefab.HandPicked ? 1 : entry.ItemId.StartsWith("junk_", StringComparison.Ordinal) ? 2 : 0;
-                string band = entry.Prefab.HandPicked ? "in old chests"
+                int row = entry.Prefab.HandPicked || entry.Geode ? 1 : entry.ItemId.StartsWith("junk_", StringComparison.Ordinal) ? 2 : 0;
+                string band = entry.Prefab.HandPicked ? "in old chests" : entry.Geode ? $"in geodes, {entry.MinDepth:0}-{entry.MaxDepth:0} m"
                     : entry.CoreShare > 0 ? $"mostly {entry.CoreMinDepth:0}-{entry.CoreMaxDepth:0} m" : $"{entry.MinDepth:0}-{entry.MaxDepth:0} m";
                 for (int look = 0; look < entry.AppearanceCount; look++)
                 {
@@ -314,8 +339,109 @@ namespace SomethingDownThere
             if (catalog != null && catalog.Chest != null)
                 foreach (var stash in terrain.GroundLayout.Stashes)
                     SpawnChest(terrain.transform.TransformPoint((Vector3)stash.Centre), terrain.transform.rotation * stash.Rotation);
+            DeriveGeodes();
+            ApplyGeodeGlow();
             initialized = true;
             PopulationRevision++;
+        }
+
+        // The ground's geodes (110): whether each has been broken into. Derived from the grid, so saves need nothing: air a
+        // little outside a hollow's face (GeodeProbe, inside its shell) means a way in. The first cut that opens a sealed one
+        // drops crumbs and a slow drift of dust into the dark; nothing caves in, a geode is hard stone.
+        private const float GeodeProbe = .15f, BreakInStep = .08f;
+        private const int GeodeProbes = 96;
+        private bool[] geodeOpened = Array.Empty<bool>();
+        public bool GeodeOpened(int index) => index >= 0 && index < geodeOpened.Length && geodeOpened[index];
+
+        private void DeriveGeodes()
+        {
+            var geodes = terrain.GroundLayout.Geodes;
+            geodeOpened = new bool[geodes.Length];
+            for (int g = 0; g < geodes.Length; g++)
+                for (int i = 0; i < GeodeProbes && !geodeOpened[g]; i++)
+                {
+                    // Fibonacci directions cover the hollow evenly.
+                    float y = 1 - 2 * (i + .5f) / GeodeProbes, ring = Mathf.Sqrt(1 - y * y), angle = i * 2.39996323f;
+                    var (surface, inward) = HollowFace(geodes[g], new Vector3(Mathf.Cos(angle) * ring, y, Mathf.Sin(angle) * ring));
+                    geodeOpened[g] = !terrain.IsSolid(surface - inward * GeodeProbe);
+                }
+        }
+
+        // Where the ray from a geode's centre along a direction (its own frame) meets its hollow's face, in the world, and
+        // the way into the hollow there.
+        private (Vector3 surface, Vector3 inward) HollowFace(TerrainGround.Geode geode, Vector3 direction)
+        {
+            Vector3 radii = geode.Radii;
+            float scale = 1 / new Vector3(direction.x / radii.x, direction.y / radii.y, direction.z / radii.z).magnitude;
+            var local = direction * scale;
+            var outward = new Vector3(local.x / (radii.x * radii.x), local.y / (radii.y * radii.y), local.z / (radii.z * radii.z)).normalized;
+            Quaternion frame = geode.Rotation;
+            return (terrain.transform.TransformPoint((Vector3)geode.Centre + frame * local), -terrain.transform.TransformDirection(frame * outward));
+        }
+
+        private void CheckGeodeBreaks(Bounds changed)
+        {
+            if (terrain.IsRestoring) return;
+            var geodes = terrain.GroundLayout.Geodes;
+            for (int g = 0; g < geodes.Length && g < geodeOpened.Length; g++)
+            {
+                if (geodeOpened[g]) continue;
+                var geode = geodes[g];
+                var bounds = new Bounds(terrain.transform.TransformPoint((Vector3)geode.Centre), Vector3.one * geode.Reach * 2);
+                if (!changed.Intersects(bounds)) continue;
+                // The face of the hollow toward the cut, a little inside it; the way there must be open.
+                var toCut = Quaternion.Inverse(geode.Rotation) * terrain.transform.InverseTransformDirection(changed.center - bounds.center);
+                if (toCut.sqrMagnitude < 1e-6f) continue;
+                var (surface, inward) = HollowFace(geode, toCut.normalized);
+                Vector3 from = changed.center, to = surface + inward * .05f;
+                float length = Vector3.Distance(from, to);
+                if (length > changed.extents.magnitude + .3f) continue;
+                bool open = true;
+                for (float t = 0; t <= length && open; t += BreakInStep)
+                    open = !terrain.IsSolid(Vector3.Lerp(from, to, t / Mathf.Max(length, 1e-4f)));
+                if (!open) continue;
+                geodeOpened[g] = true;
+                var crane = FindViewer()?.Crane;
+                if (crane != null) crane.EmitGroundBreak(surface, inward, .06f, .4f, .8f);
+            }
+        }
+
+        private FpsPlayer FindViewer()
+        {
+            foreach (var candidate in FindObjectsByType<FpsPlayer>())
+                if (candidate.gameObject.scene == gameObject.scene) return candidate;
+            return null;
+        }
+
+        // Geode glow A/B (110, admin): off, or each geode crystal faintly lit in its own colour, so it reads in the dark
+        // before a lamp reaches it. Their materials keep emission on at black; a property block sets the colour.
+        private const float GeodeGlowStrength = .35f;
+        private bool geodeGlow;
+        private MaterialPropertyBlock glowBlock;
+
+        public void SetGeodeGlow(bool on)
+        {
+            geodeGlow = on;
+            ApplyGeodeGlow();
+        }
+
+        private void ApplyGeodeGlow()
+        {
+            if (catalog == null) return;
+            var geodeIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in catalog.Entries)
+                if (entry.Geode) for (int i = 0; i < entry.AppearanceCount; i++) geodeIds.Add(entry.Appearance(i).SaveContentId);
+            if (geodeIds.Count == 0) return;
+            glowBlock ??= new MaterialPropertyBlock();
+            foreach (var find in finds)
+            {
+                if (find == null || !geodeIds.Contains(find.SaveContentId) || !find.TryGetComponent<MeshRenderer>(out var renderer)) continue;
+                if (!geodeGlow) { renderer.SetPropertyBlock(null); continue; }
+                var colour = renderer.sharedMaterial != null && renderer.sharedMaterial.HasProperty("_BaseColor")
+                    ? renderer.sharedMaterial.GetColor("_BaseColor") : Color.white;
+                glowBlock.SetColor("_EmissionColor", colour * GeodeGlowStrength);
+                renderer.SetPropertyBlock(glowBlock);
+            }
         }
 
         private BuriedChest SpawnChest(Vector3 position, Quaternion rotation)
@@ -344,6 +470,7 @@ namespace SomethingDownThere
         private void HandleExcavationChanged(Bounds changed)
         {
             using var profile = ExposureMarker.Auto();
+            CheckGeodeBreaks(changed);
             // Every world find retains its collider even while soil hides its mesh.
             // Reuse PhysX's spatial index instead of reading thousands of renderer
             // bounds for every local cut. Synchronize moved/restored finds first.

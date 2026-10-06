@@ -52,6 +52,30 @@ Material:
         m_Texture: {fileID: 2800000, guid: 89124e4aabdde0d4c9d46fa01f8f2457, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ShellAAlbedo:
+        m_Texture: {fileID: 2800000, guid: 2d06938ac922a334cb609fc27c0fdaa8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellAMask:
+        m_Texture: {fileID: 2800000, guid: 3328bb64983fb414a87b19af01d11624, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellANormal:
+        m_Texture: {fileID: 2800000, guid: 1a954c14882210c4ea21c86d1d554bcd, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellBAlbedo:
+        m_Texture: {fileID: 2800000, guid: d6887682365ebcf438ab1f1f49cdbbe6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellBMask:
+        m_Texture: {fileID: 2800000, guid: 643794ffdf1677f44b5dae483b8af899, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShellBNormal:
+        m_Texture: {fileID: 2800000, guid: 827606ce91dc65d41a3b32ca6718ac12, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SoilAlbedo:
         m_Texture: {fileID: 2800000, guid: 28893c22527e45c0bc613977651c64bf, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -92,6 +116,8 @@ Material:
     - _MaxSmoothness: 0.15
     - _NormalStrength: 1.5
     - _RimMix: 0.12
+    - _ShellNormalStrength: 1
+    - _ShellTileMetres: 2
     - _SoilOcclusion: 0.4
     - _SoilTileMetres: 4
     - _SrcBlend: 1
@@ -108,6 +134,7 @@ Material:
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
     - _BandTint: {r: 0.8962438, g: 0.8703449, b: 0.8488705, a: 1}
     - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
+    - _ShellTint: {r: 1, g: 1, b: 1, a: 1}
     - _SoilTint: {r: 0.8094681, g: 0.9911565, b: 1.1067512, a: 1}
     - _TurfTint: {r: 0.8860039, g: 0.8596959, b: 0.83786047, a: 1}
   m_BuildTextureStacks: []

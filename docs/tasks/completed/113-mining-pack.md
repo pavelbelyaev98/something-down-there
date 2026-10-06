@@ -137,8 +137,10 @@ items. AGENTS.md "Bought Before Made" now says so.
 - "When opening, items are placed with equal spacing and some are hard to see; I'd prefer to clutter items at the
   back of the chest." The six seats sit at the back: three along the back wall, two over the gaps between them, one
   before those. `DiscoveryCatalog.ChestHeap` sets each piece on the pieces already under it (by footprint), tipped
-  up to 20°, no higher than the chest's rim (`BuriedChest.Rim`), stepping toward the lock when it would be and lying
-  level on the floor when no stack fits (the chest is only about a crystal deep inside). Physics
+  up to 20°, no higher than the chest's rim (`BuriedChest.Rim`). One that would stand higher (the chest is only about a
+  crystal deep inside) takes the nearest place on the floor inside the walls (`BuriedChest.FloorHalf`) where it fits.
+  Pieces never start inside each other: a first fallback laid one level over another, and pushed apart it went through
+  the chest's floor. Physics
   settles them into a pile. Tried first: a second row lifted 12 cm in front of the first. It was too far apart to
   land on it, so it lay flat in a 2 x 3 grid.
 - "Earlier chests have bronze primarily, some silver and maybe some gold, while deeper chests have more gold and

@@ -31,6 +31,8 @@ namespace SomethingDownThere.Editor
             public bool detector_eligible, lay_on_side;
             // Taken by hand with Interact, never by digging or walking past (113: a chest's coins and ingots).
             public bool hand_picked;
+            // Lines geodes only (110): its instances are the geodes' seats.
+            public bool geode;
             public float required_exposure;
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;

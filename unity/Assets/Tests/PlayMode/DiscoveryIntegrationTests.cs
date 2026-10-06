@@ -127,10 +127,9 @@ namespace SomethingDownThere.Tests
             Assert.That(generated.Select(f => f.Item.Id).Distinct().Count(), Is.EqualTo(field.Catalog.TotalCount));
             Assert.That(generated.Count(f => f.ContentId.StartsWith("mineral_")),
                 Is.EqualTo(field.Catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).Sum(e => e.Count)));
-            // Every find starts buried, except those settled half-sunk in a sealed room's silt (partly
-            // exposed to the room's dark air, but never collectible before the player digs) and those
-            // lying loose in a closed stash chest (106).
-            Assert.That(field.Finds.Where(f => !InChest(f)).All(f => f.Exposure == 0), Is.True);
+            // Every find starts buried, except those lying loose in a closed stash chest (106) and those lining a
+            // sealed geode (110), exposed to its dark air but out of reach until the player breaks in.
+            Assert.That(field.Finds.Where(f => !InChest(f) && !InGeode(f)).All(f => f.Exposure == 0), Is.True);
             Assert.That(field.Finds.Count(InChest), Is.EqualTo(field.Chests.Count * field.Catalog.ChestItems));
             var find = PrepareUprightFind();
             Aim(find.transform.position + Vector3.up * 2, find.transform.position);
@@ -172,9 +171,8 @@ namespace SomethingDownThere.Tests
             terrain.ResetExcavation();
             Assert.That(find.Collected, Is.True);
             Assert.That(find.gameObject.activeSelf, Is.False);
-            // Reset reburies everything except the half-sunk finds of the re-carved sealed rooms and what lies
-            // in the re-carved stash chests.
-            Assert.That(field.Finds.Skip(1).Where(f => !InChest(f)).All(f => f.Exposure == 0), Is.True);
+            // Reset reburies everything except what lies in the re-carved stash chests and lines the re-carved geodes.
+            Assert.That(field.Finds.Skip(1).Where(f => !InChest(f) && !InGeode(f)).All(f => f.Exposure == 0), Is.True);
             Assert.That(player.Inventory.Count, Is.EqualTo(1));
         }
 
@@ -730,15 +728,15 @@ namespace SomethingDownThere.Tests
         public IEnumerator BuriedPopulationStopsRenderingAndPollingButWakesForDiggingAndRestore()
         {
             yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
-            Assert.That(field.Finds.Count(f => f.GetComponent<MeshRenderer>().enabled), Is.LessThan(field.Finds.Count / 20),
+            Assert.That(field.Finds.Count(f => !BesideSeededAir(f) && f.GetComponent<MeshRenderer>().enabled), Is.LessThan(field.Finds.Count / 20),
                 "Only conservative surface-edge bounds may render in pristine soil.");
             string Named(System.Func<BuriedFind, bool> which) => string.Join("; ", field.Finds.Where(which).Take(4)
                 .Select(f => $"{f.SaveContentId} at {f.transform.position:F2}, nearest chest {field.Chests.Min(c => Vector3.Distance(c.transform.position, f.transform.position)):F2}"));
-            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideChest(f))
+            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideSeededAir(f))
                 .All(f => !f.GetComponent<MeshRenderer>().enabled), Is.True,
-                "Buried finds render: " + Named(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideChest(f) && f.GetComponent<MeshRenderer>().enabled));
-            Assert.That(field.Finds.Where(f => !BesideChest(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True,
-                "Buried finds poll: " + Named(f => !BesideChest(f) && f.GetComponent<FindPhysics>().enabled));
+                "Buried finds render: " + Named(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideSeededAir(f) && f.GetComponent<MeshRenderer>().enabled));
+            Assert.That(field.Finds.Where(f => !BesideSeededAir(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True,
+                "Buried finds poll: " + Named(f => !BesideSeededAir(f) && f.GetComponent<FindPhysics>().enabled));
             Assert.That(field.Finds.All(f => f.GetComponent<MeshCollider>().enabled), Is.True,
                 "Soil-occluded targeting and collision remain available, including tiny slivers.");
             var before = field.Capture();
@@ -747,7 +745,7 @@ namespace SomethingDownThere.Tests
             Assert.That(find.Exposure, Is.GreaterThan(0));
             Assert.That(find.GetComponent<MeshRenderer>().enabled, Is.True);
             Assert.That(find.GetComponent<FindPhysics>().enabled, Is.True, "A cut wakes attachment checking.");
-            Assert.That(field.Finds.Count(f => f.GetComponent<MeshRenderer>().enabled), Is.LessThan(field.Finds.Count / 20),
+            Assert.That(field.Finds.Count(f => !BesideSeededAir(f) && f.GetComponent<MeshRenderer>().enabled), Is.LessThan(field.Finds.Count / 20),
                 "A local excavation must not activate the whole site.");
 
             terrain.ResetExcavation();
@@ -758,10 +756,16 @@ namespace SomethingDownThere.Tests
             // What lies loose in a chest settles again on its floor; everything else keeps its exact place.
             var loose = field.Finds.Where(InChest).Select(f => f.Item.InstanceId).ToHashSet();
             Assert.That(after.Where(f => !loose.Contains(f.Item.Id)).Select(f => f.Position), Is.EqualTo(before.Where(f => !loose.Contains(f.Item.Id)).Select(f => f.Position)));
-            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideChest(f))
+            Assert.That(field.Finds.Where(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideSeededAir(f))
                 .All(f => !f.GetComponent<MeshRenderer>().enabled), Is.True);
-            Assert.That(field.Finds.Where(f => !BesideChest(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True);
+            Assert.That(field.Finds.Where(f => !BesideSeededAir(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True);
         }
+
+        // Lining a geode's sealed hollow (110), or within a metre of its shell.
+        private bool InGeode(BuriedFind find) => terrain.GroundLayout.Geodes.Any(g =>
+            Vector3.Distance(terrain.transform.TransformPoint((Vector3)g.Centre), find.transform.position) < g.Reach + 1f);
+
+        private bool BesideSeededAir(BuriedFind find) => BesideChest(find) || InGeode(find);
 
         // In a chest or within a metre of the pocket it stands in (109): seeded air is modified ground, and buried finds
         // beside it wake conservatively (TerrainVolume.MayExpose checks modified samples in coarse blocks).

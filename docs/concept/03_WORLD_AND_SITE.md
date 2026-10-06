@@ -255,7 +255,8 @@ Geodes keep that moment without cave networks.
   seconds; C4 cracks it fast ([Tool and Movement](04_TOOL_AND_MOVEMENT.md#8-c4)).
 - Always sealed: the player always breaks in. Inside it is dark until the player's opening or a lamp
   lights it; crystals catch the light. They are finds worth far more than the ground around them,
-  richer the deeper the geode.
+  richer the deeper the geode: real geode minerals, celestine and fluorite in the sediment, amethyst and
+  citrine in the riverbed, apart from the gems loose in the ground.
 - Geodes never connect into passages and never form a maze.
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the

@@ -9,7 +9,8 @@ namespace SomethingDownThere.Editor
     // Finds made from bought prop prefabs (BuriedPropsSetup): rubbish (106: art/tv-set, art/big-old-tv), which lies loose
     // in the soil in its depth band like any find, and a chest's treasure (113: the ingots in art/mining-pack and the gem
     // crystals in art/pure-nature-crystal-caverns that the old chests hold, taken by hand), and pyrite, the lake sediment's
-    // fool's gold (114: ground.json beside them). Each source names its props and their find policy; a find can take further
+    // fool's gold (114: ground.json beside them), and the crystals lining the geodes (110: geode.json). Each source names its
+    // props and their find policy; a find can take further
     // appearances, each its own prop. The props bake to centred meshes (PropBake); the find prefab, surface samples and
     // detail levels come from the shared discovery import.
     public static class PropFindSetup
@@ -21,6 +22,7 @@ namespace SomethingDownThere.Editor
             ("art/mining-pack/catalog.json", "Assets/Content/Discoveries/Treasure", false),
             ("art/pure-nature-crystal-caverns/catalog.json", "Assets/Content/Discoveries/Treasure", false),
             ("art/pure-nature-crystal-caverns/ground.json", "Assets/Content/Minerals", false),
+            ("art/pure-nature-crystal-caverns/geode.json", "Assets/Content/Discoveries/Geode", false),
         };
         [Serializable] private sealed class Source { public int schema_version; public PropFind[] finds; }
         [Serializable] private sealed class PropFind { public string prefab; public float mass_kg; public DiscoveryContentSetup.SourceEntry find; }
@@ -43,7 +45,7 @@ namespace SomethingDownThere.Editor
                     e.prefab = prop.prefab;
                     var looks = ImportLooks(e, folder, boxHull, prop.mass_kg);
                     entries.Add(new DiscoveryCatalog.Entry { ItemId = e.content_id, Prefab = looks[0], AppearanceVariants = looks.Skip(1).ToArray(),
-                        Count = e.instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m,
+                        Count = e.instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m, Geode = e.geode,
                         HostGrounds = DiscoveryContentSetup.HostGrounds(e.host_grounds, e.host_weights),
                         HostWeights = DiscoveryContentSetup.HostWeights(e.host_grounds, e.host_weights) });
                 }

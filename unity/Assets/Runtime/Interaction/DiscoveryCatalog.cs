@@ -28,6 +28,8 @@ namespace SomethingDownThere
             // keeps the legacy single-band rule.
             public float CoreMinDepth, CoreMaxDepth, CoreShare;
             public bool LayOnSide, RandomOrientation;
+            // Lines geodes only (110): its instances are the geodes' seats (SeatGeodes), never loose in the ground.
+            public bool Geode;
             // Host ground (concept 03 §4): at the same depth, ground listed here carries its weight
             // times the find density of unlisted ground (weight 1). Soft bias with scatter; the
             // depth bands and prices never change.
@@ -207,9 +209,10 @@ namespace SomethingDownThere
             }
             // Each stash's chest takes its contents from the population (SeatChests): counts and bands are unchanged.
             // Ordinary finds keep out of every stash's chest and the pocket it stands in.
+            // Each geode's crystals likewise (SeatGeodes); ordinary finds keep out of its shell.
             Vector3[] seats = null;
             var stashes = groundLayout != null && Chest != null ? groundLayout.Stashes : Array.Empty<TerrainGround.Stash>();
-            var chestTurns = new Dictionary<int, Quaternion>();
+            var seatTurns = new Dictionary<int, Quaternion>();
             if (groundLayout != null)
             {
                 seats = new Vector3[radii.Length];
@@ -217,7 +220,10 @@ namespace SomethingDownThere
                 foreach (var stash in stashes)
                     foreach (var (centre, radius) in Chest.PocketReserves())
                         reserved.Add(new DiscoveryReservation((Vector3)stash.Centre + (Quaternion)stash.Rotation * centre, radius + DiscoveryField.SoilClearance));
-                SeatChests(stashes, extent, seed, shallow, bands, seats, chestTurns);
+                foreach (var geode in groundLayout.Geodes)
+                    reserved.Add(new DiscoveryReservation(geode.Centre, geode.Reach + DiscoveryField.SoilClearance));
+                SeatChests(stashes, extent, seed, shallow, bands, seats, seatTurns);
+                SeatGeodes(groundLayout.Geodes, extent, seed, shallow, bands, seats, seatTurns);
             }
             Func<int, Vector3, float> weight = null;
             if (ground != null)
@@ -244,7 +250,7 @@ namespace SomethingDownThere
                     rotation = new Quaternion((float)(Math.Sqrt(1-u)*Math.Sin(v)), (float)(Math.Sqrt(1-u)*Math.Cos(v)),
                         (float)(Math.Sqrt(u)*Math.Sin(w)), (float)(Math.Sqrt(u)*Math.Cos(w)));
                 }
-                if (chestTurns.TryGetValue(i, out var turn)) rotation = turn;
+                if (seatTurns.TryGetValue(i, out var turn)) rotation = turn;
                 layout[i] = new DiscoveryPlacement(layout[i].Position, rotation, index, appearances.Next(Entries[index].AppearanceCount));
             }
             var result = new List<DiscoveryPlacement>(layout); result.AddRange(authored); return result.ToArray();
@@ -284,12 +290,13 @@ namespace SomethingDownThere
 
         // A chest's contents heaped at its back (user, 2026-10-06: evenly spaced looked laid out). Each find takes its seat
         // on the floor turned up to ChestTurn; one that reaches over finds already lying there rests on the highest of them,
-        // tipped up to ChestTip, so it settles leaning on them. One that would stand above the walls' rim lies further
-        // toward the lock, HeapStep at a time; after HeapSteps it lies level on the floor there, and the others make room
-        // as they settle (the chest is only about a crystal deep inside).
+        // tipped up to ChestTip, so it settles leaning on them. One that would stand above the walls' rim (the chest is only
+        // about a crystal deep inside) takes the nearest place on the floor, a HeapStep grid inside its walls, where it fits
+        // on the floor or on what lies there. Finds never start inside each other: pushed apart, one went through the floor.
         public const float ChestTurn = 80f, ChestTip = 20f;
         private const float HeapStep = .06f;
-        private const int HeapSteps = 5;
+        // A find's centre keeps this share of its reach from the inner walls.
+        private const float WallMargin = .8f;
 
         internal sealed class ChestHeap
         {
@@ -308,24 +315,87 @@ namespace SomethingDownThere
                 var tipped = Quaternion.AngleAxis(tip, Quaternion.Euler(0, tipAround, 0) * Vector3.right) * turn;
                 // How far a tipped find reaches below and above its centre at most.
                 float tippedHalf = half + reach * Mathf.Sin(tip * Mathf.Deg2Rad);
-                var ahead = new Vector2(chest.Front.x, chest.Front.z).normalized;
-                for (int step = 0; ; step++)
+                var origin = new Vector2(seat.x, seat.z);
+                // The seat first, then the floor nearest it.
+                (Vector2 at, float under, bool resting) best = (origin, seat.y, false);
+                float bestDistance = float.MaxValue;
+                void Try(Vector2 at)
                 {
-                    var at = new Vector2(seat.x, seat.z) + ahead * (step * HeapStep);
+                    float distance = (at - origin).sqrMagnitude;
+                    if (distance >= bestDistance) return;
                     float under = seat.y;
                     foreach (var p in placed)
                         if ((p.at - at).magnitude < p.reach + reach) under = Mathf.Max(under, p.top);
                     bool resting = under > seat.y;
-                    float rise = (resting ? tippedHalf : half) + .01f;
-                    if (under + 2 * rise > chest.Rim)
-                    {
-                        if (step < HeapSteps) continue;
-                        under = seat.y; resting = false; rise = half + .01f;
-                    }
-                    placed.Add((at, reach, under + 2 * rise));
-                    return (new Vector3(at.x, under + rise, at.y), resting ? tipped : turn);
+                    if (under + 2 * ((resting ? tippedHalf : half) + .01f) > chest.Rim) return;
+                    best = (at, under, resting);
+                    bestDistance = distance;
+                }
+                Try(origin);
+                Vector2 inside = chest.FloorHalf - Vector2.one * (reach * WallMargin);
+                for (float x = -inside.x; x <= inside.x + 1e-4f; x += HeapStep)
+                    for (float z = -inside.y; z <= inside.y + 1e-4f; z += HeapStep)
+                        Try(new Vector2(x, z));
+                float rise = (best.resting ? tippedHalf : half) + .01f;
+                placed.Add((best.at, reach, best.under + 2 * rise));
+                return (new Vector3(best.at.x, best.under + rise, best.at.y), best.resting ? tipped : turn);
+            }
+        }
+
+        // What each geode holds (110): GeodeCrystals crystals of the geode types whose band covers its depth, each the next
+        // unseated instance of a type drawn by how many of it are left, so the instances fill the seats exactly and counts
+        // never change. They line its hollow (GeodeSeat).
+        public const int GeodeCrystals = 6;
+        private void SeatGeodes(TerrainGround.Geode[] geodes, Vector3 extent, int seed, List<int> order, Vector2[] bands,
+            Vector3[] seats, Dictionary<int, Quaternion> turns)
+        {
+            var random = new System.Random(unchecked(seed ^ 0x6E0DE5));
+            for (int g = 0; g < geodes.Length; g++)
+            {
+                float depth = extent.y - geodes[g].Centre.y;
+                for (int k = 0; k < GeodeCrystals; k++)
+                {
+                    // Unseated geode instances whose band covers this geode, by type.
+                    var left = new Dictionary<int, List<int>>();
+                    for (int i = ShallowCount; i < seats.Length; i++)
+                        if (Entries[order[i]].Geode && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y)
+                        {
+                            if (!left.TryGetValue(order[i], out var list)) left[order[i]] = list = new List<int>();
+                            list.Add(i);
+                        }
+                    if (left.Count == 0) break;
+                    int total = 0; foreach (var list in left.Values) total += list.Count;
+                    int pick = random.Next(total), entry = -1;
+                    foreach (var pair in left) { if (pick < pair.Value.Count) { entry = pair.Key; break; } pick -= pair.Value.Count; }
+                    int seated = left[entry][0];
+                    var (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
+                    seats[seated] = position;
+                    turns[seated] = rotation;
                 }
             }
+        }
+
+        // The kth crystal's seat on a geode's hollow (grid-local): four on the floor and lower walls, two higher, spread
+        // round it, each pointing into the hollow (its up along the inward normal, a seeded twist) and sunk GeodeSink of its
+        // height into the shell, so it stays anchored until the shell around it is dug.
+        public const float GeodeSink = 1 / 3f;
+        internal static (Vector3 position, Quaternion rotation) GeodeSeat(TerrainGround.Geode geode, int k, Entry entry, System.Random random)
+        {
+            bool low = k < 4;
+            float around = (low ? k * 90f : 45f + (k - 4) * 180f) + ((float)random.NextDouble() - .5f) * 40f;
+            float elevation = low ? Mathf.Lerp(-55f, -15f, (float)random.NextDouble()) : Mathf.Lerp(10f, 40f, (float)random.NextDouble());
+            var direction = Quaternion.Euler(-elevation, around, 0) * Vector3.forward;
+            // Where the ray from the centre meets the ellipsoid, and its normal there (the hollow's own frame).
+            Vector3 radii = geode.Radii;
+            float scale = 1 / new Vector3(direction.x / radii.x, direction.y / radii.y, direction.z / radii.z).magnitude;
+            var surface = direction * scale;
+            var outward = new Vector3(surface.x / (radii.x * radii.x), surface.y / (radii.y * radii.y), surface.z / (radii.z * radii.z)).normalized;
+            Quaternion frame = geode.Rotation;
+            var inward = -(frame * outward);
+            float half = entry.RestingHalfHeight;
+            var position = (Vector3)geode.Centre + frame * surface + inward * (half * (1 - 2 * GeodeSink));
+            var rotation = Quaternion.FromToRotation(Vector3.up, inward) * Quaternion.Euler(0, (float)random.NextDouble() * 360f, 0);
+            return (position, rotation);
         }
 
         // The ground at the find's centre decides.

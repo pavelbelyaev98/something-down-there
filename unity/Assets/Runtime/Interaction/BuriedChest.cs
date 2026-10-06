@@ -17,10 +17,11 @@ namespace SomethingDownThere
         // pocket of air it stands in, the seats on its floor, the space its lid sweeps opening and points just under its base.
         [SerializeField] private Vector3 hollowCentre, hollowHalf, pocketCentre, pocketHalf;
         [SerializeField] private Vector3[] contentSeats = Array.Empty<Vector3>();
-        // The way its lock faces (its lid's free edge), in its own frame, and the height of its walls' top: its contents
-        // heap no higher (DiscoveryCatalog.ChestHeap).
+        // The way its lock faces (its lid's free edge), in its own frame, the height of its walls' top and the half size
+        // (x, z) of its floor inside the walls: its contents heap no higher and no wider (DiscoveryCatalog.ChestHeap).
         [SerializeField] private Vector3 front = Vector3.right;
         [SerializeField] private float rim;
+        [SerializeField] private Vector2 floorHalf;
         [SerializeField] private Vector3[] lidSpace = Array.Empty<Vector3>(), footing = Array.Empty<Vector3>();
         // Reach of the chest's pocket from its pivot (ordinary finds keep out of PocketReserves).
         [SerializeField, Min(.1f)] private float radius = .85f;
@@ -37,8 +38,8 @@ namespace SomethingDownThere
         public string DisplayName => displayName;
         public Bounds Hollow => new Bounds(hollowCentre, hollowHalf * 2);
         public Bounds Pocket => new Bounds(pocketCentre, pocketHalf * 2);
-        public Vector3 Front => front;
         public float Rim => rim;
+        public Vector2 FloorHalf => floorHalf;
 
         // The space ordinary finds keep out of, in the chest's frame: a sphere around each quarter of its pocket (split
         // across its floor), which hugs the wide, low pocket far closer than one sphere around it all, so the rock layer

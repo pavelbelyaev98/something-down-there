@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,6,4,3,2,2,1,150}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,6,4,3,2,2,1,150,7,5,10,8}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -98,7 +98,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(640));
-            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
             foreach (int seed in Seeds(sweep))
             {
                 var layout = Layout(seed);
@@ -211,6 +211,38 @@ namespace SomethingDownThere.Tests
                     Assert.That(outside, Is.GreaterThan(radii[p.PrefabIndex]), "Nothing else reaches into a chest's pocket.");
                 }
             Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount), "Chests take their contents from the population.");
+        }
+
+        // Concept 03 §5 (110): every geode holds GeodeCrystals crystals of the geode types whose band covers its depth,
+        // pointing into its hollow and sunk into its shell; geode crystals lie nowhere else; counts are unchanged.
+        [TestCase(90127)] [TestCase(12)]
+        public void EveryGeodeIsLinedWithItsZonesCrystalsAndNothingElse(int seed)
+        {
+            var catalog = Catalog; var layout = Layout(seed);
+            var geodes = GroundLayout.Geodes;
+            Assert.That(geodes.Length, Is.EqualTo(TerrainGround.GeodesPerZone.Sum()));
+            var crystals = layout.Where(p => catalog.Entries[p.PrefabIndex].Geode).ToArray();
+            Assert.That(crystals.Length, Is.EqualTo(geodes.Length * DiscoveryCatalog.GeodeCrystals), "Every geode crystal lines a geode.");
+            foreach (var geode in geodes)
+            {
+                float depth = SiteLayout.Extent.y - geode.Centre.y;
+                var held = crystals.Where(p => Vector3.Distance(p.Position, geode.Centre) < geode.Reach).ToArray();
+                Assert.That(held.Length, Is.EqualTo(DiscoveryCatalog.GeodeCrystals), $"Seed {seed}: a geode at {depth:F0} m holds its crystals.");
+                foreach (var p in held)
+                {
+                    var entry = catalog.Entries[p.PrefabIndex];
+                    Assert.That(depth, Is.InRange(entry.MinDepth, entry.MaxDepth), $"{entry.ItemId} belongs at this depth.");
+                    var inward = ((Vector3)geode.Centre - p.Position).normalized;
+                    Assert.That(Vector3.Angle(p.Rotation * Vector3.up, inward), Is.LessThan(60), "Pointing into the hollow.");
+                    var foot = p.Position - p.Rotation * Vector3.up * entry.RestingHalfHeight;
+                    Assert.That(TerrainGround.HollowDistance(geode, foot), Is.GreaterThan(0), "Its foot is sunk in the shell.");
+                    Assert.That(TerrainGround.HollowDistance(geode, p.Position), Is.LessThan(.05f), "It stands in the hollow.");
+                }
+            }
+            foreach (var p in layout.Where(p => !catalog.Entries[p.PrefabIndex].Geode))
+                foreach (var geode in geodes)
+                    Assert.That(TerrainGround.OuterDistance(geode, p.Position), Is.GreaterThan(0), "Nothing else lies in a geode.");
+            Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount), "Geodes take their crystals from the population.");
         }
 
         // The site's pits (soil plus backfill only) still keep clear of every unique's space.

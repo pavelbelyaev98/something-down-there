@@ -47,6 +47,8 @@ namespace SomethingDownThere
         // Backfill: a pit refilled with rubble (108). Smaller, shallower bites at a slightly slower stroke: about three
         // quarters of soil's rate, felt at once and never a wall; half was a chore early on (user, 2026-10-06).
         private static readonly MaterialToolResponse Backfill = new MaterialToolResponse(.92f, .92f, .9f, 1.05f);
+        // A geode's shell (110): hard stone, about a quarter of soil's rate. The drill crawls through it in seconds.
+        private static readonly MaterialToolResponse GeodeShell = new MaterialToolResponse(.68f, .68f, .62f, 1.15f);
         // Developer ground tuning: session-only replacements for the authored responses.
         private static readonly MaterialToolResponse?[] ResponseOverrides = new MaterialToolResponse?[(int)TerrainMaterialSnapshot.Last + 1];
         public static bool HasResponseOverrides => System.Array.Exists(ResponseOverrides, value => value.HasValue);
@@ -59,16 +61,18 @@ namespace SomethingDownThere
         {
             TerrainMaterialId.Soil => "Plain ground; never collapses",
             TerrainMaterialId.Backfill => "Rubble fill: stony and hard; never collapses",
+            TerrainMaterialId.GeodeShell => "Geode shell: hard stone around a sealed hollow",
             _ => ""
         };
         public static MaterialToolResponse AuthoredResponse(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Soil => Soil,
             TerrainMaterialId.Backfill => Backfill,
+            TerrainMaterialId.GeodeShell => GeodeShell,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
         // Softest to hardest; each ground keeps its resistance at every tier.
-        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill };
+        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill, TerrainMaterialId.GeodeShell };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100, 1600, 2300 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40, 40, 40 };

@@ -4,14 +4,14 @@ using UnityEngine.Rendering;
 
 namespace SomethingDownThere
 {
-    // Developer ground X-ray: the ground turns transparent and every few cells of tell ground (backfill) get a
+    // Developer ground X-ray: the ground turns transparent and every few cells of tell ground (backfill, geode shell) get a
     // coloured marker within reach of the camera, so tells can be found and dug on purpose. Session-only; it never
     // changes the grid.
     public sealed partial class TerrainVolume
     {
-        public enum XrayGround { Backfill }
-        public static readonly Color[] XrayColours = { new Color(.95f, .25f, 1f) };
-        public const string XrayLegend = "magenta backfill";
+        public enum XrayGround { Backfill, GeodeShell }
+        public static readonly Color[] XrayColours = { new Color(.95f, .25f, 1f), new Color(.2f, .95f, 1f) };
+        public const string XrayLegend = "magenta backfill, cyan geode";
         private const float XrayRadius = 20f, XrayMarkerSize = .1f, XrayResampleDistance = 4f, XrayResampleSeconds = .5f;
         private const int XrayStep = 3;
 
@@ -46,6 +46,7 @@ namespace SomethingDownThere
         public static XrayGround? XrayClass(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Backfill => XrayGround.Backfill,
+            TerrainMaterialId.GeodeShell => XrayGround.GeodeShell,
             _ => null
         };
 

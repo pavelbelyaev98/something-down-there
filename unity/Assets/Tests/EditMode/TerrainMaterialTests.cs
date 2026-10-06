@@ -173,6 +173,18 @@ namespace SomethingDownThere.Tests
             }
         }
 
+        // A geode's shell (110): hard stone at about a quarter of soil's rate at every level, never a wall.
+        [Test]
+        public void GeodeShellDigsAtAboutAQuarterOfSoilsRateAtEveryLevel()
+        {
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
+            {
+                float ratio = Output(TerrainMaterialId.GeodeShell, level).sustained / Output(TerrainMaterialId.Soil, level).sustained;
+                TestContext.WriteLine($"Level {level}: geode shell digs {ratio:P0} of soil's rate");
+                Assert.That(ratio, Is.InRange(.15f, .35f), $"Level {level}");
+            }
+        }
+
         // Fresh (the first second) and sustained (four seconds) output (m3/s) of the automatic motion held straight down.
         private static (float first, float sustained) Output(TerrainMaterialId material, int level)
         {

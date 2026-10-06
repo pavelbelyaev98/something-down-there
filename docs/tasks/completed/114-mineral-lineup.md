@@ -88,7 +88,7 @@ at the bottom, and cut in the old chests.
 
 - **`art/minerals/catalog.json`:**
   - Core bands follow the zones, each overlapping the next by a metre or two so no metre runs thin: coal 1–5.5 m,
-    copper 5–37, iron 36–58, silver 56–76, gold 75–98, emerald 96–113, ruby 112–132, diamond 131–149.2.
+    copper 5–37, iron 34–58, silver 56–76, gold 75–98, emerald 96–113, ruby 112–132, diamond 131–149.2.
   - Scatter stays wide (the odd valuable high up). The ground gems keep 95% in their cores (86% before), so their
     higher prices do not inflate the shallow zone.
   - Prices: coal $4, copper $5, iron $8, silver $12, gold $16, emerald $30, ruby $45, diamond $70 (were $6, $9,

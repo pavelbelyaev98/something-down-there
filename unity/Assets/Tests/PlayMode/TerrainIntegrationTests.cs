@@ -159,10 +159,11 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
             // A deep volume only materializes the top layer that owns the ground plane, plus seeded air's
-            // chunks (stash chests' pockets) so it exists the moment the player reaches it.
+            // chunks (stash chests' pockets, geodes' hollows) so it exists the moment the player reaches it.
             var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
             Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
-            var hollows = terrain.GroundLayout.Stashes.Where(s => s.HasPocket).ToArray();
+            var hollows = terrain.GroundLayout.Stashes.Where(s => s.HasPocket).Select(s => (s.Min, s.Max))
+                .Concat(terrain.GroundLayout.Geodes.Select(g => (g.Min, g.Max))).ToArray();
             int surfaceLayer = (terrain.Dimensions.y - 1) / 16, deep = 0;
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
             {
@@ -171,9 +172,9 @@ namespace SomethingDownThere.Tests
                 deep++;
                 float size = SiteLayout.ChunkSize * SiteLayout.CellSize;
                 var chunkBounds = new Bounds((new Vector3(key[0], key[1], key[2]) + Vector3.one * .5f) * size, Vector3.one * size);
-                Assert.That(hollows.Any(stash =>
+                Assert.That(hollows.Any(hollow =>
                 {
-                    var air = new Bounds(); air.SetMinMax((Vector3)stash.Min, (Vector3)stash.Max); air.Expand(SiteLayout.CellSize * 6);
+                    var air = new Bounds(); air.SetMinMax((Vector3)hollow.Min, (Vector3)hollow.Max); air.Expand(SiteLayout.CellSize * 6);
                     return air.Intersects(chunkBounds);
                 }), Is.True, "Below the surface only seeded air is materialized.");
             }

@@ -256,7 +256,9 @@ namespace SomethingDownThere.Tests
             var cover = GameObject.CreatePrimitive(PrimitiveType.Cube);
             try
             {
-                cover.transform.position = find.WorldBounds.center + Vector3.up * .16f;
+                // Just above the find's highest point: a turned renderer's bounds box sits loose round a rounded find.
+                float top = find.GetComponent<MeshFilter>().sharedMesh.vertices.Max(v => find.transform.TransformPoint(v).y);
+                cover.transform.position = new Vector3(find.WorldBounds.center.x, top + .06f, find.WorldBounds.center.z);
                 cover.transform.localScale = new Vector3(2,.05f,2); Physics.SyncTransforms();
                 WalkTo(find); Assert.That(find.Collected, Is.False, "A floor/cover between the feet and item must block pickup.");
             }

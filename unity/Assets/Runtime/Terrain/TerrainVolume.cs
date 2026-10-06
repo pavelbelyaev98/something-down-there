@@ -102,7 +102,16 @@ namespace SomethingDownThere
             untouchedPreview = preview;
         }
 
-        private void Awake() => InitializeSession();
+        // The geode shell A/B (110, admin): which of its two texture sets every ground material draws, a shader global so
+        // no material asset changes at run time. Each session starts on A.
+        private static readonly int GeodeShellLookId = Shader.PropertyToID("_GeodeShellLook");
+        public static void SetGeodeShellLook(bool lookB) => Shader.SetGlobalFloat(GeodeShellLookId, lookB ? 1 : 0);
+
+        private void Awake()
+        {
+            SetGeodeShellLook(false);
+            InitializeSession();
+        }
 
         public void InitializeSession()
         {

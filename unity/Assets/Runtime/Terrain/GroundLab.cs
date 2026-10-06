@@ -31,7 +31,19 @@ namespace SomethingDownThere
             new Bay("Backfill", "rubble fill: about three quarters of soil's speed", Only(TerrainMaterialId.Backfill)),
             new Bay("Backfill pit", "1 m rubble pit in soil, 5 m deep", (u, d, v) =>
                 Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil),
+            new Bay("Geode shell", "geode stone to 3 m: about a quarter of soil's speed", (u, d, v) =>
+                d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil),
+            new Bay("Geode", "a whole geode 2.6 m down: dig in and break through", Only(TerrainMaterialId.Soil)),
         };
+
+        // The geode bay's geode (110), a small one with its crystals (DiscoveryField), as the site's are made.
+        public static readonly TerrainGround.Geode Geode = TerrainGround.Make(
+            (Unity.Mathematics.float3)Local(new Vector3(BayCentre(4).x, -2.6f, BayCentre(4).y)),
+            new Unity.Mathematics.float3(.9f, .75f, .9f), .6f, .4f, 0);
+
+        // The lab's seeded ground: no pits, the geode bay's geode.
+        public static TerrainGround.GroundLayout Layout() => new TerrainGround.GroundLayout(
+            Array.Empty<TerrainGround.Pit>(), Array.Empty<TerrainGround.Stash>(), new[] { Geode });
 
         public static Vector2 BayCentre(int bay) => new Vector2(Columns[bay % Columns.Length], Rows[bay / Columns.Length]);
 
@@ -73,6 +85,7 @@ namespace SomethingDownThere
                     ids[row + x] = (byte)(bay < 0 ? TerrainMaterialId.Soil : Bays[bay].Ground(u, depth, v));
                 }
             }
+            TerrainGround.FillGeode(ids, size, cellSize, Geode);
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
 
