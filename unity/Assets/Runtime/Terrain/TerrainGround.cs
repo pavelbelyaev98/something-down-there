@@ -42,6 +42,9 @@ namespace SomethingDownThere
         public struct Stash
         {
             public float3 Centre, PocketCentre, PocketHalf, Min, Max;
+            // The pocket's dome (PocketDistance): its centre's offset across the pocket and its width, as shares of the
+            // pocket's half extents (x, z offsets; x, z widths).
+            public float4 Dome;
             public float3x3 ToLocal;
             public quaternion Rotation;
             public bool HasPocket => math.all(PocketHalf > 0);
@@ -144,12 +147,45 @@ namespace SomethingDownThere
             return stashes;
         }
 
-        // A chest at centre (grid-local), turned by rotation, in its pocket.
+        // A chest at centre (grid-local), turned by rotation, in its pocket, its dome set from where it lies.
         public static Stash MakeStash(float3 centre, quaternion rotation, Bounds pocket)
         {
-            float reach = math.length(pocket.extents) + math.length(pocket.center);
-            return new Stash { Centre = centre, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)),
+            float reach = math.length(pocket.extents) + math.length(pocket.center) + PocketDome + PocketWarp + .1f;
+            uint state = math.hash(centre) | 1u;
+            float Next() => TerrainMaterialSnapshot.NextUnit(ref state);
+            var dome = new float4(Next() * .4f - .2f, Next() * .4f - .2f, .85f + Next() * .2f, .85f + Next() * .2f);
+            return new Stash { Centre = centre, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)), Dome = dome,
                 PocketCentre = pocket.center, PocketHalf = pocket.extents, Min = centre - reach, Max = centre + reach };
+        }
+
+        // A chest's pocket of air (user, 2026-10-06: "more space vertically and a bit more random, not a square block"):
+        // the box measured from the chest (its hollow, the lid's swing and a margin) with well-rounded edges, joined to a
+        // dome over it, PocketDome higher, set off-centre and sized per stash, and pushed out by up to PocketWarp of broad
+        // bulges, so it reads as a hollow the fill settled out of; small lumps pull walls and roof in by up to PocketRough.
+        // Its floor stays flat under the chest (bulges and lumps fade in over PocketFloorBand above it). Signed distance,
+        // negative in the air; grid-local metres.
+        public const float PocketDome = .7f, PocketWarp = .22f, PocketRough = .08f, PocketFloorBand = .3f, PocketRound = .3f;
+        public static float PocketDistance(Stash stash, float3 p)
+        {
+            var local = math.mul(stash.ToLocal, p - stash.Centre) - stash.PocketCentre;
+            var half = stash.PocketHalf;
+            float round = math.min(PocketRound, math.cmin(half) * .5f);
+            var d = math.abs(local) - (half - round);
+            float box = math.length(math.max(d, 0)) + math.min(math.cmax(d), 0) - round;
+            var domeCentre = new float3(stash.Dome.x * half.x, half.y - .15f, stash.Dome.y * half.z);
+            var domeRadii = new float3(half.x * stash.Dome.z, PocketDome + .15f, half.z * stash.Dome.w);
+            float shape = math.max(SmoothMin(box, Ellipsoid(local - domeCentre, domeRadii), .35f), -(local.y + half.y));
+            float above = math.saturate((local.y + half.y) / PocketFloorBand);
+            return shape - above * PocketWarp * (.5f + .5f * noise.snoise(p * .7f + stash.Centre * .29f))
+                + above * PocketRough * (.5f + .5f * noise.snoise(p * 2.2f + stash.Centre * .37f));
+        }
+
+        // Where finds keep out of a pocket's dome (grid-local centre and radius), beside the chest's own reserves.
+        public static (float3 centre, float radius) PocketDomeReserve(Stash stash)
+        {
+            var half = stash.PocketHalf;
+            var local = stash.PocketCentre + new float3(stash.Dome.x * half.x, half.y + PocketDome * .4f, stash.Dome.y * half.z);
+            return (stash.Centre + math.mul(stash.Rotation, local), math.max(half.x * stash.Dome.z, half.z * stash.Dome.w) + PocketWarp);
         }
 
         // Seeded geodes, each wholly inside its zone and the find footprint, clear of pits, uniques' spaces and each other.
@@ -175,7 +211,7 @@ namespace SomethingDownThere
                 for (int n = 0; n < GeodesPerZone[zone]; n++)
                     for (int attempt = 0; attempt < 200; attempt++)
                     {
-                        float radius = Range(1.3f, 1.6f), heading = Range(0, 2 * math.PI);
+                        float radius = Range(1.5f, 1.85f), heading = Range(0, 2 * math.PI);
                         var radii = new float3(radius, radius * Range(.7f, .85f), radius * Range(.85f, 1.05f));
                         var lobeA = Lobe(radius, heading, out var lobeRadiiA);
                         var lobeRadiiB = float3.zero;
@@ -381,10 +417,9 @@ namespace SomethingDownThere
         public static void FillShell(byte[] ids, Vector3Int size, float cellSize, Stash stash, float4 offsets)
         {
             int stride = size.x + 1, plane = stride * (size.y + 1);
-            float reach = math.length(stash.PocketHalf) + math.length(stash.PocketCentre) + ChestShell + .2f;
+            float reach = math.length(stash.PocketHalf) + math.length(stash.PocketCentre) + PocketDome + PocketWarp + ChestShell + .3f;
             var first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)(stash.Centre - reach) / cellSize));
             var last = Vector3Int.Min(size, Vector3Int.CeilToInt((Vector3)(stash.Centre + reach) / cellSize));
-            var half = stash.PocketHalf + ChestShell;
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
             {
@@ -392,9 +427,7 @@ namespace SomethingDownThere
                 for (int x = first.x; x <= last.x; x++)
                 {
                     var p = new float3(x, y, z) * cellSize;
-                    var d = math.abs(math.mul(stash.ToLocal, p - stash.Centre) - stash.PocketCentre) - (half - .3f);
-                    float outside = math.length(math.max(d, 0)) + math.min(math.cmax(d), 0) - .3f
-                        + .15f * noise.snoise(p * 1.4f + offsets.xzw + 19.7f);
+                    float outside = PocketDistance(stash, p) - ChestShell + .15f * noise.snoise(p * 1.4f + offsets.xzw + 19.7f);
                     if (outside < 0) ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.Backfill;
                 }
             }

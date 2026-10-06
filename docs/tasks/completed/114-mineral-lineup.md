@@ -2,8 +2,8 @@
 
 **Status:** complete. Each zone has its own pair of minerals: coal and copper, iron and silver, gold and emerald,
 ruby and diamond, with pyrite as a cheap aside in zone 2. Coal is the Mining pack's layered rocks in black; copper is
-its ore chunks with copper over about half the stone; iron, silver and gold are solid native nuggets on its jagged
-rocks; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
+its ore chunks at the pack's quality with copper over about half the stone; iron, silver and gold are solid native
+nuggets, gold on the pack's rounded rocks; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
 
 ## Objective
 
@@ -221,3 +221,9 @@ at the bottom, and cut in the old chests.
   0.43; metal 0.85, smoothness 0.5) first read as plain grey rock at metal 0.6; silver (0.86, 0.87, 0.89; 0.85,
   0.6); gold (1, 0.77, 0.34; 0.85, 0.62). The pack's iron, silver and gold ores, the rust map and their vendor files
   in the repository are gone (`M_Ore_Iron` stays: the ore chunk models reference it).
+
+## Iteration 3 (user, 2026-10-06: gold "looks like fake gold or gold wrappers")
+
+- The jagged rock's facets with a high gloss read as crumpled foil. Gold moved to the pack's rounded rocks (large
+  at scale 0.26, small at 0.36, about the other nuggets' size) with smoothness 0.48: a water-worn lump. Open to the
+  user's next look.

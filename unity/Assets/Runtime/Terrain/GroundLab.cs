@@ -29,20 +29,18 @@ namespace SomethingDownThere
         {
             new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil)),
             new Bay("Backfill", "rubble fill, three quarters of soil's speed, an old chest 3 m down", Only(TerrainMaterialId.Backfill)),
-            new Bay("Backfill pit", "1 m rubble pit in soil, 5 m deep", (u, d, v) =>
-                Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil),
             new Bay("Geode shell", "geode stone to 3 m: about a quarter of soil's speed", (u, d, v) =>
                 d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil),
             new Bay("Geode", "a big geode 2 m down: dig in and break through", Only(TerrainMaterialId.Soil)),
         };
 
-        // The geode bay's geode (110) with its crystals (DiscoveryField), as large as the site's: a lobe out east under
-        // the unused slot and one dipping south, clear of the shell bay to the west.
+        // The geode bay's geode (110) with its crystals (DiscoveryField), as large as the site's, under the bay's centre: a
+        // lobe out east under the unused slot and one north under the unused row, its hollow clear of the shell bay.
         public static readonly TerrainGround.Geode Geode = TerrainGround.Make(
-            (Unity.Mathematics.float3)Local(new Vector3(BayCentre(4).x + .75f, -3.6f, BayCentre(4).y)),
-            new Unity.Mathematics.float3(1.4f, 1.05f, 1.25f), .6f, 0, 0,
-            new Unity.Mathematics.float3(1.1f, -.2f, .3f), new Unity.Mathematics.float3(.9f, .72f, .8f),
-            new Unity.Mathematics.float3(-.3f, -.45f, -1f), new Unity.Mathematics.float3(.85f, .65f, .8f));
+            (Unity.Mathematics.float3)Local(new Vector3(BayCentre(3).x, -3.8f, BayCentre(3).y)),
+            new Unity.Mathematics.float3(1.55f, 1.15f, 1.4f), .6f, 0, 0,
+            new Unity.Mathematics.float3(1.25f, -.25f, .2f), new Unity.Mathematics.float3(1f, .8f, .9f),
+            new Unity.Mathematics.float3(.2f, -.4f, 1.1f), new Unity.Mathematics.float3(.95f, .75f, .9f));
 
         // The backfill bay's old chest (user, 2026-10-06: "actual chest inside, so I test the whole flow"; the pit was too
         // tight to dig in), buried in its pocket of air and fill as the site's are, its lock to the south. pocket: the

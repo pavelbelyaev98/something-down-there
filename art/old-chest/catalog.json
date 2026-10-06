@@ -2,7 +2,7 @@
   "schema_version": 1,
   "prefab": "Assets/Content/BuriedProps/OldChest/OldChest.prefab",
   "display_name": "Old chest",
-  "items": 6,
+  "items": 10,
   "contents": [
     {
       "content_id": "treasure_ingot_bronze",

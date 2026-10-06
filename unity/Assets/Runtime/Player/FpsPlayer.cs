@@ -717,6 +717,7 @@ namespace SomethingDownThere
 
         private bool TryGetDigTarget(out RaycastHit hit)
         {
+            if (ShavingEnabled && NearerLip(out hit)) return true;
             if (!TryGetTarget(EffectiveDigReach, out hit)) return false;
             var find = Contract<BuriedFind>(hit.collider);
             if (find == null) return true;
@@ -746,17 +747,21 @@ namespace SomethingDownThere
         public bool TryDig() => TryDig(true);
 
         // The drill's bit is as wide as its bite (user, 2026-10-06: "as if it has a tiny tip, I have to be really
-        // precise"): aimed just past the edge of a near lip, it meets the lip before the far ground the aim's ray reaches.
-        // A ball BitReach of the bite across is pushed along the aim; ground it meets nearer than the ray's hit is where
-        // the bit bores, if the ray's hit lies LipDrop or more off that ground's face: past an edge, not further along the
-        // same floor or wall at a slant.
-        private const float BitReach = .35f, LipDrop = .2f;
-        private bool NearerLip(RaycastHit hit, out RaycastHit lip)
+        // precise"): aimed just past the edge of a near lip, it meets the lip before whatever the aim's ray reaches beyond
+        // it, however far (looking down through a hole into a geode, the ray passed the rim to a floor out of reach, so
+        // nothing was dug). A ball BitReach of the bite across is pushed along the aim, within reach and short of the ray's
+        // own hit; ground it meets is where the bit bores, if the ray's hit lies LipDrop or more off that ground's face:
+        // past an edge, not further along the same floor or wall at a slant.
+        private const float BitReach = .4f, LipDrop = .2f, LipSight = 50f;
+        private bool NearerLip(out RaycastHit lip)
         {
             var aim = AimRay;
             float radius = EffectiveShovel.Radius * BitReach;
-            if (Physics.SphereCast(aim.origin, radius, aim.direction, out lip, hit.distance, worldMask, QueryTriggerInteraction.Ignore)
-                && lip.distance > 0 && lip.distance < hit.distance - radius && Mathf.Abs(Vector3.Dot(hit.point - lip.point, lip.normal)) >= LipDrop
+            lip = default;
+            if (!Physics.Raycast(aim.origin, aim.direction, out var beyond, LipSight, worldMask, QueryTriggerInteraction.Ignore)) return false;
+            float reach = Mathf.Min(EffectiveDigReach, beyond.distance - radius);
+            if (reach > 0 && Physics.SphereCast(aim.origin, radius, aim.direction, out lip, reach, worldMask, QueryTriggerInteraction.Ignore)
+                && lip.distance > 0 && Mathf.Abs(Vector3.Dot(beyond.point - lip.point, lip.normal)) >= LipDrop
                 && Contract<TerrainVolume>(lip.collider) != null) return true;
             lip = default;
             return false;
@@ -801,8 +806,7 @@ namespace SomethingDownThere
             if (!PrepareDig(out var hit, out var target, out var material, out float cost)) return false;
             var terrain = target as TerrainVolume;
             bool accepted = terrain != null
-                ? ShavingEnabled && NearerLip(hit, out var lip) && terrain.TryToolCut(lip, EffectiveShovel.Radius, true, AimRay.direction)
-                    || terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled, AimRay.direction)
+                ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled, AimRay.direction)
                 : target.TryDig(hit);
             if (!accepted) return false;
             LastDigMaterial = material;

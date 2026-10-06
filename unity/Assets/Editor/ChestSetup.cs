@@ -120,12 +120,14 @@ namespace SomethingDownThere.Editor
                 float hollowTop = outer.max.y + HollowMargin, hollowBottom = (outer.min.y + floor) * .5f;
                 var hollowHalf = new Vector3(outer.extents.x + HollowMargin, (hollowTop - hollowBottom) * .5f, outer.extents.z + HollowMargin);
                 var hollowCentre = new Vector3(outer.center.x, (hollowTop + hollowBottom) * .5f, outer.center.z);
-                // Six seats at the back, away from the lock (user, 2026-10-06: equal spacing looked laid out): three along
-                // the back wall, two over the gaps between them and one before those. DiscoveryCatalog.ChestHeap sets each
-                // find on those already under it, so the contents settle into a heap. front is the lock's side, measured below.
+                // Ten seats from the back, away from the lock (user, 2026-10-06: equal spacing looked laid out; "add more
+                // ingots"): three along the back wall, two over the gaps between them, one before those, then four more
+                // toward the middle. DiscoveryCatalog.ChestHeap sets each find on those already under it, so the contents
+                // settle into a heap. front is the lock's side, measured below.
                 float lockSide = Mathf.Sign(outer.center.x - root.transform.InverseTransformPoint(hinge.position).x + 1e-4f);
                 var seats = new[] { new Vector2(-.62f, -.5f), new Vector2(-.62f, .05f), new Vector2(-.62f, .6f),
-                        new Vector2(-.42f, -.22f), new Vector2(-.42f, .33f), new Vector2(-.2f, .08f) }
+                        new Vector2(-.42f, -.22f), new Vector2(-.42f, .33f), new Vector2(-.2f, .08f),
+                        new Vector2(-.2f, -.45f), new Vector2(-.2f, .58f), new Vector2(.02f, -.18f), new Vector2(.02f, .36f) }
                     .Select(s => new Vector3(s.x * lockSide * innerX, floor, s.y * innerZ)).ToArray();
                 if (source.items > seats.Length) throw new InvalidDataException($"The old chest seats {seats.Length} items at most.");
                 var pivot = root.transform.InverseTransformPoint(hinge.position);

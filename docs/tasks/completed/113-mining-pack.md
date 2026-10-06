@@ -1,8 +1,8 @@
 # 113 — Mining Pack: Ores, Crystals, Treasure and a Second Shovel
 
 **Status:** complete:
-- Copper is the bought Mining Tools, Ore & Ingots ore chunks; iron, silver and gold are native nuggets on its
-  rocks; emerald, ruby and diamond are Crystal Caverns crystals in project colours, two looks each.
+- Copper is the bought Mining Tools, Ore & Ingots ore chunks at the pack's quality; iron, silver and gold are
+  native nuggets on its rocks; emerald, ruby and diamond are Crystal Caverns crystals in project colours, two looks each.
 - The old chests hold only the pack's bronze, silver and gold ingots, heaped at the back and richer the deeper
   the chest, taken one at a time with Interact; digging and walking never take them.
 - The Ground Lab sets out every find's looks to compare.
@@ -157,3 +157,10 @@ items. AGENTS.md "Bought Before Made" now says so.
   prefabs, materials and find assets are gone. Bronze 8, silver 6 and gold 4 instances fill the three chests'
   eighteen seats.
 - The Ground Lab's buried chest moved into the 3 x 3 m backfill bay, 3 m down: the 1 m pit was too tight to dig in.
+
+## Iteration 4 (user, 2026-10-06)
+
+- "Add more ingots": ten seats per chest (four more toward the middle), so three chests hold 13 bronze, 10 silver and
+  7 gold. The lab's chests are full, the kinds in turn.
+- Copper ore "a bit higher quality, like silver and gold": the pack's own map size, relief and gloss on the
+  copper-rich maps; the plainer ore style is gone.

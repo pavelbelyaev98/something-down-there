@@ -218,8 +218,12 @@ namespace SomethingDownThere
                 seats = new Vector3[radii.Length];
                 for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
                 foreach (var stash in stashes)
+                {
                     foreach (var (centre, radius) in Chest.PocketReserves())
                         reserved.Add(new DiscoveryReservation((Vector3)stash.Centre + (Quaternion)stash.Rotation * centre, radius + DiscoveryField.SoilClearance));
+                    var dome = TerrainGround.PocketDomeReserve(stash);
+                    reserved.Add(new DiscoveryReservation(dome.centre, dome.radius + DiscoveryField.SoilClearance));
+                }
                 foreach (var geode in groundLayout.Geodes)
                     reserved.Add(new DiscoveryReservation(geode.Centre, geode.Reach + DiscoveryField.SoilClearance));
                 SeatChests(stashes, extent, seed, shallow, bands, seats, seatTurns);

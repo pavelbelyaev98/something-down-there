@@ -98,7 +98,7 @@ namespace SomethingDownThere.Editor
 
             foreach (var name in MiningProps)
                 PackVariant($"{MiningVendor}/Prefabs/{name}.prefab", $"{MiningFolder}/{name}.prefab",
-                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? PackStyle.Ore : PackStyle.Aged));
+                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? PackStyle.Pack : PackStyle.Aged));
             if (!AssetDatabase.IsValidFolder(MiningFolder + "/Rocks")) AssetDatabase.CreateFolder(MiningFolder, "Rocks");
             foreach (var find in RockFinds) RockFind(find);
             if (!AssetDatabase.IsValidFolder(CrystalFolder + "/Dirty")) AssetDatabase.CreateFolder(CrystalFolder, "Dirty");
@@ -121,13 +121,10 @@ namespace SomethingDownThere.Editor
             Variant(source, path, swaps);
         }
 
-        // How a Mining pack material is copied: as the pack has it; as ore in the ground, plainer and duller, closer to the
-        // photo rock the user likes (user, 2026-10-06: "a bit too high quality, too reflective": maps at OreMapSize, the
-        // normal map at OreRelief, OreGloss of the smoothness); or as aged metal (AgedTint, AgedMetal, AgedGloss). Copper
-        // ore takes its copper-rich maps (OreMaps).
-        internal enum PackStyle { Pack, Ore, Aged }
-        private const int OreMapSize = 512;
-        private const float OreRelief = .7f, OreGloss = .5f;
+        // How a Mining pack material is copied: as the pack has it (copper ore, user 2026-10-06: "a bit higher quality,
+        // like silver and gold"), or as aged metal (AgedTint, AgedMetal, AgedGloss). Copper ore takes its copper-rich maps
+        // (OreMaps).
+        internal enum PackStyle { Pack, Aged }
 
         // A URP Lit copy of a Mining Tools, Ore & Ingots HDRP Lit material: its colour map in its tint, its normal map, and
         // its mask, whose metallic (R), occlusion (G) and smoothness (A) URP Lit reads from the same map. Aged metal keeps
@@ -135,14 +132,14 @@ namespace SomethingDownThere.Editor
         internal static Material FromHdrp(Material vendor, string path, PackStyle style = PackStyle.Pack)
         {
             var (maps, floats, colors) = Saved(vendor);
-            int size = style == PackStyle.Ore ? OreMapSize : PackMapSize;
+            int size = PackMapSize;
             bool aged = style == PackStyle.Aged;
             bool own = OreMaps.TryGetValue(vendor.name, out var ours);
             var colour = own ? Project(ours.colour, "art/mining-pack/make_maps.py", size) : Sized(maps["_BaseColorMap"], size);
             var material = LitMaterial(path, colour, Sized(maps["_NormalMap"], size));
             var tint = aged ? colors["_BaseColor"] * AgedTint : colors["_BaseColor"]; tint.a = 1;
             material.SetColor("_BaseColor", tint);
-            material.SetFloat("_BumpScale", floats["_NormalScale"] * (style == PackStyle.Ore ? OreRelief : 1));
+            material.SetFloat("_BumpScale", floats["_NormalScale"]);
             var mask = own ? Project(ours.mask, "art/mining-pack/make_maps.py", size, false, true) : Sized(maps["_MaskMap"], size);
             if (aged)
             {
@@ -152,7 +149,7 @@ namespace SomethingDownThere.Editor
             else
             {
                 material.SetTexture("_MetallicGlossMap", mask);
-                material.SetFloat("_Smoothness", floats["_SmoothnessRemapMax"] * (style == PackStyle.Ore ? OreGloss : 1));
+                material.SetFloat("_Smoothness", floats["_SmoothnessRemapMax"]);
             }
             material.SetTexture("_OcclusionMap", mask); material.SetFloat("_OcclusionStrength", 1); material.EnableKeyword("_OCCLUSIONMAP");
             EditorUtility.SetDirty(material);
@@ -201,9 +198,10 @@ namespace SomethingDownThere.Editor
         // (art/mining-pack/make_maps.py):
         // - coal on the layered rocks, blocky with bedding planes, black with a dull sheen (user, 2026-10-06: the photo
         //   rock's coal "looks too much like a rock");
-        // - native iron, silver and gold on the knobbly jagged ones, solid metal (user, 2026-10-06: "gold, silver and
-        //   others can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, iron
-        //   a dull dark grey, silver bright, gold warm yellow.
+        // - native iron and silver on the knobbly jagged ones and gold on the rounded ones, solid metal (user, 2026-10-06:
+        //   "gold, silver and others can be full gold/silver"): the rock's light and dark only (its _Metal map) in the
+        //   metal's colour, iron a dull dark grey, silver bright, gold warm yellow. Gold on the jagged rocks, glossier,
+        //   read as crumpled foil ("like gold wrappers"): a water-worn lump with a softer sheen reads as a nugget.
         internal readonly struct RockFindLook
         {
             public readonly string Rock, Output;
@@ -220,8 +218,8 @@ namespace SomethingDownThere.Editor
             new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.46f, .44f, .43f), .85f, .5f),
             new RockFindLook("Jagged_Large", "Silver_Native_A", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Small", "Silver_Native_B", new Color(.86f, .87f, .89f), .85f, .6f),
-            new RockFindLook("Jagged_Large", "Gold_Native_A", new Color(1f, .77f, .34f), .85f, .62f),
-            new RockFindLook("Jagged_Small", "Gold_Native_B", new Color(1f, .77f, .34f), .85f, .62f),
+            new RockFindLook("Rounded_Large", "Gold_Native_A", new Color(1f, .77f, .34f), .85f, .48f),
+            new RockFindLook("Rounded_Small", "Gold_Native_B", new Color(1f, .77f, .34f), .85f, .48f),
         };
 
         private static void RockFind(RockFindLook look)

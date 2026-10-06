@@ -291,3 +291,12 @@ Pulpí geode in Spain is big enough to walk into.
   neighbour, while the rebuild's links need clear air between the nodes' standing points; the patch now checks the
   same clearance. Scripted pinholes (on and between node columns) lit the same at once and after the rebuild, so
   the user's exact case is not reproduced; it is in the playtest note.
+
+## Iteration 3 (user, 2026-10-06: "could be slightly bigger still")
+
+- Main hollow radius 1.5–1.85 m (lobes scale with it). The Ground Lab's geode moved under its bay's centre (the
+  backfill pit bay went, so the geode bay is the fourth slot), with lobes east and north into unused slots.
+- The drill's lip rule missed the user's case: looking down a shaft through a hole into a geode, the ray reached the
+  hollow's floor beyond dig reach, so no target was found and the lip test never ran. The lip test now runs before
+  the reach check against the ray's hit however far (`TryGetDigTarget`), with a wider ball (0.4 of the bite). In the
+  lab, aimed 8 cm inside the rim from 1.6 m above it, the drill cut the rim and left the floor 4 m away untouched.

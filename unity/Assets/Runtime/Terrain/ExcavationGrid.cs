@@ -193,28 +193,16 @@ namespace SomethingDownThere
             }
         }
 
-        // A stash chest's pocket: a signed-distance box in the chest's frame with rounded edges, its walls and roof
-        // pulled in by up to PocketRough of lumps so it reads as fill that settled away, not a cut. Its floor stays flat
-        // under the chest (the lumps fade in over PocketFloorBand above it), so the chest rests on its footing.
-        private const float PocketRound = .2f, PocketRough = .08f, PocketFloorBand = .3f;
-
+        // A stash chest's pocket of air (TerrainGround.PocketDistance).
         private void CarvePocket(TerrainGround.Stash stash)
         {
             Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)stash.Min / CellSize) - Vector3Int.one);
             Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)stash.Max / CellSize) + Vector3Int.one);
-            var half = stash.PocketHalf;
-            float round = Mathf.Min(PocketRound, Unity.Mathematics.math.cmin(half) * .5f);
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
             for (int x = first.x; x <= last.x; x++)
             {
-                var position = new Unity.Mathematics.float3(x, y, z) * CellSize;
-                var local = Unity.Mathematics.math.mul(stash.ToLocal, position - stash.Centre) - stash.PocketCentre;
-                var d = Unity.Mathematics.math.abs(local) - (half - round);
-                float outside = Unity.Mathematics.math.length(Unity.Mathematics.math.max(d, 0))
-                    + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0) - round;
-                float lumps = Mathf.Clamp01((local.y + half.y) / PocketFloorBand);
-                outside += lumps * PocketRough * (.5f + .5f * Unity.Mathematics.noise.snoise(position * 2.2f + stash.Centre * .37f));
+                float outside = TerrainGround.PocketDistance(stash, new Unity.Mathematics.float3(x, y, z) * CellSize);
                 if (outside >= band) continue;
                 int index = x + y * strideY + z * strideZ;
                 density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));

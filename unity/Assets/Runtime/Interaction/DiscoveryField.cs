@@ -202,14 +202,14 @@ namespace SomethingDownThere
             // Its base 2 cm into the ground (the pocket's floor lies that far above the base), so its footing holds.
             var position = new Vector3(LabChestAt.x, terrain.SurfaceHeight - catalog.Chest.Pocket.min.y, LabChestAt.z);
             FillLabChest(SpawnChest(position, Quaternion.Euler(0, 90, 0)), "ground-lab-chest");
-            // The backfill pit bay's chest, buried in its pocket as the site's are, to dig down to, break into and open.
+            // The backfill bay's chest, buried in its pocket as the site's are, to dig down to, break into and open.
             int n = 0;
             foreach (var stash in terrain.GroundLayout.Stashes)
                 FillLabChest(SpawnChest(terrain.transform.TransformPoint((Vector3)stash.Centre), terrain.transform.rotation * stash.Rotation),
                     "ground-lab-buried-chest-" + n++);
         }
 
-        // One each of the chest contents' most valuable kinds, heaped as in the site's chests.
+        // A full chest: its seats take the chest contents' kinds in turn, the dearest first, heaped as in the site's chests.
         private void FillLabChest(BuriedChest chest, string id)
         {
             var random = new System.Random(6);
@@ -221,9 +221,9 @@ namespace SomethingDownThere
             }
             kinds.Sort((a, b) => b.Prefab.SaleValue.CompareTo(a.Prefab.SaleValue));
             var heap = new DiscoveryCatalog.ChestHeap(chest, random);
-            for (int k = 0; k < kinds.Count && k < catalog.ChestItems && k < chest.ContentSeats.Length; k++)
+            for (int k = 0; kinds.Count > 0 && k < catalog.ChestItems && k < chest.ContentSeats.Length; k++)
             {
-                var entry = kinds[k];
+                var entry = kinds[k % kinds.Count];
                 var (at, lie) = heap.Place(chest.ContentSeats[k], entry);
                 var find = Instantiate(entry.Appearance(random.Next(entry.AppearanceCount)), chest.transform.TransformPoint(at),
                     chest.transform.rotation * lie, transform);

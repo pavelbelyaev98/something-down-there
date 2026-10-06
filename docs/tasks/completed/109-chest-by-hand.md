@@ -2,7 +2,7 @@
 
 **Status:** complete. Holding Interact for 1.5 s forces the old chest's rusted lock (one `HoldInteraction` shared
 with the crane mark through `IHoldTarget`); an opened chest with nothing left in its hollow goes the next time it is
-out of the player's sight and untouched, and is no longer saved. The chest stands in a wide pocket of air, and its
+out of the player's sight and untouched, and is no longer saved. The chest stands in a tall, uneven pocket of air, and its
 lock is forced only from in front of it. Breaking into the pocket caves part of it in once, an A/B against a fall
 of crumbs and dust only. A first version, open to change after the playtest.
 Plan and research: [107](107-asset-only-grounds.md).
@@ -223,3 +223,13 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
 - "Add in the Ground Lab, in the backfill, an actual chest inside so I test the whole flow": the backfill pit bay's
   pit leads down to an old chest 4.6 m down, in its pocket of air and fill shell as the site's chests are
   (`GroundLab.Layout`), holding one each of the dearest contents.
+
+## Iteration 5 (user, 2026-10-06: "more space vertically and a bit more randomish, not a square block")
+
+- The pocket was the measured box with 0.2 m rounding: from inside it read as a square room with a low ceiling.
+  `TerrainGround.PocketDistance` now joins that box (rounded 0.3 m, so nothing the chest needs is lost) to a dome
+  over it (0.7 m higher, its centre off by up to a fifth of the pocket and its width 0.85–1.05 of it, both from a
+  hash of the stash's position) and pushes walls and roof out by up to 0.22 m of broad noise; small lumps stay. In
+  the lab the ceiling runs from 1.7 to 2.3 m over the 1.64 m box. The backfill shell follows the same shape, the
+  stash's reach covers it, and finds keep out of the dome too (`PocketDomeReserve`).
+- The Ground Lab's backfill pit bay, which led nowhere, is gone; the backfill bay holds the buried chest.

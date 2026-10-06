@@ -3,8 +3,8 @@
   the pack's copper flecks grown and joined by more patches to about half the stone, in the pack's own copper colour,
   with its metal and sheen in the mask (Ore_Copper_Rich.png, Ore_Copper_Rich_Mask.png).
 - The rock sets coal and the native metal nuggets are built on, at 1024 px (Rocks/<set>_BC/_N/_Mask.png): the pack's
-  4K TGAs are 160 MB a set, and a find a metre away needs no more. Coal takes the layered rocks, iron, silver and gold
-  the jagged ones. A nugget is solid metal ("gold, silver and others can be full gold/silver"): the jagged sets also get
+  4K TGAs are 160 MB a set, and a find a metre away needs no more. Coal takes the layered rocks, iron and silver the
+  jagged ones, gold the rounded ones. A nugget is solid metal ("gold, silver and others can be full gold/silver"): the jagged sets also get
   a grey map of the rock's light and dark only, around white (Rocks/<set>_Metal.png), which the metal's colour tints.
 Run from the repository root (needs Pillow and numpy) after reimporting the pack."""
 import colorsys
@@ -16,14 +16,14 @@ from PIL import Image, ImageFilter
 textures = Path('unity/Assets/REAL_DEDICATED/MiningTools_Ore_Ingots/Textures')
 target = Path('unity/Assets/Content/BuriedProps/MiningPack')
 size = 1024
-rocks = ['Layered_Large', 'Layered_Small', 'Jagged_Large', 'Jagged_Small']
+rocks = ['Layered_Large', 'Layered_Small', 'Jagged_Large', 'Jagged_Small', 'Rounded_Large', 'Rounded_Small']
 # Copper: what counts as a copper fleck (hue in degrees, saturation), how far the flecks grow (px at 1024), the share of
 # the stone the added patches take, and the copper's metal and smoothness in the mask (the pack's own, measured).
 copper_hue, copper_saturation = 45, .3
 grow, patches = 9, .3
 copper_metal, copper_gloss = .73, .58
 # Nugget maps: the rock's luminance over its mean, kept within metal_range, so the tint sets the colour.
-metal_rocks, metal_range = ['Jagged_Large', 'Jagged_Small'], (.6, 1.1)
+metal_rocks, metal_range = ['Jagged_Large', 'Jagged_Small', 'Rounded_Large', 'Rounded_Small'], (.6, 1.1)
 
 
 def load(path, mode):

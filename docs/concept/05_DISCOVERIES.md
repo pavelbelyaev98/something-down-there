@@ -163,7 +163,8 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 **Moving discoveries**: objects, including uniques waiting for the crane, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
-pit into the pocket of air its old chest stands in, hold Interact to force its rusted lock, and the
+pit into the pocket of air its old chest stands in (a tall, uneven hollow the fill settled out of, never a
+square room: user, 2026-10-06), hold Interact to force its rusted lock, and the
 lid opens on what it holds: a prospector's ingots of bronze, silver and gold, nothing else (user,
 2026-10-06), worth far more than anything loose in the soil around it, each taken by hand. The lock is forced from
 in front of it (user, 2026-10-06). The deeper the chest, the richer: a shallow one holds mostly bronze,

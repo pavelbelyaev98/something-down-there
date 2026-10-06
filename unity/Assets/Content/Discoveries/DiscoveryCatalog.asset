@@ -376,7 +376,7 @@ MonoBehaviour:
     Prefab: {fileID: 6329413978238984095, guid: 8bbcae2a222326b439140224677b1883, type: 3}
     AppearanceVariants:
     - {fileID: 2388083526001396382, guid: dd338e75bd215134bab1ee5b29f3e312, type: 3}
-    Count: 8
+    Count: 13
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -397,7 +397,7 @@ MonoBehaviour:
     Prefab: {fileID: 6121914866324238277, guid: 96e4dd7ca355cf7458d9c9c4c3cfd366, type: 3}
     AppearanceVariants:
     - {fileID: 4407781966802062575, guid: 7e45b2f22fc90f048bd7c8bf9912d092, type: 3}
-    Count: 6
+    Count: 10
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -418,7 +418,7 @@ MonoBehaviour:
     Prefab: {fileID: 3106832568637923618, guid: 43605f8e3a851ba44b35e678f8e5f234, type: 3}
     AppearanceVariants:
     - {fileID: 2088103132838309429, guid: f8294784bbe080642acd5884aa3b96d0, type: 3}
-    Count: 4
+    Count: 7
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -538,7 +538,7 @@ MonoBehaviour:
     HostGrounds: 
     HostWeights: []
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}
-  ChestItems: 6
+  ChestItems: 10
   ChestContents:
   - ItemId: treasure_ingot_bronze
     ShallowWeight: 6
