@@ -10,7 +10,7 @@ namespace SomethingDownThere.Editor
 {
     // The stash pits' old chest (106) from art/old-chest/catalog.json: a variant of the URP old chest (BuriedPropsSetup)
     // with a kinematic body, box colliders for its floor and walls and one on its lid bone (it swings with the lid), and
-    // the geometry BuriedChest reads, measured from the closed model: its hollow, floor seats, lid space and footing.
+    // the geometry BuriedChest reads, measured from the closed model: its hollow, pocket, floor seats, lid space and footing.
     public static class ChestSetup
     {
         public const string Folder = "Assets/Content/Discoveries/Chest", PrefabPath = Folder + "/OldChest.prefab";
@@ -19,6 +19,10 @@ namespace SomethingDownThere.Editor
         // and corners inward by most of a 12.5 cm cell, and a tighter hollow gripped an undercut chest by its corners
         // instead of letting it fall. The lid opens with this much of its space measured above it.
         private const float HollowMargin = .09f, LidClearance = .02f;
+        // The pocket of air the chest stands in (user, 2026-10-06) takes in the hollow and the lid's whole swing, PocketSide
+        // past them sideways and PocketHeadroom above; its floor lies PocketFloor above the chest's base, so the base sits
+        // that little way in the ground and the footing under it stays solid.
+        private const float PocketSide = .3f, PocketHeadroom = .2f, PocketFloor = .02f;
         [Serializable] private sealed class Source { public int schema_version; public string prefab, display_name; public int items; public Content[] contents; }
         [Serializable] private sealed class Content { public string content_id; public int weight; }
 
@@ -113,7 +117,10 @@ namespace SomethingDownThere.Editor
                 float hollowTop = outer.max.y + HollowMargin, hollowBottom = (outer.min.y + floor) * .5f;
                 var hollowHalf = new Vector3(outer.extents.x + HollowMargin, (hollowTop - hollowBottom) * .5f, outer.extents.z + HollowMargin);
                 var hollowCentre = new Vector3(outer.center.x, (hollowTop + hollowBottom) * .5f, outer.center.z);
-                var seats = new[] { -.62f, 0f, .62f }.Select(t => new Vector3(0, floor, t * innerZ)).ToArray();
+                // Five seats on the floor (113: a few coins and an ingot or two): its middle and towards its four corners.
+                var seats = new[] { Vector2.zero, new Vector2(-.5f, -.55f), new Vector2(.5f, .55f), new Vector2(.5f, -.55f), new Vector2(-.5f, .55f) }
+                    .Select(s => new Vector3(s.x * innerX, floor, s.y * innerZ)).ToArray();
+                if (source.items > seats.Length) throw new InvalidDataException($"The old chest seats {seats.Length} items at most.");
                 var pivot = root.transform.InverseTransformPoint(hinge.position);
                 float reach = vertices.Where((v, i) => BoneOf(i) == Lid).Max(v => new Vector2(v.x - pivot.x, v.y - pivot.y).magnitude);
                 float thickness = lid.max.y - pivot.y;
@@ -131,6 +138,12 @@ namespace SomethingDownThere.Editor
                     var point = new Vector2(pivot.x, pivot.y) + edge * r + face * lift;
                     lidSpace.Add(new Vector3(point.x, point.y, along * innerZ));
                 }
+                var space = new Bounds(outer.center, outer.size);
+                space.Encapsulate(new Bounds(hollowCentre, hollowHalf * 2));
+                foreach (var point in lidSpace) space.Encapsulate(point);
+                float pocketBottom = Mathf.Min(hollowBottom, outer.min.y + PocketFloor), pocketTop = space.max.y + PocketHeadroom;
+                var pocketHalf = new Vector3(space.extents.x + PocketSide, (pocketTop - pocketBottom) * .5f, space.extents.z + PocketSide);
+                var pocketCentre = new Vector3(space.center.x, (pocketTop + pocketBottom) * .5f, space.center.z);
                 var footing = new List<Vector3>();
                 foreach (float x in new[] { -.75f, 0, .75f })
                 foreach (float z in new[] { -.85f, -.42f, 0, .42f, .85f })
@@ -141,8 +154,10 @@ namespace SomethingDownThere.Editor
                 data.FindProperty("displayName").stringValue = source.display_name;
                 data.FindProperty("hollowCentre").vector3Value = hollowCentre;
                 data.FindProperty("hollowHalf").vector3Value = hollowHalf;
-                // Ordinary finds keep out of the whole hollow, not only the wood.
-                data.FindProperty("radius").floatValue = Mathf.Max(outer.extents.magnitude, hollowHalf.magnitude + hollowCentre.magnitude) + .02f;
+                data.FindProperty("pocketCentre").vector3Value = pocketCentre;
+                data.FindProperty("pocketHalf").vector3Value = pocketHalf;
+                // Ordinary finds keep out of the whole pocket, not only the wood.
+                data.FindProperty("radius").floatValue = pocketHalf.magnitude + pocketCentre.magnitude + .02f;
                 Write(data.FindProperty("contentSeats"), seats);
                 Write(data.FindProperty("lidSpace"), lidSpace);
                 Write(data.FindProperty("footing"), footing);
@@ -152,7 +167,7 @@ namespace SomethingDownThere.Editor
                 catalog.Chest = saved.GetComponent<BuriedChest>();
                 catalog.ChestItems = source.items;
                 catalog.ChestContents = source.contents.Select(c => new DiscoveryCatalog.ChestContent { ItemId = c.content_id, Weight = c.weight }).ToArray();
-                Debug.Log($"Old chest: outer {outer.size:F3}, inner floor {floor:F3}, inner walls x {innerX:F3} z {innerZ:F3}, hinge {pivot:F3}, lid reach {reach:F2}.");
+                Debug.Log($"Old chest: outer {outer.size:F3}, inner floor {floor:F3}, inner walls x {innerX:F3} z {innerZ:F3}, hinge {pivot:F3}, lid reach {reach:F2}, pocket {pocketCentre:F2} half {pocketHalf:F2}.");
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }

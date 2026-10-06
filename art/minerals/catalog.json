@@ -35,14 +35,13 @@
     {
       "content_id": "mineral_copper",
       "display_name": "Copper",
-      "atlas_group": "Copper",
       "tier": "common",
-      "fbx": "copper/Copper.fbx",
-      "collision_fbx": "copper/Copper_collision.fbx",
-      "dimensions_m": [
-        0.59,
-        0.46,
-        0.41
+      "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_CopperA.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_copper_b",
+          "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_CopperB.prefab"
+        }
       ],
       "instances": 1280,
       "shallow_instances": 0,
@@ -56,24 +55,18 @@
       "core_minimum_depth_m": 5,
       "core_maximum_depth_m": 27,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "copper/BaseColor.png",
-        "Normal": "copper/Normal.png",
-        "Masks": "copper/Masks.png"
-      }
+      "model_scale": 1.5
     },
     {
       "content_id": "mineral_iron",
       "display_name": "Iron",
-      "atlas_group": "Iron",
       "tier": "common",
-      "fbx": "iron/Iron.fbx",
-      "collision_fbx": "iron/Iron_collision.fbx",
-      "dimensions_m": [
-        0.6,
-        0.45,
-        0.4
+      "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_IronA.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_iron_b",
+          "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_IronB.prefab"
+        }
       ],
       "instances": 1280,
       "shallow_instances": 0,
@@ -87,24 +80,18 @@
       "core_minimum_depth_m": 25,
       "core_maximum_depth_m": 47,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "iron/BaseColor.png",
-        "Normal": "iron/Normal.png",
-        "Masks": "iron/Masks.png"
-      }
+      "model_scale": 1.5
     },
     {
       "content_id": "mineral_silver",
       "display_name": "Silver",
-      "atlas_group": "Silver",
       "tier": "common",
-      "fbx": "silver/Silver.fbx",
-      "collision_fbx": "silver/Silver_collision.fbx",
-      "dimensions_m": [
-        0.57,
-        0.45,
-        0.4
+      "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_SilverA.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_silver_b",
+          "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_SilverB.prefab"
+        }
       ],
       "instances": 1400,
       "shallow_instances": 0,
@@ -118,24 +105,18 @@
       "core_minimum_depth_m": 45,
       "core_maximum_depth_m": 69,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "silver/BaseColor.png",
-        "Normal": "silver/Normal.png",
-        "Masks": "silver/Masks.png"
-      }
+      "model_scale": 1.5
     },
     {
       "content_id": "mineral_gold",
       "display_name": "Gold",
-      "atlas_group": "Gold",
       "tier": "common",
-      "fbx": "gold/Gold.fbx",
-      "collision_fbx": "gold/Gold_collision.fbx",
-      "dimensions_m": [
-        0.54,
-        0.43,
-        0.39
+      "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_GoldA.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_gold_b",
+          "prefab": "Assets/Content/BuriedProps/MiningPack/Ore_GoldB.prefab"
+        }
       ],
       "instances": 1510,
       "shallow_instances": 0,
@@ -149,24 +130,18 @@
       "core_minimum_depth_m": 67,
       "core_maximum_depth_m": 93,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "gold/BaseColor.png",
-        "Normal": "gold/Normal.png",
-        "Masks": "gold/Masks.png"
-      }
+      "model_scale": 1.5
     },
     {
       "content_id": "mineral_emerald",
       "display_name": "Emerald",
-      "atlas_group": "Emerald",
       "tier": "common",
-      "fbx": "emerald/Emerald.fbx",
-      "collision_fbx": "emerald/Emerald_collision.fbx",
-      "dimensions_m": [
-        0.45,
-        0.4,
-        0.6
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Beryl_01.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_emerald_b",
+          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Beryl_02.prefab"
+        }
       ],
       "instances": 1400,
       "shallow_instances": 0,
@@ -180,24 +155,18 @@
       "core_minimum_depth_m": 91,
       "core_maximum_depth_m": 115,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "emerald/BaseColor.png",
-        "Normal": "emerald/Normal.png",
-        "Masks": "emerald/Masks.png"
-      }
+      "model_scale": 0.3
     },
     {
       "content_id": "mineral_ruby",
       "display_name": "Ruby",
-      "atlas_group": "Ruby",
       "tier": "common",
-      "fbx": "ruby/Ruby.fbx",
-      "collision_fbx": "ruby/Ruby_collision.fbx",
-      "dimensions_m": [
-        0.48,
-        0.43,
-        0.55
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Ruby_1.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_ruby_b",
+          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Ruby_2.prefab"
+        }
       ],
       "instances": 1160,
       "shallow_instances": 0,
@@ -211,24 +180,18 @@
       "core_minimum_depth_m": 113,
       "core_maximum_depth_m": 133,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "ruby/BaseColor.png",
-        "Normal": "ruby/Normal.png",
-        "Masks": "ruby/Masks.png"
-      }
+      "model_scale": 0.25
     },
     {
       "content_id": "mineral_diamond",
       "display_name": "Diamond",
-      "atlas_group": "Diamond",
       "tier": "common",
-      "fbx": "diamond/Diamond.fbx",
-      "collision_fbx": "diamond/Diamond_collision.fbx",
-      "dimensions_m": [
-        0.46,
-        0.44,
-        0.55
+      "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Quartz_1.prefab",
+      "prop_looks": [
+        {
+          "content_id": "mineral_diamond_b",
+          "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Crystal_Quartz_2.prefab"
+        }
       ],
       "instances": 1060,
       "shallow_instances": 0,
@@ -242,12 +205,7 @@
       "core_minimum_depth_m": 131,
       "core_maximum_depth_m": 149.2,
       "core_share": 0.86,
-      "model_scale": 0.7,
-      "textures": {
-        "BaseColor": "diamond/BaseColor.png",
-        "Normal": "diamond/Normal.png",
-        "Masks": "diamond/Masks.png"
-      }
+      "model_scale": 0.18
     }
   ]
 }

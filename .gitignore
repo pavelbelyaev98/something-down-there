@@ -20,3 +20,7 @@ games/
 /unity/Tests/**/obj/
 
 /.tools/
+
+# Bought packs ship nested installers for other render pipelines; the import is all the project needs.
+/unity/Assets/**/*.unitypackage
+/unity/Assets/**/*.unitypackage.meta

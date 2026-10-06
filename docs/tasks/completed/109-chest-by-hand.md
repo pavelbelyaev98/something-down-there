@@ -2,7 +2,8 @@
 
 **Status:** complete. Holding Interact for 1.5 s forces the old chest's rusted lock (one `HoldInteraction` shared
 with the crane mark through `IHoldTarget`); an opened chest with nothing left in its hollow goes the next time it is
-out of the player's sight and untouched, and is no longer saved. A first version, open to change after the playtest.
+out of the player's sight and untouched, and is no longer saved. The chest stands in a pocket of air, so its lid can
+be forced the moment it is reached. A first version, open to change after the playtest.
 Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
@@ -171,3 +172,14 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
   counts as out of sight, anything else (the chest itself, finds, lamps) as seen.
 - `StashChestIntegrationTests` cover opening by hold, a dig never opening it, and the empty chest staying while
   anything is inside, in sight or touched, then going and staying gone after a load.
+
+## Iteration (user, 2026-10-06)
+
+- "I would prefer if there was empty space around the stash." `ChestSetup` measures a pocket from the closed model: the
+  hollow, the outer box and every lid-sweep point, 0.3 m wider each side and 0.2 m above the swing, its floor 2 cm
+  above the chest's base, so the base sits in the ground and its footing holds (1.6 x 1.3 x 2.1 m). `ExcavationGrid`
+  carves it in place of the hollow: a box with 0.2 m rounded edges, its walls and roof pulled in by up to 8 cm of noise
+  that fades out over the bottom 0.3 m, so the floor stays flat. The chest's reach (`Radius`), and with it the ordinary
+  finds' reservation, covers the pocket.
+- The shovel no longer clears the lid space; the "clear the soil above its lid" prompt stays for ground that was put
+  back.

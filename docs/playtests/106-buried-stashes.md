@@ -1,26 +1,28 @@
-# 106–109 — Buried Stashes: Rubble Pits, the Old Chest and Old TVs
+# 106–113 — Buried Stashes: Rubble Pits, the Old Chest, Treasure and Ores
 
 **Build & start:** fresh `builds/windows/SomethingDownThere.exe`, **New Game** (older saves no longer
 load). The first chest lies 4–6 m under the middle of the taped plot. Developer admin → **Ground
-X-ray** marks backfill magenta if you want to find the other pits.
+X-ray** marks backfill magenta if you want to find the other two pits.
 
 **Try:**
-- Dig down near the plot's middle until the ground turns stony and the tool takes small, hard bites
-  (about half soil's speed). Follow that rubble down to the chest, with the shovel and the drill (Ctrl+Shift+7).
-- Clear the space above the chest's lid until the prompt says to hold E; hold E to force the lock.
-- Take everything inside, turn away and look back: the empty chest is gone. It stays while anything
-  is inside, while you look at it and while you stand on it. Dig under another chest to see it drop.
-- Find a rubbish pit (they end below 8 m) and its two old TVs; TVs are found only there.
+- Dig down near the plot's middle until the ground turns grey-brown and stony and the tool takes small,
+  hard bites. With the drill (Ctrl+Shift+7) the bit visibly slows in it and speeds up again in soil.
+- Break into the open space the chest stands in, then hold E on it to force the lock straight away.
+- Inside are coins and ingots. Aim at each and press E to take it; digging or walking over them never
+  picks them up. Sell them at the computer.
+- Empty it, turn away and look back: the chest is gone (it stays while you look at it or stand on it).
+- Old TVs now lie loose in the soil between 6 and 36 m, like any find.
+- Copper, iron, silver and gold are now the new pack's ore chunks (two looks each); emerald, ruby and
+  diamond are the Crystal Caverns crystals (deep: use admin level and X-ray to see them).
+- Developer admin → **Shovel: Western / Mining pack**: compare the two shovels at levels 1–6.
 - Save and quit, then Continue: an opened chest stays open, an emptied one stays gone.
-- Undercut a pit's wall: nothing lets go any more. Deeper soil may look a touch flatter now.
-- Title menu → **Ground Lab**: only soil, backfill and a backfill pit, plus the crane scenes.
 
-**Good feels like:** "this ground is different; someone filled this in", then the lid swinging up on a
-few pieces of silver and gold. Clearing the lid is uncovering, not a chore.
+**Good feels like:** breaking into a dark space with the old chest standing in it, and the lid swinging
+up on a glint of gold and silver worth the detour.
 
 **Tell the agent:**
-- Whether the rubble's hardness feels right or like a chore, and whether the pits read in the wall.
-- Whether the 1.5 s hold and the amount of lid clearing feel right.
-- Whether the quietly vanishing empty chest feels right, or it should wait for the tool to break it.
-- The chest's green paint (keep, weathered brown, swap), its three pieces and the TV prices.
-- Whether the soil looks too flat with depth, and anything that clipped, floated or blocked you.
+- Which shovel wins (the other one is removed).
+- Whether the drill's slowdown and the backfill's colour read clearly enough.
+- The pocket's size, five pieces per chest and whether their prices feel like a real reward.
+- The ores and the crystals: the crystals are more cartoonish than the ores; keep, retint or swap?
+- Whether silver and copper read as tarnished metal or anything still looks blue or plastic.

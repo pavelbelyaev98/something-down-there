@@ -117,7 +117,7 @@ Until a zone's ground is in, the zone is soil.
 
 | #   | Zone                    | Main ground (direction)                              | Typical finds                                        | Mood                             |
 | --- | ----------------------- | ---------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
-| 1   | **Recent fill**         | Soil, with backfill pits                             | Bottles, scrap, household junk, coins, coal, copper; stashes and rubbish in the pits | Bright, familiar, hopeful |
+| 1   | **Recent fill**         | Soil, with backfill pits                             | Bottles, scrap, household junk, coins, coal, copper, old TVs; stashes in the pits | Bright, familiar, hopeful |
 | 2   | **Old sediment**        | Old grey lake silt and clay                          | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
 | 3   | **Deep sediment**       | An old riverbed of sand and gravel                   | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
 | 4   | **Ancient constructed** | Its own ancient material (defined with the zone-4 work) | Impossibilities, final components, the final object | Cold, quiet, wrong in a good way |
@@ -186,7 +186,7 @@ Shared rules for all tells:
   ground and stay hidden inside solid ground until a cut exposes them, so to the player they seem to
   appear as they dig. They are identical after reload and need no save data beyond the material IDs.
 - **Presence, never value.** A tell says "something is this way", never what or how much. Backfill
-  is the exception: every pit holds something, even if only rubbish.
+  is the exception: every pit holds a chest.
 - **Straight digging always works.** Following a tell is the smarter way, never the only way.
 - **Felt as well as seen.** The dig-speed change is felt in the dark and by colour-blind players;
   the visual tell needs a lamp. Tells never rely on colour alone: grain, stones and shape differ too.
@@ -200,14 +200,17 @@ Shared rules for all tells:
 - It is refilled with rubble: it reads in the wall as a stony patch cutting across the soil, and the
   tool takes small, hard bites at once (about half soil's speed). Follow it down or sideways and
   something waits at the bottom. It costs seconds, never minutes: a toll the player chooses.
-- Only what was buried on purpose leaves a pit: a **stash** (an old chest, opened where it lies; see
-  [finds inside finds](05_DISCOVERIES.md#3-the-reveal-and-recognition-loop)) or **rubbish** (junk
-  such as old TVs, found only in rubbish pits). Things that sank or were lost leave none and lie
-  scattered, so ordinary digging keeps its own surprises. Every pit holds something, never an empty
-  decoy, and pays well for following it: a rock-priced find at the bottom would be a letdown.
-- It reads by grain, not a colour jump: the same soil turned over, a little darker, with dirty stones
-  churned in, drawn from its own texture made from the packs' soil and rubble. What the eye sees is
-  what the tool feels.
+- Only a **stash** leaves a pit: an old chest, opened where it lies (see
+  [finds inside finds](05_DISCOVERIES.md#3-the-reveal-and-recognition-loop)). Backfill holds only
+  chests (user, 2026-10-06): rubbish such as old TVs lies scattered in the soil like any find, and so
+  does whatever sank or was lost, so ordinary digging keeps its own surprises. Every pit holds a
+  chest, never an empty decoy, and pays well for following it.
+- The fill settled away from the chest: it stands in a pocket of air reaching past its sides and
+  above its lid's swing, so the shaft breaks into an open space with the chest in it, and its lid
+  can be forced the moment the player reaches it (user, 2026-10-06).
+- It reads by grain and colour: the soil turned over, darker and greyer than the warm settled soil
+  (user, 2026-10-06), with dirty stones churned in, drawn from its own texture made from the packs'
+  soil and rubble. What the eye sees is what the tool feels.
 - Pits stay in the recent fill for now: a refilled hole far down needs a story first. The first one
   lies a few metres under the plot centre, where an early shaft meets it in daylight.
 - *Feel:* "this ground is different; someone dug here before me."

@@ -560,6 +560,7 @@ namespace SomethingDownThere
                 + DensityLine(), "body");
             var grid = Element(scroll, "admin-actions");
             Button(grid, "Hover: " + player.AdminHoverLabel, player.ToggleAdminHover);
+            Button(grid, "Shovel: " + player.AdminShovelLabel, player.ToggleAdminShovel);
             foreach (FpsPlayer.DrillDial dial in Enum.GetValues(typeof(FpsPlayer.DrillDial)))
                 Button(grid, $"Drill {dial.ToString().ToLowerInvariant()}: {player.AdminDrillLabel(dial)}", () => player.CycleAdminDrill(dial));
             for (int i = 1; i <= player.Shovel.LevelCount; i++)

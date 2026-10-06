@@ -421,6 +421,7 @@ MonoBehaviour:
   kind: 0
   recovery: 0
   lore: 
+  handPicked: 0
 --- !u!114 &7318984221266323873
 MonoBehaviour:
   m_ObjectHideFlags: 0

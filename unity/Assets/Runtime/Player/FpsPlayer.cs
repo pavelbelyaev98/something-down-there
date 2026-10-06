@@ -87,6 +87,8 @@ namespace SomethingDownThere
         private bool adminDetectorOff;
         private bool adminHoverOnRelease;
         private bool adminGroundXray;
+        // Shovel look A/B (113): the Mining pack's shovel in place of the Western one for levels 1-6, for the session.
+        private bool adminPackShovel;
         // Drill look comparison (playtest 001): the step picked on each DrillDial.
         private readonly int[] adminDrillDials = new int[DrillDialSteps.Length];
         // Ground contact shading (SSAO) strength set from the admin slider for the session.
@@ -146,10 +148,13 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminHoverOnRelease || adminGroundXray || adminContactShading);
+            || adminHoverOnRelease || adminGroundXray || adminContactShading || adminPackShovel);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
+        // The first-person shovel's look (ToolRigPresenter part looks): the Western shovel, or the Mining pack's to compare.
+        public string ShovelLook => AdminAvailable && adminPackShovel ? "Mining" : "Western";
+        public string AdminShovelLabel => ShovelLook == "Mining" ? "Mining pack" : "Western";
         // The first-person drill's look (ToolRigPresenter), dialled per session in developer admin; each dial's first
         // step is the default. Size scales the drill (1 = the purchased model); Position moves it along the tool (metres,
         // + away from the eye).
@@ -344,7 +349,7 @@ namespace SomethingDownThere
             Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = false;
+            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = adminPackShovel = false;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             motor.enabled = false;
@@ -806,6 +811,7 @@ namespace SomethingDownThere
             adminDetectorOff = false;
             adminHoverOnRelease = false;
             adminGroundXray = false;
+            adminPackShovel = false;
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
@@ -836,6 +842,14 @@ namespace SomethingDownThere
             if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
             adminHoverOnRelease = !adminHoverOnRelease;
             ShowFeedback("Hover " + AdminHoverLabel + (HoverOnRelease ? "; hold crouch to drop" : ""));
+            MenuChanged?.Invoke();
+        }
+
+        public void ToggleAdminShovel()
+        {
+            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
+            adminPackShovel = !adminPackShovel;
+            ShowFeedback("Shovel: " + AdminShovelLabel + (EffectiveShovelLevel >= EquipmentProgression.DrillLevel ? " (shows below level 7)" : ""));
             MenuChanged?.Invoke();
         }
 

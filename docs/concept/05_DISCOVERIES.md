@@ -11,7 +11,8 @@
 | **Oversized Salvage** | Handful of set pieces | Signals | Crane set-down spot at camp | Huge payday | **0 slots** (claimed via tag/clamp) |
 
 Commons include the mineral ladder (coal → copper → iron → silver → gold → emerald → ruby → diamond),
-bottles, plain stones, commonplace scrap, packaging and rubbish. "Common" means routine to find
+bottles, plain stones, commonplace scrap, packaging and rubbish. Which minerals lie at which depths,
+and how each looks, is still open (task `114`); so far only the plain rock's design is settled. "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
 During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.
@@ -30,9 +31,9 @@ unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get thei
   with their own eyes ([lenses](03_WORLD_AND_SITE.md#lenses-around-uniques)).
 - **Geodes** hold crystals on their inner walls, seen in the lamp's light before they are collected
   ([geodes](03_WORLD_AND_SITE.md#5-geodes)).
-- **Buried on purpose:** a backfill pit holds what someone buried, a stash in a chest or rubbish
-  (junk such as old TVs, found only there and priced as a reward for following the pit); what sank
-  or was lost lies scattered ([disturbed ground](03_WORLD_AND_SITE.md#disturbed-ground-backfill)).
+- **Buried on purpose:** a backfill pit holds what someone buried, a stash in an old chest; rubbish
+  such as old TVs, and whatever sank or was lost, lies scattered like any find
+  ([disturbed ground](03_WORLD_AND_SITE.md#disturbed-ground-backfill)).
 
 **Constant rate, rising value.** A metre of descent keeps meeting finds at a roughly constant rate
 to the bottom — depth changes *what* you meet, never whether digging pays. Each find type has a
@@ -122,7 +123,9 @@ Automatic collection also reaches nearby, clearly uncovered ordinary finds in fr
 walking or holding dig, including elevated and falling pieces. It is not restricted to foot contact.
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
 Soil, walls and partial burial still block it; a full bag stops all pickup (see §9).
-There is no picking up, carrying or throwing finds by hand: a find is dug out, bagged or craned.
+There is no carrying or throwing finds by hand: a find is dug out, bagged or craned. A chest's coins
+and ingots are taken into the bag by hand instead: each piece waits for Interact while aimed at it,
+one at a time, and neither digging nor walking past ever takes one (user, 2026-10-06).
 Nearly excavated rocks break loose when only shallow surface contacts remain; substantial inner
 burial keeps them anchored. Their real colliders and gravity determine the resulting motion.
 
@@ -154,8 +157,9 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 **Moving discoveries**: objects, including uniques waiting for the crane, fall and settle physically once surrounding soil no longer supports them. The buried computer starts deeper to allow a substantial approach tunnel and recovery test.
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
-pit to the old chest at its bottom, clear the space its lid swings through, hold Interact to force
-its rusted lock, and the lid opens on what it holds (a prospector's few pieces of silver and gold).
+pit into the pocket of air its old chest stands in, hold Interact to force its rusted lock, and the
+lid opens on what it holds: a prospector's coins and ingots of copper, silver and gold, worth far more
+than anything loose in the soil around it, each taken by hand.
 The outside gives a clue; the contents deliver a second reveal and a small piece of buried history.
 
 - Use a few selected objects, not every box or appliance. Contents fit the container and its scene.

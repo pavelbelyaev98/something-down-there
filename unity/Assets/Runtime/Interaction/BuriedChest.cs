@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // An old chest at the bottom of a stash pit (106, 109): a container opened where it lies. Its hollow is seeded air,
-    // so what it holds lies loose inside from New Game, behind its walls and lid. Once the lid has room to swing,
+    // An old chest at the bottom of a stash pit (106, 109): a container opened where it lies. It stands in a pocket of
+    // seeded air that takes in its hollow and the lid's swing, so what it holds lies loose inside from New Game, behind
+    // its walls and lid, and a shaft breaks into open space around it. Once the lid has room to swing,
     // holding Interact forces the rusted lock and the lid swings up; the contents are ordinary finds from then on.
     // Never sold, bagged or craned. Anchored while soil holds it up, it falls once undercut. Once nothing is left
     // inside, it goes the next time it is out of the player's sight and untouched, so it never pops away in front of them.
@@ -12,12 +13,12 @@ namespace SomethingDownThere
     public sealed class BuriedChest : MonoBehaviour, IInteractionTarget, IHoldTarget
     {
         [SerializeField] private string displayName = "Old chest";
-        // Measured from the closed model by the discovery sync (ChestSetup), in the chest's own frame: its hollow,
-        // the seats on its floor, the space its lid sweeps opening and points just under its base.
-        [SerializeField] private Vector3 hollowCentre, hollowHalf;
+        // Measured from the closed model by the discovery sync (ChestSetup), in the chest's own frame: its hollow, the
+        // pocket of air it stands in, the seats on its floor, the space its lid sweeps opening and points just under its base.
+        [SerializeField] private Vector3 hollowCentre, hollowHalf, pocketCentre, pocketHalf;
         [SerializeField] private Vector3[] contentSeats = Array.Empty<Vector3>();
         [SerializeField] private Vector3[] lidSpace = Array.Empty<Vector3>(), footing = Array.Empty<Vector3>();
-        // Reach of the whole chest from its pivot; ordinary finds keep out of it.
+        // Reach of the chest's pocket from its pivot; ordinary finds keep out of it.
         [SerializeField, Min(.1f)] private float radius = .85f;
         // The lid opens with this share of its space still soil (crumbs and slivers), and the chest falls
         // once no more than FootingHeld of its footing points rest on soil.
@@ -30,6 +31,7 @@ namespace SomethingDownThere
 
         public string DisplayName => displayName;
         public Bounds Hollow => new Bounds(hollowCentre, hollowHalf * 2);
+        public Bounds Pocket => new Bounds(pocketCentre, pocketHalf * 2);
         public Vector3[] ContentSeats => contentSeats;
         public float Radius => radius;
         public bool Opened { get; private set; }

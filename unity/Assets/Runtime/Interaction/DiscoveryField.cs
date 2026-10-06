@@ -332,7 +332,7 @@ namespace SomethingDownThere
         // (DiscoveryCatalog host ground). A group is chosen in proportion to weight x candidates
         // seen, so density follows the weight at the same depth; spread ranking then picks
         // inside the group. Depths never move.
-        // Seats (NaN x for none) place a find exactly there: junk at a rubbish pit's bottom.
+        // Seats (NaN x for none) place a find exactly there: a chest's contents on its floor.
         public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null, Func<int, Vector3, float> hostWeight = null, Vector3[] seats = null)
         {
             if (!ExcavationGrid.Finite(extent.x) || !ExcavationGrid.Finite(extent.y) || !ExcavationGrid.Finite(extent.z)

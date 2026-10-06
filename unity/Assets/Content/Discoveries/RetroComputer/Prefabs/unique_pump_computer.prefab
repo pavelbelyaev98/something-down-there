@@ -421,6 +421,7 @@ MonoBehaviour:
   kind: 1
   recovery: 1
   lore: Its maintenance reminder was set to repeat after the next flood.
+  handPicked: 0
 --- !u!114 &7065870891634227205
 MonoBehaviour:
   m_ObjectHideFlags: 0

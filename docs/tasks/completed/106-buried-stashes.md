@@ -1,6 +1,6 @@
 # 106 — Buried Stashes: Backfill Pits, the Old Chest and Old TVs
 
-**Status:** complete. The site is soil plus six backfill pits in the recent fill (`SiteLayout.Ground`), stash and rubbish alternating: each stash holds an old chest, opened where it lies with one tool strike once its lid has room, whose seeded hollow holds three silver or gold pieces seated from the population; each rubbish pit holds two old TVs ($40-100), the first junk finds, found only there; backfill draws from its own texture set built from the packs' soil and rubble.
+**Status:** complete. The site is soil plus three backfill pits in the recent fill (`SiteLayout.Ground`), each holding an old chest opened where it lies, its contents seated from the population; the old TVs ($40-100), the first junk finds, lie loose in the soil like any find; backfill draws from its own texture set built from the packs' soil and rubble.
 
 ## Objective
 
@@ -166,3 +166,9 @@ pit ends in old TVs, the first junk finds. Feel:
   set, and the shader draws backfill from it alone. Tried and dropped: soft blended normals (the fill
   read smoother than the soil around it) and relief 1.3 (black creases under a lamp); whiteout-blended
   normals at relief 1.0 keep it lumpier than soil without them.
+
+## Iteration (user, 2026-10-06)
+
+- "Backfills should have only chests; items like TVs are like minerals people just find and collect." The rubbish
+  pits, their seats (`PitSeats`, `GroundLayout.Seats`, `SeatSink`) and the junk flag are gone; the six TVs keep their
+  6–36 m band and lie in the soil. Three pits remain, each with a chest, so the chests' treasure stays as it was.

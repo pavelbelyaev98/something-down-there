@@ -18,31 +18,25 @@ namespace SomethingDownThere.Tests
 
         private static int Index(int x, int y, int z) => x + y * (SiteLayout.Size.x + 1) + z * (SiteLayout.Size.x + 1) * (SiteLayout.Size.y + 1);
 
-        // Concept 03 §4 disturbed ground (106): pits of backfill only in the recent fill, stash and
-        // rubbish alternating; the first a stash a few metres under the plot centre; rubbish pits have seats, stash pits
-        // a chest each.
+        // Concept 03 §4 disturbed ground (106): pits of backfill only in the recent fill, each holding a chest (user,
+        // 2026-10-06); the first a few metres under the plot centre.
         [TestCase(2718)] [TestCase(12)] [TestCase(991)]
-        public void BackfillPitsHoldStashesAndRubbishInTheRecentFill(int seed)
+        public void BackfillPitsHoldOnlyChestsInTheRecentFill(int seed)
         {
             var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, seed);
             var pits = layout.Pits;
-            Assert.That(pits.Length, Is.EqualTo(6), $"Seed {seed}: six pits.");
+            Assert.That(pits.Length, Is.EqualTo(TerrainGround.PitCount), $"Seed {seed}: every pit placed.");
             Assert.That(pits.All(p => SiteLayout.Extent.y - p.Bottom.y < TerrainGround.ZoneBorders[0]), Is.True, "Only the recent fill.");
-            Assert.That(pits.Select(p => p.Kind), Is.EqualTo(new[] { TerrainGround.PitKind.Stash, TerrainGround.PitKind.Rubbish,
-                TerrainGround.PitKind.Stash, TerrainGround.PitKind.Rubbish, TerrainGround.PitKind.Stash, TerrainGround.PitKind.Rubbish }));
             var first = pits[0];
             Assert.That(SiteLayout.Extent.y - first.Bottom.y, Is.InRange(4f, 6f), "The first stash lies a few metres down.");
             Assert.That(new Vector2(first.Bottom.x - SiteLayout.Extent.x * .5f, first.Bottom.z - SiteLayout.Extent.z * .5f).magnitude,
                 Is.LessThanOrEqualTo(3 * Mathf.Sqrt(2) + .01f), "Under the plot centre.");
-            Assert.That(layout.Stashes.Length, Is.EqualTo(3));
+            Assert.That(layout.Stashes.Length, Is.EqualTo(pits.Length), "A chest in every pit.");
             var ids = Site(seed);
             foreach (var pit in pits)
             {
                 Assert.That(SiteLayout.Extent.y - pit.Top.y, Is.GreaterThanOrEqualTo(TerrainGround.SurfaceSoil), "Below the first scrapes.");
                 Assert.That(pit.Top.y, Is.GreaterThan(pit.Bottom.y), "Dug from above.");
-                Assert.That(TerrainGround.PitSeats(pit).Length, pit.Kind == TerrainGround.PitKind.Stash ? Is.EqualTo(0) : Is.EqualTo(2));
-                if (pit.Kind == TerrainGround.PitKind.Rubbish)
-                    Assert.That(SiteLayout.Extent.y - pit.Bottom.y, Is.GreaterThanOrEqualTo(TerrainGround.RubbishTop - .001f), "Rubbish lies below the entry layer.");
                 var middle = Vector3Int.RoundToInt((Vector3)((pit.Top + pit.Bottom) * .5f) / SiteLayout.CellSize);
                 Assert.That(ids[Index(middle.x, middle.y, middle.z)], Is.EqualTo((byte)TerrainMaterialId.Backfill), "The pit is backfill.");
             }
@@ -57,25 +51,32 @@ namespace SomethingDownThere.Tests
             var ids = TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground).ToArray();
             Assert.That(ids.Distinct().OrderBy(v => v), Is.EqualTo(new[] { (byte)TerrainMaterialId.Soil, (byte)TerrainMaterialId.Backfill }));
             var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground);
-            Assert.That(layout.Pits.Length, Is.EqualTo(6));
+            Assert.That(layout.Pits.Length, Is.EqualTo(3));
             Assert.That(layout.Pits.All(p => SiteLayout.Extent.y - p.Bottom.y < TerrainGround.ZoneBorders[0]), Is.True);
         }
 
-        // A stash chest's hollow is seeded air, closed on every side, with soil under it.
+        // A stash chest's pocket is seeded air, closed on every side, with a flat floor of ground under the chest's base.
         [Test]
-        public void StashHollowsAreClosedSeededAir()
+        public void StashPocketsAreClosedSeededAir()
         {
-            var hollow = new Bounds(new Vector3(0, .023f, 0), new Vector3(.81f, .56f, 1.4f));
-            var grid = new ExcavationGrid(new Vector3Int(112, 320, 112), .125f, 77, null, TerrainGround.Features.Pits, hollow);
+            var pocket = new Bounds(new Vector3(0, .5f, 0), new Vector3(1.4f, 1.04f, 2f));
+            var grid = new ExcavationGrid(new Vector3Int(112, 320, 112), .125f, 77, null, TerrainGround.Features.Pits, pocket);
             var stashes = grid.Layout.Stashes;
             Assert.That(stashes.Length, Is.GreaterThan(0));
             Assert.That(grid.RemovedVolume, Is.Zero, "Seeded air is not a cut.");
             foreach (var stash in stashes)
             {
-                Assert.That(stash.Hollow, Is.True);
-                var centre = (Vector3)stash.Centre + (Quaternion)stash.Rotation * hollow.center;
-                Assert.That(grid.IsSolid(centre), Is.False, "The chest's hollow holds air.");
-                Assert.That(grid.IsSolid(centre - Vector3.up * (hollow.extents.y + .1f)), Is.True, "Soil under the chest.");
+                Assert.That(stash.HasPocket, Is.True);
+                var turn = (Quaternion)stash.Rotation;
+                var centre = (Vector3)stash.Centre + turn * pocket.center;
+                Assert.That(grid.IsSolid(centre), Is.False, "The chest's pocket holds air.");
+                Assert.That(grid.IsSolid(centre - Vector3.up * (pocket.extents.y + .1f)), Is.True, "Ground under the chest.");
+                foreach (var corner in new[] { new Vector3(-.35f, 0, -.6f), new Vector3(.35f, 0, .6f), new Vector3(.35f, 0, -.6f) })
+                {
+                    var floor = (Vector3)stash.Centre + turn * (corner + Vector3.up * pocket.min.y);
+                    Assert.That(grid.IsSolid(floor - Vector3.up * .05f), Is.True, "The chest's footing stays ground.");
+                    Assert.That(grid.IsSolid(floor + Vector3.up * .08f), Is.False, "A flat floor under the chest.");
+                }
                 var start = Vector3Int.RoundToInt(centre / .125f);
                 var seen = new HashSet<Vector3Int> { start };
                 var queue = new Queue<Vector3Int>(); queue.Enqueue(start);
@@ -84,7 +85,7 @@ namespace SomethingDownThere.Tests
                 while (queue.Count > 0)
                 {
                     var s = queue.Dequeue();
-                    Assert.That(s.x > low.x && s.y > low.y && s.z > low.z && s.x < high.x && s.y < high.y && s.z < high.z, Is.True, "The hollow leaks.");
+                    Assert.That(s.x > low.x && s.y > low.y && s.z > low.z && s.x < high.x && s.y < high.y && s.z < high.z, Is.True, "The pocket leaks.");
                     foreach (var step in new[] { Vector3Int.right, Vector3Int.left, Vector3Int.up, Vector3Int.down, new Vector3Int(0, 0, 1), new Vector3Int(0, 0, -1) })
                     {
                         var n = s + step;
@@ -94,12 +95,12 @@ namespace SomethingDownThere.Tests
                 }
                 Assert.That(seen.Count, Is.GreaterThan(100), "A chest's worth of air.");
             }
-            var above = (Vector3)stashes[0].Centre + Vector3.up * (hollow.max.y + .3f);
+            var above = (Vector3)stashes[0].Centre + Vector3.up * (pocket.max.y + .3f);
             grid.RemoveSphere(above, .3f, out _);
             Assert.That(grid.IsSolid(above), Is.False);
             grid.Reset();
             Assert.That(grid.IsSolid(above), Is.True, "Reset refills above the chest.");
-            Assert.That(grid.IsSolid((Vector3)stashes[0].Centre + (Quaternion)stashes[0].Rotation * hollow.center), Is.False, "Reset carves the hollow again.");
+            Assert.That(grid.IsSolid((Vector3)stashes[0].Centre + (Quaternion)stashes[0].Rotation * pocket.center), Is.False, "Reset carves the pocket again.");
         }
 
         // The Ground Lab lays every bay out in its own ground on the shipped grid; unused slots and the ground below stay soil.

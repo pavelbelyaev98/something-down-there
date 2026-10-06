@@ -421,6 +421,7 @@ MonoBehaviour:
   kind: 1
   recovery: 1
   lore: The restart instructions did not mention draining the reservoir.
+  handPicked: 0
 --- !u!114 &4485818366796957304
 MonoBehaviour:
   m_ObjectHideFlags: 0

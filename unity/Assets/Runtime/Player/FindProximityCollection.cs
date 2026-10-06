@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Nearby free finds collect during movement or held digging, at any height.
+    // Nearby free finds collect during movement or held digging, at any height; finds taken by hand never do.
     internal sealed class FindProximityCollection
     {
         private readonly FpsPlayer player;
@@ -45,7 +45,7 @@ namespace SomethingDownThere
 
         public bool CanCollect(BuriedFind find)
         {
-            if (!active || find == null || !find.isActiveAndEnabled
+            if (!active || find == null || !find.isActiveAndEnabled || find.HandPicked
                 || player.IsMenuOpen || !player.HasGameplayFocus
                 || (player.Persistence != null && player.Persistence.BlocksPlay)) return false;
             var terrain = player.ExcavationTerrain;

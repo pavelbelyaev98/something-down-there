@@ -18,14 +18,19 @@ namespace SomethingDownThere.Editor
         public const string CatalogPath = Folder + "/DiscoveryCatalog.asset";
         [Serializable] public sealed class SourceCatalog { public int schema_version; public SourceEntry[] variants; }
         [Serializable] public sealed class Maps { public string BaseColor, Normal, Masks; }
+        // A further look made from a bought prop prefab (BuriedPropsSetup), saved under its own key.
+        [Serializable] public sealed class PropLook { public string content_id, prefab; }
         [Serializable] public sealed class SourceEntry
         {
             public string content_id, display_name, atlas_group, tier, fbx, collision_fbx, recovery, lore;
+            // A find made from a bought prop prefab instead of a model of its own (113), with its further looks.
+            public string prefab;
+            public PropLook[] prop_looks;
             public float[] dimensions_m;
             public int instances, shallow_instances, sale_value, slots;
             public bool detector_eligible, lay_on_side;
-            // Rubbish someone dumped: rubbish pits' seats take only junk (106).
-            public bool junk;
+            // Taken by hand with Interact, never by digging or walking past (113: a chest's coins and ingots).
+            public bool hand_picked;
             public float required_exposure;
             // Small finds keep the entry carpet: coal ships this way.
             public bool small;
@@ -66,7 +71,7 @@ namespace SomethingDownThere.Editor
             PhotoRockSetup.AppendToCatalog(entries);
             MineralSetup.AppendToCatalog(entries);
             RetroComputerSetup.AppendToCatalog(entries);
-            JunkSetup.AppendToCatalog(entries);
+            PropFindSetup.AppendToCatalog(entries);
             catalog.Entries = entries.ToArray();
             ChestSetup.Configure(catalog);
             catalog.Validate(); EditorUtility.SetDirty(catalog);
@@ -146,10 +151,10 @@ namespace SomethingDownThere.Editor
             var ground = new SerializedObject(terrain);
             var spots = catalog.OddSpots(); var list = ground.FindProperty("oddSpots"); list.arraySize = spots.Length;
             for (int i = 0; i < spots.Length; i++) list.GetArrayElementAtIndex(i).vector4Value = spots[i];
-            // The stash chest's hollow, carved in every stash pit (106).
-            var hollow = catalog.Chest != null ? catalog.Chest.Hollow : default;
-            ground.FindProperty("stashHollowCentre").vector3Value = hollow.center;
-            ground.FindProperty("stashHollowHalf").vector3Value = hollow.extents;
+            // The stash chest's pocket, carved in every stash pit (106, 109).
+            var pocket = catalog.Chest != null ? catalog.Chest.Pocket : default;
+            ground.FindProperty("stashPocketCentre").vector3Value = pocket.center;
+            ground.FindProperty("stashPocketHalf").vector3Value = pocket.extents;
             ground.ApplyModifiedPropertiesWithoutUndo();
             var settings = new SerializedObject(player);settings.FindProperty("discoveries").objectReferenceValue = field;
             settings.ApplyModifiedPropertiesWithoutUndo(); EditorSceneManager.MarkSceneDirty(scene);
@@ -279,6 +284,7 @@ namespace SomethingDownThere.Editor
                 data.FindProperty("kind").enumValueIndex = (int)(entry.tier == "unique" ? DiscoveryKind.Unique : DiscoveryKind.Common);
                 data.FindProperty("recovery").enumValueIndex = (int)(entry.recovery == "rope" ? RecoveryMethod.Rope : RecoveryMethod.Bag);
                 data.FindProperty("lore").stringValue = entry.lore ?? "";
+                data.FindProperty("handPicked").boolValue = entry.hand_picked;
                 data.FindProperty("collectionThreshold").floatValue = entry.required_exposure;
                 var samples = SurfaceSamples(mesh, 256, !large); var serialized = data.FindProperty("exposureSamples"); serialized.arraySize = samples.Length;
                 for (int i = 0; i < samples.Length; i++) serialized.GetArrayElementAtIndex(i).vector3Value = samples[i];

@@ -29,6 +29,11 @@ unity/Assets/StylizedShovel/**/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/StylizedShovel/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Content/ToolRig/WesternShovel/*.png filter=lfs diff=lfs merge=lfs -text
 
+# Purchased Mining Tools, Ore & Ingots: binary payloads in LFS (only the files the game uses are committed).
+unity/Assets/REAL_DEDICATED/**/*.tga filter=lfs diff=lfs merge=lfs -text
+unity/Assets/REAL_DEDICATED/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+unity/Assets/REAL_DEDICATED/**/*.exr filter=lfs diff=lfs merge=lfs -text
+
 # Free buried-prop packs (old chest, big old TV, TV set): binary payloads in LFS, as are the project's masks.
 unity/Assets/NOT_Lonely/**/*.tga filter=lfs diff=lfs merge=lfs -text
 unity/Assets/NOT_Lonely/**/*.fbx filter=lfs diff=lfs merge=lfs -text

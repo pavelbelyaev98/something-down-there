@@ -10,9 +10,9 @@ using UnityEngine.TestTools;
 
 namespace SomethingDownThere.Tests
 {
-    // Concept 05 §3 finds inside finds (106, 109): the stash pits' old chest lies with its contents loose inside, refuses to
-    // open until its lid has room, opens where it lies when Interact is held on its rusted lock, stays open across a save,
-    // and once emptied goes when out of sight and untouched.
+    // Concept 05 §3 finds inside finds (106, 109): the stash pits' old chest stands in a pocket of air with its contents
+    // loose inside, opens where it lies when Interact is held on its rusted lock, stays open across a save, and once
+    // emptied goes when out of sight and untouched.
     public sealed class StashChestIntegrationTests
     {
         private Scene scene;
@@ -48,14 +48,6 @@ namespace SomethingDownThere.Tests
         private BuriedFind[] Contents(BuriedChest chest)
             => field.Finds.Where(f => !f.Collected && Vector3.Distance(f.transform.position, chest.transform.position) < chest.Radius).ToArray();
 
-        // Dig out the space the lid sweeps; the soil above the chest goes, the chest stays.
-        private void ClearLid(BuriedChest chest)
-        {
-            var t = chest.transform;
-            Assert.That(terrain.ClearLoadSweep(t.TransformPoint(new Vector3(-.1f, .75f, 0)), t.TransformPoint(new Vector3(-.1f, .75f, 0)),
-                t.rotation, new Vector3(.62f, .55f, .8f)), Is.True);
-        }
-
         [UnityTest]
         public IEnumerator AStashChestOpensWhereItLiesWhenItsLockIsForced()
         {
@@ -63,20 +55,19 @@ namespace SomethingDownThere.Tests
             var chest = FirstChest();
             Assert.That(terrain.SurfaceHeight - chest.transform.position.y, Is.InRange(3.5f, 6.5f), "The first stash lies a few metres down.");
             Assert.That(chest.Opened || chest.Released, Is.False);
-            Assert.That(chest.CanHold(player), Is.False, "Buried, its lid has no room.");
-            Assert.That(chest.GetPrompt(player), Does.Contain("Clear the soil above its lid"));
+            var t = chest.transform;
+            var pocket = chest.Pocket;
+            // The fill settled away from it: open air on every side and above the lid, a floor of ground under it.
+            foreach (var side in new[] { Vector3.left, Vector3.right, Vector3.forward, Vector3.back })
+                Assert.That(terrain.IsSolid(t.TransformPoint(pocket.center + Vector3.Scale(side, pocket.extents) * .6f)), Is.False, "Air beside it.");
+            Assert.That(terrain.IsSolid(t.TransformPoint(new Vector3(pocket.center.x, pocket.max.y - .15f, pocket.center.z))), Is.False, "Air above it.");
+            Assert.That(chest.LidHasRoom(), Is.True, "Its lid can swing the moment it is reached.");
             var contents = Contents(chest);
             Assert.That(contents.Length, Is.EqualTo(field.Catalog.ChestItems));
-            // Loose in the seeded hollow, they settle on the chest's floor.
+            // Loose in the seeded pocket, they settle on the chest's floor.
             yield return new WaitForSeconds(1.5f);
             Assert.That(contents.All(f => f.IsReleased), Is.True, "The contents lie loose inside.");
-            Assert.That(chest.Released, Is.False, "Soil holds the chest.");
-
-            ClearLid(chest);
-            yield return new WaitForFixedUpdate();
-            Assert.That(chest.LidHasRoom(), Is.True);
-            Assert.That(chest.Released, Is.False, "Digging above does not free it.");
-            var t = chest.transform;
+            Assert.That(chest.Released, Is.False, "Its footing holds the chest.");
             var eye = t.position + Vector3.up * 1.15f;
             var item = contents[0].transform.position;
             Physics.SyncTransforms();
@@ -114,7 +105,6 @@ namespace SomethingDownThere.Tests
         {
             var chest = FirstChest();
             var t = chest.transform;
-            ClearLid(chest);
             yield return new WaitForSeconds(1.5f);
             var contents = Contents(chest);
             Assert.That(contents.Length, Is.EqualTo(field.Catalog.ChestItems));
@@ -132,7 +122,7 @@ namespace SomethingDownThere.Tests
             foreach (var find in contents) Assert.That((bool)commit.Invoke(find, new object[] { player }), Is.True, find.Item.DisplayName);
             Assert.That(chest.HoldsAnything(), Is.False, "Emptied.");
 
-            // Looking into the cleared lid space at it.
+            // Looking at it from inside its pocket.
             camera.position = t.TransformPoint(new Vector3(-.1f, 1.05f, .6f));
             camera.LookAt(t.position);
             Physics.SyncTransforms();
@@ -156,6 +146,37 @@ namespace SomethingDownThere.Tests
             field.Restore(field.Capture(), field.Seed, saved);
             yield return null;
             Assert.That(field.Chests.Count, Is.EqualTo(2), "A load keeps it gone.");
+        }
+
+        // What it holds (113: coins and ingots) is taken by hand, one piece per Interact; neither the dig action nor walking
+        // past takes it.
+        [UnityTest]
+        public IEnumerator ItsTreasureIsTakenByHandOnePieceAtATime()
+        {
+            player.SetApplicationFocus(true);
+            if (player.IsMenuOpen) player.CloseMenu();
+            var chest = FirstChest();
+            var t = chest.transform;
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(chest.CompleteHold(player, default), Is.True);
+            yield return new WaitForSeconds(3.5f);
+            var contents = Contents(chest);
+            Assert.That(contents.Length, Is.EqualTo(field.Catalog.ChestItems));
+            Assert.That(contents.All(f => f.HandPicked && f.Collectible), Is.True, "Coins and ingots, free to take.");
+            var find = contents[0];
+            var camera = player.ViewCamera.transform;
+            camera.position = t.TransformPoint(new Vector3(.1f, .9f, 0));
+            camera.LookAt(find.WorldBounds.center);
+            Physics.SyncTransforms();
+            Assert.That(find.GetPrompt(player), Does.Contain("to take"));
+            Assert.That(find.TryCollect(player), Is.False, "The dig action never takes it.");
+            var nearby = typeof(BuriedFind).GetMethod("TryCollectNearby", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That((bool)nearby.Invoke(find, new object[] { player }), Is.False, "Walking past never takes it.");
+            player.enabled = true;
+            Assert.That(find.TryInteract(player), Is.True, "Interact takes it.");
+            Assert.That(find.Collected, Is.True);
+            Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
+            Assert.That(contents.Skip(1).Any(f => f.Collected), Is.False, "One piece at a time.");
         }
 
         // Dug out under and around its lower half, the chest falls and settles; a save keeps where it fell.

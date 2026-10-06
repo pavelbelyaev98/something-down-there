@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5314e371523c3bd459eec16cb7b246df
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26357
+  packageName: Mining Tools, Ore, & Ingots
+  packageVersion: 3.0.1
+  assetPath: Assets/REAL_DEDICATED/MiningTools_Ore_Ingots/Materials/M_Ingots_Gold.mat
+  uploadId: 785544

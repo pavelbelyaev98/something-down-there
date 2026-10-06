@@ -4,8 +4,10 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // The one machine in first person (concept 04 section 1): model parts are named L<from>[-<to>]_<Part>__<Material>
-    // and show while the owned tool level is in range (art/stylized-western-shovel, art/hand-mining-drill, task 105). The rig
+    // The one machine in first person (concept 04 section 1): model parts are named L<from>[-<to>]_<Part>[__<Look>]
+    // and show while the owned tool level is in range (art/stylized-western-shovel, art/hand-mining-drill, task 105);
+    // where a part comes in several looks, the player's chosen look shows (FpsPlayer.ShovelLook, a developer-admin
+    // comparison), else the part's first look. The rig
     // sits small and close, inside the player's capsule, so it can never poke through a wall; its
     // width and height follow the field of view so it keeps its place on screen. Only the tool
     // moves, never the camera: scoops per stroke up to level 6, a spinning bit from the drill on,
@@ -16,6 +18,9 @@ namespace SomethingDownThere
         public enum MotionFamily { Scoop, Bite, Hard }
         public const float ReferenceFov = 75f;
         private const float LowerSeconds = .15f, CutWindow = .15f, MaxSpinStep = 70f;
+        // The bit slows under load (user, 2026-10-06): free in soil it turns FreeSpin degrees a second, and in harder ground
+        // in proportion to that ground's dig rate, never below SlowestSpin of free.
+        private const float FreeSpin = 3200f, SlowestSpin = .3f;
         private static readonly Regex StageName = new Regex(@"^L(\d{2})(?:-(\d{2}))?_");
         // A shovel stroke pries and then scoops; the drill has no stroke, only its spin and chatter. The shovel's stroke
         // takes ScoopLength times a plain push and turns about the blade's tip; the drill lowers away about the socket
@@ -34,11 +39,12 @@ namespace SomethingDownThere
         // the lower right, and tips down so its head points below the crosshair.
         private static readonly Vector3 DrillTilt = new Vector3(10f, 0f, 0f), DrillShift = new Vector3(0f, 0f, .3f);
 
-        private readonly List<(GameObject part, int from, int to)> parts = new List<(GameObject, int, int)>();
+        private readonly List<(GameObject part, int from, int to, string key, string look)> parts = new List<(GameObject, int, int, string, string)>();
         private readonly List<(Transform part, Quaternion rest)> spinners = new List<(Transform, Quaternion)>();
         private readonly List<Renderer> renderers = new List<Renderer>();
         private int shownLevel = -1, seenStrokes = -1;
-        private float stroke = 1f, strokeSeconds = .3f, lowered = 1f, spinSpeed, spinAngle, sinceCut = 10f;
+        private string shownLook;
+        private float stroke = 1f, strokeSeconds = .3f, lowered = 1f, spinSpeed, spinAngle, sinceCut = 10f, spinLoad = 1f;
         private MotionFamily family;
         // Each stroke differs a little in depth, side and roll so held digging never looks mechanical.
         private float strokeDepth = 1f, strokeSide, strokeRoll;
@@ -66,7 +72,8 @@ namespace SomethingDownThere
             foreach (var part in model.GetComponentsInChildren<Transform>(true))
             {
                 if (!TryParseStage(part.name, out int from, out int to)) continue;
-                parts.Add((part.gameObject, from, to));
+                int split = part.name.IndexOf("__", System.StringComparison.Ordinal);
+                parts.Add((part.gameObject, from, to, split < 0 ? part.name : part.name.Substring(0, split), split < 0 ? "" : part.name.Substring(split + 2)));
                 if (part.name.Contains("Spin")) spinners.Add((part, part.localRotation));
             }
             model.GetComponentsInChildren(true, renderers);
@@ -76,7 +83,7 @@ namespace SomethingDownThere
         {
             if (player == null || model == null) return;
             int level = player.EffectiveShovelLevel;
-            if (level != shownLevel) ShowLevel(level);
+            if (level != shownLevel || player.ShovelLook != shownLook) ShowLevel(level, player.ShovelLook);
             bool hide = !player.isActiveAndEnabled || player.IsMenuOpen
                 || (player.WorksiteTools != null && player.WorksiteTools.IsPlacing) || player.HoldProgress > 0f;
             lowered = Mathf.MoveTowards(lowered, hide ? 1f : 0f, Time.unscaledDeltaTime / LowerSeconds);
@@ -90,7 +97,7 @@ namespace SomethingDownThere
             float dt = Time.deltaTime;
             sinceCut += dt;
             bool cutting = sinceCut < CutWindow;
-            float spinTarget = player.ShavingEnabled && cutting ? (family == MotionFamily.Hard ? 1900f : 3200f) : 0f;
+            float spinTarget = player.ShavingEnabled && cutting ? FreeSpin * spinLoad : 0f;
             spinSpeed = Mathf.MoveTowards(spinSpeed, spinTarget, 12000f * dt);
             // A two-flute bit turning more than a quarter turn per frame reads as spinning backwards.
             spinAngle = Mathf.Repeat(spinAngle + Mathf.Min(spinSpeed * dt, MaxSpinStep), 360f);
@@ -143,10 +150,20 @@ namespace SomethingDownThere
             sinceCut = 0f;
             var material = player.LastDigMaterial;
             family = Family(material);
+            spinLoad = SpinShare(material);
             if (player.ShavingEnabled) return;
             stroke = 0f;
             strokeSeconds = StrokeSeconds(player.LastDigInterval, material);
             strokeDepth = Random.Range(.8f, 1.2f); strokeSide = Random.Range(-1f, 1f); strokeRoll = Random.Range(-1f, 1f);
+        }
+
+        // The share of its free speed the drill's bit keeps in this ground: the ground's dig rate (bite volume per stroke time)
+        // relative to soil's.
+        public static float SpinShare(TerrainMaterialId material)
+        {
+            var response = EquipmentProgression.MaterialResponse(material);
+            float rate = response.Width * response.Length * response.Penetration / Mathf.Max(.01f, response.Interval);
+            return Mathf.Clamp(rate, SlowestSpin, 1f);
         }
 
         // Seconds from a shovel stroke's start to its scoop, when its dirt is removed, for a dig of this cadence and ground.
@@ -175,10 +192,15 @@ namespace SomethingDownThere
         private static float Rise(float t, float a, float b) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(a, b, t));
         private static float Pulse(float t, float a, float peak, float b) => t < peak ? Rise(t, a, peak) : 1f - Rise(t, peak, b);
 
-        private void ShowLevel(int level)
+        private void ShowLevel(int level, string look)
         {
-            shownLevel = level;
-            foreach (var (part, from, to) in parts) part.SetActive(level >= from && level <= to);
+            shownLevel = level; shownLook = look;
+            foreach (var (part, from, to, key, own) in parts)
+            {
+                // The chosen look where this part has it, else its first.
+                string shown = parts.Exists(p => p.key == key && p.look == look) ? look : parts.Find(p => p.key == key).look;
+                part.SetActive(level >= from && level <= to && own == shown);
+            }
         }
     }
 }

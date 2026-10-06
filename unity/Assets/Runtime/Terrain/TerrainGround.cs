@@ -23,34 +23,27 @@ namespace SomethingDownThere
         [Flags] public enum Features { None = 0, Pits = 1, All = Pits }
         private static bool Has(Features features, Features feature) => (features & feature) != 0;
 
-        // A seated find sinks SeatSink of its own radius below its seat.
-        public const float SeatSink = .35f;
-
-        // Disturbed ground (099, 106): a column of backfill someone dug and refilled, from Top down to what
-        // they buried at Bottom: a stash (an old chest) or rubbish (junk finds on its seats). Mostly steep,
-        // some leaning sideways.
-        public enum PitKind : byte { Stash, Rubbish }
+        // Disturbed ground (099, 106): a column of backfill someone dug and refilled, from Top down to the old chest
+        // they buried at Bottom. Mostly steep, some leaning sideways. Backfill holds only chests (user, 2026-10-06):
+        // rubbish such as old TVs lies loose in the soil like any find.
         public struct Pit
         {
-            public PitKind Kind;
             public float3 Top, Bottom, Min, Max;
             public float Radius;
         }
         // Only the recent fill (user, 2026-10-05): a refilled hole far down needs a story.
-        public const int PitCount = 6;
-        // A rubbish pit's bottom lies at least this deep: both its seats take junk, which starts below the dense entry
-        // layer (6 m). Its radius is at least RubbishRadius, so the biggest junk fits; its two seats lie RubbishSeatGap apart.
-        public const float RubbishTop = 8, RubbishRadius = .7f, RubbishSeatGap = 1.2f;
+        public const int PitCount = 3;
 
-        // A stash pit's chest: its pivot StashLift above the pit's bottom, turned to a seeded yaw. Its hollow
-        // (grid-local box in the chest's frame, from the chest prefab via TerrainVolume) is seeded air, so what
-        // it holds lies loose inside from New Game.
+        // A stash pit's chest: its pivot StashLift above the pit's bottom, turned to a seeded yaw. Its pocket
+        // (grid-local box in the chest's frame, from the chest prefab via TerrainVolume) is seeded air around and inside
+        // the chest, from its base up past the lid's swing (user, 2026-10-06): the fill settled away from the chest, so a
+        // shaft breaks into an open space with the chest standing in it, and what it holds lies loose inside from New Game.
         public struct Stash
         {
-            public float3 Centre, HollowCentre, HollowHalf, Min, Max;
+            public float3 Centre, PocketCentre, PocketHalf, Min, Max;
             public float3x3 ToLocal;
             public quaternion Rotation;
-            public bool Hollow => math.all(HollowHalf > 0);
+            public bool HasPocket => math.all(PocketHalf > 0);
         }
         public const float StashLift = .12f;
 
@@ -89,15 +82,12 @@ namespace SomethingDownThere
             for (int n = 0; n < PitCount; n++)
                 for (int attempt = 0; attempt < 120; attempt++)
                 {
-                    // Stash and rubbish alternate. The first is a stash a few metres under the plot centre, where a
-                    // first shaft meets it in daylight; stash pits are wide enough for the chest to lie in loose fill.
-                    // Rubbish pits end below the dense entry layer, where junk finds start (RubbishTop).
+                    // The first lies a few metres under the plot centre, where a first shaft meets it in daylight; each
+                    // pit is wide enough for the chest to lie in loose fill.
                     bool first = n == 0;
-                    var kind = n % 2 == 0 ? PitKind.Stash : PitKind.Rubbish;
-                    float radius = kind == PitKind.Stash ? Range(1f, 1.2f) : Range(RubbishRadius, 1.1f), length = Range(2.5f, 6f);
-                    float shallowest = kind == PitKind.Rubbish ? Mathf.Min(RubbishTop, bottom - 1) : top + 1;
+                    float radius = Range(1f, 1.2f), length = Range(2.5f, 6f);
                     var low = first ? new float3(extent.x * .5f + Range(-3, 3), extent.y - Range(top + 1, Mathf.Min(top + 3, bottom)), extent.z * .5f + Range(-3, 3))
-                        : new float3(Range(2, extent.x - 2), extent.y - Range(shallowest, bottom), Range(2, extent.z - 2));
+                        : new float3(Range(2, extent.x - 2), extent.y - Range(top + 1, bottom), Range(2, extent.z - 2));
                     // Most pits were dug straight down; some lean well over to the side.
                     float lean = first ? Range(0, .3f) : Next() < .7f ? Range(0, .45f) : Range(.7f, 1.2f), heading = Range(0, 2 * math.PI);
                     var up = new float3(math.sin(lean) * math.sin(heading), math.cos(lean), math.sin(lean) * math.cos(heading));
@@ -105,7 +95,7 @@ namespace SomethingDownThere
                     if (extent.y - high.y < SurfaceSoil + .6f) high = low + up * ((extent.y - SurfaceSoil - .6f - low.y) / math.max(up.y, .2f));
                     if (math.distance(high, low) < 2) continue;
                     if (footprint != null && (!Inside(footprint, low, radius + .5f) || !Inside(footprint, high, radius + .5f))) continue;
-                    var pit = new Pit { Kind = kind, Top = high, Bottom = low, Radius = radius,
+                    var pit = new Pit { Top = high, Bottom = low, Radius = radius,
                         Min = math.min(low, high) - radius - .2f, Max = math.max(low, high) + radius + .2f };
                     bool clear = true;
                     foreach (var other in pits) clear &= math.any(pit.Min > other.Max + 1) || math.any(other.Min > pit.Max + 1);
@@ -117,58 +107,37 @@ namespace SomethingDownThere
             return pits.ToArray();
         }
 
-        // Two finds wait at the bottom of every rubbish pit, one just above the other. A stash pit's bottom holds its
-        // chest instead (Stashes).
-        public static Vector3[] PitSeats(Pit pit)
+        // One chest per pit, level, at a yaw seeded per pit. pocket: the chest's pocket in its own frame (size zero: none
+        // carved).
+        public static Stash[] Stashes(Pit[] pits, int seed, Bounds pocket = default)
         {
-            if (pit.Kind == PitKind.Stash) return Array.Empty<Vector3>();
-            float3 up = math.normalize(pit.Top - pit.Bottom);
-            float length = math.distance(pit.Top, pit.Bottom);
-            var bottom = pit.Bottom + up * math.min(pit.Radius * .5f, length * .2f);
-            return new[] { (Vector3)bottom, (Vector3)(bottom + up * RubbishSeatGap) };
-        }
-
-        // One chest per stash pit, level, at a yaw seeded per pit. hollow: the chest's hollow in its own frame
-        // (size zero: none carved).
-        public static Stash[] Stashes(Pit[] pits, int seed, Bounds hollow = default)
-        {
-            var stashes = new List<Stash>();
+            var stashes = new Stash[pits.Length];
             for (int i = 0; i < pits.Length; i++)
             {
-                if (pits[i].Kind != PitKind.Stash) continue;
                 uint h = unchecked((uint)seed * 2654435761u ^ (uint)i * 2246822519u ^ 0x9e3779b9u);
                 var rotation = quaternion.RotateY(TerrainMaterialSnapshot.NextUnit(ref h) * 2 * math.PI);
                 var centre = pits[i].Bottom + new float3(0, StashLift, 0);
-                float reach = math.length(hollow.extents) + math.length(hollow.center);
-                stashes.Add(new Stash { Centre = centre, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)),
-                    HollowCentre = hollow.center, HollowHalf = hollow.extents, Min = centre - reach, Max = centre + reach });
+                float reach = math.length(pocket.extents) + math.length(pocket.center);
+                stashes[i] = new Stash { Centre = centre, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)),
+                    PocketCentre = pocket.center, PocketHalf = pocket.extents, Min = centre - reach, Max = centre + reach };
             }
-            return stashes.ToArray();
+            return stashes;
         }
 
-        // What find placement needs from the seeded ground: seats where a find must lie (rubbish pit bottoms, each
-        // with the largest find radius it takes; a rubbish seat takes junk only) and the stashes' chests.
+        // What find placement needs from the seeded ground: the pits and their chests.
         public sealed class GroundLayout
         {
             public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Pit>(), Array.Empty<Stash>());
             public readonly Pit[] Pits; public readonly Stash[] Stashes;
             public GroundLayout(Pit[] pits, Stash[] stashes) { Pits = pits; Stashes = stashes; }
-
-            public (Vector3 position, float fits, bool junk)[] Seats()
-            {
-                var seats = new List<(Vector3, float, bool)>();
-                foreach (var pit in Pits)
-                    foreach (var seat in PitSeats(pit)) seats.Add((seat, pit.Radius, true));
-                return seats.ToArray();
-            }
         }
 
         // Pits keep clear of every unique's space.
         public static GroundLayout Layout(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null, Features features = Features.All,
-            Bounds stashHollow = default)
+            Bounds stashPocket = default)
         {
             var pits = Pits(size, cellSize, seed, OddSpots(oddSpots), features);
-            return new GroundLayout(pits, Stashes(pits, seed, stashHollow));
+            return new GroundLayout(pits, Stashes(pits, seed, stashPocket));
         }
 
         private static bool Inside(Func<Vector2, bool> footprint, float3 centre, float reach)

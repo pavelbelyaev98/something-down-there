@@ -1,8 +1,9 @@
 # 108 — Rubble Backfill
 
 **Status:** complete. Backfill is rubble fill: it digs at about half soil's rate at every tool level (47–55%,
-with the tool's shorter bite motion), and its texture churns the rubble's dirty stones into the turned-over soil,
-so the pit reads as a stony column in the wall. Plan and research: [107](107-asset-only-grounds.md).
+with the tool's shorter bite motion), and the drill's bit turns at about half speed in it; its texture churns the
+rubble's dirty stones into turned-over soil, darker and greyer than the warm soil, so the pit reads as a stony
+column in the wall. Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
 
@@ -106,3 +107,13 @@ once, never a wall.
 - Checked in the Ground Lab: a shaft beside the pit bay shows the column as a band of dirty rubble in the red-brown
   soil under daylight from above. Captures from a camera without URP post-processing glare white; copy the view
   camera's `UniversalAdditionalCameraData` too.
+
+## Iteration (user, 2026-10-06)
+
+- "Make the drill visibly spin slower when digging something harder." The bit's speed is the ground's dig rate
+  relative to soil's (bite width x length x depth over stroke time, `ToolRigPresenter.SpinShare`), at least 30%:
+  3200°/s in soil, about 1540°/s in backfill. It follows admin ground tuning.
+- "Color the backfill a bit differently so it is even more distinct." `make_backfill.py` now takes half the colour
+  out of the dirt (`dirt_grey` .5), darkens it (`dirt_shade` .8) and mixes more of the rubble's mud (.5): grey-brown
+  (mean sRGB .35/.31/.27) against the soil's warm brown (.42/.32/.20). Under the lamp it still reads brown, but cooler,
+  with the pale stones.

@@ -35,7 +35,6 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 3
-    Junk: 0
   - ItemId: mineral_coal
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -55,13 +54,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_copper
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 4582630098943393868, guid: 639e718224a86954693289508c116355, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 8467664755821964486, guid: b46ffea0c6ffffc4780eb8eaec8bc4c1, type: 3}
     Count: 1280
     ShallowCount: 0
     ShallowMinCover: 0
@@ -75,13 +74,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_iron
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 2564259689525694727, guid: 5da72b4cede10d64897000d7646f75de, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 459042316760444966, guid: 4fcbf86e9ff46044481c353410f96a68, type: 3}
     Count: 1280
     ShallowCount: 0
     ShallowMinCover: 0
@@ -95,13 +94,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_silver
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1723953362618204297, guid: 9f59f9736d541ed4f8f663f9891e3d39, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 7227871479736835481, guid: ef004da23ee0333438cb3fcd8f8f5ece, type: 3}
     Count: 1400
     ShallowCount: 0
     ShallowMinCover: 0
@@ -115,13 +114,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_gold
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 5887150894810649546, guid: 9a260e874716482448f1cedad8255236, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 7554163555797922429, guid: ff594686c1c443f43a0aca4ec3923671, type: 3}
     Count: 1510
     ShallowCount: 0
     ShallowMinCover: 0
@@ -135,13 +134,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_emerald
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 6329973060314555801, guid: eb556f9a02aa83940a9607a270da09d2, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 2961762360941508022, guid: f7e177274811ea4439d416a96c6f8225, type: 3}
     Count: 1400
     ShallowCount: 0
     ShallowMinCover: 0
@@ -155,13 +154,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_ruby
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 8312464020256252658, guid: 715919f0cdfaaae458c2b25297e021cd, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 8780119650868488600, guid: 4c0cc67f22cc6de41bde7e4c2b59b439, type: 3}
     Count: 1160
     ShallowCount: 0
     ShallowMinCover: 0
@@ -175,13 +174,13 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: mineral_diamond
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 8911235515186892685, guid: 1527e65ddc4f4224eb30348e8930992d, type: 3}
-    AppearanceVariants: []
+    AppearanceVariants:
+    - {fileID: 5516362254304247654, guid: 0a7e3a9ff42344e46b6a2d6f3e6f63b2, type: 3}
     Count: 1060
     ShallowCount: 0
     ShallowMinCover: 0
@@ -195,7 +194,6 @@ MonoBehaviour:
     RandomOrientation: 1
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: unique_reservoir_computer
     AuthoredPlacement: 1
     AuthoredPosition: {x: 19.5, y: 142, z: 4.7}
@@ -215,7 +213,6 @@ MonoBehaviour:
     RandomOrientation: 0
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: unique_survey_computer
     AuthoredPlacement: 1
     AuthoredPosition: {x: 13, y: 136.5, z: 11}
@@ -235,7 +232,6 @@ MonoBehaviour:
     RandomOrientation: 0
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: unique_pump_computer
     AuthoredPlacement: 1
     AuthoredPosition: {x: 24, y: 129, z: 18}
@@ -255,7 +251,6 @@ MonoBehaviour:
     RandomOrientation: 0
     HostGrounds: 
     HostWeights: []
-    Junk: 0
   - ItemId: junk_tv_portable
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -276,7 +271,6 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-    Junk: 1
   - ItemId: junk_tv_wood
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -297,7 +291,6 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-    Junk: 1
   - ItemId: junk_tv_crt
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -318,7 +311,6 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-    Junk: 1
   - ItemId: junk_tv_flat
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -339,7 +331,6 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-    Junk: 1
   - ItemId: junk_tv_big
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -360,11 +351,138 @@ MonoBehaviour:
     HostGrounds: 00y
     HostWeights:
     - 2
-    Junk: 1
+  - ItemId: treasure_coin_copper
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 8937178477075514568, guid: f514dc9341ab1a94ca106b73088a88e1, type: 3}
+    AppearanceVariants:
+    - {fileID: 1904526323183719875, guid: 65a6aafba28a0e94dbf8802f794fcf10, type: 3}
+    Count: 4
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_coin_silver
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 7396396720571468543, guid: c9a1506f2ef111a48ad668d9f28805e4, type: 3}
+    AppearanceVariants:
+    - {fileID: 2678101783681667888, guid: ce8bd99cb6879e8408404e823ec19979, type: 3}
+    Count: 3
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_coin_gold
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 2874719503386324339, guid: a9ca5fdbd66af5d4fb9df0eba2bcfc37, type: 3}
+    AppearanceVariants:
+    - {fileID: 3079681070611488800, guid: a24e60830fb058c43adeb40a8868266b, type: 3}
+    Count: 2
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_ingot_copper
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 1519585528931462753, guid: d019cefa3c1f30242954271887a8be35, type: 3}
+    AppearanceVariants:
+    - {fileID: 5971219111663248406, guid: 56d2a248ea715bd49bd73fb7fa90d873, type: 3}
+    Count: 3
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_ingot_silver
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 6121914866324238277, guid: 96e4dd7ca355cf7458d9c9c4c3cfd366, type: 3}
+    AppearanceVariants:
+    - {fileID: 4407781966802062575, guid: 7e45b2f22fc90f048bd7c8bf9912d092, type: 3}
+    Count: 2
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: treasure_ingot_gold
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 3106832568637923618, guid: 43605f8e3a851ba44b35e678f8e5f234, type: 3}
+    AppearanceVariants:
+    - {fileID: 2088103132838309429, guid: f8294784bbe080642acd5884aa3b96d0, type: 3}
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 1
+    MaxDepth: 37
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    HostGrounds: 
+    HostWeights: []
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}
-  ChestItems: 3
+  ChestItems: 5
   ChestContents:
-  - ItemId: mineral_silver
+  - ItemId: treasure_coin_copper
+    Weight: 4
+  - ItemId: treasure_coin_silver
+    Weight: 3
+  - ItemId: treasure_coin_gold
     Weight: 2
-  - ItemId: mineral_gold
+  - ItemId: treasure_ingot_copper
+    Weight: 3
+  - ItemId: treasure_ingot_silver
+    Weight: 2
+  - ItemId: treasure_ingot_gold
     Weight: 1

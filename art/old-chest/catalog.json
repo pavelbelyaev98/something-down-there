@@ -2,9 +2,31 @@
   "schema_version": 1,
   "prefab": "Assets/Content/BuriedProps/OldChest/OldChest.prefab",
   "display_name": "Old chest",
-  "items": 3,
+  "items": 5,
   "contents": [
-    { "content_id": "mineral_silver", "weight": 2 },
-    { "content_id": "mineral_gold", "weight": 1 }
+    {
+      "content_id": "treasure_coin_copper",
+      "weight": 4
+    },
+    {
+      "content_id": "treasure_coin_silver",
+      "weight": 3
+    },
+    {
+      "content_id": "treasure_coin_gold",
+      "weight": 2
+    },
+    {
+      "content_id": "treasure_ingot_copper",
+      "weight": 3
+    },
+    {
+      "content_id": "treasure_ingot_silver",
+      "weight": 2
+    },
+    {
+      "content_id": "treasure_ingot_gold",
+      "weight": 1
+    }
   ]
 }

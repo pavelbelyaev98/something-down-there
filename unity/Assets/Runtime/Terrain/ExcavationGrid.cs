@@ -33,9 +33,9 @@ namespace SomethingDownThere
         // ground into a thin roof. Lateral digging under the site starts below it.
         private float[] bankBeyond;
         private float bankDepth;
-        // The seeded ground's pits and stashes; a stash chest's hollow is part of untouched ground.
+        // The seeded ground's pits and stashes; a stash chest's pocket is part of untouched ground.
         public TerrainGround.GroundLayout Layout { get; private set; } = TerrainGround.GroundLayout.Empty;
-        // A developer lab's air (grid-local metres), carved on every reset like a chest's hollow: boxes
+        // A developer lab's air (grid-local metres), carved on every reset like a chest's pocket: boxes
         // and round-ended tubes (the Ground Lab crane scenes' pockets, pits, shafts and tunnels). Null for the site.
         public readonly struct LabCarve
         {
@@ -83,10 +83,10 @@ namespace SomethingDownThere
                 throw new ArgumentOutOfRangeException(nameof(size), "Terrain exceeds the supported sample budget.");
         }
 
-        // features: what the seeded ground holds (TerrainGround.Features); stashHollow: the chest's hollow in its
+        // features: what the seeded ground holds (TerrainGround.Features); stashPocket: the chest's pocket in its
         // own frame, carved as seeded air in every stash (size zero carves none).
         public ExcavationGrid(Vector3Int size, float cellSize, int? materialSeed = null, Vector4[] oddSpots = null,
-            TerrainGround.Features features = TerrainGround.Features.All, Bounds stashHollow = default)
+            TerrainGround.Features features = TerrainGround.Features.All, Bounds stashPocket = default)
         {
             ValidateDimensions(size, cellSize);
             Size = size;
@@ -98,7 +98,7 @@ namespace SomethingDownThere
             bool seeded = materialSeed.HasValue && features != TerrainGround.Features.None;
             materials = seeded ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value, oddSpots, features)
                 : TerrainMaterialSnapshot.Uniform(density.Length);
-            if (seeded) Layout = TerrainGround.Layout(size, cellSize, materialSeed.Value, oddSpots, features, stashHollow);
+            if (seeded) Layout = TerrainGround.Layout(size, cellSize, materialSeed.Value, oddSpots, features, stashPocket);
             // Reserve the support-search workspace during loading, not on the
             // first live cut (the full-depth site's buffer is tens of megabytes).
             supportState = new byte[density.Length];
@@ -128,7 +128,7 @@ namespace SomethingDownThere
             for (int y = 0; y <= Size.y; y++)
             for (int x = 0; x <= Size.x; x++)
                 density[x + y * strideY + z * strideZ] = Mathf.Min(band, (Size.y - y) * CellSize);
-            foreach (var stash in Layout.Stashes) if (stash.Hollow) CarveHollow(stash);
+            foreach (var stash in Layout.Stashes) if (stash.HasPocket) CarvePocket(stash);
             if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
@@ -191,20 +191,28 @@ namespace SomethingDownThere
             }
         }
 
-        // A stash chest's hollow: a smooth signed-distance box in the chest's frame. It reaches into the chest's
-        // walls, floor and lid, so its soil faces stay hidden inside the wood.
-        private void CarveHollow(TerrainGround.Stash stash)
+        // A stash chest's pocket: a signed-distance box in the chest's frame with rounded edges, its walls and roof
+        // pulled in by up to PocketRough of lumps so it reads as fill that settled away, not a cut. Its floor stays flat
+        // under the chest (the lumps fade in over PocketFloorBand above it), so the chest rests on its footing.
+        private const float PocketRound = .2f, PocketRough = .08f, PocketFloorBand = .3f;
+
+        private void CarvePocket(TerrainGround.Stash stash)
         {
             Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)stash.Min / CellSize) - Vector3Int.one);
             Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)stash.Max / CellSize) + Vector3Int.one);
+            var half = stash.PocketHalf;
+            float round = Mathf.Min(PocketRound, Unity.Mathematics.math.cmin(half) * .5f);
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
             for (int x = first.x; x <= last.x; x++)
             {
-                var local = Unity.Mathematics.math.mul(stash.ToLocal, new Unity.Mathematics.float3(x, y, z) * CellSize - stash.Centre) - stash.HollowCentre;
-                var d = Unity.Mathematics.math.abs(local) - stash.HollowHalf;
+                var position = new Unity.Mathematics.float3(x, y, z) * CellSize;
+                var local = Unity.Mathematics.math.mul(stash.ToLocal, position - stash.Centre) - stash.PocketCentre;
+                var d = Unity.Mathematics.math.abs(local) - (half - round);
                 float outside = Unity.Mathematics.math.length(Unity.Mathematics.math.max(d, 0))
-                    + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                    + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0) - round;
+                float lumps = Mathf.Clamp01((local.y + half.y) / PocketFloorBand);
+                outside += lumps * PocketRough * (.5f + .5f * Unity.Mathematics.noise.snoise(position * 2.2f + stash.Centre * .37f));
                 if (outside >= band) continue;
                 int index = x + y * strideY + z * strideZ;
                 density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));

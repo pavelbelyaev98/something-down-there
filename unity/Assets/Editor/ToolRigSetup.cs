@@ -11,19 +11,23 @@ namespace SomethingDownThere.Editor
 {
     // Places the tool rig under the MainGame player camera: the purchased Stylized Western Shovel (Assets/StylizedShovel)
     // for levels 1-6 and the purchased Hand Mining Drill (Assets/HandMiningDrill) for 7-12, both untouched and drawn
-    // with project URP materials. The drill's head turns on a pivot named `...Spin` about the drill's axis.
+    // with project URP materials. The Mining Tools pack's shovel is a second look for levels 1-6 that developer admin
+    // switches to for comparison (113). The drill's head turns on a pivot named `...Spin` about the drill's axis.
     public static class ToolRigSetup
     {
         public const string Folder = "Assets/Content/ToolRig";
         // Part names the presenter reads: L<from>[-<to>]_<Part>; children of a part show and hide with it.
-        public const string ShovelBlade = "L01-06_Blade__Western", Drill = "L07-12_Drill", DrillHead = "L07-12_BitSpin";
-        public static IEnumerable<string> PartNames => new[] { ShovelBlade, Drill, DrillHead };
+        public const string ShovelBlade = "L01-06_Blade__Western", PackShovelBlade = "L01-06_Blade__Mining", Drill = "L07-12_Drill", DrillHead = "L07-12_BitSpin";
+        public static IEnumerable<string> PartNames => new[] { ShovelBlade, PackShovelBlade, Drill, DrillHead };
 
         private const string ShovelVendor = "Assets/StylizedShovel", DrillVendor = "Assets/HandMiningDrill";
         private const string ShovelFolder = Folder + "/WesternShovel", DrillFolder = Folder + "/MiningDrill";
         // The shovel's model stands on its blade's tip (y = 0) with the grip up: its tip sits at z = ShovelTip in the rig.
         // The drill runs along its model's +x with its head in front: the head's point sits at z = DrillTip.
         private const float ShovelTip = 1.245f, DrillTip = 1.3f;
+        // The pack's shovel is drawn this much larger, so its blade is about as wide on screen as the Western one's and
+        // the comparison is of looks, not size (its handle runs out of view either way).
+        private const float PackShovelScale = 1.6f;
         // The drill's shaft runs from the body's front face to the head's bell within NeckRadius of the axis; the bell
         // reaches beyond BellRadius (model metres).
         private const float NeckRadius = .03f, BellRadius = .04f;
@@ -43,6 +47,7 @@ namespace SomethingDownThere.Editor
             var model = new GameObject("Model").transform;
             model.SetParent(rig, false);
             PlaceShovel(model);
+            PlacePackShovel(model);
             PlaceDrill(model);
             foreach (var transform in model.GetComponentsInChildren<Transform>(true)) transform.gameObject.layer = 2;
             foreach (var renderer in model.GetComponentsInChildren<MeshRenderer>(true))
@@ -79,6 +84,33 @@ namespace SomethingDownThere.Editor
             part.transform.SetLocalPositionAndRotation(new Vector3(0, 0, ShovelTip), Quaternion.Euler(-90, 0, 0));
             part.AddComponent<MeshFilter>().sharedMesh = AssetDatabase.LoadAssetAtPath<GameObject>(path).GetComponentInChildren<MeshFilter>().sharedMesh;
             part.AddComponent<MeshRenderer>().sharedMaterial = material;
+        }
+
+        // The Mining Tools pack's shovel placed like the Western one: its model is centred with the blade up (+y), so it is
+        // turned over about its face's normal and lifted to stand on the blade's tip, at the Western blade's tip.
+        private static void PlacePackShovel(Transform model)
+        {
+            string path = BuriedPropsSetup.MiningVendor + "/Models/SM_Tools_Shovel.fbx";
+            if (!(AssetImporter.GetAtPath(path) is ModelImporter importer))
+                throw new InvalidOperationException("Missing the purchased Mining Tools, Ore & Ingots in " + BuriedPropsSetup.MiningVendor + ".");
+            var vendor = AssetDatabase.LoadAssetAtPath<Material>(BuriedPropsSetup.MiningVendor + "/Materials/M_Tools.mat");
+            if (!AssetDatabase.IsValidFolder(Folder + "/MiningShovel")) AssetDatabase.CreateFolder(Folder, "MiningShovel");
+            var material = BuriedPropsSetup.FromHdrp(vendor, Folder + "/MiningShovel/MiningShovel.mat");
+            // The model's material slot points at ours: the pack's HDRP material has no shader here and stops the build.
+            var slots = importer.GetExternalObjectMap().Where(p => p.Key.type == typeof(Material) && p.Value != material).Select(p => p.Key).ToList();
+            foreach (var slot in slots) importer.AddRemap(slot, material);
+            if (slots.Count > 0) importer.SaveAndReimport();
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var mesh = source.GetComponentsInChildren<MeshFilter>(true).Single(f => f.name.EndsWith("_LOD0")).sharedMesh;
+            var part = new GameObject(PackShovelBlade).transform;
+            part.SetParent(model, false);
+            part.SetLocalPositionAndRotation(new Vector3(0, 0, ShovelTip), Quaternion.Euler(-90, 0, 0));
+            var shape = new GameObject("Shovel").transform;
+            shape.SetParent(part, false);
+            shape.SetLocalPositionAndRotation(new Vector3(0, mesh.bounds.max.y * PackShovelScale, 0), Quaternion.Euler(0, 0, 180));
+            shape.localScale = Vector3.one * PackShovelScale;
+            shape.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+            shape.gameObject.AddComponent<MeshRenderer>().sharedMaterial = material;
         }
 
         // The drill's meshes copied out of its model (so the head can sit on its own pivot) with their placements,

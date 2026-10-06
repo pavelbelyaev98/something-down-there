@@ -21,6 +21,10 @@ namespace SomethingDownThere
         [SerializeField] private DiscoveryKind kind;
         [SerializeField] private RecoveryMethod recovery;
         [SerializeField, TextArea] private string lore = "";
+        // Taken by hand (113): Interact aimed at it takes it into the bag, one at a time; neither the dig action nor
+        // walking past it ever picks it up (a chest's coins and ingots).
+        [SerializeField] private bool handPicked;
+        public bool HandPicked => handPicked;
         private DiscoveryField field;
         public DiscoveryKind Kind => kind;
         public RecoveryMethod Recovery => recovery;
@@ -228,6 +232,7 @@ namespace SomethingDownThere
             if (!ExposureReady) return $"Uncover more  |  {Mathf.RoundToInt(Exposure * 100)}% / {Mathf.RoundToInt(RequiredExposure * 100)}% exposed";
             if (RopeTarget) return $"{DisplayName}  |  Hold {player.InputSettings.Display(PlayerBinding.Interact)} to mark for excavation";
             string collect = player.Inventory.IsFull ? "Inventory full"
+                : handPicked ? $"{player.InputSettings.Display(PlayerBinding.Interact)} to take"
                 : $"{(player.InputSettings.ToggleDig ? "Toggle" : "Hold")} {player.InputSettings.Display(PlayerBinding.Dig)} to collect";
             return $"{Item.DisplayName}  |  {collect}";
         }
@@ -270,9 +275,11 @@ namespace SomethingDownThere
             return soil.collider != null;
         }
 
-        public bool TryCollect(FpsPlayer player)
+        public bool TryCollect(FpsPlayer player) => !handPicked && TryTakeAimed(player);
+
+        // Aimed and nearby pickup share one inventory transaction.
+        private bool TryTakeAimed(FpsPlayer player)
         {
-            // Aimed and nearby pickup share one inventory transaction.
             if (!CanCollect(player)
                 || terrain.IsSolid(player.ViewCamera.transform.position)
                 || !player.TryGetTarget(player.PickupReach(this), out var hit) || hit.collider != hitCollider) return false;
@@ -281,7 +288,7 @@ namespace SomethingDownThere
 
         internal bool TryCollectNearby(FpsPlayer player)
         {
-            if (!CanCollect(player) || !FullyUncovered || !player.CanCollectNearby(this)) return false;
+            if (handPicked || !CanCollect(player) || !FullyUncovered || !player.CanCollectNearby(this)) return false;
             return CommitCollection(player);
         }
 
@@ -334,7 +341,7 @@ namespace SomethingDownThere
         {
             if (player == null || !player.GameplayActive) return false;
             if (State == FindState.Stored) { player.ShowFeedback(LoreCard); return true; }
-            return false;
+            return handPicked && TryTakeAimed(player);
         }
     }
 }

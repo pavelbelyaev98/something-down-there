@@ -211,16 +211,24 @@ namespace SomethingDownThere.Tests
             Assert.That(player.transform.Find("Pickup visual"), Is.Null);
         }
 
+        // Every look of an ordinary find is taken by walking over it; a hand-picked one (a chest's coins and ingots) never is.
         [UnityTest]
         public IEnumerator WalkingCollectsEveryUncoveredAppearanceWithoutAimOrDig()
         {
             var variants = field.Finds.Where(f => f.Kind == DiscoveryKind.Common).GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
+            Assert.That(variants.Any(f => f.HandPicked), Is.True);
             foreach (var find in variants)
             {
                 Place(find,.65f); yield return WaitForSimulation(1.5f);
                 Assert.That(find.Collectible, Is.True, find.SaveContentId);
                 float charge = player.Battery.Charge; int strokes = player.SuccessfulStrokes;
                 WalkTo(find);
+                if (find.HandPicked)
+                {
+                    Assert.That(find.Collected, Is.False, $"Walk-over took hand-picked {find.SaveContentId}");
+                    find.gameObject.SetActive(false);
+                    continue;
+                }
                 Assert.That(find.Collected, Is.True, $"Walk-over {find.SaveContentId}, exposed={find.Exposure}, feet={player.FeetPosition}, bounds={find.WorldBounds}");
                 Assert.That(player.Inventory.Items.Count(i => i.InstanceId == find.Item.InstanceId), Is.EqualTo(1));
                 Assert.That(player.Battery.Charge, Is.EqualTo(charge)); Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));

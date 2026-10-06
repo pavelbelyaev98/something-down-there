@@ -32,9 +32,11 @@ namespace SomethingDownThere.Tests
                 var shown = parts.Where(p => level >= p.from && level <= p.to).Select(p => p.name).ToArray();
                 Assert.That(shown, EquipmentProgression.UsesDrill(level)
                     ? Is.EquivalentTo(new[] { ToolRigSetup.Drill, ToolRigSetup.DrillHead })
-                    : Is.EquivalentTo(new[] { ToolRigSetup.ShovelBlade }), $"Level {level}.");
+                    : Is.EquivalentTo(new[] { ToolRigSetup.ShovelBlade, ToolRigSetup.PackShovelBlade }), $"Level {level}.");
             }
             Assert.That(ToolRigSetup.DrillHead, Does.Contain("Spin"), "The drill's head turns.");
+            // The two shovels are two looks of one part (113): the presenter shows only the chosen one.
+            Assert.That(ToolRigSetup.PackShovelBlade.Split("__")[0], Is.EqualTo(ToolRigSetup.ShovelBlade.Split("__")[0]));
         }
     }
 }

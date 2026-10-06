@@ -14,7 +14,7 @@ so they are not proposed again without new evidence.
 | Hook's tunnel ride | The hook rides the smart rope's end on its own (built) / thrusters steering the hook / creatures carrying it | The user may make the hook's way through a tunnel more believable later. Whatever moves it, the crane's cable, route, haul and crane stay as they are ([Discoveries](05_DISCOVERIES.md)) |
 | Geodes | How many, how large | Start with two or three small ones per zone in zones 2–3; tune from playtest. Never connected into passages ([World §5](03_WORLD_AND_SITE.md#5-geodes)) |
 | Find rosters | Exact common and distinctive object lists | Keep the 20–30 / 30–50 type targets, organised by zone and host ground; new silhouettes keep appearing to the bottom of the 150 m site. Uniques and ending parts consume zero bag slots |
-| Mystery payoff | Ancient junk-making machine / one huge buried structure / parts collected to open something (possibly at ground level) | Undecided, no leaning. Decide before the mystery and ending work; earlier finds only need to be able to carry fragments of whichever is chosen |
+| Mystery payoff | Ancient junk-making machine / one huge buried structure / parts collected to open something (possibly at ground level) | Undecided. The user's candidate (2026-10-06): a sealed gate at the far end of the deep crystal cavern (`115`), opened by the ending components. Decide before the mystery and ending work; earlier finds only need to be able to carry fragments of whichever is chosen |
 | Final meaningful purchase | Exact point in the campaign | Test around 75% of first completion, leaving substantial deep excavation for the final machine |
 | Zone names | Final names | Keep the descriptive placeholders until content work |
 | Achievements | Final 5–10 achievements | Use the [candidate set](12_ACHIEVEMENTS_AND_COMPLETION.md#3-candidate-set-to-be-finalized-with-content); natural accomplishments, no grind or seed-exclusive requirements |
@@ -23,7 +23,7 @@ so they are not proposed again without new evidence.
 
 | Topic | Open choice | Leaning / next step |
 |---|---|---|
-| Final object | Ancient household technology / modern machine in ancient materials / ancient original of the player's machine / another object | Choose with the mystery payoff. Its recognizable modern function must explain the major connected finds; no candidate is selected |
+| Final object | Ancient household technology / modern machine in ancient materials / ancient original of the player's machine / another object | Choose with the mystery payoff. Its recognizable modern function must explain the major connected finds; no candidate is selected. The user's candidate (2026-10-06): a mining mech behind the gate, the ancient original of the player's machine, if it reads as ancient materials rather than sci-fi |
 | Ancient material | Look, dig response and contact signature of the zone-4 ground | Defined with the zone-4 structure and signature work; must read as clearly unlike bedrock ([Ending §1](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)) |
 
 ## Interface

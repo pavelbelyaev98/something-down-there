@@ -33,8 +33,6 @@ namespace SomethingDownThere
             // depth bands and prices never change.
             public TerrainMaterialId[] HostGrounds = Array.Empty<TerrainMaterialId>();
             public float[] HostWeights = Array.Empty<float>();
-            // Rubbish someone dumped (106): rubbish pits' seats take only junk.
-            public bool Junk;
             public int AppearanceCount => 1 + (AppearanceVariants?.Length ?? 0);
             // Half the find's height lying level: it rests that far above a chest's floor seat.
             public float RestingHalfHeight
@@ -189,10 +187,8 @@ namespace SomethingDownThere
                 reserved.Add(new DiscoveryReservation(p,entryRadii[i] + TerrainGround.OddSpotReach));
                 authored.Add(new DiscoveryPlacement(p,Quaternion.Euler(entry.AuthoredEuler),i));
             }
-            // Each seat takes the next find whose depth band covers it and that fits, sunk a third of
-            // its size below the seat: counts and bands are unchanged. Rubbish pit seats wait at the bottom
-            // of disturbed ground and take junk (03 §4: every pit holds something). Ordinary finds keep out
-            // of every stash's chest.
+            // Each stash's chest takes its contents from the population (SeatChests): counts and bands are unchanged.
+            // Ordinary finds keep out of every stash's chest and the pocket it stands in.
             Vector3[] seats = null;
             var stashes = groundLayout != null && Chest != null ? groundLayout.Stashes : Array.Empty<TerrainGround.Stash>();
             var chestTurns = new Dictionary<int, Quaternion>();
@@ -201,14 +197,6 @@ namespace SomethingDownThere
                 seats = new Vector3[radii.Length];
                 for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
                 foreach (var stash in stashes) reserved.Add(new DiscoveryReservation((Vector3)stash.Centre, Chest.Radius + DiscoveryField.SoilClearance));
-                foreach (var (seat, fits, junk) in groundLayout.Seats())
-                {
-                    float depth = extent.y - seat.y;
-                    for (int i = ShallowCount; i < seats.Length; i++)
-                        if (float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y && radii[i] <= fits
-                            && (!junk || Entries[shallow[i]].Junk))
-                        { seats[i] = seat + Vector3.down * radii[i] * TerrainGround.SeatSink; break; }
-                }
                 SeatChests(stashes, extent, seed, shallow, bands, seats, chestTurns);
             }
             Func<int, Vector3, float> weight = null;

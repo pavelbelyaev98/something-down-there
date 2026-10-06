@@ -1,6 +1,6 @@
 """Writes the backfill ground's texture set from the approved packs' own ground textures (106, 108): the site's soil
-(Mountains Mud01, carrying the dig ground's clay-loam tint) turned over with Highlands Mud_rubble's lumpy mud, a
-little darker, with that texture's stones churned in so the rubble fill reads as stony and hard. One tileable set (colour, normal, occlusion in G)
+(Mountains Mud01, carrying the dig ground's clay-loam tint) turned over with Highlands Mud_rubble's lumpy mud,
+darker and greyer, with that texture's stones churned in so the rubble fill reads as stony and hard. One tileable set (colour, normal, occlusion in G)
 covering 2 x 2 soil tiles and one rubble tile; the ground shader draws backfill from it alone.
 Run from the repository root (needs Pillow and numpy) after reimporting either pack."""
 from pathlib import Path
@@ -14,9 +14,10 @@ target = Path('unity/Assets/Content/GroundTextures')
 size = 2048
 # The dig ground's soil tint (LakebedSiteSetup.ClayLoamTint, linear): baked into the dirt, never the stones.
 soil_tint = np.array([.62, .98, 1.25])
-# Stirred-up fill reads a little darker and damper than settled soil; the rubble's mud gives it lumps, and its
-# stones keep most of their own colour under a film of dirt, so the churned-in rubble shows without glaring.
-dirt_shade, rubble_mud_share, stone_dirt = .84, .35, .5
+# Stirred-up fill reads darker and ashier than settled soil, grey-brown against the soil's warm brown, so a pit stands
+# apart in the wall (user, 2026-10-06): dirt_grey takes that share of the dirt's colour out. The rubble's mud gives it
+# lumps, and its stones keep most of their own colour under a film of dirt, so the churned-in rubble shows without glaring.
+dirt_shade, dirt_grey, rubble_mud_share, stone_dirt = .8, .5, .5, .5
 # The rubble's stones are its pale parts; after the 2048 reduction they sit around grey 125-140 (above 145 there
 # are none). stone_level picks the stones churned in, a little lower keeps every stone out of the mud.
 stone_level = 126
@@ -83,10 +84,11 @@ churned = wrapped(grey.point(lambda v: 255 if v > stone_level else 0), ImageFilt
 all_stones = np.asarray(all_stones, dtype=np.float64)[..., None] / 255
 churned = np.asarray(churned, dtype=np.float64)[..., None] / 255
 
-# Dirt: the soil in the dig ground's tint, turned over with the rubble's mud (its stones left out), a little darker.
+# Dirt: the soil in the dig ground's tint, turned over with the rubble's mud (its stones left out), darker and greyer.
 soil_tinted = to_srgb(to_linear(soil) * soil_tint)
 rubble_mud = rubble * (1 - all_stones) + soil_tinted * all_stones
 dirt = (soil_tinted * (1 - rubble_mud_share) + rubble_mud * rubble_mud_share) * dirt_shade
+dirt = dirt * (1 - dirt_grey) + (dirt @ np.array([.2126, .7152, .0722]))[..., None] * dirt_grey
 stones = rubble * (1 - stone_dirt) + dirt * stone_dirt
 colour = dirt * (1 - churned) + stones * churned
 
