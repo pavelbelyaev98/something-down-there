@@ -3,8 +3,9 @@
 **Status:** complete:
 - Underground the site is 50 m wide, about 8 m more than the plot on each side.
 - One sealed cavern per zone lies beside the plot, east and west in turn: a walkable chamber in geode stone with
-  minerals half-buried in its walls. The deepest is the crystal cavern, dressed, glowing and lit in the Crystal
-  Caverns demo's colours.
+  minerals half-buried in its walls. The deepest is the crystal cavern: groves of the Crystal Caverns demo's big
+  crystals, one colour to an area and lit in it. The tool breaks them into glow crystals sealed inside, and more of
+  those lie half-buried in its floor.
 - Untouched solid ground is one shared page in memory and in saves.
 
 Concept: [03 §1, §5, §7](../../concept/03_WORLD_AND_SITE.md), [05 §1](../../concept/05_DISCOVERIES.md),
@@ -174,3 +175,25 @@ authored positions are grid-local, so they move with the origin and were shifted
 - **Tests:** the end-of-session test run passes, with updated size, layout and count tests.
 
 ## Playtest notes (`docs/playtests/115-caverns.md`)
+
+## Iteration (user, 2026-10-06, after a first look)
+
+"The crystal cavern is way too random, doesn't match the textures, way too many random minerals ... I can't dig
+anything, which kills the vibe ... I want to break anything with purpose, break big structures into smaller crystals
+... not a static cave to look at but something to interact with."
+
+- **Style from the demo** (rendered from its scene): each grove is one colour, dozens of crystals crowded round one
+  spot (big columns, sprays, many small crystals), the area lit in that colour. So each chamber now holds a grove
+  (`TerrainGround.Grove`): 3 columns by a wall, 5 sprays on it, 5 shards in the floor. Colours change every two
+  chambers (blue, green, red); one per chamber read as random where neighbours met, so amber went.
+- **Nothing static:** the boulders, rubble and rock formations (undiggable props) and the crystal cavern's dusty
+  diamonds are gone.
+- **Breakable crystals:** columns and sprays are `CavernCrystal` dig targets. Each stroke adds the tool's stroke
+  interval as work, so shovel and drill take the same time; a crystal needs 1.1 s per metre (a spray about 1 s of
+  drilling). Shards chip off and it shrinks as it cracks; at the end it shatters and its sealed pieces fall out:
+  3 from a column, 1 from a spray. The grove's light dims as its crystals go (to 35%).
+- **Pieces are population finds** (glow crystals in `cavern.json`, one type per colour),
+  sealed (`FindState.Sealed`, new: inactive, out of physics, pickup and the detector, allowed in saves) inside their
+  crystal, released by `DiscoveryField.UnsealWithin`. A crystal is made again only while it still seals a piece, so
+  broken crystals stay broken across loads with no save record of their own.
+- **Props live under their own root:** under the terrain, the tool's contract lookup took them for ground.

@@ -167,6 +167,93 @@ namespace SomethingDownThere
             return new float3(c.x, math.max(c.y, cavern.Floor + 1.1f), c.z);
         }
 
+        // A crystal cavern chamber's grove (user, 2026-10-06, after the Crystal Caverns demo: one colour to a grove, its
+        // crystals crowded round one spot by a wall, never scattered): GroveColumns tall columns standing by the wall,
+        // GroveSprays sprays on the wall beside them pointing into the air, and GroveShards small crystals half-buried in
+        // the floor round them. Columns and sprays are scenery the player breaks (CavernCrystal), each sealing
+        // GroveColumnPieces or GroveSprayPieces finds that fall out when it breaks; shards are finds from the start. Glow:
+        // one colour to GroveGlowRun chambers in turn, so the cavern goes blue, then green, then red, as the demo's areas
+        // do; one colour a chamber read as random where neighbours met. Seeded from the cavern, so scenery and find seats
+        // agree.
+        public enum GroveKind : byte { Column, Spray, Shard }
+        public struct GroveCrystal
+        {
+            // Grid-local: where it stands, the way it points and how far (metres), its turn about that way.
+            public float3 Foot, Up;
+            public float Size, Turn;
+            public GroveKind Kind;
+            public int Glow, Variant;
+            public float3 Centre => Foot + Up * (Size * .5f);
+            public int Pieces => Kind == GroveKind.Column ? GroveColumnPieces : Kind == GroveKind.Spray ? GroveSprayPieces : 1;
+        }
+        public const int GroveColumns = 3, GroveSprays = 5, GroveShards = 5, GroveColumnPieces = 3, GroveSprayPieces = 1, GroveGlows = 3, GroveGlowRun = 2;
+        private const int GroveTries = 10;
+
+        public static List<GroveCrystal> Grove(Cavern cavern, int chamber)
+        {
+            var grove = new List<GroveCrystal>();
+            uint state = math.hash(new float4(cavern.Seed, chamber)) | 1u;
+            float Next() => TerrainMaterialSnapshot.NextUnit(ref state);
+            float Range(float a, float b) => a + (b - a) * Next();
+            int glow = chamber / GroveGlowRun % GroveGlows;
+            var heart = CavernHeart(cavern, chamber);
+            // The grove's wall: where a seeded level ray from the chamber's heart meets the stone.
+            float bearing = Next() * 2 * math.PI;
+            var level = new float3(math.cos(bearing), 0, math.sin(bearing));
+            var (wall, wallOut) = CavernFace(cavern, heart, level);
+            var inward = math.normalizesafe(new float3(-wallOut.x, 0, -wallOut.z), -level);
+            var side = math.cross(new float3(0, 1, 0), inward);
+            float3 FloorAt(float3 near)
+            {
+                var start = new float3(near.x, heart.y, near.z);
+                if (CavernHollow(cavern, start) > -.15f) return float3.zero;
+                return CavernFace(cavern, start, new float3(0, -1, 0)).surface;
+            }
+            float Room(float3 from, float3 way) => math.distance(from, CavernFace(cavern, from, way).surface);
+            bool Clear(float3 at, float gap)
+            {
+                foreach (var other in grove) if (math.distance(other.Foot, at) < gap) return false;
+                return true;
+            }
+            var centre = FloorAt(wall + inward * 1.2f);
+            if (math.all(centre == float3.zero)) return grove;
+            for (int n = 0; n < GroveColumns; n++)
+                for (int attempt = 0; attempt < GroveTries; attempt++)
+                {
+                    var foot = FloorAt(centre + side * ((n - 1) * 1f + Range(-.3f, .3f)) + inward * Range(-.4f, .3f));
+                    if (math.all(foot == float3.zero) || !Clear(foot, .8f)) continue;
+                    var up = math.normalize(new float3(0, 1, 0) + inward * Range(.05f, .35f) + side * Range(-.2f, .2f));
+                    float size = math.min(Range(1.8f, 2.7f), Room(foot + up * .2f, up) * .85f);
+                    if (size < 1f) continue;
+                    grove.Add(new GroveCrystal { Foot = foot, Up = up, Size = size, Turn = Range(0, 360), Kind = GroveKind.Column, Glow = glow, Variant = (int)(Next() * 1000) });
+                    break;
+                }
+            for (int n = 0; n < GroveSprays; n++)
+                for (int attempt = 0; attempt < GroveTries; attempt++)
+                {
+                    float turn = bearing + Range(-.6f, .6f), rise = math.radians(Range(5f, 50f));
+                    var way = new float3(math.cos(turn) * math.cos(rise), math.sin(rise), math.sin(turn) * math.cos(rise));
+                    var (foot, outward) = CavernFace(cavern, heart, way);
+                    if (!Clear(foot, .6f)) continue;
+                    var up = math.normalize(-outward + new float3(0, .35f, 0));
+                    float size = math.min(Range(.8f, 1.3f), Room(foot + up * .15f, up) * .8f);
+                    if (size < .5f) continue;
+                    grove.Add(new GroveCrystal { Foot = foot, Up = up, Size = size, Turn = Range(0, 360), Kind = GroveKind.Spray, Glow = glow, Variant = (int)(Next() * 1000) });
+                    break;
+                }
+            for (int n = 0; n < GroveShards; n++)
+                for (int attempt = 0; attempt < GroveTries; attempt++)
+                {
+                    float angle = Range(0, 2 * math.PI), reach = Range(.5f, 1.6f);
+                    var foot = FloorAt(centre + new float3(math.cos(angle), 0, math.sin(angle)) * reach);
+                    if (math.all(foot == float3.zero) || !Clear(foot, .45f)) continue;
+                    var up = math.normalize(new float3(Range(-.3f, .3f), 1, Range(-.3f, .3f)));
+                    grove.Add(new GroveCrystal { Foot = foot, Up = up, Size = .35f, Turn = Range(0, 360), Kind = GroveKind.Shard, Glow = glow, Variant = (int)(Next() * 1000) });
+                    break;
+                }
+            return grove;
+        }
+
         // A cavern's stone: everything inside its shell's outer face, its air's samples too, so its walls read as stone.
         public static void FillCavern(byte[] ids, Vector3Int size, float cellSize, Cavern cavern)
         {

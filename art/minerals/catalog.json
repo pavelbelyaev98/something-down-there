@@ -62,7 +62,7 @@
         {
           "content_id": "mineral_iron_b",
           "prefab": "Assets/Content/BuriedProps/MiningPack/Iron_Native_B.prefab",
-          "model_scale": 0.22
+          "model_scale": 0.286
         }
       ],
       "instances": 1280,
@@ -77,7 +77,7 @@
       "core_minimum_depth_m": 34,
       "core_maximum_depth_m": 58,
       "core_share": 0.86,
-      "model_scale": 0.15,
+      "model_scale": 0.195,
       "cavern": true
     },
     {
@@ -89,7 +89,7 @@
         {
           "content_id": "mineral_silver_b",
           "prefab": "Assets/Content/BuriedProps/MiningPack/Silver_Native_B.prefab",
-          "model_scale": 0.22
+          "model_scale": 0.286
         }
       ],
       "instances": 1400,
@@ -104,7 +104,7 @@
       "core_minimum_depth_m": 56,
       "core_maximum_depth_m": 76,
       "core_share": 0.86,
-      "model_scale": 0.15,
+      "model_scale": 0.195,
       "cavern": true
     },
     {
@@ -116,7 +116,7 @@
         {
           "content_id": "mineral_gold_b",
           "prefab": "Assets/Content/BuriedProps/MiningPack/Gold_Native_B.prefab",
-          "model_scale": 0.36
+          "model_scale": 0.414
         }
       ],
       "instances": 1510,
@@ -131,7 +131,7 @@
       "core_minimum_depth_m": 75,
       "core_maximum_depth_m": 98,
       "core_share": 0.86,
-      "model_scale": 0.26,
+      "model_scale": 0.299,
       "cavern": true
     },
     {

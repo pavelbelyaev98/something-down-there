@@ -52,23 +52,14 @@ namespace SomethingDownThere.Editor
             ["Amethyst"] = new Color(.42f, .2f, .6f), ["Citrine"] = new Color(.82f, .52f, .14f),
         };
         private const float GeodeGloss = .8f;
-        // The caverns' dressing (115, CavernDressing): the Crystal Caverns demo's boulders, sparse rubble and cubic rock
-        // formations in URP copies of its layered rock material, and its big crystals lit from within for the crystal
-        // cavern. Its cave walls, pillars and arches are cave-sized and stay out: the caverns' own stone is their walls.
+        // The crystal cavern's groves (115, CavernDressing): the Crystal Caverns demo's big crystals lit from within, white
+        // for CavernScenery to colour; the tall ones are a grove's columns, the smaller its sprays. The pieces that fall out
+        // of a broken one and the shards in the floor are finds: its quartz and prism clusters, one glowing material per
+        // grove colour (CavernPieces, cavern.json).
         public const string CavernFolder = CrystalFolder + "/Cavern";
-        internal static readonly (string folder, string name)[] CavernRocks =
-        {
-            ("Boulders", "Rock_0"), ("Boulders", "Rock_1"), ("Boulders", "Rock_2"), ("Boulders", "Rock_3"), ("Boulders", "Rock_4"),
-            ("Boulders", "Rock_5"), ("Boulders", "Rock_6"), ("Boulders", "Rock_7"), ("Boulders", "Rock_8"), ("Boulders", "Rock_9"),
-            ("Boulders", "Rock_10"), ("Boulders", "RubbleSparse_1"), ("Boulders", "RubbleSparse_2"), ("Boulders", "RubbleSparse_3"),
-            ("BigBlocks", "BigBlock_1"), ("BigBlocks", "BigBlock_2"), ("BigBlocks", "BigBlock_3"), ("BigBlocks", "BigBlock_4"), ("BigBlocks", "BigBlock_5"),
-        };
-        internal static readonly string[] CavernCrystals =
-        {
-            "CrystalBig1_0", "CrystalBig1_1", "CrystalBig1_2", "CrystalBig1_3", "CrystalBig1_4", "CrystalBig1_5", "CrystalBig1_6",
-            "Crystal_BigHex_8", "Crystal_BigHex_9",
-        };
-        private const float CavernRockGloss = .35f;
+        internal static readonly string[] CavernColumns = { "Crystal_BigHex_8", "Crystal_BigHex_9", "CrystalBig1_0", "CrystalBig1_1" };
+        internal static readonly string[] CavernSprays = { "CrystalBig1_2", "CrystalBig1_3", "CrystalBig1_4", "CrystalBig1_5", "CrystalBig1_6" };
+        internal static readonly string[] CavernPieces = { "Crystal_Quartz_3", "Crystal_Prism_3" };
         // Pyrite, fool's gold, has a metal's sheen, so at a glance it passes for gold. CrystalGloss keeps a clean
         // crystal's glint without a mirror.
         private const float PyriteMetal = .6f;
@@ -127,10 +118,16 @@ namespace SomethingDownThere.Editor
                 PackVariant($"{CrystalVendor}/Prefabs/Crystals/{prop}.prefab", $"{CrystalFolder}/Geode/{prop}.prefab",
                     vendor => FromGeodeCrystal(vendor, $"{CrystalFolder}/Geode/{mineral}.mat", GeodeTints[mineral]));
             if (!AssetDatabase.IsValidFolder(CavernFolder)) AssetDatabase.CreateFolder(CrystalFolder, "Cavern");
-            foreach (var (folder, name) in CavernRocks)
-                PackVariant($"{CrystalVendor}/Prefabs/{folder}/{name}.prefab", $"{CavernFolder}/{name}.prefab", vendor => FromLayered(vendor, $"{CavernFolder}/{vendor.name}.mat"));
-            foreach (var name in CavernCrystals)
-                PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CavernFolder}/{name}.prefab", vendor => FromGlowCrystal(vendor, $"{CavernFolder}/{vendor.name}.mat"));
+            foreach (var name in CavernColumns.Concat(CavernSprays))
+                PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CavernFolder}/{name}.prefab", vendor => FromGlowCrystal(vendor, $"{CavernFolder}/{vendor.name}.mat", Color.white, 1));
+            foreach (var name in CavernPieces)
+                for (int glow = 0; glow < CavernScenery.GlowNames.Length; glow++)
+                {
+                    string colour = CavernScenery.GlowNames[glow];
+                    var tint = CavernScenery.Glow[glow];
+                    PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CavernFolder}/{name}_{colour}.prefab",
+                        vendor => FromGlowCrystal(vendor, $"{CavernFolder}/{vendor.name}_{colour}.mat", tint * CavernScenery.GlowBase, CavernScenery.GlowIntensity / CavernScenery.GlowBase));
+                }
             AssetDatabase.SaveAssets();
         }
 
@@ -198,30 +195,16 @@ namespace SomethingDownThere.Editor
             return material;
         }
 
-        // A URP Lit copy of a Crystal Caverns rock (its layered shader): its colour, normal and metallic-gloss maps at
-        // CavernRockGloss; the moss and sand layer on top is left out underground.
-        private static Material FromLayered(Material vendor, string path)
-        {
-            var (maps, floats, colors) = Saved(vendor);
-            var material = LitMaterial(path, Sized(maps["_MainTex"]), Sized(maps["_BumpMap"]));
-            var tint = colors.TryGetValue("_Color", out var own) ? own : Color.white; tint.a = 1;
-            material.SetColor("_BaseColor", tint);
-            material.SetFloat("_BumpScale", floats.TryGetValue("_NormalPower", out var relief) ? relief : 1);
-            if (maps.TryGetValue("_MetallicGlossMap", out var mask) && mask != null) material.SetTexture("_MetallicGlossMap", Sized(mask));
-            else { material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP"); material.SetFloat("_Metallic", 0); }
-            material.SetFloat("_Smoothness", CavernRockGloss);
-            EditorUtility.SetDirty(material);
-            return material;
-        }
-
-        // A big Crystal Caverns crystal lit from within, for the crystal cavern: the clean crystal in white, its colour map
-        // its glow; CavernScenery colours each cluster.
-        private static Material FromGlowCrystal(Material vendor, string path)
+        // A Crystal Caverns crystal lit from within, for the crystal cavern: the clean crystal in tint, its colour map its
+        // glow at glow times the tint (white for the groves' crystals, which CavernScenery colours per grove).
+        private static Material FromGlowCrystal(Material vendor, string path, Color tint, float glow)
         {
             var material = FromCrystal(vendor, path, false);
-            material.SetColor("_BaseColor", Color.white);
+            tint.a = 1;
+            material.SetColor("_BaseColor", tint);
             material.SetTexture("_EmissionMap", material.GetTexture("_BaseMap"));
-            material.SetColor("_EmissionColor", Color.white);
+            var emission = tint * glow; emission.a = 1;
+            material.SetColor("_EmissionColor", emission);
             material.EnableKeyword("_EMISSION");
             material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             EditorUtility.SetDirty(material);

@@ -300,3 +300,10 @@ Pulpí geode in Spain is big enough to walk into.
   hollow's floor beyond dig reach, so no target was found and the lip test never ran. The lip test now runs before
   the reach check against the ray's hit however far (`TryGetDigTarget`), with a wider ball (0.4 of the bite). In the
   lab, aimed 8 cm inside the rim from 1.6 m above it, the drill cut the rim and left the floor 4 m away untouched.
+
+## Iteration 4 (user, 2026-10-06: "this time it digs what I don't want")
+
+- The wide ball for the drill's lip caught ground right beside the player, about 14 degrees off the crosshair, because
+  up close a 0.2 m ball spans a wide angle. Two rings of 12 rays now look 1.75 and 3.5 degrees round the aim, and the
+  nearest hit across an edge wins, so only ground visually at the crosshair counts. In the lab, aimed 14 degrees off a
+  trench's near edge, nothing beside the player was cut.

@@ -746,25 +746,34 @@ namespace SomethingDownThere
 
         public bool TryDig() => TryDig(true);
 
-        // The drill's bit is as wide as its bite (user, 2026-10-06: "as if it has a tiny tip, I have to be really
-        // precise"): aimed just past the edge of a near lip, it meets the lip before whatever the aim's ray reaches beyond
-        // it, however far (looking down through a hole into a geode, the ray passed the rim to a floor out of reach, so
-        // nothing was dug). A ball BitReach of the bite across is pushed along the aim, within reach and short of the ray's
-        // own hit; ground it meets is where the bit bores, if the ray's hit lies LipDrop or more off that ground's face:
-        // past an edge, not further along the same floor or wall at a slant.
-        private const float BitReach = .4f, LipDrop = .2f, LipSight = 50f;
+        // The drill's bit is wider than the crosshair (user, 2026-10-06: "as if it has a tiny tip, I have to be really
+        // precise"): aimed just past the edge of a near lip, it bores the lip rather than whatever the aim's ray reaches
+        // beyond it, however far (looking down through a hole into a geode, the ray passed the rim to a floor out of reach,
+        // so nothing was dug). Rays in two rings up to LipCone degrees round the aim look for ground within reach and
+        // nearer than the ray's own hit, LipDrop or more off that hit's face (past an edge, not further along the same floor
+        // or wall at a slant); the nearest is the lip. A cone, not a ball: only ground beside the crosshair counts. A ball
+        // as wide as the bite caught a wall right beside the player, far off the crosshair (user: "it dug next to me").
+        private const float LipCone = 3.5f, LipDrop = .2f, LipSight = 50f, LipNearer = .15f;
+        private const int LipRays = 12;
         private bool NearerLip(out RaycastHit lip)
         {
             var aim = AimRay;
-            float radius = EffectiveShovel.Radius * BitReach;
             lip = default;
             if (!Physics.Raycast(aim.origin, aim.direction, out var beyond, LipSight, worldMask, QueryTriggerInteraction.Ignore)) return false;
-            float reach = Mathf.Min(EffectiveDigReach, beyond.distance - radius);
-            if (reach > 0 && Physics.SphereCast(aim.origin, radius, aim.direction, out lip, reach, worldMask, QueryTriggerInteraction.Ignore)
-                && lip.distance > 0 && Mathf.Abs(Vector3.Dot(beyond.point - lip.point, lip.normal)) >= LipDrop
-                && Contract<TerrainVolume>(lip.collider) != null) return true;
-            lip = default;
-            return false;
+            float reach = Mathf.Min(EffectiveDigReach, beyond.distance - LipNearer);
+            if (reach <= 0) return false;
+            var side = Vector3.Cross(aim.direction, Mathf.Abs(aim.direction.y) < .99f ? Vector3.up : Vector3.right).normalized;
+            float nearest = float.MaxValue;
+            for (int ring = 1; ring <= 2; ring++)
+            for (int i = 0; i < LipRays; i++)
+            {
+                var direction = Quaternion.AngleAxis(i * 360f / LipRays, aim.direction) * Quaternion.AngleAxis(LipCone * ring * .5f, side) * aim.direction;
+                if (!Physics.Raycast(aim.origin, direction, out var hit, reach, worldMask, QueryTriggerInteraction.Ignore) || hit.distance >= nearest
+                    || Mathf.Abs(Vector3.Dot(beyond.point - hit.point, hit.normal)) < LipDrop || Contract<TerrainVolume>(hit.collider) == null) continue;
+                nearest = hit.distance;
+                lip = hit;
+            }
+            return nearest < float.MaxValue;
         }
 
         // The cut a shovel stroke started earlier, at its scoop, where the player looks by then (user, 2026-10-05: not

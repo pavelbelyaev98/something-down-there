@@ -12,41 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 408246b1056339f44815085364af890c, type: 3}
   m_Name: CavernDressing
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.CavernDressing
-  Boulders:
-  - {fileID: 4291048397414398252, guid: 646df6d2a56d8f046ba8565f979adaa9, type: 3}
-  - {fileID: 2586664185003362288, guid: 03cb952174f54744d92585dd325110c1, type: 3}
-  - {fileID: 7309345878793722887, guid: 8c34561a3b690c6478e62b0172dd9b0d, type: 3}
-  - {fileID: 1342078725682435627, guid: 6bf4ddae947732e4683ae4b18f865295, type: 3}
-  - {fileID: 5912153816491918246, guid: faa5dcef9511c944ea12b0503c8a2753, type: 3}
-  - {fileID: 5964732541583494938, guid: 987d83a955112a04f963c43bc9a33ef5, type: 3}
-  - {fileID: 215144726980780091, guid: 955f326ead3181140811bfd60cd700c2, type: 3}
-  - {fileID: 6350687937150366905, guid: 2b689a0d6200dd34ba330947ecf8996d, type: 3}
-  - {fileID: 6985166773582550837, guid: 98edb291c4b48f1429247f43e6a147e1, type: 3}
-  - {fileID: 7365737433438788025, guid: 6f642240a40173e4f9ffb89d7b0782b8, type: 3}
-  - {fileID: 3830890234323393699, guid: ae5fb2abe37eb45448f7d949150c107e, type: 3}
-  Rubble:
-  - {fileID: 1285260399866381155, guid: 3762574d205c0d148ac93eac5875517f, type: 3}
-  - {fileID: 761942040654306988, guid: f7ced38a9b5ea1c499dfd6091ee03b54, type: 3}
-  - {fileID: 6936307261629667142, guid: 27d9447a7f36f78429be56970cdd3a28, type: 3}
-  Formations:
-  - {fileID: 433079981695642187, guid: 892fe31775e56e14c8ef7c632bf1fc3e, type: 3}
-  - {fileID: 2693424620800125439, guid: 93e0c7c3f512fd449a39bceeda03608c, type: 3}
-  - {fileID: 2521943673877437704, guid: 734e7dd4864384d448c506053b94c937, type: 3}
-  - {fileID: 8455158148497638881, guid: 0148651b2fcd3b840aae84201dc4ae5c, type: 3}
-  - {fileID: 7188510340603576629, guid: 3944b7e1c584adc438ea6596feb3d94d, type: 3}
-  Crystals:
+  Columns:
+  - {fileID: 8367988382537768619, guid: 1844d7912027c5d479e57fcbd400a87e, type: 3}
+  - {fileID: 4402085306773040196, guid: ecb336a8aca09c847ae06a1c60360a59, type: 3}
   - {fileID: 3724088234084170767, guid: 1717475abf3fb50448e0a612c8692e71, type: 3}
   - {fileID: 1541590768245861721, guid: 1526a2bd4e58443499573ba07153462b, type: 3}
+  Sprays:
   - {fileID: 605779972248382332, guid: 9e7a8beca6bdf674182e301163fa842a, type: 3}
   - {fileID: 2777220321514830762, guid: d0b67816e0b77be43b9a75694bb8ef64, type: 3}
   - {fileID: 6748191838760279555, guid: 8d5959f4e7cb5e8478a0fe0953269587, type: 3}
   - {fileID: 2335716507555398932, guid: 7150747584dd1fa469e7baf7ff869fea, type: 3}
   - {fileID: 1475852585721493896, guid: 1a4051caafaf6ef41a0bfe8bb649f3b5, type: 3}
-  - {fileID: 8367988382537768619, guid: 1844d7912027c5d479e57fcbd400a87e, type: 3}
-  - {fileID: 4402085306773040196, guid: ecb336a8aca09c847ae06a1c60360a59, type: 3}
-  Glow:
-  - {r: 0, g: 0.6, b: 1, a: 1}
-  - {r: 0, g: 1, b: 0.44, a: 1}
-  - {r: 1, g: 0.45, b: 0, a: 1}
-  - {r: 1, g: 0.1, b: 0.1, a: 1}
+  Shards: {fileID: 2100000, guid: 7cf65e4b8982f9c4a932e7be6c96d2a0, type: 2}
   Bloom: {fileID: 11400000, guid: 1122e96c4f1ea8c46a1ac9d271acf0ec, type: 2}

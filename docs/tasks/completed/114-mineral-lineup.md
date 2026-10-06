@@ -227,3 +227,8 @@ at the bottom, and cut in the old chests.
 - The jagged rock's facets with a high gloss read as crumpled foil. Gold moved to the pack's rounded rocks (large
   at scale 0.26, small at 0.36, about the other nuggets' size) with smoothness 0.48: a water-worn lump. Open to the
   user's next look.
+
+## Iteration 4 (user, 2026-10-06: some minerals "can be larger ... closer to the rock size")
+
+- Plain rocks are about 0.5 x 0.3 x 0.4 m. Iron and silver nuggets grew 1.3 times (to about 0.34 x 0.22 x 0.53 m),
+  pyrite 1.8 times (about 0.36 x 0.43 x 0.38 m) and gold 1.15 times.

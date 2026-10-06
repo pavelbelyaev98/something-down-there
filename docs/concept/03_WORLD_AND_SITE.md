@@ -270,10 +270,13 @@ Geodes keep that moment without cave networks.
   runs out under the permanent ground. Sealed and dark until the player breaks in and lights it;
   never connected to another. Minerals of its zone sit half-buried in its walls: a lamp shows them,
   digging frees them.
-- **The crystal cavern**, the deepest: built from the Crystal Caverns demo's own pieces, rock
-  formations, boulders and big crystals that glow in the demo's colours and light the cavern
-  themselves (the user loved the demo's look). It is the one place underground that needs no lamp,
-  a reward for reaching the bottom. Its far end is kept for the ending's gate.
+- **The crystal cavern**, the deepest: groves of the Crystal Caverns demo's big crystals, one
+  colour to an area as in the demo (blue, then green, then red), crowded round a spot by a wall and
+  lighting it in their colour (the user loved the demo's look). It is the one place underground that
+  needs no lamp, a reward for reaching the bottom. Nothing in it is only to look at (user,
+  2026-10-06: "I don't want a static cave to look at but something to interact with"): the tool
+  breaks the big crystals, which shatter into small crystals to take, and more small ones lie
+  half-buried in its floor. Its far end is kept for the ending's gate.
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
   digging"; Keep Digging players loved its hand-built caves. Meltopia's network of identical tunnels

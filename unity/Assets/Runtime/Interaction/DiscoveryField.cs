@@ -16,8 +16,10 @@ namespace SomethingDownThere
         public readonly Quaternion Rotation;
         public readonly int PrefabIndex;
         public readonly int AppearanceIndex;
-        public DiscoveryPlacement(Vector3 position, Quaternion rotation, int prefabIndex, int appearanceIndex = 0)
-        { Position = position; Rotation = rotation; PrefabIndex = prefabIndex; AppearanceIndex = appearanceIndex; }
+        // Sealed in a cavern crystal until it breaks (FindState.Sealed).
+        public readonly bool Sealed;
+        public DiscoveryPlacement(Vector3 position, Quaternion rotation, int prefabIndex, int appearanceIndex = 0, bool sealedIn = false)
+        { Position = position; Rotation = rotation; PrefabIndex = prefabIndex; AppearanceIndex = appearanceIndex; Sealed = sealedIn; }
     }
 
     [DisallowMultipleComponent]
@@ -183,6 +185,7 @@ namespace SomethingDownThere
             }
             SpawnLabChest();
             SpawnLabGeode();
+            SpawnLabCavern();
             foreach (var find in finds) find.RefreshExposure();
             SpawnGallery();
             DeriveGeodes();
@@ -249,6 +252,48 @@ namespace SomethingDownThere
                 find.name = find.Item.DisplayName + " (lab geode " + k + ")";
                 finds.Add(find);
             }
+        }
+
+        // The Ground Lab's crystal cavern (115), as the site's are made: each grove's pieces sealed in its crystals, its
+        // shards in the floor.
+        private void SpawnLabCavern()
+        {
+            var cavern = GroundLab.Cavern;
+            var random = new System.Random(11);
+            int n = 0;
+            for (int chamber = 0; chamber < cavern.Centres.Length; chamber++)
+                foreach (var crystal in TerrainGround.Grove(cavern, chamber))
+                {
+                    var entry = Array.Find(catalog.Entries, e => e.CavernGlow == crystal.Glow);
+                    if (entry == null) continue;
+                    for (int j = 0; j < crystal.Pieces; j++)
+                    {
+                        var (position, rotation) = DiscoveryCatalog.GroveSeat(crystal, j, entry, random);
+                        var find = Instantiate(entry.Appearance(n % entry.AppearanceCount), terrain.transform.TransformPoint(position),
+                            terrain.transform.rotation * rotation, transform);
+                        find.Initialize(terrain, $"ground-lab-cavern-{n}", this);
+                        find.name = find.Item.DisplayName + " (lab cavern " + n++ + ")";
+                        if (crystal.Kind != TerrainGround.GroveKind.Shard) find.Seal();
+                        finds.Add(find);
+                    }
+                }
+        }
+
+        // Cavern crystals (115): whether any find is still sealed within reach of a point (world), and breaking them out.
+        public bool AnySealedWithin(Vector3 centre, float reach)
+        {
+            foreach (var find in finds)
+                if (find.State == FindState.Sealed && (find.transform.position - centre).sqrMagnitude <= reach * reach) return true;
+            return false;
+        }
+
+        public int UnsealWithin(Vector3 centre, float reach)
+        {
+            int count = 0;
+            foreach (var find in finds)
+                if (find.State == FindState.Sealed && (find.transform.position - centre).sqrMagnitude <= reach * reach) { find.Unseal(); count++; }
+            if (count > 0) NotifyMotion();
+            return count;
         }
 
         // The Ground Lab's find gallery (user, 2026-10-06): every look of every common find set out on the surface north of
@@ -340,6 +385,7 @@ namespace SomethingDownThere
                     terrain.transform.rotation * placement.Rotation, transform);
                 find.Initialize(terrain, $"find-{seed}-{i:D3}", this);
                 find.name = find.Item.DisplayName + " " + i;
+                if (placement.Sealed) find.Seal();
                 finds.Add(find);
             }
             if (catalog != null && catalog.Chest != null)

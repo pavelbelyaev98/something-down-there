@@ -22,6 +22,7 @@ namespace SomethingDownThere.Editor
             ("art/mining-pack/catalog.json", "Assets/Content/Discoveries/Treasure", false),
             ("art/pure-nature-crystal-caverns/ground.json", "Assets/Content/Minerals", false),
             ("art/pure-nature-crystal-caverns/geode.json", "Assets/Content/Discoveries/Geode", false),
+            ("art/pure-nature-crystal-caverns/cavern.json", "Assets/Content/Discoveries/Cavern", false),
         };
         [Serializable] private sealed class Source { public int schema_version; public PropFind[] finds; }
         [Serializable] private sealed class PropFind { public string prefab; public float mass_kg; public DiscoveryContentSetup.SourceEntry find; }
@@ -45,6 +46,7 @@ namespace SomethingDownThere.Editor
                     var looks = ImportLooks(e, folder, boxHull, prop.mass_kg);
                     entries.Add(new DiscoveryCatalog.Entry { ItemId = e.content_id, Prefab = looks[0], AppearanceVariants = looks.Skip(1).ToArray(),
                         Count = e.instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m, Geode = e.geode,
+                        CavernGlow = string.IsNullOrEmpty(e.cavern_glow) ? -1 : Array.IndexOf(CavernScenery.GlowNames, e.cavern_glow),
                         HostGrounds = DiscoveryContentSetup.HostGrounds(e.host_grounds, e.host_weights),
                         HostWeights = DiscoveryContentSetup.HostWeights(e.host_grounds, e.host_weights) });
                 }

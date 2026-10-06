@@ -5,138 +5,150 @@ using UnityEngine.Rendering;
 
 namespace SomethingDownThere
 {
-    // The caverns' scenery (115): solid props from CavernDressing set on each cavern's floor and walls whenever the
-    // ground's layout is made (new game, load, Ground Lab), seeded from the cavern, so it is the same every time and saves
-    // nothing. It is lit like the dig (ExcavationDaylight): dark until lamps reach it, except the crystal cavern's
-    // glowing crystals and the light each throws in its colour (the demo's look, user 2026-10-06). A bloom fades in while
-    // the view is inside the crystal cavern. Props stand where they were set; digging under one leaves it standing.
+    // The crystal cavern's groves (115, TerrainGround.Grove), made whenever the ground's layout or the population changes
+    // (new game, load, Ground Lab) and seeded from the cavern, so they save nothing of their own. Each chamber's grove is
+    // one colour, as in the Crystal Caverns demo, lit by one light in it: its columns and sprays are the demo's big
+    // crystals lit from within, which the player breaks with the tool (CavernCrystal). A crystal still holds its sealed
+    // pieces (DiscoveryField) until it breaks; one whose pieces are out is not made again. Everything is lit like the dig
+    // (ExcavationDaylight): only the glow and the grove's light show it without lamps. A bloom fades in while the view is
+    // inside the crystal cavern. Props live outside the terrain's hierarchy, so the tool takes them for themselves.
     public sealed class CavernScenery : MonoBehaviour
     {
-        // Boulders and rubble in every cavern; formations and glowing crystals in the crystal cavern. Sink: the share of a
-        // prop's height set into the floor or wall; Tries: positions tried per prop before it is left out.
-        private const int Boulders = 4, Rubble = 3, CrystalBoulders = 5, CrystalRubble = 4, Formations = 6, GlowCrystals = 9, Tries = 12;
-        private const float FloorSink = .18f, WallSink = .12f, BloomFade = 1.5f;
-        // Sizes in metres (a boulder's, rubble patch's or crystal's longest side, a formation's height): the demo's
-        // pieces are cave-sized, from 2 m spikes to 12 m columns. A glowing crystal shows its own texture in its colour
-        // (GlowBase of it lit, GlowIntensity of it glowing), with a light of LightRange and LightIntensity.
-        private static readonly Vector2 BoulderSize = new Vector2(.5f, 1.1f), RubbleSize = new Vector2(1.4f, 2.4f),
-            FormationSize = new Vector2(.9f, 2.4f), CrystalSize = new Vector2(.7f, 2f);
-        private const float GlowBase = .3f, GlowIntensity = .75f, LightRange = 5.5f, LightIntensity = 2.2f;
+        // The demo's glow colours: cyan, green, red (catalog names in GlowNames).
+        public static readonly string[] GlowNames = { "blue", "green", "red" };
+        public static readonly Color[] Glow = { new Color(0, .55f, 1), new Color(0, 1, .45f), new Color(1, .12f, .12f) };
+        // A glowing crystal shows its own texture in its colour (GlowBase of it lit, GlowIntensity of it glowing).
+        public const float GlowBase = .3f, GlowIntensity = .75f;
+        // A grove's light, LightRise above its middle, dimming to LightLeft of it as its crystals break; a crystal's work
+        // to break, per metre of it, in seconds of the tool working, and how far it shrinks as it cracks; how far its
+        // sealed pieces may lie from its middle, in its lengths; how deep it stands in the stone, in its lengths.
+        private const float LightRange = 7.5f, LightIntensity = 3f, LightLeft = .35f, LightRise = .9f, WorkPerMetre = 1.1f,
+            CrackShrink = .12f, PieceReach = .6f, BloomFade = 1.5f, Sink = .15f;
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor"), EmissionColorId = Shader.PropertyToID("_EmissionColor");
 
         [SerializeField] private TerrainVolume terrain;
+        [SerializeField] private DiscoveryField field;
         [SerializeField] private CavernDressing dressing;
+        private Transform root;
         private TerrainGround.GroundLayout dressed;
-        private readonly List<GameObject> props = new List<GameObject>();
+        private long dressedRevision = -1;
+        private readonly List<Grove> groves = new List<Grove>();
         private readonly Dictionary<GameObject, Bounds> sizes = new Dictionary<GameObject, Bounds>();
         private Volume bloom;
         private FpsPlayer viewer;
-        public int PropCount => props.Count;
-        public int LightCount { get; private set; }
+        public int CrystalCount { get; private set; }
+        public int LightCount => groves.Count;
         public float BloomWeight => bloom != null ? bloom.weight : 0;
+
+        private sealed class Grove
+        {
+            public Light Light;
+            public int Crystals, Left;
+        }
+
+        private void OnDestroy() { if (root != null) Destroy(root.gameObject); }
 
         private void LateUpdate()
         {
-            if (terrain == null || dressing == null) return;
+            if (terrain == null || dressing == null || field == null) return;
             var layout = terrain.GroundLayout;
-            if (!ReferenceEquals(layout, dressed)) Dress(layout);
+            if (!ReferenceEquals(layout, dressed) || field.PopulationRevision != dressedRevision) Dress(layout);
             UpdateBloom();
         }
 
         private void Dress(TerrainGround.GroundLayout layout)
         {
-            foreach (var prop in props) if (prop != null) Destroy(prop);
-            props.Clear();
-            LightCount = 0;
+            if (root == null) root = new GameObject("Cavern scenery").transform;
+            foreach (Transform child in root) Destroy(child.gameObject);
+            groves.Clear();
+            CrystalCount = 0;
             dressed = layout;
+            dressedRevision = field.PopulationRevision;
             var daylight = terrain.GetComponent<ExcavationDaylight>();
-            foreach (var cavern in layout.Caverns) DressCavern(cavern, daylight);
+            foreach (var cavern in layout.Caverns)
+                if (cavern.Crystal)
+                    for (int chamber = 0; chamber < cavern.Centres.Length; chamber++) DressGrove(TerrainGround.Grove(cavern, chamber), daylight);
         }
 
-        private void DressCavern(TerrainGround.Cavern cavern, ExcavationDaylight daylight)
+        private void DressGrove(List<TerrainGround.GroveCrystal> crystals, ExcavationDaylight daylight)
         {
-            var random = new System.Random((int)math.hash(cavern.Seed));
-            var taken = new List<(Vector3 centre, float radius)>();
-            Scatter(cavern, dressing.Boulders, cavern.Crystal ? CrystalBoulders : Boulders, BoulderSize, false, false, random, taken, daylight, null);
-            Scatter(cavern, dressing.Rubble, cavern.Crystal ? CrystalRubble : Rubble, RubbleSize, false, false, random, taken, daylight, null);
-            if (!cavern.Crystal) return;
-            Scatter(cavern, dressing.Formations, Formations, FormationSize, true, false, random, taken, daylight, null);
-            Scatter(cavern, dressing.Crystals, GlowCrystals, CrystalSize, false, true, random, taken, daylight, dressing.Glow);
-        }
-
-        // count props of the kinds, each sized within sizes (its height if byHeight, else its longest side), on the floor
-        // (standing up) or on the walls and roof (pointing into the air); glow: their colours, which they shine in, with a
-        // light each.
-        private void Scatter(TerrainGround.Cavern cavern, GameObject[] kinds, int count, Vector2 sizes, bool byHeight, bool onWalls,
-            System.Random random, List<(Vector3 centre, float radius)> taken, ExcavationDaylight daylight, Color[] glow)
-        {
-            if (kinds == null || kinds.Length == 0) return;
-            for (int n = 0; n < count; n++)
+            if (crystals.Count == 0) return;
+            var grove = new Grove();
+            var middle = float3.zero;
+            foreach (var crystal in crystals)
             {
-                var kind = kinds[random.Next(kinds.Length)];
-                if (kind == null) continue;
-                var size = Size(kind);
-                float measure = byHeight ? size.size.y : Mathf.Max(size.size.x, Mathf.Max(size.size.y, size.size.z));
-                float s = Mathf.Lerp(sizes.x, sizes.y, (float)random.NextDouble()) / Mathf.Max(measure, .01f);
-                float height = size.size.y * s, reach = Mathf.Max(size.extents.x, size.extents.z) * s;
-                for (int attempt = 0; attempt < Tries; attempt++)
-                {
-                    int chamber = random.Next(cavern.Centres.Length);
-                    var heart = TerrainGround.CavernHeart(cavern, chamber);
-                    var radii = cavern.Radii[chamber];
-                    Vector3 surface, up;
-                    if (onWalls)
-                    {
-                        float around = (float)random.NextDouble() * 360f, elevation = Mathf.Lerp(-20f, 70f, (float)random.NextDouble());
-                        var (face, outward) = TerrainGround.CavernFace(cavern, heart, Quaternion.Euler(-elevation, around, 0) * Vector3.forward);
-                        surface = face; up = -(Vector3)outward;
-                    }
-                    else
-                    {
-                        float angle = (float)random.NextDouble() * Mathf.PI * 2, distance = Mathf.Sqrt((float)random.NextDouble()) * .7f;
-                        var start = heart + new float3(Mathf.Cos(angle) * radii.x, 0, Mathf.Sin(angle) * radii.z) * distance;
-                        if (TerrainGround.CavernHollow(cavern, start) >= -.2f) continue;
-                        var (face, _) = TerrainGround.CavernFace(cavern, start, new float3(0, -1, 0));
-                        surface = face; up = Vector3.up;
-                    }
-                    var centre = surface + up * (height * .5f);
-                    bool clear = true;
-                    foreach (var (other, radius) in taken) clear &= Vector3.Distance(other, centre) > radius + reach;
-                    if (!clear) continue;
-                    taken.Add((centre, reach));
-                    var turn = Quaternion.FromToRotation(Vector3.up, up) * Quaternion.Euler(0, (float)random.NextDouble() * 360f, 0);
-                    var foot = surface - up * (height * (onWalls ? WallSink : FloorSink)) - turn * (size.center - Vector3.up * size.extents.y) * s;
-                    var prop = Instantiate(kind, terrain.transform.TransformPoint(foot), terrain.transform.rotation * turn, transform);
-                    prop.transform.localScale = kind.transform.localScale * s;
-                    props.Add(prop);
-                    Color colour = glow != null && glow.Length > 0 ? glow[random.Next(glow.Length)] : default;
-                    foreach (var renderer in prop.GetComponentsInChildren<Renderer>(true))
-                    {
-                        if (daylight != null) daylight.Register(renderer);
-                        if (glow == null) continue;
-                        var block = new MaterialPropertyBlock();
-                        renderer.GetPropertyBlock(block);
-                        block.SetColor(BaseColorId, colour * GlowBase);
-                        block.SetColor(EmissionColorId, colour * GlowIntensity);
-                        renderer.SetPropertyBlock(block);
-                    }
-                    if (glow != null) AddLight(prop.transform, terrain.transform.TransformPoint(surface + up * (height * .55f + .35f)), colour);
-                    break;
-                }
+                middle += crystal.Centre;
+                if (crystal.Kind == TerrainGround.GroveKind.Shard) continue;
+                grove.Crystals++;
+                var centre = terrain.transform.TransformPoint((Vector3)crystal.Centre);
+                if (!field.AnySealedWithin(centre, crystal.Size * PieceReach)) continue;
+                var kinds = crystal.Kind == TerrainGround.GroveKind.Column ? dressing.Columns : dressing.Sprays;
+                if (kinds == null || kinds.Length == 0) continue;
+                Make(kinds[crystal.Variant % kinds.Length], crystal, grove, centre, daylight);
+                grove.Left++;
+            }
+            middle /= crystals.Count;
+            var light = new GameObject("Grove light").AddComponent<Light>();
+            light.transform.SetParent(root, false);
+            light.transform.position = terrain.transform.TransformPoint((Vector3)middle + Vector3.up * LightRise);
+            light.type = LightType.Point;
+            light.color = Glow[crystals[0].Glow];
+            light.range = LightRange;
+            light.shadows = LightShadows.None;
+            grove.Light = light;
+            groves.Add(grove);
+            Dim(grove);
+        }
+
+        private void Make(GameObject kind, TerrainGround.GroveCrystal crystal, Grove grove, Vector3 centre, ExcavationDaylight daylight)
+        {
+            var size = Size(kind);
+            float s = crystal.Size / Mathf.Max(size.size.y, .01f);
+            Vector3 up = crystal.Up, foot = crystal.Foot;
+            var turn = Quaternion.FromToRotation(Vector3.up, up) * Quaternion.Euler(0, crystal.Turn, 0);
+            var pivot = foot - up * (crystal.Size * Sink) - turn * (size.center - Vector3.up * size.extents.y) * s;
+            var prop = Instantiate(kind, terrain.transform.TransformPoint(pivot), terrain.transform.rotation * turn, root);
+            prop.transform.localScale = kind.transform.localScale * s;
+            var colour = Glow[crystal.Glow];
+            foreach (var renderer in prop.GetComponentsInChildren<Renderer>(true))
+            {
+                if (daylight != null) daylight.Register(renderer);
+                var block = new MaterialPropertyBlock();
+                renderer.GetPropertyBlock(block);
+                block.SetColor(BaseColorId, colour * GlowBase);
+                block.SetColor(EmissionColorId, colour * GlowIntensity);
+                renderer.SetPropertyBlock(block);
+            }
+            prop.AddComponent<CavernCrystal>().Initialize(this, grove, centre, crystal.Size * PieceReach, crystal.Size * WorkPerMetre, colour, CrackShrink);
+            CrystalCount++;
+        }
+
+        // A crystal broke: its pieces fall out, its grove's light dims, shards fly.
+        internal void Broke(CavernCrystal crystal, object grove, Vector3 centre, float reach, Color colour)
+        {
+            field.UnsealWithin(centre, reach);
+            CavernShatter.Burst(dressing.Shards, centre, reach * .8f, colour, 60, root);
+            if (grove is Grove g) { g.Left = Mathf.Max(0, g.Left - 1); Dim(g); }
+            CrystalCount = Mathf.Max(0, CrystalCount - 1);
+            Destroy(crystal.gameObject);
+        }
+
+        internal void Chipped(Vector3 point, Vector3 normal, Color colour) => CavernShatter.Burst(dressing.Shards, point + normal * .03f, .08f, colour, 8, root);
+
+        // The work of one tool stroke, in seconds of the tool working: the viewer's stroke interval.
+        internal float StrokeWork
+        {
+            get
+            {
+                if (viewer == null) viewer = FindAnyObjectByType<FpsPlayer>();
+                return viewer != null ? viewer.EffectiveDigInterval : .25f;
             }
         }
 
-        private void AddLight(Transform parent, Vector3 position, Color colour)
+        private static void Dim(Grove grove)
         {
-            var light = new GameObject("Crystal light").AddComponent<Light>();
-            light.transform.SetParent(parent, true);
-            light.transform.position = position;
-            light.type = LightType.Point;
-            light.color = colour;
-            light.range = LightRange;
-            light.intensity = LightIntensity;
-            light.shadows = LightShadows.None;
-            LightCount++;
+            float share = grove.Crystals > 0 ? (float)grove.Left / grove.Crystals : 1;
+            grove.Light.intensity = LightIntensity * Mathf.Lerp(LightLeft, 1, share);
         }
 
         // A prefab's bounds in its own frame, unscaled by its root.
@@ -144,12 +156,12 @@ namespace SomethingDownThere
         {
             if (sizes.TryGetValue(kind, out var bounds)) return bounds;
             bool any = false;
-            var root = kind.transform.worldToLocalMatrix;
+            var own = kind.transform.worldToLocalMatrix;
             foreach (var filter in kind.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (filter.sharedMesh == null) continue;
                 var b = filter.sharedMesh.bounds;
-                var matrix = root * filter.transform.localToWorldMatrix;
+                var matrix = own * filter.transform.localToWorldMatrix;
                 for (int i = 0; i < 8; i++)
                 {
                     var corner = matrix.MultiplyPoint3x4(b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));

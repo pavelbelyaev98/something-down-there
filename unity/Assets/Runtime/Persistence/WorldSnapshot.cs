@@ -80,7 +80,7 @@ namespace SomethingDownThere
                     Require(find.State==FindState.World || find.DepthRecorded,"Recovered unique has no discovery record.");
                     if(find.State==FindState.Extracting) extracting++;
                 }
-                else Require((find.State==FindState.World || find.State==FindState.Collected) && !find.DepthRecorded,
+                else Require((find.State==FindState.World || find.State==FindState.Collected || find.State==FindState.Sealed) && !find.DepthRecorded,
                     "Ordinary find has unique state.");
             }
             Require(extracting==(Extraction==null?0:1),"Extraction ownership is inconsistent.");

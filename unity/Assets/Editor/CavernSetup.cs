@@ -9,13 +9,14 @@ using UnityEngine.SceneManagement;
 
 namespace SomethingDownThere.Editor
 {
-    // The caverns' dressing (115): CavernDressing from the props Configure Buried Props copies out of the Crystal Caverns
-    // demo (BuriedPropsSetup.CavernRocks, CavernCrystals), the crystal cavern's bloom, and CavernScenery on MainGame's
-    // terrain. Run Configure Buried Props first, with the saved MainGame scene open.
+    // The crystal cavern's groves (115): CavernDressing from the crystals Configure Buried Props copies out of the Crystal
+    // Caverns demo (BuriedPropsSetup.CavernColumns, CavernSprays), the shards' material, the bloom, and CavernScenery on
+    // MainGame's terrain. Run Configure Buried Props first, with the saved MainGame scene open.
     public static class CavernSetup
     {
         private const string Folder = "Assets/Content/Caverns";
-        private const string DressingPath = Folder + "/CavernDressing.asset", BloomPath = Folder + "/CrystalCavernBloom.asset";
+        private const string DressingPath = Folder + "/CavernDressing.asset", BloomPath = Folder + "/CrystalCavernBloom.asset",
+            ShardsPath = Folder + "/CrystalShards.mat";
         // The crystal cavern's bloom: the glowing crystals spill light into the dark; the site's own bloom is faint.
         private const float BloomIntensity = 1.1f, BloomThreshold = .9f, BloomScatter = .7f;
 
@@ -32,11 +33,14 @@ namespace SomethingDownThere.Editor
             GameObject[] Props(params string[] names) => names.Select(name =>
                 AssetDatabase.LoadAssetAtPath<GameObject>($"{BuriedPropsSetup.CavernFolder}/{name}.prefab")
                 ?? throw new InvalidOperationException($"Missing {name} (run Configure Buried Props).")).ToArray();
-            var rocks = BuriedPropsSetup.CavernRocks.Select(r => r.name).ToArray();
-            dressing.Boulders = Props(rocks.Where(n => n.StartsWith("Rock_")).ToArray());
-            dressing.Rubble = Props(rocks.Where(n => n.StartsWith("Rubble")).ToArray());
-            dressing.Formations = Props(rocks.Where(n => n.StartsWith("BigBlock")).ToArray());
-            dressing.Crystals = Props(BuriedPropsSetup.CavernCrystals);
+            dressing.Columns = Props(BuriedPropsSetup.CavernColumns);
+            dressing.Sprays = Props(BuriedPropsSetup.CavernSprays);
+            // Shards: unlit flecks in the colour each burst gives them.
+            var shards = AssetDatabase.LoadAssetAtPath<Material>(ShardsPath);
+            if (shards == null) { shards = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit")); AssetDatabase.CreateAsset(shards, ShardsPath); }
+            shards.SetColor("_BaseColor", Color.white);
+            EditorUtility.SetDirty(shards);
+            dressing.Shards = shards;
 
             var bloomProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(BloomPath);
             if (bloomProfile == null) { bloomProfile = ScriptableObject.CreateInstance<VolumeProfile>(); AssetDatabase.CreateAsset(bloomProfile, BloomPath); }
@@ -50,16 +54,19 @@ namespace SomethingDownThere.Editor
             EditorUtility.SetDirty(dressing);
             AssetDatabase.SaveAssets();
 
+            var field = UnityEngine.Object.FindObjectsByType<DiscoveryField>(FindObjectsInactive.Include).FirstOrDefault(f => !f.name.Contains("Development"))
+                ?? throw new InvalidOperationException("MainGame has no discovery field.");
             var scenery = terrain.GetComponent<CavernScenery>() ?? Undo.AddComponent<CavernScenery>(terrain.gameObject);
             using (var data = new SerializedObject(scenery))
             {
                 data.FindProperty("terrain").objectReferenceValue = terrain;
+                data.FindProperty("field").objectReferenceValue = field;
                 data.FindProperty("dressing").objectReferenceValue = dressing;
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            Debug.Log($"Caverns configured: {dressing.Boulders.Length} boulders, {dressing.Rubble.Length} rubble, {dressing.Formations.Length} formations, {dressing.Crystals.Length} crystals.");
+            Debug.Log($"Caverns configured: {dressing.Columns.Length} column and {dressing.Sprays.Length} spray crystals, field {field.name}.");
         }
     }
 }
