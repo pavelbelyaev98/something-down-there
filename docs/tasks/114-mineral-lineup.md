@@ -105,7 +105,8 @@ at the bottom, and cut in the old chests.
 ## Picks for the user
 
 1. Pyrite as zone 2's cheap "fool's gold": in or out? (Agent: in.)
-2. Which three gemstone cuts read best as emerald, ruby and diamond (previews in chat).
+2. The three gemstone cuts. The agent proposes `Crystal_Gemstone_2` (round brilliant) for diamond, `_4` (oval
+   brilliant) for ruby and `_5` (step cut, the classic emerald cut) for emerald.
 3. The crystal cavern (`115`) as its own task after `110`, sharing the geode's break-in (agent: yes).
 
 ## Acceptance
@@ -143,9 +144,10 @@ at the bottom, and cut in the old chests.
 ## Long term: the gate and the mech (Phase 7, not this task)
 
 - **The gate:**
-  - Crystal Caverns has no gate model, only two cave arches; the carved doorway in the user's screenshot is not in
-    our import.
-  - Highlands' Mosaic Ruin set (carved stones) may build one; otherwise it is a door to buy.
+  - The carved doorway in the user's screenshot is built from Crystal Caverns' `BigBlock` pieces, which we own.
+    They include tall carved pillars with engraved symbols (`BigBlock_3`, `_4`), plain blocks and slabs, and an
+    L-shaped lintel (`_6`).
+  - Its cave arches are natural rock, and Highlands' Mosaic Ruin set is floor mosaics, so neither is the gate.
   - It would stand at the cavern's far end, matching the open payoff "parts collected to open something"
     (`11` §1).
 - **The mech:**
