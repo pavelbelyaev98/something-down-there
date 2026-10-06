@@ -7,9 +7,9 @@ using UnityEngine;
 namespace SomethingDownThere.Editor
 {
     // Finds made from bought prop prefabs (BuriedPropsSetup): rubbish (106: art/tv-set, art/big-old-tv), which lies loose
-    // in the soil in its depth band like any find, and a chest's treasure (113: the ingots in art/mining-pack and the gem
-    // crystals in art/pure-nature-crystal-caverns that the old chests hold, taken by hand), and pyrite, the lake sediment's
-    // fool's gold (114: ground.json beside them), and the crystals lining the geodes (110: geode.json). Each source names its
+    // in the soil in its depth band like any find, a chest's treasure (113: the ingots in art/mining-pack, taken by hand;
+    // chests hold ingots only), pyrite, the lake sediment's fool's gold (114: art/pure-nature-crystal-caverns/ground.json),
+    // and the crystals lining the geodes (110: geode.json beside it). Each source names its
     // props and their find policy; a find can take further
     // appearances, each its own prop. The props bake to centred meshes (PropBake); the find prefab, surface samples and
     // detail levels come from the shared discovery import.
@@ -20,7 +20,6 @@ namespace SomethingDownThere.Editor
             ("art/tv-set/catalog.json", "Assets/Content/Discoveries/Junk", true),
             ("art/big-old-tv/catalog.json", "Assets/Content/Discoveries/Junk", true),
             ("art/mining-pack/catalog.json", "Assets/Content/Discoveries/Treasure", false),
-            ("art/pure-nature-crystal-caverns/catalog.json", "Assets/Content/Discoveries/Treasure", false),
             ("art/pure-nature-crystal-caverns/ground.json", "Assets/Content/Minerals", false),
             ("art/pure-nature-crystal-caverns/geode.json", "Assets/Content/Discoveries/Geode", false),
         };

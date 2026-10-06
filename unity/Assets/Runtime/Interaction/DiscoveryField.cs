@@ -233,19 +233,17 @@ namespace SomethingDownThere
             }
         }
 
-        // The Ground Lab's geode (110, its own bay): one crystal of each geode kind, the dearest first, then the dearest
-        // again, lining its hollow as in the site's.
+        // The Ground Lab's geode (110, its own bay), lined as the site's are, with the geode kind the most of them hold.
         private void SpawnLabGeode()
         {
-            var kinds = new List<DiscoveryCatalog.Entry>(Array.FindAll(catalog.Entries, e => e.Geode));
-            if (kinds.Count == 0) return;
-            kinds.Sort((a, b) => b.Prefab.SaleValue.CompareTo(a.Prefab.SaleValue));
+            DiscoveryCatalog.Entry entry = null;
+            foreach (var kind in catalog.Entries) if (kind.Geode && (entry == null || kind.Count > entry.Count)) entry = kind;
+            if (entry == null) return;
             var random = new System.Random(7);
             for (int k = 0; k < DiscoveryCatalog.GeodeCrystals; k++)
             {
-                var entry = kinds[k % kinds.Count];
                 var (position, rotation) = DiscoveryCatalog.GeodeSeat(GroundLab.Geode, k, entry, random);
-                var find = Instantiate(entry.Appearance(k / kinds.Count % entry.AppearanceCount), terrain.transform.TransformPoint(position),
+                var find = Instantiate(entry.Appearance(k % entry.AppearanceCount), terrain.transform.TransformPoint(position),
                     terrain.transform.rotation * rotation, transform);
                 find.Initialize(terrain, $"ground-lab-geode-{k}", this);
                 find.name = find.Item.DisplayName + " (lab geode " + k + ")";
@@ -378,12 +376,8 @@ namespace SomethingDownThere
         // the way into the hollow there.
         private (Vector3 surface, Vector3 inward) HollowFace(TerrainGround.Geode geode, Vector3 direction)
         {
-            Vector3 radii = geode.Radii;
-            float scale = 1 / new Vector3(direction.x / radii.x, direction.y / radii.y, direction.z / radii.z).magnitude;
-            var local = direction * scale;
-            var outward = new Vector3(local.x / (radii.x * radii.x), local.y / (radii.y * radii.y), local.z / (radii.z * radii.z)).normalized;
-            Quaternion frame = geode.Rotation;
-            return (terrain.transform.TransformPoint((Vector3)geode.Centre + frame * local), -terrain.transform.TransformDirection(frame * outward));
+            var (surface, outward) = TerrainGround.HollowFace(geode, direction);
+            return (terrain.transform.TransformPoint((Vector3)surface), -terrain.transform.TransformDirection((Vector3)outward));
         }
 
         private void CheckGeodeBreaks(Bounds changed)

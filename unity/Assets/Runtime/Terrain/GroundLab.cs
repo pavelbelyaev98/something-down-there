@@ -28,26 +28,30 @@ namespace SomethingDownThere
         public static readonly Bay[] Bays =
         {
             new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil)),
-            new Bay("Backfill", "rubble fill: about three quarters of soil's speed", Only(TerrainMaterialId.Backfill)),
-            new Bay("Backfill pit", "1 m rubble pit down to a buried old chest, 4.6 m", (u, d, v) =>
+            new Bay("Backfill", "rubble fill, three quarters of soil's speed, an old chest 3 m down", Only(TerrainMaterialId.Backfill)),
+            new Bay("Backfill pit", "1 m rubble pit in soil, 5 m deep", (u, d, v) =>
                 Mathf.Abs(u) < .5f && Mathf.Abs(v) < .5f && d < 5f ? TerrainMaterialId.Backfill : TerrainMaterialId.Soil),
             new Bay("Geode shell", "geode stone to 3 m: about a quarter of soil's speed", (u, d, v) =>
                 d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil),
-            new Bay("Geode", "a whole geode 2.6 m down: dig in and break through", Only(TerrainMaterialId.Soil)),
+            new Bay("Geode", "a big geode 2 m down: dig in and break through", Only(TerrainMaterialId.Soil)),
         };
 
-        // The geode bay's geode (110), a small one with its crystals (DiscoveryField), as the site's are made.
+        // The geode bay's geode (110) with its crystals (DiscoveryField), as large as the site's: a lobe out east under
+        // the unused slot and one dipping south, clear of the shell bay to the west.
         public static readonly TerrainGround.Geode Geode = TerrainGround.Make(
-            (Unity.Mathematics.float3)Local(new Vector3(BayCentre(4).x, -2.6f, BayCentre(4).y)),
-            new Unity.Mathematics.float3(.9f, .75f, .9f), .6f, .4f, 0);
+            (Unity.Mathematics.float3)Local(new Vector3(BayCentre(4).x + .75f, -3.6f, BayCentre(4).y)),
+            new Unity.Mathematics.float3(1.4f, 1.05f, 1.25f), .6f, 0, 0,
+            new Unity.Mathematics.float3(1.1f, -.2f, .3f), new Unity.Mathematics.float3(.9f, .72f, .8f),
+            new Unity.Mathematics.float3(-.3f, -.45f, -1f), new Unity.Mathematics.float3(.85f, .65f, .8f));
 
-        // The backfill pit bay's old chest (user, 2026-10-06: "actual chest inside, so I test the whole flow"), buried in its
-        // pocket of air and fill as the site's are, its lock to the south. pocket: the chest's (size zero: no chest).
-        private static readonly Vector3 LabStashAt = new Vector3(BayCentre(2).x, -4.6f, BayCentre(2).y);
+        // The backfill bay's old chest (user, 2026-10-06: "actual chest inside, so I test the whole flow"; the pit was too
+        // tight to dig in), buried in its pocket of air and fill as the site's are, its lock to the south. pocket: the
+        // chest's (size zero: no chest).
+        private static readonly Vector3 LabStashAt = new Vector3(BayCentre(1).x, -3f, BayCentre(1).y);
         private static TerrainGround.Stash[] Stashes(Bounds pocket) => pocket.size == Vector3.zero ? Array.Empty<TerrainGround.Stash>()
             : new[] { TerrainGround.MakeStash((Unity.Mathematics.float3)Local(LabStashAt), Unity.Mathematics.quaternion.RotateY(Mathf.PI / 2), pocket) };
 
-        // The lab's seeded ground: the backfill pit bay's chest and the geode bay's geode.
+        // The lab's seeded ground: the backfill bay's chest and the geode bay's geode.
         public static TerrainGround.GroundLayout Layout(Bounds stashPocket = default) => new TerrainGround.GroundLayout(
             Array.Empty<TerrainGround.Pit>(), Stashes(stashPocket), new[] { Geode });
 

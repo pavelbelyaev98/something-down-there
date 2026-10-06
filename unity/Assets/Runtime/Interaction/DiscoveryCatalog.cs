@@ -342,10 +342,11 @@ namespace SomethingDownThere
             }
         }
 
-        // What each geode holds (110): GeodeCrystals crystals of the geode types whose band covers its depth, each the next
-        // unseated instance of a type drawn by how many of it are left, so the instances fill the seats exactly and counts
-        // never change. They line its hollow (GeodeSeat).
-        public const int GeodeCrystals = 6;
+        // What each geode holds (110): GeodeCrystals crystals of one kind (user, 2026-10-06: "one crystal type inside"),
+        // the geode type whose band covers its depth with the most instances left (a tie drawn), each the next unseated
+        // instance, so the instances fill the seats exactly and counts never change. Should that kind run out, the next
+        // fills the rest. They line its hollow (GeodeSeat).
+        public const int GeodeCrystals = 10;
         private void SeatGeodes(TerrainGround.Geode[] geodes, Vector3 extent, int seed, List<int> order, Vector2[] bands,
             Vector3[] seats, Dictionary<int, Quaternion> turns)
         {
@@ -353,21 +354,29 @@ namespace SomethingDownThere
             for (int g = 0; g < geodes.Length; g++)
             {
                 float depth = extent.y - geodes[g].Centre.y;
+                // Unseated geode instances whose band covers this geode, by type.
+                var left = new SortedDictionary<int, List<int>>();
+                for (int i = ShallowCount; i < seats.Length; i++)
+                    if (Entries[order[i]].Geode && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y)
+                    {
+                        if (!left.TryGetValue(order[i], out var list)) left[order[i]] = list = new List<int>();
+                        list.Add(i);
+                    }
+                int entry = -1;
                 for (int k = 0; k < GeodeCrystals; k++)
                 {
-                    // Unseated geode instances whose band covers this geode, by type.
-                    var left = new Dictionary<int, List<int>>();
-                    for (int i = ShallowCount; i < seats.Length; i++)
-                        if (Entries[order[i]].Geode && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y)
-                        {
-                            if (!left.TryGetValue(order[i], out var list)) left[order[i]] = list = new List<int>();
-                            list.Add(i);
-                        }
-                    if (left.Count == 0) break;
-                    int total = 0; foreach (var list in left.Values) total += list.Count;
-                    int pick = random.Next(total), entry = -1;
-                    foreach (var pair in left) { if (pick < pair.Value.Count) { entry = pair.Key; break; } pick -= pair.Value.Count; }
-                    int seated = left[entry][0];
+                    if (!left.ContainsKey(entry))
+                    {
+                        if (left.Count == 0) break;
+                        int most = 0; foreach (var list in left.Values) most = Math.Max(most, list.Count);
+                        var tied = new List<int>();
+                        foreach (var pair in left) if (pair.Value.Count == most) tied.Add(pair.Key);
+                        entry = tied[random.Next(tied.Count)];
+                    }
+                    var instances = left[entry];
+                    int seated = instances[0];
+                    instances.RemoveAt(0);
+                    if (instances.Count == 0) left.Remove(entry);
                     var (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
                     seats[seated] = position;
                     turns[seated] = rotation;
@@ -375,25 +384,23 @@ namespace SomethingDownThere
             }
         }
 
-        // The kth crystal's seat on a geode's hollow (grid-local): four on the floor and lower walls, two higher, spread
-        // round it, each pointing into the hollow (its up along the inward normal, a seeded twist) and sunk GeodeSink of its
-        // height into the shell, so it stays anchored until the shell around it is dug.
+        // The kth crystal's seat on a geode's hollow (grid-local): the first GeodeLow round the floor and lower walls, the
+        // rest higher, spread round it, each where the ray from the centre meets the hollow's face, pointing into the
+        // hollow (its up along the inward normal, a seeded twist) and sunk GeodeSink of its height into the shell, so it
+        // stays anchored until the shell around it is dug.
         public const float GeodeSink = 1 / 3f;
+        private const int GeodeLow = 6;
         internal static (Vector3 position, Quaternion rotation) GeodeSeat(TerrainGround.Geode geode, int k, Entry entry, System.Random random)
         {
-            bool low = k < 4;
-            float around = (low ? k * 90f : 45f + (k - 4) * 180f) + ((float)random.NextDouble() - .5f) * 40f;
-            float elevation = low ? Mathf.Lerp(-55f, -15f, (float)random.NextDouble()) : Mathf.Lerp(10f, 40f, (float)random.NextDouble());
+            bool low = k < GeodeLow;
+            float step = 360f / Mathf.Max(1, low ? GeodeLow : GeodeCrystals - GeodeLow);
+            float around = (low ? k : k - GeodeLow + .5f) * step + ((float)random.NextDouble() - .5f) * step * .6f;
+            float elevation = low ? Mathf.Lerp(-55f, -15f, (float)random.NextDouble()) : Mathf.Lerp(5f, 40f, (float)random.NextDouble());
             var direction = Quaternion.Euler(-elevation, around, 0) * Vector3.forward;
-            // Where the ray from the centre meets the ellipsoid, and its normal there (the hollow's own frame).
-            Vector3 radii = geode.Radii;
-            float scale = 1 / new Vector3(direction.x / radii.x, direction.y / radii.y, direction.z / radii.z).magnitude;
-            var surface = direction * scale;
-            var outward = new Vector3(surface.x / (radii.x * radii.x), surface.y / (radii.y * radii.y), surface.z / (radii.z * radii.z)).normalized;
-            Quaternion frame = geode.Rotation;
-            var inward = -(frame * outward);
+            var (surface, outward) = TerrainGround.HollowFace(geode, direction);
+            var inward = -(Vector3)outward;
             float half = entry.RestingHalfHeight;
-            var position = (Vector3)geode.Centre + frame * surface + inward * (half * (1 - 2 * GeodeSink));
+            var position = (Vector3)surface + inward * (half * (1 - 2 * GeodeSink));
             var rotation = Quaternion.FromToRotation(Vector3.up, inward) * Quaternion.Euler(0, (float)random.NextDouble() * 360f, 0);
             return (position, rotation);
         }

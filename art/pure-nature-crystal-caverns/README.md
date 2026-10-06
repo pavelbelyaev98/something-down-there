@@ -8,8 +8,7 @@
 - **Purpose:**
   - The deep gems: emerald, ruby and diamond are its beryl, ruby and quartz crystals, dusty (`Content/BuriedProps/CrystalCaverns/Dirty`; the maps `<family>_Dirty.png`, with the crystal's colour baked in, are written by `make_dirty.py` from its maps and Mountains' Mud01).
   - Pyrite, fool's gold: its pyrite crystals, dirty and brassy (`ground.json`, a prop find).
-  - The same crystals clean and smaller are old-chest treasure (`catalog.json`, taken by hand).
-  - The geodes (`110`): celestine, fluorite, amethyst and citrine are its cobalt, fluorite and prism crystals (amethyst and citrine both prisms), clean, in one project material per mineral (`Content/BuriedProps/CrystalCaverns/Geode`, `geode.json`). The geode shell's texture set (`Content/GroundTextures/GeodeShell_*`) is its tiling `_RockDetail1` stone graded dark grey by `make_shell.py`.
+  - The geodes (`110`, one kind each): celestine, fluorite, amethyst and citrine are its cobalt, fluorite and prism crystals (amethyst and citrine both prisms), clean, in one project material per mineral (`Content/BuriedProps/CrystalCaverns/Geode`, `geode.json`). The geode shell's texture set (`Content/GroundTextures/GeodeShell_*`) is its tiling `_RockDetail1` stone graded dark grey by `make_shell.py`.
   - Later the crystal cavern (`115`). Its lava and water are not used.
 - **Source/License:** User-purchased BK Asset Store pack (2026-10-05), Unity Asset Store EULA (Extension Asset, single entity); keep source access restricted.
 - **Unity Path:** `unity/Assets/BK/PureNature_CrystalCaverns/`, plus `BK_Crystal`, `BK_Lava` and `BK_StandardLayer_Emissive` in the shared `Pure_Common/Shaders`.

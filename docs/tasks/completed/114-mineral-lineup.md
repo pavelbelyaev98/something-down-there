@@ -2,9 +2,8 @@
 
 **Status:** complete. Each zone has its own pair of minerals: coal and copper, iron and silver, gold and emerald,
 ruby and diamond, with pyrite as a cheap aside in zone 2. Coal is the Mining pack's layered rocks in black; copper is
-its ore chunk or a native copper nugget (an A/B); iron, silver and gold are its ore chunks, iron rust-veined and silver
-at the pack's quality; ground gems and pyrite are dusty Crystal Caverns crystals. The chests' clean crystals stay
-separate items, smaller and cheaper than the ground gems.
+its ore chunks with copper over about half the stone; iron, silver and gold are solid native nuggets on its jagged
+rocks; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
 
 ## Objective
 
@@ -209,3 +208,16 @@ at the bottom, and cut in the old chests.
   dirty materials draw it in white.
 - Found by the tests: nearby pickup's sight line went to the find's exact nearest point, which on the layered coal is
   an edge the ray grazed past. It now aims 3 cm inside the find (`FindProximityCollection.EdgeInset`).
+
+## Iteration 2 (user, 2026-10-06)
+
+- **Copper:** "fine to be rock and copper in one, but I need more copper on it": the native nugget A/B is dropped and
+  both looks are the pack's ore chunks on `Ore_Copper_Rich.png` (`make_maps.py`: the pack's copper flecks grown and
+  joined by soft patches to about half the stone, 22% before, in the pack's own copper colour, with its metal and
+  sheen written into the mask).
+- **Iron, silver and gold** ("can be full gold/silver"): solid native nuggets on the pack's large and small jagged
+  rocks (`RockFinds`, scale 0.15 and 0.22, about the ore chunks' size), each material the rock's light and dark only
+  (`Rocks/<set>_Metal.png`: luminance over its mean, kept within 0.6–1.1) in the metal's colour. Iron (0.46, 0.44,
+  0.43; metal 0.85, smoothness 0.5) first read as plain grey rock at metal 0.6; silver (0.86, 0.87, 0.89; 0.85,
+  0.6); gold (1, 0.77, 0.34; 0.85, 0.62). The pack's iron, silver and gold ores, the rust map and their vendor files
+  in the repository are gone (`M_Ore_Iron` stays: the ore chunk models reference it).

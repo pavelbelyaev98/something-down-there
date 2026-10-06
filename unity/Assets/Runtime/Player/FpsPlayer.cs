@@ -745,6 +745,23 @@ namespace SomethingDownThere
 
         public bool TryDig() => TryDig(true);
 
+        // The drill's bit is as wide as its bite (user, 2026-10-06: "as if it has a tiny tip, I have to be really
+        // precise"): aimed just past the edge of a near lip, it meets the lip before the far ground the aim's ray reaches.
+        // A ball BitReach of the bite across is pushed along the aim; ground it meets nearer than the ray's hit is where
+        // the bit bores, if the ray's hit lies LipDrop or more off that ground's face: past an edge, not further along the
+        // same floor or wall at a slant.
+        private const float BitReach = .35f, LipDrop = .2f;
+        private bool NearerLip(RaycastHit hit, out RaycastHit lip)
+        {
+            var aim = AimRay;
+            float radius = EffectiveShovel.Radius * BitReach;
+            if (Physics.SphereCast(aim.origin, radius, aim.direction, out lip, hit.distance, worldMask, QueryTriggerInteraction.Ignore)
+                && lip.distance > 0 && lip.distance < hit.distance - radius && Mathf.Abs(Vector3.Dot(hit.point - lip.point, lip.normal)) >= LipDrop
+                && Contract<TerrainVolume>(lip.collider) != null) return true;
+            lip = default;
+            return false;
+        }
+
         // The cut a shovel stroke started earlier, at its scoop, where the player looks by then (user, 2026-10-05: not
         // where the stroke began); a find it reveals is collected as on a press.
         private void CompletePendingScoop()
@@ -784,7 +801,8 @@ namespace SomethingDownThere
             if (!PrepareDig(out var hit, out var target, out var material, out float cost)) return false;
             var terrain = target as TerrainVolume;
             bool accepted = terrain != null
-                ? terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled, AimRay.direction)
+                ? ShavingEnabled && NearerLip(hit, out var lip) && terrain.TryToolCut(lip, EffectiveShovel.Radius, true, AimRay.direction)
+                    || terrain.TryToolCut(hit, EffectiveShovel.Radius, ShavingEnabled, AimRay.direction)
                 : target.TryDig(hit);
             if (!accepted) return false;
             LastDigMaterial = material;

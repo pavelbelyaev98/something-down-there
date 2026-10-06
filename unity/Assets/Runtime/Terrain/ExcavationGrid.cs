@@ -226,11 +226,14 @@ namespace SomethingDownThere
         {
             Vector3Int first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)geode.Min / CellSize) - Vector3Int.one);
             Vector3Int last = Vector3Int.Min(Size, Vector3Int.CeilToInt((Vector3)geode.Max / CellSize) + Vector3Int.one);
+            using var field = TerrainGround.GeodeField(geode, CellSize, new Unity.Mathematics.int3(first.x, first.y, first.z),
+                new Unity.Mathematics.int3(last.x, last.y, last.z), false, Unity.Collections.Allocator.TempJob);
+            int sample = 0;
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
-            for (int x = first.x; x <= last.x; x++)
+            for (int x = first.x; x <= last.x; x++, sample++)
             {
-                float outside = TerrainGround.HollowDistance(geode, new Unity.Mathematics.float3(x, y, z) * CellSize);
+                float outside = field[sample];
                 if (outside >= band) continue;
                 int index = x + y * strideY + z * strideZ;
                 density[index] = Mathf.Min(density[index], Mathf.Max(-band, outside));

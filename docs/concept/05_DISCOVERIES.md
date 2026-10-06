@@ -14,12 +14,11 @@ Commons include the mineral ladder (coal → copper → iron → silver → gold
 bottles, plain stones, commonplace scrap, packaging and rubbish. Each zone has its own pair of
 minerals (`114`): coal and copper in the recent fill, iron and silver in the sediment, gold and
 emerald in the third zone, ruby and diamond in the deep stone. Pyrite, fool's gold, is a cheap
-aside in the sediment: it looks like gold and sells like rock. Every mineral is plain, matte and
-earthy like the plain rock the user approved, never glossy or finely detailed, yet reads as its own
-material at a glance (user, 2026-10-06): coal is a black, layered lump, not a dark rock; iron is
-rust-streaked, never glowing like lava; silver keeps its sparkle; copper is an ore or a native nugget
-(an A/B). Gems dug out of the ground are big, dusty crystals, never darkly stained; the clean ones in
-old chests are smaller and worth less (user, 2026-10-06: "weird smaller crystals cost more"). "Common" means routine to find
+aside in the sediment: it looks like gold and sells like rock. Every mineral reads as its own
+material at a glance, never finely detailed (user, 2026-10-06): coal is a black, layered lump, not a
+dark rock; copper is rock and copper in one, with plenty of copper showing; iron, silver and gold are
+solid nuggets of their metal ("gold, silver and others can be full gold/silver"). Gems dug out of
+the ground are big, dusty crystals, never darkly stained. "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
 During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.
@@ -131,7 +130,7 @@ walking or holding dig, including elevated and falling pieces. It is not restric
 The automatic collection area stays close so surrounding loose rocks do not disappear too eagerly.
 Soil, walls and partial burial still block it; a full bag stops all pickup (see §9).
 There is no carrying or throwing finds by hand: a find is dug out, bagged or craned. A chest's ingots
-and crystals are taken into the bag by hand instead: each piece waits for Interact while aimed at it,
+are taken into the bag by hand instead: each piece waits for Interact while aimed at it,
 one at a time, and neither digging nor walking past ever takes one (user, 2026-10-06).
 Nearly excavated rocks break loose when only shallow surface contacts remain; substantial inner
 burial keeps them anchored. Their real colliders and gravity determine the resulting motion.
@@ -165,10 +164,10 @@ The yard's small tower crane (the purchased pack's rig and motion) does it with 
 
 **Finds inside finds**: occasional authored containers hold another discovery. Dig down a stash
 pit into the pocket of air its old chest stands in, hold Interact to force its rusted lock, and the
-lid opens on what it holds: a prospector's ingots of bronze, silver and gold and a few gem crystals,
-worth far more than anything loose in the soil around it, each taken by hand. The lock is forced from
+lid opens on what it holds: a prospector's ingots of bronze, silver and gold, nothing else (user,
+2026-10-06), worth far more than anything loose in the soil around it, each taken by hand. The lock is forced from
 in front of it (user, 2026-10-06). The deeper the chest, the richer: a shallow one holds mostly bronze,
-some silver and the odd gold ingot, a deep one mostly gold and gems. The pieces lie heaped at the back
+some silver and the odd gold ingot, a deep one mostly gold. The pieces lie heaped at the back
 as if tossed in, never laid out in rows (user, 2026-10-06).
 The outside gives a clue; the contents deliver a second reveal and a small piece of buried history.
 

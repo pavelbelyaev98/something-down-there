@@ -376,7 +376,7 @@ MonoBehaviour:
     Prefab: {fileID: 6329413978238984095, guid: 8bbcae2a222326b439140224677b1883, type: 3}
     AppearanceVariants:
     - {fileID: 2388083526001396382, guid: dd338e75bd215134bab1ee5b29f3e312, type: 3}
-    Count: 6
+    Count: 8
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -397,7 +397,7 @@ MonoBehaviour:
     Prefab: {fileID: 6121914866324238277, guid: 96e4dd7ca355cf7458d9c9c4c3cfd366, type: 3}
     AppearanceVariants:
     - {fileID: 4407781966802062575, guid: 7e45b2f22fc90f048bd7c8bf9912d092, type: 3}
-    Count: 4
+    Count: 6
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -418,70 +418,7 @@ MonoBehaviour:
     Prefab: {fileID: 3106832568637923618, guid: 43605f8e3a851ba44b35e678f8e5f234, type: 3}
     AppearanceVariants:
     - {fileID: 2088103132838309429, guid: f8294784bbe080642acd5884aa3b96d0, type: 3}
-    Count: 3
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 1
-    MaxDepth: 37
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    HostGrounds: 
-    HostWeights: []
-  - ItemId: treasure_crystal_emerald
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 6589374323264401479, guid: ce138c0619980754e833d5ceebc39cda, type: 3}
-    AppearanceVariants:
-    - {fileID: 8478080413224632738, guid: 645d6092eeb0a164e8343b1a8bae2980, type: 3}
-    Count: 2
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 1
-    MaxDepth: 37
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    HostGrounds: 
-    HostWeights: []
-  - ItemId: treasure_crystal_ruby
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 4583801216564935326, guid: 7f1dd13ab0aa5934289afecd610bd66d, type: 3}
-    AppearanceVariants:
-    - {fileID: 4203522914614432247, guid: ab470b25d1e5e0b4ba03d92ecb22521c, type: 3}
-    Count: 2
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 1
-    MaxDepth: 37
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    HostGrounds: 
-    HostWeights: []
-  - ItemId: treasure_crystal_diamond
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 4825057123851874062, guid: 5ccc6f92ce0136d478bd3e75c46430c0, type: 3}
-    AppearanceVariants:
-    - {fileID: 2668993875281045146, guid: 4f2ce1fcd4c173f47a24429b8df12151, type: 3}
-    Count: 1
+    Count: 4
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -523,7 +460,7 @@ MonoBehaviour:
     Prefab: {fileID: 3471135678283433236, guid: 0861ce86a63c41a479e4888fe251c320, type: 3}
     AppearanceVariants:
     - {fileID: 6499642286929261914, guid: 9a7238f5f0d0846458fc9396700a1b1d, type: 3}
-    Count: 7
+    Count: 10
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -544,7 +481,7 @@ MonoBehaviour:
     Prefab: {fileID: 7674035815106315012, guid: bfc0535b89a01fe4594ee7e99c4d7689, type: 3}
     AppearanceVariants:
     - {fileID: 673661669777665024, guid: 3dd218da79365f64f985be2fb9e8d556, type: 3}
-    Count: 5
+    Count: 10
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -565,7 +502,7 @@ MonoBehaviour:
     Prefab: {fileID: 3231336519082527753, guid: 8d73d2d54f15d6b40b9767203f98d322, type: 3}
     AppearanceVariants:
     - {fileID: 7692080274387417109, guid: 0e7f0ed25e8f7a340bdfcaba44df256d, type: 3}
-    Count: 10
+    Count: 20
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -586,7 +523,7 @@ MonoBehaviour:
     Prefab: {fileID: 3236398565471483190, guid: 11716654689146246a02733b8df7bd73, type: 3}
     AppearanceVariants:
     - {fileID: 4305353514304060016, guid: 17cc41841a33dd548a169d10b2d503d5, type: 3}
-    Count: 8
+    Count: 10
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -612,12 +549,3 @@ MonoBehaviour:
   - ItemId: treasure_ingot_gold
     ShallowWeight: 1
     DeepWeight: 4
-  - ItemId: treasure_crystal_emerald
-    ShallowWeight: 0
-    DeepWeight: 2
-  - ItemId: treasure_crystal_ruby
-    ShallowWeight: 0
-    DeepWeight: 2
-  - ItemId: treasure_crystal_diamond
-    ShallowWeight: 0
-    DeepWeight: 1

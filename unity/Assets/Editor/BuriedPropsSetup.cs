@@ -22,18 +22,15 @@ namespace SomethingDownThere.Editor
         private const string ChestVendor = "Assets/NOT_Lonely/OldChest", OldTvVendor = "Assets/JustPlay/Old TV", TvSetVendor = "Assets/_Television_set";
         private const string CrystalVendor = "Assets/BK/PureNature_CrystalCaverns";
         public static readonly string[] TvEras = { "70", "80", "90", "00" };
-        // The pack props finds are made from: copper, iron, silver and gold ores, bronze, silver and gold ingots (the
-        // shallow chests' bronze, user 2026-10-06), and the crystals the gems take (beryl for emerald, ruby, quartz for diamond). The coins went (user, 2026-10-06: messy).
+        // The pack props finds are made from: copper ore, and the chests' bronze, silver and gold ingots (user, 2026-10-06:
+        // chests hold ingots only). Iron, silver and gold are native nuggets (RockFinds); the coins went (user: messy).
         public static readonly string[] MiningProps =
         {
-            "Ore_CopperA", "Ore_CopperB", "Ore_IronA", "Ore_IronB", "Ore_SilverA", "Ore_SilverB", "Ore_GoldA", "Ore_GoldB",
+            "Ore_CopperA", "Ore_CopperB",
             "Ingot_Bronze_Flat", "Ingot_Bronze_Thin", "Ingot_Silver_Flat", "Ingot_Silver_Thin", "Ingot_Gold_Flat", "Ingot_Gold_Thin",
         };
-        public static readonly string[] CrystalProps =
-        {
-            "Crystal_Beryl_01", "Crystal_Beryl_02", "Crystal_Ruby_1", "Crystal_Ruby_2", "Crystal_Quartz_1", "Crystal_Quartz_2",
-        };
-        // The same crystals dirty, as dug out of the ground (114), and pyrite, the ground's fool's gold.
+        // The crystals the ground's gems take, dirty as dug out of the ground (114): beryl for emerald, ruby, quartz for
+        // diamond, and pyrite, the ground's fool's gold.
         public static readonly string[] GroundCrystalProps =
         {
             "Crystal_Beryl_01", "Crystal_Beryl_02", "Crystal_Ruby_1", "Crystal_Ruby_2", "Crystal_Quartz_1", "Crystal_Quartz_2",
@@ -55,17 +52,8 @@ namespace SomethingDownThere.Editor
             ["Amethyst"] = new Color(.42f, .2f, .6f), ["Citrine"] = new Color(.82f, .52f, .14f),
         };
         private const float GeodeGloss = .8f;
-        // Crystal colours of our own on the pack's maps (any bought pack's textures may dress new items): its beryl is
-        // aquamarine and its quartz pale blue, so emerald takes a deep green, diamond a cool grey-blue and ruby a deep red.
-        // Dark enough that sunlight down a shaft shades them instead of burning them white (user, 2026-10-06: the near-
-        // white diamond read as a flat white shape); CrystalGloss keeps a glint without a mirror.
-        private static readonly Dictionary<string, Color> CrystalTints = new Dictionary<string, Color>
-        {
-            ["Crystal_Beryl_01"] = new Color(.08f, .38f, .18f), ["Crystal_Ruby_1"] = new Color(.42f, .03f, .06f),
-            ["Crystal_Quartz_1"] = new Color(.45f, .5f, .56f),
-            // Pyrite, fool's gold: brassy, with a metal's sheen (PyriteMetal), so at a glance it passes for gold.
-            ["Crystal_Pyrite_1"] = new Color(.72f, .6f, .3f),
-        };
+        // Pyrite, fool's gold, has a metal's sheen, so at a glance it passes for gold. CrystalGloss keeps a clean
+        // crystal's glint without a mirror.
         private const float PyriteMetal = .6f;
         private const float CrystalGloss = .75f;
         // Small props seen from a metre or two in a stylized game: their maps import no larger than this.
@@ -110,12 +98,9 @@ namespace SomethingDownThere.Editor
 
             foreach (var name in MiningProps)
                 PackVariant($"{MiningVendor}/Prefabs/{name}.prefab", $"{MiningFolder}/{name}.prefab",
-                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat",
-                        name.StartsWith("Ore_Silver") ? PackStyle.Pack : name.StartsWith("Ore_") ? PackStyle.Ore : PackStyle.Aged));
+                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? PackStyle.Ore : PackStyle.Aged));
             if (!AssetDatabase.IsValidFolder(MiningFolder + "/Rocks")) AssetDatabase.CreateFolder(MiningFolder, "Rocks");
-            foreach (var (rock, output, style) in RockFinds) RockFind(rock, output, style);
-            foreach (var name in CrystalProps)
-                PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CrystalFolder}/{name}.prefab", vendor => FromCrystal(vendor, $"{CrystalFolder}/{vendor.name}.mat", false));
+            foreach (var find in RockFinds) RockFind(find);
             if (!AssetDatabase.IsValidFolder(CrystalFolder + "/Dirty")) AssetDatabase.CreateFolder(CrystalFolder, "Dirty");
             foreach (var name in GroundCrystalProps)
                 PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CrystalFolder}/Dirty/{name}.prefab",
@@ -136,10 +121,10 @@ namespace SomethingDownThere.Editor
             Variant(source, path, swaps);
         }
 
-        // How a Mining pack material is copied: as the pack has it (silver ore: "could be higher quality", user 2026-10-06);
-        // as ore in the ground, plainer and duller, closer to the photo rock the user likes (user, 2026-10-06: "a bit too
-        // high quality, too reflective": maps at OreMapSize, the normal map at OreRelief, OreGloss of the smoothness); or as
-        // aged metal (AgedTint, AgedMetal, AgedGloss). Iron ore takes its rust-veined colour map (OreColours).
+        // How a Mining pack material is copied: as the pack has it; as ore in the ground, plainer and duller, closer to the
+        // photo rock the user likes (user, 2026-10-06: "a bit too high quality, too reflective": maps at OreMapSize, the
+        // normal map at OreRelief, OreGloss of the smoothness); or as aged metal (AgedTint, AgedMetal, AgedGloss). Copper
+        // ore takes its copper-rich maps (OreMaps).
         internal enum PackStyle { Pack, Ore, Aged }
         private const int OreMapSize = 512;
         private const float OreRelief = .7f, OreGloss = .5f;
@@ -152,13 +137,13 @@ namespace SomethingDownThere.Editor
             var (maps, floats, colors) = Saved(vendor);
             int size = style == PackStyle.Ore ? OreMapSize : PackMapSize;
             bool aged = style == PackStyle.Aged;
-            var colour = OreColours.TryGetValue(vendor.name, out var own) ? Project(own, "art/mining-pack/make_maps.py", size)
-                : Sized(maps["_BaseColorMap"], size);
+            bool own = OreMaps.TryGetValue(vendor.name, out var ours);
+            var colour = own ? Project(ours.colour, "art/mining-pack/make_maps.py", size) : Sized(maps["_BaseColorMap"], size);
             var material = LitMaterial(path, colour, Sized(maps["_NormalMap"], size));
             var tint = aged ? colors["_BaseColor"] * AgedTint : colors["_BaseColor"]; tint.a = 1;
             material.SetColor("_BaseColor", tint);
             material.SetFloat("_BumpScale", floats["_NormalScale"] * (style == PackStyle.Ore ? OreRelief : 1));
-            var mask = Sized(maps["_MaskMap"], size);
+            var mask = own ? Project(ours.mask, "art/mining-pack/make_maps.py", size, false, true) : Sized(maps["_MaskMap"], size);
             if (aged)
             {
                 material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
@@ -174,7 +159,7 @@ namespace SomethingDownThere.Editor
             return material;
         }
 
-        // A URP Lit copy of a Crystal Caverns crystal: its colour map in the crystal's colour and its normal map, glassy and
+        // A URP Lit copy of a Crystal Caverns crystal: its colour map in the pack's colour and its normal map, glassy and
         // not metal. The pack's crystal shader (translucency, inner glow) is not used: buried finds draw through the
         // excavation daylight's Lit shader. A dirty one, for crystals dug out of the ground, takes the dusty copy of its map
         // with its colour baked in (art/pure-nature-crystal-caverns/make_dirty.py) and DirtyGloss.
@@ -184,7 +169,7 @@ namespace SomethingDownThere.Editor
             var (maps, floats, colors) = Saved(vendor);
             var colour = dirty ? DirtyMap(vendor.name) : Sized(maps["_MainTex"]);
             var material = LitMaterial(path, colour, Sized(maps["_BumpMap"]));
-            var tint = dirty ? Color.white : CrystalTints.TryGetValue(vendor.name, out var ours) ? ours : colors["_MainColor"]; tint.a = 1;
+            var tint = dirty ? Color.white : colors["_MainColor"]; tint.a = 1;
             material.SetColor("_BaseColor", tint);
             material.SetFloat("_BumpScale", floats["_NormalPower"]);
             material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
@@ -204,10 +189,11 @@ namespace SomethingDownThere.Editor
             return material;
         }
 
-        // Iron ore's own colour map: the pack's, its orange veins (read as lava, user 2026-10-06) turned rust.
-        private static readonly Dictionary<string, string> OreColours = new Dictionary<string, string>
+        // Copper ore's own colour map and mask: the pack's, with copper on about half the stone instead of a fifth (user,
+        // 2026-10-06: "copper is fine to be rock and copper in one, but I need more copper on it").
+        private static readonly Dictionary<string, (string colour, string mask)> OreMaps = new Dictionary<string, (string, string)>
         {
-            ["M_Ore_Iron"] = MiningFolder + "/Ore_Iron_Rust.png",
+            ["M_Ore_Copper"] = (MiningFolder + "/Ore_Copper_Rich.png", MiningFolder + "/Ore_Copper_Rich_Mask.png"),
         };
 
         // Finds built on the pack's rock models, each a project prefab of its full-detail mesh (copied into Rocks/, so the
@@ -215,19 +201,32 @@ namespace SomethingDownThere.Editor
         // (art/mining-pack/make_maps.py):
         // - coal on the layered rocks, blocky with bedding planes, black with a dull sheen (user, 2026-10-06: the photo
         //   rock's coal "looks too much like a rock");
-        // - native copper (copper's second look, an A/B with the ore chunk) on the knobbly jagged one, metal in copper's
-        //   colour.
-        internal enum RockStyle { Coal, NativeCopper }
-        internal static readonly (string rock, string output, RockStyle style)[] RockFinds =
+        // - native iron, silver and gold on the knobbly jagged ones, solid metal (user, 2026-10-06: "gold, silver and
+        //   others can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, iron
+        //   a dull dark grey, silver bright, gold warm yellow.
+        internal readonly struct RockFindLook
         {
-            ("Layered_Large", "Coal_Layered_Large", RockStyle.Coal), ("Layered_Small", "Coal_Layered_Small", RockStyle.Coal),
-            ("Jagged_Large", "Copper_Native", RockStyle.NativeCopper),
+            public readonly string Rock, Output;
+            public readonly Color Tint;
+            public readonly float Metal, Gloss;
+            public RockFindLook(string rock, string output, Color tint, float metal, float gloss)
+            { Rock = rock; Output = output; Tint = tint; Metal = metal; Gloss = gloss; }
+        }
+        internal static readonly RockFindLook[] RockFinds =
+        {
+            new RockFindLook("Layered_Large", "Coal_Layered_Large", new Color(.17f, .17f, .18f), 0, .5f),
+            new RockFindLook("Layered_Small", "Coal_Layered_Small", new Color(.17f, .17f, .18f), 0, .5f),
+            new RockFindLook("Jagged_Large", "Iron_Native_A", new Color(.46f, .44f, .43f), .85f, .5f),
+            new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.46f, .44f, .43f), .85f, .5f),
+            new RockFindLook("Jagged_Large", "Silver_Native_A", new Color(.86f, .87f, .89f), .85f, .6f),
+            new RockFindLook("Jagged_Small", "Silver_Native_B", new Color(.86f, .87f, .89f), .85f, .6f),
+            new RockFindLook("Jagged_Large", "Gold_Native_A", new Color(1f, .77f, .34f), .85f, .62f),
+            new RockFindLook("Jagged_Small", "Gold_Native_B", new Color(1f, .77f, .34f), .85f, .62f),
         };
-        private static readonly Color CoalTint = new Color(.17f, .17f, .18f), CopperTint = new Color(.86f, .52f, .32f);
-        private const float CoalGloss = .5f, CopperMetal = .7f, CopperGloss = .55f;
 
-        private static void RockFind(string rock, string output, RockStyle style)
+        private static void RockFind(RockFindLook look)
         {
+            string rock = look.Rock, output = look.Output;
             string family = rock.Split('_')[0], source = $"{MiningVendor}/Prefabs/Rocks_{family}/Rock_{rock}_Plain.prefab";
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(source) ?? throw new InvalidOperationException("Missing " + source + " (reimport the pack).");
             var lods = prefab.GetComponentInChildren<LODGroup>(true)?.GetLODs();
@@ -246,15 +245,14 @@ namespace SomethingDownThere.Editor
             mesh.name = rock;
 
             string maps = $"{MiningFolder}/Rocks/{rock}";
-            var material = LitMaterial($"{MiningFolder}/{output}.mat", Project(maps + "_BC.png", "art/mining-pack/make_maps.py"),
+            var material = LitMaterial($"{MiningFolder}/{output}.mat", Project(maps + (look.Metal > 0 ? "_Metal.png" : "_BC.png"), "art/mining-pack/make_maps.py"),
                 Project(maps + "_N.png", "art/mining-pack/make_maps.py", PackMapSize, true));
             var mask = Project(maps + "_Mask.png", "art/mining-pack/make_maps.py", PackMapSize, false, true);
             material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
             material.SetTexture("_OcclusionMap", mask); material.SetFloat("_OcclusionStrength", 1); material.EnableKeyword("_OCCLUSIONMAP");
-            bool coal = style == RockStyle.Coal;
-            material.SetColor("_BaseColor", coal ? CoalTint : CopperTint);
-            material.SetFloat("_Metallic", coal ? 0 : CopperMetal);
-            material.SetFloat("_Smoothness", coal ? CoalGloss : CopperGloss);
+            material.SetColor("_BaseColor", look.Tint);
+            material.SetFloat("_Metallic", look.Metal);
+            material.SetFloat("_Smoothness", look.Gloss);
             EditorUtility.SetDirty(material);
 
             var root = new GameObject(output);

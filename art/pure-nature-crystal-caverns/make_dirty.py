@@ -2,7 +2,7 @@
 "make them dirtier"): the crystal in its own colour, with a pale film of the site's dust settled in its crevices and in
 soft patches over it, so a crystal dug out of the earth reads as dusty, unlike the clean ones in the old chests.
 The crystal's colour is baked in (its material draws the map in white): tinted afterwards, the dust took the crystal's
-dark colour and read as black spots (user, 2026-10-06). Colours match BuriedPropsSetup.CrystalTints.
+dark colour and read as black spots (user, 2026-10-06).
 Run from the repository root (needs Pillow and numpy) after reimporting either pack."""
 from pathlib import Path
 
@@ -12,7 +12,9 @@ from PIL import Image, ImageFilter
 crystals = Path('unity/Assets/BK/PureNature_CrystalCaverns/Models/Crystals/Textures')
 soil_path = Path('unity/Assets/BK/PureNature_Mountains/Textures/Surfaces/Mud01_a.png')
 target = Path('unity/Assets/Content/BuriedProps/CrystalCaverns')
-# Each family's crystal colour (sRGB, as BuriedPropsSetup.CrystalTints).
+# Each family's crystal colour (sRGB), our own on the pack's maps: its beryl is aquamarine and its quartz pale blue, so
+# emerald takes a deep green, diamond a cool grey-blue, ruby a deep red and pyrite brass. Dark enough that sunlight down
+# a shaft shades them instead of burning them white (user, 2026-10-06: a near-white diamond read as a flat white shape).
 families = {'Beryl': (.08, .38, .18), 'Ruby': (.42, .03, .06), 'Quartz': (.45, .5, .56), 'Pyrite': (.72, .6, .3)}
 size = 1024
 # The dig ground's soil tint (LakebedSiteSetup.ClayLoamTint, linear), as the backfill uses.

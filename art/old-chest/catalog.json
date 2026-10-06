@@ -18,21 +18,6 @@
       "content_id": "treasure_ingot_gold",
       "shallow_weight": 1,
       "deep_weight": 4
-    },
-    {
-      "content_id": "treasure_crystal_emerald",
-      "shallow_weight": 0,
-      "deep_weight": 2
-    },
-    {
-      "content_id": "treasure_crystal_ruby",
-      "shallow_weight": 0,
-      "deep_weight": 2
-    },
-    {
-      "content_id": "treasure_crystal_diamond",
-      "shallow_weight": 0,
-      "deep_weight": 1
     }
   ]
 }

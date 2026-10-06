@@ -1,10 +1,10 @@
 # 113 — Mining Pack: Ores, Crystals, Treasure and a Second Shovel
 
 **Status:** complete:
-- Copper, iron, silver and gold are the bought Mining Tools, Ore & Ingots ore chunks; emerald, ruby and diamond
-  are Crystal Caverns crystals in project colours, two looks each.
-- The old chests hold the pack's bronze, silver and gold ingots and clean gem crystals, heaped at the back and
-  richer the deeper the chest, taken one at a time with Interact; digging and walking never take them.
+- Copper is the bought Mining Tools, Ore & Ingots ore chunks; iron, silver and gold are native nuggets on its
+  rocks; emerald, ruby and diamond are Crystal Caverns crystals in project colours, two looks each.
+- The old chests hold only the pack's bronze, silver and gold ingots, heaped at the back and richer the deeper
+  the chest, taken one at a time with Interact; digging and walking never take them.
 - The Ground Lab sets out every find's looks to compare.
 - Only the pack files the game uses are committed; its installers are ignored. The pack's coins and its shovel
   were tried and dropped.
@@ -150,3 +150,10 @@ items. AGENTS.md "Bought Before Made" now says so.
 - Bronze ingots replace copper ones: copper read too close to gold.
 - "It's weird smaller crystals cost more than bigger crystals." The chests' clean crystals are now cheaper than the
   big, dirty ground gems of `114`.
+
+## Iteration 3 (user, 2026-10-06: "in chests I want only ingots, no crystals")
+
+- The chests hold ingots only: the crystal contents, their catalog (`art/pure-nature-crystal-caverns/catalog.json`),
+  prefabs, materials and find assets are gone. Bronze 8, silver 6 and gold 4 instances fill the three chests'
+  eighteen seats.
+- The Ground Lab's buried chest moved into the 3 x 3 m backfill bay, 3 m down: the 1 m pit was too tight to dig in.

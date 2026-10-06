@@ -44,6 +44,7 @@ namespace SomethingDownThere
         // provisional patches stay visible while it runs.
         private readonly byte[] light, computed;
         private readonly List<bool> patchOpen = new List<bool>(), patchFresh = new List<bool>();
+        private readonly List<byte> patchAnchor = new List<byte>();
         // Nodes the last rebuild reached, and the cells its final pass covered. Only these can hold
         // routes or light, so a rebuild resets and recomputes just this part of the grid.
         private Vector3Int reachedMin, reachedMax, litMin, litMax;
@@ -94,26 +95,36 @@ namespace SomethingDownThere
         // lands, only the fresh nodes (open now but not air at the last rebuild, or still unlit) are
         // filled from their lit neighbours: nearly all of the light from above, less from the side,
         // as the rebuild would, so a fresh cut neither flashes dark nor brightens the ground around
-        // it. Wall samples beside fresh air take its light. The next rebuild replaces these values.
+        // it. Wall samples beside fresh air take its light. The next rebuild replaces these values. Light passes only where
+    // the rebuild's links would, through clear air between the nodes' standing points: a hole too small for them stays
+    // dark rather than flashing bright until the rebuild lands (user, 2026-10-06, breaking into a geode).
         public void Patch(Bounds changed, Func<Vector3, float> density)
         {
             Range(changed, out var min, out var max);
             int sx = max.x - min.x + 1, sy = max.y - min.y + 1, sz = max.z - min.z + 1;
-            patchOpen.Clear(); patchFresh.Clear();
+            patchOpen.Clear(); patchFresh.Clear(); patchAnchor.Clear();
             for (int z = min.z; z <= max.z; z++)
             for (int y = min.y; y <= max.y; y++)
             for (int x = min.x; x <= max.x; x++)
             {
                 int i = Index(x, y, z);
-                bool open = Locate(x, y, z, density, out _), fresh = open && (!air[i] || light[i] == 0);
-                patchOpen.Add(open); patchFresh.Add(fresh);
+                bool open = Locate(x, y, z, density, out var which), fresh = open && (!air[i] || light[i] == 0);
+                patchOpen.Add(open); patchFresh.Add(fresh); patchAnchor.Add(which);
                 if (fresh) light[i] = 0;
             }
             int layer = Size.x * Size.y;
             int Local(int x, int y, int z) => (x - min.x) + sx * ((y - min.y) + sy * (z - min.z));
             bool Inside(int x, int y, int z) => x >= min.x && y >= min.y && z >= min.z && x <= max.x && y <= max.y && z <= max.z;
             bool Open(int x, int y, int z) => Inside(x, y, z) ? patchOpen[Local(x, y, z)] : air[Index(x, y, z)];
-            float From(int x, int y, int z, int i, float share) => Open(x, y, z) ? light[i] * share : 0;
+            Vector3 At(int x, int y, int z) => Point(x, y, z)
+                + Vector3.Scale(Anchors[Inside(x, y, z) ? patchAnchor[Local(x, y, z)] : anchor[Index(x, y, z)]], Step);
+            // Node (x, y, z) takes its neighbour (nx, ny, nz)'s light by `share` where the air between them is clear.
+            float From(int x, int y, int z, int nx, int ny, int nz, int j, float share)
+            {
+                if (!Open(nx, ny, nz)) return 0;
+                var p = At(x, y, z);
+                return Clear(p, At(nx, ny, nz) - p, density) ? light[j] * share : 0;
+            }
             float side = Mathf.Exp(-Step.x / SidewaysReach);
             // A tool cut is a few nodes deep; large releases settle with the rebuild instead.
             for (int pass = Math.Min(6, Math.Max(sx, Math.Max(sy, sz))); pass > 0; pass--)
@@ -126,12 +137,12 @@ namespace SomethingDownThere
                     if (!patchFresh[Local(x, y, z)]) continue;
                     int i = Index(x, y, z);
                     float best = 0;
-                    if (y < Size.y - 1) best = Math.Max(best, From(x, y + 1, z, i + Size.x, .97f));
-                    if (y > 0) best = Math.Max(best, From(x, y - 1, z, i - Size.x, side));
-                    if (x > 0) best = Math.Max(best, From(x - 1, y, z, i - 1, side));
-                    if (x < Size.x - 1) best = Math.Max(best, From(x + 1, y, z, i + 1, side));
-                    if (z > 0) best = Math.Max(best, From(x, y, z - 1, i - layer, side));
-                    if (z < Size.z - 1) best = Math.Max(best, From(x, y, z + 1, i + layer, side));
+                    if (y < Size.y - 1) best = Math.Max(best, From(x, y, z, x, y + 1, z, i + Size.x, .97f));
+                    if (y > 0) best = Math.Max(best, From(x, y, z, x, y - 1, z, i - Size.x, side));
+                    if (x > 0) best = Math.Max(best, From(x, y, z, x - 1, y, z, i - 1, side));
+                    if (x < Size.x - 1) best = Math.Max(best, From(x, y, z, x + 1, y, z, i + 1, side));
+                    if (z > 0) best = Math.Max(best, From(x, y, z, x, y, z - 1, i - layer, side));
+                    if (z < Size.z - 1) best = Math.Max(best, From(x, y, z, x, y, z + 1, i + layer, side));
                     int value = (int)best;
                     if (value > light[i]) { light[i] = (byte)value; brightened = true; }
                 }

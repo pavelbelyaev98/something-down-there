@@ -48,20 +48,26 @@ namespace SomethingDownThere
         }
         public const float StashLift = .12f;
 
-        // A geode (110): a hollow ellipsoid of air (Radii, in its own frame) inside a shell of hard stone Shell thick, its
-        // outer face lumpy and its inner one nearly smooth. Sealed until the player breaks in; its crystals line the hollow.
+        // A geode (110): a hollow of air inside a shell of hard stone Shell thick, sealed until the player breaks in; its
+        // crystals line the hollow. The hollow is an ellipsoid (Radii, in its own frame) smoothly joined to up to two side
+        // lobes (LobeA, LobeB: their centres in its frame, with their radii; zero radii: none) and bent by a broad warp, so
+        // it bulges and pinches like a real one instead of an egg (user, 2026-10-06: "larger ... weirder shape"). The
+        // shell follows it, its outer face lumpy, the inner one nearly smooth.
         public struct Geode
         {
             public float3 Centre, Radii, Min, Max;
+            public float3 LobeA, LobeRadiiA, LobeB, LobeRadiiB;
             public float Shell;
+            // The farthest the shell reaches from the centre, lobes, warp and lumps included.
+            public float Reach;
             public float3x3 ToLocal;
             public quaternion Rotation;
-            // The farthest the shell reaches from the centre, lumps included.
-            public float Reach => math.cmax(Radii) + Shell + GeodeOuterLumps;
         }
         // Two in the old lake sediment, three in the old riverbed (110); the deep stone's hollow is the crystal cavern (115).
         public static readonly int[] GeodesPerZone = { 0, 2, 3, 0 };
-        public const float GeodeOuterLumps = .15f, GeodeInnerLumps = .04f;
+        // The warp's and the lumps' heights, how softly a lobe joins the hollow, and slack on the reach for the
+        // approximate distances.
+        public const float GeodeWarp = .22f, GeodeOuterLumps = .15f, GeodeInnerLumps = .05f, GeodeBlend = .4f, GeodeSlack = .1f;
         // Clearance from pits and stashes, from uniques' spaces, and between geodes (beyond their shells).
         private const float GeodePitClearance = 1.5f, GeodeSpotClearance = 1f, GeodeSpacing = 6f;
 
@@ -156,20 +162,30 @@ namespace SomethingDownThere
             float Next() => TerrainMaterialSnapshot.NextUnit(ref state);
             float Range(float a, float b) => a + (b - a) * Next();
             var geodes = new List<Geode>();
+            // A side lobe off a hollow of this radius along heading, rising or dipping a little, always overlapping it.
+            float3 Lobe(float radius, float heading, out float3 lobeRadii)
+            {
+                float rise = Range(-.5f, .4f), size = radius * Range(.5f, .75f);
+                lobeRadii = new float3(size, size * Range(.7f, .9f), size * Range(.8f, 1.1f));
+                return new float3(math.cos(rise) * math.cos(heading), math.sin(rise), math.cos(rise) * math.sin(heading)) * radius * Range(.6f, .9f);
+            }
             for (int zone = 0; zone < GeodesPerZone.Length; zone++)
             {
                 float zoneTop = zone == 0 ? 0 : ZoneBorders[zone - 1], zoneBottom = zone < ZoneBorders.Length ? ZoneBorders[zone] : extent.y;
                 for (int n = 0; n < GeodesPerZone[zone]; n++)
                     for (int attempt = 0; attempt < 200; attempt++)
                     {
-                        float radius = Range(.9f, 1.3f);
-                        var geode = Make(float3.zero, new float3(radius, radius * Range(.75f, .9f), radius * Range(.9f, 1.1f)), Range(.6f, .9f),
-                            Range(0, 2 * math.PI), Range(-.26f, .26f));
+                        float radius = Range(1.3f, 1.6f), heading = Range(0, 2 * math.PI);
+                        var radii = new float3(radius, radius * Range(.7f, .85f), radius * Range(.85f, 1.05f));
+                        var lobeA = Lobe(radius, heading, out var lobeRadiiA);
+                        var lobeRadiiB = float3.zero;
+                        var lobeB = Next() < .6f ? Lobe(radius, heading + Range(1.6f, 4.7f), out lobeRadiiB) : float3.zero;
+                        var geode = Make(float3.zero, radii, Range(.6f, .8f), Range(0, 2 * math.PI), Range(-.26f, .26f), lobeA, lobeRadiiA, lobeB, lobeRadiiB);
                         float reach = geode.Reach;
                         float top = zoneTop + reach + .5f, bottom = math.min(zoneBottom, extent.y - 1) - reach - .5f;
                         if (bottom <= top) break;
                         var centre = new float3(Range(reach + 1, extent.x - reach - 1), extent.y - Range(top, bottom), Range(reach + 1, extent.z - reach - 1));
-                        geode = Make(centre, geode.Radii, geode.Shell, geode.Rotation);
+                        geode = At(geode, centre);
                         if (footprint != null && !Inside(footprint, centre, reach + .5f)) continue;
                         bool clear = true;
                         foreach (var pit in pits) clear &= math.any(geode.Min > pit.Max + GeodePitClearance) || math.any(pit.Min > geode.Max + GeodePitClearance);
@@ -183,15 +199,24 @@ namespace SomethingDownThere
             return geodes.ToArray();
         }
 
-        // A geode at centre (grid-local metres), turned by yaw about up and tipped by tilt about its own x.
-        public static Geode Make(float3 centre, float3 radii, float shell, float yaw, float tilt)
-            => Make(centre, radii, shell, math.mul(quaternion.RotateY(yaw), quaternion.RotateX(tilt)));
-
-        private static Geode Make(float3 centre, float3 radii, float shell, quaternion rotation)
+        // A geode at centre (grid-local metres), turned by yaw about up and tipped by tilt about its own x, with its side
+        // lobes (zero radii: none).
+        public static Geode Make(float3 centre, float3 radii, float shell, float yaw, float tilt,
+            float3 lobeA = default, float3 lobeRadiiA = default, float3 lobeB = default, float3 lobeRadiiB = default)
         {
-            var geode = new Geode { Centre = centre, Radii = radii, Shell = shell, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)) };
-            float reach = geode.Reach;
-            geode.Min = centre - reach; geode.Max = centre + reach;
+            var rotation = math.mul(quaternion.RotateY(yaw), quaternion.RotateX(tilt));
+            float span = math.cmax(radii);
+            if (math.cmin(lobeRadiiA) > 0) span = math.max(span, math.length(lobeA) + math.cmax(lobeRadiiA));
+            if (math.cmin(lobeRadiiB) > 0) span = math.max(span, math.length(lobeB) + math.cmax(lobeRadiiB));
+            var geode = new Geode { Radii = radii, Shell = shell, Rotation = rotation, ToLocal = math.transpose(new float3x3(rotation)),
+                LobeA = lobeA, LobeRadiiA = lobeRadiiA, LobeB = lobeB, LobeRadiiB = lobeRadiiB,
+                Reach = span + GeodeBlend * .25f + GeodeWarp + shell + GeodeOuterLumps + GeodeSlack };
+            return At(geode, centre);
+        }
+
+        private static Geode At(Geode geode, float3 centre)
+        {
+            geode.Centre = centre; geode.Min = centre - geode.Reach; geode.Max = centre + geode.Reach;
             return geode;
         }
 
@@ -202,13 +227,93 @@ namespace SomethingDownThere
             return k1 > 1e-6f ? k0 * (k0 - 1) / k1 : -math.cmin(radii);
         }
 
+        // Polynomial smooth minimum: the nearer of two distances, rounded where they come within k of each other.
+        private static float SmoothMin(float a, float b, float k)
+        {
+            float h = math.max(k - math.abs(a - b), 0) / k;
+            return math.min(a, b) - h * h * k * .25f;
+        }
+
+        // Signed distance (approximate) from a geode-local point to the hollow's shape: its lobes joined, warped.
+        private static float Shape(Geode geode, float3 local)
+        {
+            float d = Ellipsoid(local, geode.Radii);
+            if (math.cmin(geode.LobeRadiiA) > 0) d = SmoothMin(d, Ellipsoid(local - geode.LobeA, geode.LobeRadiiA), GeodeBlend);
+            if (math.cmin(geode.LobeRadiiB) > 0) d = SmoothMin(d, Ellipsoid(local - geode.LobeB, geode.LobeRadiiB), GeodeBlend);
+            return d + GeodeWarp * noise.snoise(local * .55f + geode.Centre);
+        }
+
         // Signed distance to a geode's hollow (negative in its air) and to its shell's outer face (negative inside the
-        // stone or the hollow), lumps included.
+        // stone or the hollow), lumps included. Grid-local metres.
         public static float HollowDistance(Geode geode, float3 p)
-            => Ellipsoid(math.mul(geode.ToLocal, p - geode.Centre), geode.Radii) + GeodeInnerLumps * noise.snoise(p * 2.6f + geode.Centre);
+        {
+            var local = math.mul(geode.ToLocal, p - geode.Centre);
+            return Shape(geode, local) + GeodeInnerLumps * noise.snoise(local * 2.6f + geode.Centre);
+        }
 
         public static float OuterDistance(Geode geode, float3 p)
-            => Ellipsoid(math.mul(geode.ToLocal, p - geode.Centre), geode.Radii + geode.Shell) + GeodeOuterLumps * noise.snoise(p * .9f + geode.Centre * .37f);
+        {
+            var local = math.mul(geode.ToLocal, p - geode.Centre);
+            return Shape(geode, local) - geode.Shell + GeodeOuterLumps * noise.snoise(local * .9f + geode.Centre * .37f);
+        }
+
+        // Where the ray from a geode's centre along a direction (its own frame) first meets its hollow's face, and the
+        // face's outward normal there, grid-local: marched out HollowStep at a time, then halved to a millimetre or so.
+        private const float HollowStep = .08f;
+        public static (float3 surface, float3 outward) HollowFace(Geode geode, float3 direction)
+        {
+            var way = math.mul(new float3x3(geode.Rotation), math.normalizesafe(direction, new float3(0, -1, 0)));
+            float inside = 0, outside = geode.Reach;
+            for (float t = HollowStep; t < geode.Reach; t += HollowStep)
+            {
+                if (HollowDistance(geode, geode.Centre + way * t) >= 0) { outside = t; break; }
+                inside = t;
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                float middle = (inside + outside) * .5f;
+                if (HollowDistance(geode, geode.Centre + way * middle) >= 0) outside = middle; else inside = middle;
+            }
+            var surface = geode.Centre + way * outside;
+            const float h = .03f;
+            var gradient = new float3(
+                HollowDistance(geode, surface + new float3(h, 0, 0)) - HollowDistance(geode, surface - new float3(h, 0, 0)),
+                HollowDistance(geode, surface + new float3(0, h, 0)) - HollowDistance(geode, surface - new float3(0, h, 0)),
+                HollowDistance(geode, surface + new float3(0, 0, h)) - HollowDistance(geode, surface - new float3(0, 0, h)));
+            return (surface, math.normalizesafe(gradient, way));
+        }
+
+        // A geode's signed distances, to its hollow or to its shell's outer face, at every sample from first to last
+        // (inclusive, x fastest). Burst-compiled: a geode's box holds a few hundred thousand samples.
+        public static NativeArray<float> GeodeField(Geode geode, float cellSize, int3 first, int3 last, bool outer, Allocator allocator)
+        {
+            var count = math.max(last - first + 1, 0);
+            var field = new NativeArray<float>(count.x * count.y * count.z, allocator, NativeArrayOptions.UninitializedMemory);
+            new GeodeJob { Geode = geode, CellSize = cellSize, First = first, Count = count, Outer = outer, Output = field }
+                .Schedule(count.z, 1).Complete();
+            return field;
+        }
+
+        [BurstCompile(CompileSynchronously = true, FloatMode = FloatMode.Strict)]
+        private struct GeodeJob : IJobParallelFor
+        {
+            public Geode Geode;
+            public float CellSize;
+            public int3 First, Count;
+            public bool Outer;
+            [NativeDisableParallelForRestriction, WriteOnly] public NativeArray<float> Output;
+
+            public void Execute(int z)
+            {
+                int i = z * Count.x * Count.y;
+                for (int y = 0; y < Count.y; y++)
+                for (int x = 0; x < Count.x; x++, i++)
+                {
+                    var p = (float3)(First + new int3(x, y, z)) * CellSize;
+                    Output[i] = Outer ? OuterDistance(Geode, p) : HollowDistance(Geode, p);
+                }
+            }
+        }
 
         // What find placement needs from the seeded ground: the pits and their chests, and the geodes.
         public sealed class GroundLayout
@@ -262,10 +367,12 @@ namespace SomethingDownThere
             int stride = size.x + 1, plane = stride * (size.y + 1);
             var first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)geode.Min / cellSize));
             var last = Vector3Int.Min(size, Vector3Int.CeilToInt((Vector3)geode.Max / cellSize));
+            using var field = GeodeField(geode, cellSize, new int3(first.x, first.y, first.z), new int3(last.x, last.y, last.z), true, Allocator.TempJob);
+            int i = 0;
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
-            for (int x = first.x; x <= last.x; x++)
-                if (OuterDistance(geode, new float3(x, y, z) * cellSize) < 0) ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.GeodeShell;
+            for (int x = first.x; x <= last.x; x++, i++)
+                if (field[i] < 0) ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.GeodeShell;
         }
 
         // The fill around a chest (user, 2026-10-06: "all ground around it"): its pocket's walls, floor and roof are

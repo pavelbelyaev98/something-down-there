@@ -1,10 +1,11 @@
 # 110 — Geodes
 
 **Status:** complete:
-- Five geodes, sealed ellipsoid hollows in a shell of hard stone at about a quarter of soil's dig rate, lie
-  in zones 2–3. The first way in opens each one once, with crumbs and dust.
-- Six crystals line each hollow, from the population: celestine and fluorite in the sediment, amethyst and
-  citrine deeper.
+- Five geodes, sealed hollows a few metres across (an ellipsoid smoothly joined to side lobes and warped) in a
+  shell of hard stone at about a quarter of soil's dig rate, lie in zones 2–3. The first way in opens each one
+  once, with crumbs and dust.
+- Ten crystals of one kind line each hollow, from the population: celestine and fluorite in the sediment,
+  amethyst and citrine deeper.
 - The shell is Crystal Caverns' porous rock detail graded dark grey, which won its A/B. The crystals don't glow.
 
 Plan and research: [107](107-asset-only-grounds.md).
@@ -266,3 +267,27 @@ Pulpí geode in Spain is big enough to walk into.
   admin toggle). A crystal shows in the lamp's light, as concept `03` §5 has it.
 - Emission had first failed to show at all: URP's material validation switches a material's `_EMISSION` off when
   its emission colour is black, and the excavation daylight's copy kept that.
+
+## Iteration 2 (user, 2026-10-06: "make them larger and with one crystal type inside and weirder shape")
+
+- **Shape:** the hollow is a main ellipsoid (radius 1.3–1.6 m) smoothly joined (polynomial smooth minimum, 0.4 m)
+  to one or two side lobes (half to three quarters its size, offset 0.6–0.9 of its radius, rising or dipping a
+  little, the second at least 90 degrees round from the first), bent by a broad warp (0.22 m of simplex noise at
+  0.55/m) shared with the shell, which is the same shape grown by 0.6–0.8 m with its outer lumps. `Geode.Reach` is
+  now a stored field covering lobes, blend, warp, lumps and 0.1 m slack.
+- **Cost:** a geode's box is about 7 m across, some 175,000 samples at 0.125 m: `TerrainGround.GeodeField` samples
+  it in a Burst job (z slices in parallel) for both the material fill and the hollow carve; the managed loops were
+  six times the old work and would have added seconds to New Game.
+- **Crystals:** `TerrainGround.HollowFace` marches rays from the centre to the hollow's face (0.08 m steps, then
+  halving) and takes the normal from the distance's gradient, shared by seating (`GeodeSeat`) and the break-in
+  probes (`DiscoveryField.HollowFace`). Each geode takes `GeodeCrystals` = 10 of the kind its band covers with the
+  most instances left (a tie drawn); six ring the floor and lower walls, four higher. Counts: celestine and
+  fluorite 10 each (the sediment's two geodes), amethyst 20 and citrine 10 (the riverbed's three); each crystal
+  cheaper ($30, $40, $55, $75), a geode worth a little more than before. Crystals are 1.6 times larger
+  (0.4–0.6 m clusters), so ten still fill a bigger hollow.
+- **Ground Lab:** its geode is as large as the site's (lobes east under the unused slot and south, clear of the
+  shell bay), about 2 m down, lined with the kind most geodes hold.
+- **Lighting:** breaking in flashed bright, then went dark (user). The instant patch lit fresh nodes from any open
+  neighbour, while the rebuild's links need clear air between the nodes' standing points; the patch now checks the
+  same clearance. Scripted pinholes (on and between node columns) lit the same at once and after the rebuild, so
+  the user's exact case is not reproduced; it is in the playtest note.

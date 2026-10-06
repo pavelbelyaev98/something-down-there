@@ -73,7 +73,7 @@ The lakebed excavation is a single contained worksite.
   the shore into a glowing white band; the lake remains scenery outside the play area.
 - **Underground:** fully diggable voxel ground except permanent boundaries.
 - **No caves or tunnel networks:** every passage is one the player dug. The only pre-existing
-  air is the old chests' hollows and a few small [geodes](#5-geodes), and the player always breaks
+  air is the old chests' hollows and a few [geodes](#5-geodes), and the player always breaks
   into them.
 - **Buried structures:** authored walls, machinery and filled interiors are allowed. The
   player digs every opening; no pre-dug passage network.
@@ -250,13 +250,16 @@ Geodes keep that moment without cave networks.
 - A geode is a ball of hard rock, hollow inside and lined with crystals. Real ones are dug out of
   river-bed sediments (the Keokuk geodes along the Mississippi); the Pulpí geode is big enough to walk
   into.
-- A few lie in zones 2–3, small and off the main descent. The shell reads in a tunnel wall as a
-  curved face of distinct stone, never the bedrock shelf's look. The drill crawls through it in
+- A few lie in zones 2–3, off the main descent, big enough to stand in: an uneven hollow a few
+  metres across that bulges and pinches, never an egg (user, 2026-10-06: "larger ... weirder
+  shape"). The shell reads in a tunnel wall as a curved face of distinct stone, never the bedrock
+  shelf's look. The drill crawls through it in
   seconds; C4 cracks it fast ([Tool and Movement](04_TOOL_AND_MOVEMENT.md#8-c4)).
 - Always sealed: the player always breaks in. Inside it is dark until the player's opening or a lamp
-  lights it; crystals catch the light. They are finds worth far more than the ground around them,
-  richer the deeper the geode: real geode minerals, celestine and fluorite in the sediment, amethyst and
-  citrine in the riverbed, apart from the gems loose in the ground.
+  lights it; crystals catch the light. Each geode holds one kind (user, 2026-10-06). They are finds
+  worth far more than the ground around them, richer the deeper the geode: real geode minerals,
+  celestine and fluorite in the sediment, amethyst and citrine in the riverbed, apart from the gems
+  loose in the ground.
 - Geodes never connect into passages and never form a maze.
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
