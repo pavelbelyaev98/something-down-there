@@ -2,19 +2,19 @@
   "schema_version": 1,
   "prefab": "Assets/Content/BuriedProps/OldChest/OldChest.prefab",
   "display_name": "Old chest",
-  "items": 5,
+  "items": 6,
   "contents": [
     {
       "content_id": "treasure_ingot_copper",
-      "weight": 3
+      "weight": 4
     },
     {
       "content_id": "treasure_ingot_silver",
-      "weight": 2
+      "weight": 3
     },
     {
       "content_id": "treasure_ingot_gold",
-      "weight": 2
+      "weight": 3
     },
     {
       "content_id": "treasure_crystal_emerald",

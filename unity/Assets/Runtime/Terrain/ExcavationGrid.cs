@@ -96,7 +96,7 @@ namespace SomethingDownThere
             strideZ = strideY * (size.y + 1);
             density = new PagedDensity(strideZ * (size.z + 1));
             bool seeded = materialSeed.HasValue && features != TerrainGround.Features.None;
-            materials = seeded ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value, oddSpots, features)
+            materials = seeded ? TerrainMaterialSnapshot.Generate(size, cellSize, materialSeed.Value, oddSpots, features, stashPocket)
                 : TerrainMaterialSnapshot.Uniform(density.Length);
             if (seeded) Layout = TerrainGround.Layout(size, cellSize, materialSeed.Value, oddSpots, features, stashPocket);
             // Reserve the support-search workspace during loading, not on the

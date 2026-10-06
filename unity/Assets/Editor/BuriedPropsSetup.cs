@@ -34,18 +34,21 @@ namespace SomethingDownThere.Editor
             "Crystal_Beryl_01", "Crystal_Beryl_02", "Crystal_Ruby_1", "Crystal_Ruby_2", "Crystal_Quartz_1", "Crystal_Quartz_2",
         };
         // Crystal colours of our own on the pack's maps (any bought pack's textures may dress new items): its beryl is
-        // aquamarine and its quartz pale blue, so emerald takes a deep green, diamond a clear white with a cold edge, and
-        // ruby a deeper red than the pack's flat one.
+        // aquamarine and its quartz pale blue, so emerald takes a deep green, diamond a cool grey-blue and ruby a deep red.
+        // Dark enough that sunlight down a shaft shades them instead of burning them white (user, 2026-10-06: the near-
+        // white diamond read as a flat white shape); CrystalGloss keeps a glint without a mirror.
         private static readonly Dictionary<string, Color> CrystalTints = new Dictionary<string, Color>
         {
-            ["Crystal_Beryl_01"] = new Color(.12f, .5f, .24f), ["Crystal_Ruby_1"] = new Color(.5f, .04f, .07f),
-            ["Crystal_Quartz_1"] = new Color(.9f, .95f, 1f),
+            ["Crystal_Beryl_01"] = new Color(.08f, .38f, .18f), ["Crystal_Ruby_1"] = new Color(.42f, .03f, .06f),
+            ["Crystal_Quartz_1"] = new Color(.45f, .5f, .56f),
         };
+        private const float CrystalGloss = .75f;
         // Small props seen from a metre or two in a stylized game: their maps import no larger than this.
         private const int PackMapSize = 1024;
-        // Ingots after decades in the ground are tarnished, not mirror-bright: this share of the pack's smoothness.
-        // Mirror silver at the bottom of an open shaft read sky blue.
-        private const float Tarnish = .55f;
+        // Ingots after decades in the ground are aged, dull metal: their colour map at AgedTint, half metal and AgedGloss
+        // smooth, so the light shades their faces. Fully metal, they showed only the reflected sky, as a flat glowing
+        // colour (user, 2026-10-06: "ingots light is fucked"); mirror silver read sky blue.
+        private const float AgedTint = .62f, AgedMetal = .5f, AgedGloss = .42f;
 
         [MenuItem("Tools/Something Down There/Configure Buried Props")]
         public static void Configure()
@@ -82,7 +85,7 @@ namespace SomethingDownThere.Editor
 
             foreach (var name in MiningProps)
                 PackVariant($"{MiningVendor}/Prefabs/{name}.prefab", $"{MiningFolder}/{name}.prefab",
-                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? 1 : Tarnish));
+                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", !name.StartsWith("Ore_")));
             foreach (var name in CrystalProps)
                 PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CrystalFolder}/{name}.prefab", vendor => FromCrystal(vendor, $"{CrystalFolder}/{vendor.name}.mat"));
             AssetDatabase.SaveAssets();
@@ -98,16 +101,22 @@ namespace SomethingDownThere.Editor
         }
 
         // A URP Lit copy of a Mining Tools, Ore & Ingots HDRP Lit material: its colour map in its tint, its normal map, and
-        // its mask, whose metallic (R), occlusion (G) and smoothness (A, times shine) URP Lit reads from the same map.
-        internal static Material FromHdrp(Material vendor, string path, float shine = 1)
+        // its mask, whose metallic (R), occlusion (G) and smoothness (A) URP Lit reads from the same map. Aged metal keeps
+        // the mask's occlusion only (AgedTint, AgedMetal, AgedGloss).
+        internal static Material FromHdrp(Material vendor, string path, bool aged = false)
         {
             var (maps, floats, colors) = Saved(vendor);
             var material = LitMaterial(path, Sized(maps["_BaseColorMap"]), Sized(maps["_NormalMap"]));
-            var tint = colors["_BaseColor"]; tint.a = 1;
+            var tint = aged ? colors["_BaseColor"] * AgedTint : colors["_BaseColor"]; tint.a = 1;
             material.SetColor("_BaseColor", tint);
             material.SetFloat("_BumpScale", floats["_NormalScale"]);
             var mask = Sized(maps["_MaskMap"]);
-            material.SetTexture("_MetallicGlossMap", mask); material.SetFloat("_Smoothness", floats["_SmoothnessRemapMax"] * shine);
+            if (aged)
+            {
+                material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
+                material.SetFloat("_Metallic", AgedMetal); material.SetFloat("_Smoothness", AgedGloss);
+            }
+            else { material.SetTexture("_MetallicGlossMap", mask); material.SetFloat("_Smoothness", floats["_SmoothnessRemapMax"]); }
             material.SetTexture("_OcclusionMap", mask); material.SetFloat("_OcclusionStrength", 1); material.EnableKeyword("_OCCLUSIONMAP");
             EditorUtility.SetDirty(material);
             return material;
@@ -124,7 +133,7 @@ namespace SomethingDownThere.Editor
             material.SetColor("_BaseColor", tint);
             material.SetFloat("_BumpScale", floats["_NormalPower"]);
             material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
-            material.SetFloat("_Metallic", 0); material.SetFloat("_Smoothness", Mathf.Min(.9f, floats["_Smoothness"]));
+            material.SetFloat("_Metallic", 0); material.SetFloat("_Smoothness", Mathf.Min(CrystalGloss, floats["_Smoothness"]));
             EditorUtility.SetDirty(material);
             return material;
         }

@@ -55,7 +55,7 @@ namespace SomethingDownThere.Tests
         }
 
         private BuriedFind[] Contents(BuriedChest chest)
-            => field.Finds.Where(f => !f.Collected && Vector3.Distance(f.transform.position, chest.transform.position) < chest.Radius).ToArray();
+            => field.Finds.Where(f => !f.Collected && chest.Hollow.Contains(chest.transform.InverseTransformPoint(f.transform.position))).ToArray();
 
         [UnityTest]
         public IEnumerator AStashChestOpensWhereItLiesWhenItsLockIsForced()

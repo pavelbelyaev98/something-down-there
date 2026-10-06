@@ -191,3 +191,12 @@ the pits. This first version is meant to change after a playtest (user: "maybe, 
 - "I can open it only when facing the opening and holding E": `BuriedChest.FacesLock` asks for the eye within 55°
   of the way the lock faces (`front`, measured by `ChestSetup` from the hinge). From behind or the side the prompt
   says to go round to its lock.
+- "More pocket space horizontally in front of the chest": the pocket reaches a further 0.8 m in front of the lock
+  (`PocketFront`), about 2 m of floor there.
+- "You added the backfill on top and bottom of the chest, but I want all ground around it to be like that":
+  - The pocket had outgrown its pit, so its side walls were soil.
+  - `TerrainGround.FillShell` now makes the ground backfill to 0.6 m around the pocket, with a lumpy edge.
+  - It runs on the main thread after the ground job, so the Burst job is unchanged.
+- Ordinary finds keep out of the pocket by a sphere around each quarter of it (`BuriedChest.PocketReserves`). One
+  sphere around the wider pocket reached about 3 m up and would have emptied the rock layer over the first chest,
+  under the plot centre.

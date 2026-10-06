@@ -150,7 +150,8 @@ namespace SomethingDownThere
             return footprint(new Vector2(centre.x, centre.z));
         }
 
-        internal static byte[] Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null, Features features = Features.All)
+        internal static byte[] Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null, Features features = Features.All,
+            Bounds stashPocket = default)
         {
             int stride = size.x + 1, plane = stride * (size.y + 1);
             var pits = Pits(size, cellSize, seed, OddSpots(oddSpots), features);
@@ -160,7 +161,34 @@ namespace SomethingDownThere
             using var nativePits = new NativeArray<Pit>(pits, Allocator.TempJob);
             new GroundJob { Size = new int3(size.x, size.y, size.z), CellSize = cellSize, Offsets = offsets, Pits = nativePits, Output = output }
                 .Schedule(size.z + 1, 1).Complete();
-            return output.ToArray();
+            var ids = output.ToArray();
+            foreach (var stash in Stashes(pits, seed, stashPocket)) if (stash.HasPocket) FillShell(ids, size, cellSize, stash, offsets);
+            return ids;
+        }
+
+        // The fill around a chest (user, 2026-10-06: "all ground around it"): its pocket's walls, floor and roof are
+        // backfill to ChestShell beyond it, with a lumpy edge, wherever the pit itself does not reach.
+        public const float ChestShell = .6f;
+        private static void FillShell(byte[] ids, Vector3Int size, float cellSize, Stash stash, float4 offsets)
+        {
+            int stride = size.x + 1, plane = stride * (size.y + 1);
+            float reach = math.length(stash.PocketHalf) + math.length(stash.PocketCentre) + ChestShell + .2f;
+            var first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)(stash.Centre - reach) / cellSize));
+            var last = Vector3Int.Min(size, Vector3Int.CeilToInt((Vector3)(stash.Centre + reach) / cellSize));
+            var half = stash.PocketHalf + ChestShell;
+            for (int z = first.z; z <= last.z; z++)
+            for (int y = first.y; y <= last.y; y++)
+            {
+                if ((size.y - y) * cellSize < SurfaceSoil) continue;
+                for (int x = first.x; x <= last.x; x++)
+                {
+                    var p = new float3(x, y, z) * cellSize;
+                    var d = math.abs(math.mul(stash.ToLocal, p - stash.Centre) - stash.PocketCentre) - (half - .3f);
+                    float outside = math.length(math.max(d, 0)) + math.min(math.cmax(d), 0) - .3f
+                        + .15f * noise.snoise(p * 1.4f + offsets.xzw + 19.7f);
+                    if (outside < 0) ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.Backfill;
+                }
+            }
         }
 
         [BurstCompile(CompileSynchronously = true, FloatMode = FloatMode.Strict)]

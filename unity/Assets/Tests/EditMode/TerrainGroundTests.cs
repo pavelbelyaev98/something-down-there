@@ -77,6 +77,12 @@ namespace SomethingDownThere.Tests
                     Assert.That(grid.IsSolid(floor - Vector3.up * .05f), Is.True, "The chest's footing stays ground.");
                     Assert.That(grid.IsSolid(floor + Vector3.up * .08f), Is.False, "A flat floor under the chest.");
                 }
+                // Its walls, floor and roof are fill all round (user, 2026-10-06).
+                foreach (var side in new[] { Vector3.left, Vector3.right, Vector3.forward, Vector3.back, Vector3.up, Vector3.down })
+                {
+                    var wall = Vector3Int.RoundToInt(((Vector3)stash.Centre + turn * (pocket.center + Vector3.Scale(side, pocket.extents + Vector3.one * .25f))) / .125f);
+                    Assert.That(grid.MaterialAt(wall.x, wall.y, wall.z), Is.EqualTo(TerrainMaterialId.Backfill), $"Fill {side} of the pocket.");
+                }
                 var start = Vector3Int.RoundToInt(centre / .125f);
                 var seen = new HashSet<Vector3Int> { start };
                 var queue = new Queue<Vector3Int>(); queue.Enqueue(start);

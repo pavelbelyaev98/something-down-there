@@ -58,10 +58,10 @@ namespace SomethingDownThere
         // Soil and backfill pits: see TerrainGround.
         // Odd spots: grid-local unique centres (xyz) and envelope radii (w) that pits keep clear of.
         public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null,
-            TerrainGround.Features features = TerrainGround.Features.All)
+            TerrainGround.Features features = TerrainGround.Features.All, Bounds stashPocket = default)
         {
             ExcavationGrid.ValidateDimensions(size, cellSize);
-            return new TerrainMaterialSnapshot(TerrainGround.Generate(size, cellSize, seed, oddSpots, features));
+            return new TerrainMaterialSnapshot(TerrainGround.Generate(size, cellSize, seed, oddSpots, features, stashPocket));
         }
 
         // Seeded unit float from a hash state; never touches UnityEngine.Random.

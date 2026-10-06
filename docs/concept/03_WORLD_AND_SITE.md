@@ -206,8 +206,9 @@ Shared rules for all tells:
   does whatever sank or was lost, so ordinary digging keeps its own surprises. Every pit holds a
   chest, never an empty decoy, and pays well for following it.
 - The fill settled away from the chest: it stands in a pocket of air reaching past its sides and
-  above its lid's swing, so the shaft breaks into an open space with the chest in it, and its lid
-  can be forced the moment the player reaches it (user, 2026-10-06).
+  above its lid's swing, with room to stand in front of its lock, so the shaft breaks into an open
+  space with the chest in it, and its lid can be forced the moment the player reaches it. The ground
+  all round the pocket is fill too (user, 2026-10-06).
 - It reads by grain and colour: the soil turned over, darker and greyer than the warm settled soil
   (user, 2026-10-06), with dirty stones churned in, drawn from its own texture made from the packs'
   soil and rubble. What the eye sees is what the tool feels.

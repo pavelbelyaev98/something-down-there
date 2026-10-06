@@ -121,3 +121,13 @@ items. AGENTS.md "Bought Before Made" now says so.
     a row of minerals, a row of chest treasure and a row of TVs.
   - It strips each copy's `BuriedFind` and `FindPhysics`, so it stays solid but is never taken.
   - `LabExhibit` names the look on aim, with its price and depth.
+- **Bigger ingots, more per chest:** ingots at 1.1x the pack's size; six floor seats in two rows of three; a
+  smaller random turn (±12°) so they keep clear of each other; 18 pieces across three chests.
+- **Lighting** ("the crystal is pure white; the ingots' light is also off"):
+  - Fully metallic ingots showed only the reflected sky, a flat glowing colour. They are now aged metal: colour map
+    at 62%, half metal, smoothness 0.42, keeping the mask's occlusion. They shade like the wood around them.
+  - The crystals took darker tints (diamond a cool grey-blue instead of near-white) and at most 0.75 smoothness.
+  - These were compared on the Ground Lab chest in full sun and checked in the first stash under its shaft.
+- **Ground Lab chest:** "also add an openable chest with valuables inside." `DiscoveryField.SpawnLabChest`
+  stands an old chest on the surface west of the open pit, its lock to the south, its base 2 cm into the ground so
+  its footing holds. It holds one each of the chest contents' most valuable kinds, as real finds taken by hand.

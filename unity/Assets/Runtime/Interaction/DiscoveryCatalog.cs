@@ -196,7 +196,9 @@ namespace SomethingDownThere
             {
                 seats = new Vector3[radii.Length];
                 for (int i = 0; i < seats.Length; i++) seats[i] = new Vector3(float.NaN, 0, 0);
-                foreach (var stash in stashes) reserved.Add(new DiscoveryReservation((Vector3)stash.Centre, Chest.Radius + DiscoveryField.SoilClearance));
+                foreach (var stash in stashes)
+                    foreach (var (centre, radius) in Chest.PocketReserves())
+                        reserved.Add(new DiscoveryReservation((Vector3)stash.Centre + (Quaternion)stash.Rotation * centre, radius + DiscoveryField.SoilClearance));
                 SeatChests(stashes, extent, seed, shallow, bands, seats, chestTurns);
             }
             Func<int, Vector3, float> weight = null;
@@ -246,7 +248,7 @@ namespace SomethingDownThere
                 {
                     int pick = random.Next(total), choice = 0;
                     while (pick >= ChestContents[choice].Weight) pick -= ChestContents[choice++].Weight;
-                    var turn = chest * Quaternion.Euler(0, (float)(random.NextDouble() - .5) * 40, 0);
+                    var turn = chest * Quaternion.Euler(0, (float)(random.NextDouble() - .5) * 24, 0);
                     for (int attempt = 0; attempt < ChestContents.Length; attempt++)
                     {
                         int entry = ContentIndex(ChestContents[(choice + attempt) % ChestContents.Length].ItemId), seated = -1;

@@ -180,11 +180,43 @@ namespace SomethingDownThere
                 find.name = find.Item.DisplayName + " (lab " + finds.Count + ")";
                 finds.Add(find);
             }
+            SpawnLabChest();
             foreach (var find in finds) find.RefreshExposure();
             SpawnGallery();
             clearsStored = true;
             initialized = true;
             PopulationRevision++;
+        }
+
+        // The Ground Lab's old chest (user, 2026-10-06): one stands on the surface west of the open pit, its lock to the
+        // south where the player arrives, holding one each of the chest contents' most valuable kinds. It opens and
+        // empties like a buried one; Restart Ground Lab brings it back.
+        private static readonly Vector3 LabChestAt = new Vector3(-5f, 0, 6f);
+
+        private void SpawnLabChest()
+        {
+            if (catalog.Chest == null || catalog.ChestContents.Length == 0) return;
+            // Its base 2 cm into the ground (the pocket's floor lies that far above the base), so its footing holds.
+            var position = new Vector3(LabChestAt.x, terrain.SurfaceHeight - catalog.Chest.Pocket.min.y, LabChestAt.z);
+            var chest = SpawnChest(position, Quaternion.Euler(0, 90, 0));
+            var random = new System.Random(6);
+            var kinds = new List<DiscoveryCatalog.Entry>();
+            foreach (var content in catalog.ChestContents)
+            {
+                var kind = Array.Find(catalog.Entries, e => e.ItemId == content.ItemId);
+                if (kind != null) kinds.Add(kind);
+            }
+            kinds.Sort((a, b) => b.Prefab.SaleValue.CompareTo(a.Prefab.SaleValue));
+            for (int k = 0; k < kinds.Count && k < catalog.ChestItems && k < chest.ContentSeats.Length; k++)
+            {
+                var entry = kinds[k];
+                var seat = chest.transform.TransformPoint(chest.ContentSeats[k]) + Vector3.up * (entry.RestingHalfHeight + .01f);
+                var turn = chest.transform.rotation * Quaternion.Euler(0, (float)(random.NextDouble() - .5) * 24, 0);
+                var find = Instantiate(entry.Appearance(random.Next(entry.AppearanceCount)), seat, turn, transform);
+                find.Initialize(terrain, $"ground-lab-chest-{k}", this);
+                find.name = find.Item.DisplayName + " (lab chest " + k + ")";
+                finds.Add(find);
+            }
         }
 
         // The Ground Lab's find gallery (user, 2026-10-06): every look of every common find set out on the surface north of

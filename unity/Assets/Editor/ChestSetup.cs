@@ -23,6 +23,8 @@ namespace SomethingDownThere.Editor
         // past them sideways (room to stand beside it) and PocketHeadroom above; its floor lies PocketFloor above the
         // chest's base, so the base sits that little way in the ground and the footing under it stays solid.
         private const float PocketSide = .75f, PocketHeadroom = .5f, PocketFloor = .02f;
+        // In front of its lock the pocket reaches PocketFront further, room to stand there and open it (user, 2026-10-06).
+        private const float PocketFront = .8f;
         [Serializable] private sealed class Source { public int schema_version; public string prefab, display_name; public int items; public Content[] contents; }
         [Serializable] private sealed class Content { public string content_id; public int weight; }
 
@@ -117,8 +119,9 @@ namespace SomethingDownThere.Editor
                 float hollowTop = outer.max.y + HollowMargin, hollowBottom = (outer.min.y + floor) * .5f;
                 var hollowHalf = new Vector3(outer.extents.x + HollowMargin, (hollowTop - hollowBottom) * .5f, outer.extents.z + HollowMargin);
                 var hollowCentre = new Vector3(outer.center.x, (hollowTop + hollowBottom) * .5f, outer.center.z);
-                // Five seats on the floor (113: a few coins and an ingot or two): its middle and towards its four corners.
-                var seats = new[] { Vector2.zero, new Vector2(-.5f, -.55f), new Vector2(.5f, .55f), new Vector2(.5f, -.55f), new Vector2(-.5f, .55f) }
+                // Six seats on the floor in two rows of three (user, 2026-10-06: bigger ingots, more of them), so a turned ingot
+                // keeps clear of its neighbours and the walls.
+                var seats = new[] { -.62f, 0f, .62f }.SelectMany(z => new[] { new Vector2(-.5f, z), new Vector2(.5f, z) })
                     .Select(s => new Vector3(s.x * innerX, floor, s.y * innerZ)).ToArray();
                 if (source.items > seats.Length) throw new InvalidDataException($"The old chest seats {seats.Length} items at most.");
                 var pivot = root.transform.InverseTransformPoint(hinge.position);
@@ -142,8 +145,9 @@ namespace SomethingDownThere.Editor
                 space.Encapsulate(new Bounds(hollowCentre, hollowHalf * 2));
                 foreach (var point in lidSpace) space.Encapsulate(point);
                 float pocketBottom = Mathf.Min(hollowBottom, outer.min.y + PocketFloor), pocketTop = space.max.y + PocketHeadroom;
-                var pocketHalf = new Vector3(space.extents.x + PocketSide, (pocketTop - pocketBottom) * .5f, space.extents.z + PocketSide);
-                var pocketCentre = new Vector3(space.center.x, (pocketTop + pocketBottom) * .5f, space.center.z);
+                float pocketBack = space.min.x - PocketSide - (front < 0 ? PocketFront : 0), pocketAhead = space.max.x + PocketSide + (front > 0 ? PocketFront : 0);
+                var pocketHalf = new Vector3((pocketAhead - pocketBack) * .5f, (pocketTop - pocketBottom) * .5f, space.extents.z + PocketSide);
+                var pocketCentre = new Vector3((pocketAhead + pocketBack) * .5f, (pocketTop + pocketBottom) * .5f, space.center.z);
                 var footing = new List<Vector3>();
                 foreach (float x in new[] { -.75f, 0, .75f })
                 foreach (float z in new[] { -.85f, -.42f, 0, .42f, .85f })

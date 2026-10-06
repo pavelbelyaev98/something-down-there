@@ -20,7 +20,7 @@ namespace SomethingDownThere
         // The way its lock faces (its lid's free edge), in its own frame.
         [SerializeField] private Vector3 front = Vector3.right;
         [SerializeField] private Vector3[] lidSpace = Array.Empty<Vector3>(), footing = Array.Empty<Vector3>();
-        // Reach of the chest's pocket from its pivot; ordinary finds keep out of it.
+        // Reach of the chest's pocket from its pivot (ordinary finds keep out of PocketReserves).
         [SerializeField, Min(.1f)] private float radius = .85f;
         // The lid opens with this share of its space still soil (crumbs and slivers), and the chest falls
         // once no more than FootingHeld of its footing points rest on soil.
@@ -35,6 +35,19 @@ namespace SomethingDownThere
         public string DisplayName => displayName;
         public Bounds Hollow => new Bounds(hollowCentre, hollowHalf * 2);
         public Bounds Pocket => new Bounds(pocketCentre, pocketHalf * 2);
+
+        // The space ordinary finds keep out of, in the chest's frame: a sphere around each quarter of its pocket (split
+        // across its floor), which hugs the wide, low pocket far closer than one sphere around it all, so the rock layer
+        // over a shallow chest stays. PocketMargin more, as the carved surface can lie a voxel cell or two outside the box.
+        public const float PocketMargin = .25f;
+        public (Vector3 centre, float radius)[] PocketReserves()
+        {
+            var quarter = new Vector3(pocketHalf.x * .5f, pocketHalf.y, pocketHalf.z * .5f);
+            var reserves = new (Vector3, float)[4];
+            for (int i = 0; i < 4; i++)
+                reserves[i] = (pocketCentre + new Vector3((i & 1) == 0 ? -quarter.x : quarter.x, 0, (i & 2) == 0 ? -quarter.z : quarter.z), quarter.magnitude + PocketMargin);
+            return reserves;
+        }
         public Vector3[] ContentSeats => contentSeats;
         public float Radius => radius;
         public bool Opened { get; private set; }

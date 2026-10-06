@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,3,2,2,3,3,2}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,4,3,3,3,3,2}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -162,14 +162,13 @@ namespace SomethingDownThere.Tests
             Assert.That(rock.Prefab.GetComponent<MeshFilter>().sharedMesh.bounds.size.x, Is.GreaterThan(.4f));
         }
 
-        // The stash whose chest holds this point, or -1.
-        private static float chestRadius = -1;
+        // The stash whose chest's hollow holds this point, or -1.
         private static int InChest(Vector3 point)
         {
-            if (chestRadius < 0) chestRadius = Catalog.Chest.Radius;
+            var hollow = Catalog.Chest.Hollow;
             var stashes = GroundLayout.Stashes;
             for (int s = 0; s < stashes.Length; s++)
-                if (Vector3.Distance(point, (Vector3)stashes[s].Centre) < chestRadius) return s;
+                if (hollow.Contains(Quaternion.Inverse(stashes[s].Rotation) * (point - (Vector3)stashes[s].Centre))) return s;
             return -1;
         }
 
@@ -201,10 +200,15 @@ namespace SomethingDownThere.Tests
             Assert.That(layout.Count(p => contents.Contains(p.PrefabIndex)), Is.EqualTo(stashes.Length * catalog.ChestItems),
                 $"Seed {seed}: the treasure lies only in chests.");
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
+            var pocket = catalog.Chest.Pocket;
             foreach (var p in layout.Where(p => !contents.Contains(p.PrefabIndex)))
                 foreach (var stash in stashes)
-                    Assert.That(Vector3.Distance(p.Position, (Vector3)stash.Centre) - radii[p.PrefabIndex], Is.GreaterThan(catalog.Chest.Radius),
-                        "Nothing else reaches into a chest's pocket.");
+                {
+                    var local = Quaternion.Inverse(stash.Rotation) * (p.Position - (Vector3)stash.Centre) - pocket.center;
+                    var d = new Vector3(Mathf.Abs(local.x), Mathf.Abs(local.y), Mathf.Abs(local.z)) - pocket.extents;
+                    float outside = Vector3.Max(d, Vector3.zero).magnitude + Mathf.Min(Mathf.Max(d.x, Mathf.Max(d.y, d.z)), 0);
+                    Assert.That(outside, Is.GreaterThan(radii[p.PrefabIndex]), "Nothing else reaches into a chest's pocket.");
+                }
             Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount), "Chests take their contents from the population.");
         }
 
@@ -295,13 +299,17 @@ namespace SomethingDownThere.Tests
                     var patches = new System.Collections.Generic.List<int>();
                     var corner = new Vector2(SiteLayout.Origin.x, SiteLayout.Origin.z);
                     bool InPlot(float x, float z) => SiteLayout.BeyondFootprint(new Vector2(x, z) + corner) <= 0;
-                    // A stash's old chest crossing the floor is that patch's encounter (106): its reserve keeps rocks away.
+                    // A stash's chest pocket crossing the floor is the encounter of every patch it reaches (106, 109): its
+                    // reserve keeps rocks away there.
                     bool Inside(Vector3 p, float x, float z) => p.x >= x && p.x < x + 3 && p.z >= z && p.z < z + 3;
+                    float reach = new Vector2(catalog.Chest.Pocket.extents.x, catalog.Chest.Pocket.extents.z).magnitude
+                        + new Vector2(catalog.Chest.Pocket.center.x, catalog.Chest.Pocket.center.z).magnitude;
+                    bool Reaches(Vector3 c, float x, float z) => new Vector2(Mathf.Clamp(c.x, x, x + 3) - c.x, Mathf.Clamp(c.z, z, z + 3) - c.z).magnitude < reach;
                     var chests = GroundLayout.Stashes.Where(s => Mathf.Abs(SiteLayout.Extent.y - s.Centre.y - floor) < catalog.Chest.Radius)
                         .Select(s => (Vector3)s.Centre).ToArray();
                     for (float x = 0; x + 3 <= SiteLayout.Extent.x; x += 3) for (float z = 0; z + 3 <= SiteLayout.Extent.z; z += 3)
                         if (InPlot(x, z) && InPlot(x + 3, z) && InPlot(x, z + 3) && InPlot(x + 3, z + 3))
-                            patches.Add(fresh.Count(i => Inside(layout[i].Position, x, z)) + chests.Count(c => Inside(c, x, z)));
+                            patches.Add(fresh.Count(i => Inside(layout[i].Position, x, z)) + chests.Count(c => Reaches(c, x, z)));
                     Assert.That(patches.Count, Is.GreaterThanOrEqualTo(40), "The plot holds enough whole patches to judge.");
                     // Random patches may vary; require no empty patch and keep even the
                     // sparse decile useful, rather than treating one low sample as the mean.

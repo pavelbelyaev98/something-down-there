@@ -4,4 +4,4 @@
 - **Source/License:** User-purchased [Asset Store pack](https://assetstore.unity.com/packages/3d/props/exterior/mining-tools-ore-ingots-26357) (2026-10-06), Unity Asset Store EULA (Extension Asset); keep source access restricted.
 - **Unity Path:** `unity/Assets/REAL_DEDICATED/` (vendor files untouched apart from a 1024 px import cap on the used maps). Its loose materials are HDRP. Configure Buried Props builds URP copies and prefab variants in `Content/BuriedProps/MiningPack`.
 - **Repository:** Only the files the game uses are committed (the vendor prefabs, materials, models and maps that `Content/BuriedProps/MiningPack` depends on, by `AssetDatabase.GetDependencies`), with the binaries in LFS. Its two nested installers (`*_BRP/_URP.unitypackage`, 1.9 GB) are ignored. The unused coins, tools, 4K rock sets, decals, `_Showcase` and `_Shared` stay out until they are needed.
-- **Status:** In the game (113). The ingots are tarnished copies (lower smoothness).
+- **Status:** In the game (113). The ingots are aged copies (dulled colour, half metal, less gloss).

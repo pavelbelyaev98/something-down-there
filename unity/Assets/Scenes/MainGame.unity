@@ -26297,7 +26297,7 @@ MonoBehaviour:
   prefabs: []
   catalog: {fileID: 11400000, guid: d167a5aee9521d54eb852204c85f19cc, type: 2}
   seed: 90127
-  count: 15704
+  count: 15707
   developmentContent: 0
 --- !u!1 &203660131
 GameObject:
@@ -63578,8 +63578,8 @@ MonoBehaviour:
   - {x: 19.5, y: 142, z: 4.7, w: 0.89879173}
   - {x: 13, y: 136.5, z: 11, w: 0.89879173}
   - {x: 24, y: 129, z: 18, w: 0.89879173}
-  stashPocketCentre: {x: -0.044675767, y: 0.5643426, z: 0}
-  stashPocketHalf: {x: 1.259398, y: 0.8209485, z: 1.5079907}
+  stashPocketCentre: {x: 0.3553242, y: 0.5643426, z: 0}
+  stashPocketHalf: {x: 1.6593978, y: 0.8209485, z: 1.5079907}
   soilMaterial: {fileID: 2100000, guid: 685a4a2f8a621554ba94a0445b00b296, type: 2}
   untouchedPreview: {fileID: 1062989434}
 --- !u!114 &486403994
