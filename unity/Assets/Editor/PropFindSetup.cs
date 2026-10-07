@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SomethingDownThere.Editor
 {
-    // Finds made from bought prop prefabs (BuriedPropsSetup): rubbish (106: art/tv-set, art/big-old-tv), which lies loose
+    // Finds made from bought prop prefabs (BuriedPropsSetup): rubbish (106: the TVs in art/tv-set), which lies loose
     // in the soil in its depth band like any find, a chest's treasure (113: the ingots in art/mining-pack, taken by hand;
     // chests hold ingots only), pyrite, the lake sediment's fool's gold (114: art/pure-nature-crystal-caverns/ground.json),
     // and the crystals lining the geodes (110: geode.json beside it). Each source names its
@@ -18,7 +18,6 @@ namespace SomethingDownThere.Editor
         private static readonly (string path, string folder, bool boxHull)[] Sources =
         {
             ("art/tv-set/catalog.json", "Assets/Content/Discoveries/Junk", true),
-            ("art/big-old-tv/catalog.json", "Assets/Content/Discoveries/Junk", true),
             ("art/mining-pack/catalog.json", "Assets/Content/Discoveries/Treasure", false),
             ("art/pure-nature-crystal-caverns/ground.json", "Assets/Content/Minerals", false),
             ("art/pure-nature-crystal-caverns/geode.json", "Assets/Content/Discoveries/Geode", false),

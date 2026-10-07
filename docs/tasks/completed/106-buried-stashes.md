@@ -172,3 +172,8 @@ pit ends in old TVs, the first junk finds. Feel:
 - "Backfills should have only chests; items like TVs are like minerals people just find and collect." The rubbish
   pits, their seats (`PitSeats`, `GroundLayout.Seats`, `SeatSink`) and the junk flag are gone; the six TVs keep their
   6–36 m band and lie in the soil. Three pits remain, each with a chest, so the chests' treasure stays as it was.
+
+## Iteration (user, 2026-10-07: "leave only the CRT TV and the wood-cased TV")
+
+- The portable and flat-screen sets of the TV Set pack and the Big old TV pack are gone, the latter's vendor import and
+  card too. The wood-cased and CRT sets take three each, so six TVs still lie in their band.

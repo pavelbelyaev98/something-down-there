@@ -288,36 +288,13 @@ MonoBehaviour:
     CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
-  - ItemId: junk_tv_portable
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 2383930273382638627, guid: c4378202c0910fa47bd29e054fcb492f, type: 3}
-    AppearanceVariants: []
-    Count: 1
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 6
-    MaxDepth: 36
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    Cave: 0
-    CaveTrophy: 0
-    HostGrounds: 00y
-    HostWeights:
-    - 2
   - ItemId: junk_tv_wood
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 7864941974147000433, guid: 0cb777f594558ab4d881d59761a0f15c, type: 3}
     AppearanceVariants: []
-    Count: 1
+    Count: 3
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -340,53 +317,7 @@ MonoBehaviour:
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1954727524220898531, guid: 1a6c17d3e0bb9ed43b44083c3c79c6c6, type: 3}
     AppearanceVariants: []
-    Count: 1
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 6
-    MaxDepth: 36
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    Cave: 0
-    CaveTrophy: 0
-    HostGrounds: 00y
-    HostWeights:
-    - 2
-  - ItemId: junk_tv_flat
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 4860593173274638293, guid: 44909de8f36525943a835ea1ab555156, type: 3}
-    AppearanceVariants: []
-    Count: 1
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 6
-    MaxDepth: 36
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    Cave: 0
-    CaveTrophy: 0
-    HostGrounds: 00y
-    HostWeights:
-    - 2
-  - ItemId: junk_tv_big
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 2615695706916654769, guid: 6d4ac52df81fd2c49a216a26f21647db, type: 3}
-    AppearanceVariants: []
-    Count: 2
+    Count: 3
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0

@@ -246,3 +246,10 @@ at the bottom, and cut in the old chests.
 - Compared in the Ground Lab in a dug tray in daylight and under a lamp in the great cave: the rounded gold,
   flattened rounded, plain and flattened jagged gold; iron at 0.46 / 0.6-0.66 grey and 0.4-0.85 metal beside coal and
   silver.
+
+## Iteration 6 (user, 2026-10-07: "barely any difference between iron and silver"; pyrite "way too cheap")
+
+- Iron at a light steel grey read as a duller silver. It is now a dark, rust-tinged grey (0.45, 0.39, 0.34), 0.42 metal,
+  0.38 smoothness: rust says iron, and it stays apart from black coal and silver's bright blue-white in daylight and
+  under a lamp. Compared: dark steel grey, rust brown and a blue gunmetal, which mirrored the sky like silver.
+- Pyrite pays between iron and silver (`ground.json`), well short of gold, instead of a plain rock's price.

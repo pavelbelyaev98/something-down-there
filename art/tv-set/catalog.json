@@ -2,30 +2,6 @@
   "schema_version": 1,
   "finds": [
     {
-      "prefab": "Assets/Content/BuriedProps/TVSet/TV_70.prefab",
-      "mass_kg": 6,
-      "find": {
-        "content_id": "junk_tv_portable",
-        "display_name": "Portable TV",
-        "tier": "common",
-        "recovery": "bag",
-        "instances": 1,
-        "shallow_instances": 0,
-        "sale_value": 40,
-        "slots": 1,
-        "detector_eligible": false,
-        "required_exposure": 0.6,
-        "minimum_depth_m": 6,
-        "maximum_depth_m": 36,
-        "host_grounds": [
-          "soil"
-        ],
-        "host_weights": [
-          2
-        ]
-      }
-    },
-    {
       "prefab": "Assets/Content/BuriedProps/TVSet/TV_80.prefab",
       "mass_kg": 14,
       "find": {
@@ -33,7 +9,7 @@
         "display_name": "Wood-cased TV",
         "tier": "common",
         "recovery": "bag",
-        "instances": 1,
+        "instances": 3,
         "shallow_instances": 0,
         "sale_value": 70,
         "slots": 1,
@@ -58,34 +34,9 @@
         "display_name": "CRT TV",
         "tier": "common",
         "recovery": "bag",
-        "instances": 1,
+        "instances": 3,
         "shallow_instances": 0,
         "sale_value": 60,
-        "slots": 1,
-        "detector_eligible": false,
-        "required_exposure": 0.6,
-        "minimum_depth_m": 6,
-        "maximum_depth_m": 36,
-        "host_grounds": [
-          "soil"
-        ],
-        "host_weights": [
-          2
-        ],
-        "model_scale": 1.4
-      }
-    },
-    {
-      "prefab": "Assets/Content/BuriedProps/TVSet/TV_00.prefab",
-      "mass_kg": 7,
-      "find": {
-        "content_id": "junk_tv_flat",
-        "display_name": "Flat-screen TV",
-        "tier": "common",
-        "recovery": "bag",
-        "instances": 1,
-        "shallow_instances": 0,
-        "sale_value": 80,
         "slots": 1,
         "detector_eligible": false,
         "required_exposure": 0.6,

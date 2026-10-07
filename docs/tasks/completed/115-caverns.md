@@ -287,3 +287,10 @@ pointers or anything, but I do want big walkable caverns."
   middle and east ones first sat under the find gallery's rows; they moved to the south-east and north of the rows.
 - **Rejected:** a light per hollow (dominates the cave, changes everything when it goes out); bloom per hollow (a
   global look change on entering); one light per crystal at full strength in a geode (floods it).
+
+## Iteration (user, 2026-10-07: wedges of ground sticking out of the lakebed)
+
+- Widening the grid to 50 m put its ends under the lakebed, which the bake raised to the grid's top only round the
+  camp and opening: in 63 places along the far edges, up to 13 cm, the lakebed lay lower and the grid's flat top and end
+  walls showed as wedges. The bake now keeps the lakebed at the grid's top over the whole collar rectangle, blending
+  back over 3 m (`GridCoverBlend`); the site was regenerated and occlusion rebaked.

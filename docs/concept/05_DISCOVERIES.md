@@ -13,8 +13,9 @@
 Commons include the mineral ladder (coal → copper → iron → silver → gold → emerald → ruby → diamond),
 bottles, plain stones, commonplace scrap, packaging and rubbish. Each zone has its own pair of
 minerals (`114`): coal and copper in the recent fill, iron and silver in the sediment, gold and
-emerald in the third zone, ruby and diamond in the deep stone. Pyrite, fool's gold, is a cheap
-aside in the sediment: it looks like gold and sells like rock. Every mineral reads as its own
+emerald in the third zone, ruby and diamond in the deep stone. Pyrite, fool's gold, is an
+aside in the sediment: it looks like gold and pays between iron and silver, well short of gold (user,
+2026-10-07: priced like rock it was "way too cheap"). Every mineral reads as its own
 material at a glance, never finely detailed (user, 2026-10-06): coal is a black, layered lump, not a
 dark rock; copper is rock and copper in one, with plenty of copper showing; iron, silver and gold are
 solid nuggets of their metal ("gold, silver and others can be full gold/silver"). Gems dug out of
@@ -40,7 +41,8 @@ unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get thei
 - **Geodes** hold crystals on their inner walls, seen in the lamp's light before they are collected
   ([geodes](03_WORLD_AND_SITE.md#5-geodes)).
 - **Buried on purpose:** a backfill pit holds what someone buried, a stash in an old chest; rubbish
-  such as old TVs, and whatever sank or was lost, lies scattered like any find
+  such as old TVs (a CRT and a wood-cased set; user, 2026-10-07: no portable, flat-screen or big old
+  TV), and whatever sank or was lost, lies scattered like any find
   ([disturbed ground](03_WORLD_AND_SITE.md#disturbed-ground-backfill)).
 
 **Constant rate, rising value.** A metre of descent keeps meeting finds at a roughly constant rate

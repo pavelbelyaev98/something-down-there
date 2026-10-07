@@ -8,11 +8,11 @@ using UnityEngine;
 
 namespace SomethingDownThere.Editor
 {
-    // Project URP copies of the free buried-prop packs: Animated Old Chest (Assets/NOT_Lonely), Big old TV
-    // (Assets/JustPlay) and TV Set (Assets/_Television_set). Their own materials are Built-in (Standard specular,
-    // Autodesk Interactive, a Shader Forge shader) and draw magenta in URP. The vendor files stay untouched: each prop
-    // gets a prefab variant under Content/BuriedProps that swaps in URP Lit materials on the vendor's maps, plus the
-    // project masks written by art/old-chest/make_mask.py, art/big-old-tv/make_mask.py and art/tv-set/make_masks.py.
+    // Project URP copies of the free buried-prop packs: Animated Old Chest (Assets/NOT_Lonely) and TV Set
+    // (Assets/_Television_set). Their own materials are Built-in (Standard specular, a Shader Forge shader) and draw
+    // magenta in URP. The vendor files stay untouched: each prop gets a prefab variant under Content/BuriedProps that
+    // swaps in URP Lit materials on the vendor's maps, plus the project masks written by art/old-chest/make_mask.py and
+    // art/tv-set/make_masks.py.
     // The bought Mining Tools, Ore & Ingots (Assets/REAL_DEDICATED, HDRP materials) and Pure Nature Crystal Caverns
     // (Assets/BK, its own crystal shader) props the game buries get the same treatment (113).
     public static class BuriedPropsSetup
@@ -20,9 +20,11 @@ namespace SomethingDownThere.Editor
         public const string Folder = "Assets/Content/BuriedProps";
         public const string MiningFolder = Folder + "/MiningPack", CrystalFolder = Folder + "/CrystalCaverns";
         public const string MiningVendor = "Assets/REAL_DEDICATED/MiningTools_Ore_Ingots";
-        private const string ChestVendor = "Assets/NOT_Lonely/OldChest", OldTvVendor = "Assets/JustPlay/Old TV", TvSetVendor = "Assets/_Television_set";
+        private const string ChestVendor = "Assets/NOT_Lonely/OldChest", TvSetVendor = "Assets/_Television_set";
         private const string CrystalVendor = "Assets/BK/PureNature_CrystalCaverns";
-        public static readonly string[] TvEras = { "70", "80", "90", "00" };
+        // The TV Set pack's wood-cased and CRT sets (user, 2026-10-07: not its portable or flat-screen ones, nor the big
+        // old TV pack's).
+        public static readonly string[] TvEras = { "80", "90" };
         // The pack props finds are made from: copper ore, and the chests' bronze, silver and gold ingots (user, 2026-10-06:
         // chests hold ingots only). Iron, silver and gold are native nuggets (RockFinds); the coins went (user: messy).
         public static readonly string[] MiningProps =
@@ -91,7 +93,7 @@ namespace SomethingDownThere.Editor
         [MenuItem("Tools/Something Down There/Configure Buried Props")]
         public static void Configure()
         {
-            foreach (var sub in new[] { "OldChest", "BigOldTV", "TVSet", "MiningPack", "CrystalCaverns" }) EnsureFolder(sub);
+            foreach (var sub in new[] { "OldChest", "TVSet", "MiningPack", "CrystalCaverns" }) EnsureFolder(sub);
             // The chest's specular map becomes a metallic mask (art/old-chest/make_mask.py): buried props draw through the
             // excavation daylight shader, whose specular setup is a shader feature that builds strip.
             var chest = LitMaterial(Folder + "/OldChest/OldChest.mat", Vendor(ChestVendor + "/ModelAndTexture/Chest.tga"),
@@ -99,12 +101,6 @@ namespace SomethingDownThere.Editor
             chest.SetTexture("_MetallicGlossMap", Mask(Folder + "/OldChest/OldChest_Mask.png", "art/old-chest/make_mask.py"));
             chest.SetTexture("_SpecGlossMap", null);
             EditorUtility.SetDirty(chest);
-
-            var oldTv = LitMaterial(Folder + "/BigOldTV/BigOldTV.mat", Vendor(OldTvVendor + "/Textures/Albedo.psd"), Vendor(OldTvVendor + "/Textures/Normal.png"));
-            oldTv.SetTexture("_MetallicGlossMap", Mask(Folder + "/BigOldTV/BigOldTV_Mask.png", "art/big-old-tv/make_mask.py"));
-            oldTv.SetTexture("_OcclusionMap", Vendor(OldTvVendor + "/Textures/AO.psd"));
-            oldTv.SetFloat("_OcclusionStrength", 1); oldTv.EnableKeyword("_OCCLUSIONMAP");
-            EditorUtility.SetDirty(oldTv);
 
             Material TvMaterial(string set)
             {
@@ -117,7 +113,6 @@ namespace SomethingDownThere.Editor
             var tv12 = TvMaterial("Tv_1_2"); var tv34 = TvMaterial("Tv_3_4");
 
             Variant(ChestVendor + "/Chest.prefab", Folder + "/OldChest/OldChest.prefab", ("OldChest", chest));
-            Variant(OldTvVendor + "/Prefab/Old TV.prefab", Folder + "/BigOldTV/BigOldTV.prefab", ("Old TV", oldTv));
             foreach (var era in TvEras)
                 Variant($"{TvSetVendor}/TV_{era}.prefab", $"{Folder}/TVSet/TV_{era}.prefab", ("Tv_1_2", tv12), ("Tv_3_4", tv34));
 
@@ -221,6 +216,8 @@ namespace SomethingDownThere.Editor
             tint.a = 1;
             var lit = tint * CrystalLit; lit.a = 1;
             material.SetColor("_BaseColor", lit);
+            // The legacy colour as Unity keeps it, matching the base colour, so a rerun leaves the material unchanged.
+            material.SetColor("_Color", lit);
             // Glass, never metal: the amber cubes are cut from the pack's pyrite, whose sheen darkened them to brown in
             // daylight (user, 2026-10-07: "on light some rocks are hard to see").
             material.SetFloat("_Metallic", 0);
@@ -295,9 +292,10 @@ namespace SomethingDownThere.Editor
         // - coal on the layered rocks, blocky with bedding planes, black with a dull sheen (user, 2026-10-06: the photo
         //   rock's coal "looks too much like a rock");
         // - native iron, silver and gold on the knobbly jagged ones, solid metal (user, 2026-10-06: "gold, silver and others
-        //   can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, iron a mid
-        //   steel grey, silver bright, gold yellow. Iron and gold are part metal only, so a lamp underground still shows
-        //   their colour: dark and fully metal, iron passed for coal (user, 2026-10-07). Gold's rocks are flattened
+        //   can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, iron a dark,
+        //   rust-tinged grey, silver bright, gold yellow. Iron and gold are part metal only, so a lamp underground still
+        //   shows their colour: dark and fully metal, iron passed for coal; a light steel grey passed for silver (user,
+        //   2026-10-07: "barely any difference between iron and silver"). Gold's rocks are flattened
         //   (Flatten of their height) into a nugget: mirror-glossy on the jagged rock it read as crumpled foil ("like gold
         //   wrappers"), on the pack's rounded rock as a blob ("poop shape").
         internal readonly struct RockFindLook
@@ -312,8 +310,8 @@ namespace SomethingDownThere.Editor
         {
             new RockFindLook("Layered_Large", "Coal_Layered_Large", new Color(.17f, .17f, .18f), 0, .5f),
             new RockFindLook("Layered_Small", "Coal_Layered_Small", new Color(.17f, .17f, .18f), 0, .5f),
-            new RockFindLook("Jagged_Large", "Iron_Native_A", new Color(.6f, .58f, .56f), .5f, .45f),
-            new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.6f, .58f, .56f), .5f, .45f),
+            new RockFindLook("Jagged_Large", "Iron_Native_A", new Color(.45f, .39f, .34f), .42f, .38f),
+            new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.45f, .39f, .34f), .42f, .38f),
             new RockFindLook("Jagged_Large", "Silver_Native_A", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Small", "Silver_Native_B", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Large", "Gold_Native_A", new Color(1f, .8f, .34f), .65f, .5f, .8f),

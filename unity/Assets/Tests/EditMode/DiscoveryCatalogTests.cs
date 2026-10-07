@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,31,31,31,31,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,3,3,13,10,7,150,16,16,32,16,31,31,31,31,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -483,7 +483,7 @@ namespace SomethingDownThere.Tests
         public void MineralBandsHaveIncreasingValuesAndLateralCoverageAcrossSeeds(bool sweep)
         {
             var catalog = Catalog;
-            // Pyrite (114) sits outside the ladder: fool's gold, priced like rock.
+            // Pyrite (114) sits outside the ladder: fool's gold, priced between iron and silver.
             var minerals = catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_") && e.ItemId != "mineral_pyrite").ToArray();
             CollectionAssert.AreEqual(new[] { "Coal", "Copper", "Iron", "Silver", "Gold", "Emerald", "Ruby", "Diamond" }, minerals.Select(e => e.Prefab.DisplayName));
             CollectionAssert.AreEqual(new[] { 4, 5, 8, 12, 16, 30, 45, 70 }, minerals.Select(e => e.Prefab.SaleValue));

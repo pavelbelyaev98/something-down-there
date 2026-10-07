@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Pyrite
   minor: 1
   detectorEligible: 0
-  saleValue: 3
+  saleValue: 10
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.19984312, y: 0.5738447, z: -0.0010266695}

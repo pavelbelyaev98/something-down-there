@@ -46,7 +46,7 @@ namespace SomethingDownThere.Editor
         // Metres beyond the plot outline that plants and debris keep clear.
         public const float DressingClearance = 3f;
         // The rim collar's roof reaches this far past the grid rectangle, under the terrain.
-        private const float CollarOverlap = .5f;
+        private const float CollarOverlap = .5f, GridCoverBlend = 3f;
         private static readonly string[] Groups = { "Cliffs", "Peaks", "BigBoulders", "Boulders", "Rubble_dense", "Rubble_sparse", "Ruins", "Trees", "Water" };
 
         public static Vector3 Camp(Vector3 rimLayout) => rimLayout + Vector3.up * SiteLayout.GroundTop;
@@ -186,6 +186,12 @@ namespace SomethingDownThere.Editor
                 }
                 float beyond = SiteLayout.BeyondOpening(local);
                 if (beyond < CampBlend) h = Mathf.Lerp(SiteInDemo.y + SiteLayout.GroundTop, h, Smooth((beyond - CampFlat) / (CampBlend - CampFlat)));
+                // Nowhere over the excavation grid does the lakebed dip below its top, its ends under the bank included
+                // (115 widened it): there the grid's flat top and end walls showed through as wedges (user, 2026-10-07).
+                // The ground rises to the top over the grid's collar rectangle and blends back over GridCoverBlend.
+                float cover = BeyondCollar(local);
+                if (cover < GridCoverBlend)
+                    h = Mathf.Max(h, Mathf.Lerp(SiteInDemo.y + SiteLayout.GroundTop, h, Smooth(Mathf.Max(0, cover) / GridCoverBlend)));
                 s.After[z, x] = h;
             }
             CarveChannels(s);
