@@ -1,0 +1,85 @@
+{
+ "schema_version": 1,
+ "trophies": [
+  {
+   "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Trophy/Crystal_Quartz_1_trophy.prefab",
+   "height_m": 1.9,
+   "mass_kg": 160,
+   "find": {
+    "content_id": "unique_trophy_quartz",
+    "display_name": "Great blue quartz",
+    "tier": "unique",
+    "recovery": "rope",
+    "instances": 1,
+    "shallow_instances": 0,
+    "sale_value": 0,
+    "slots": 0,
+    "detector_eligible": true,
+    "required_exposure": 0.6,
+    "minimum_depth_m": 0,
+    "maximum_depth_m": 37.5,
+    "lore": "A cluster of blue quartz taller than a man, grown in a sealed cave under the lake for longer than the lake has been there. Its glow never quite fades."
+   }
+  },
+  {
+   "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Trophy/Crystal_Pyrite_2_trophy.prefab",
+   "height_m": 1.7,
+   "mass_kg": 220,
+   "find": {
+    "content_id": "unique_trophy_cubes",
+    "display_name": "Great amber cubes",
+    "tier": "unique",
+    "recovery": "rope",
+    "instances": 1,
+    "shallow_instances": 0,
+    "sale_value": 0,
+    "slots": 0,
+    "detector_eligible": true,
+    "required_exposure": 0.6,
+    "minimum_depth_m": 37.5,
+    "maximum_depth_m": 75,
+    "lore": "Cubes stacked as squarely as a builder's blocks, though nobody laid them. They lit the old sediment's cave amber from within."
+   }
+  },
+  {
+   "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Trophy/Crystal_BigHex_6_trophy.prefab",
+   "height_m": 2.1,
+   "mass_kg": 200,
+   "find": {
+    "content_id": "unique_trophy_hex",
+    "display_name": "Great green columns",
+    "tier": "unique",
+    "recovery": "rope",
+    "instances": 1,
+    "shallow_instances": 0,
+    "sale_value": 0,
+    "slots": 0,
+    "detector_eligible": true,
+    "required_exposure": 0.6,
+    "minimum_depth_m": 75,
+    "maximum_depth_m": 112.5,
+    "lore": "A sheaf of green columns, every one six-sided and true, standing upright in the riverbed's cave as if they were waiting for a roof."
+   }
+  },
+  {
+   "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Trophy/Crystal_Ruby_1_trophy.prefab",
+   "height_m": 2.2,
+   "mass_kg": 240,
+   "find": {
+    "content_id": "unique_trophy_ruby",
+    "display_name": "Great ruby",
+    "tier": "unique",
+    "recovery": "rope",
+    "instances": 1,
+    "shallow_instances": 0,
+    "sale_value": 0,
+    "slots": 0,
+    "detector_eligible": true,
+    "required_exposure": 0.6,
+    "minimum_depth_m": 112.5,
+    "maximum_depth_m": 150,
+    "lore": "A ruby the height of a door, stepped like a stair, from the deepest cave. Something that old should not be this clear."
+   }
+  }
+ ]
+}

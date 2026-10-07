@@ -351,11 +351,25 @@ namespace SomethingDownThere
             LetGo();
             var body = payload.GetComponent<FindPhysics>().Body;
             payload.MoveRecovered(body.position, body.rotation);
+            if (payload.LiftsByCrown) StandUpright(payload);
             if (!payload.Transition(FindState.Extracting, FindState.Stored)) throw new InvalidOperationException("Recovery lost its owner.");
             payload.GetComponent<FindPhysics>().Restore(false);
             player.ShowFeedback($"The crane set the {payload.DisplayName} down at camp");
             job = null; payload = null; mark?.Hide();
             Checkpoint();
+        }
+
+        // A trophy hung from its crown lands upright; it is set level on its base where it came down, on the ground under it.
+        private void StandUpright(BuriedFind find)
+        {
+            var rotation = Quaternion.Euler(0, find.transform.eulerAngles.y, 0);
+            find.MoveRecovered(find.transform.position, rotation);
+            var bounds = find.WorldBounds;
+            var probe = new Vector3(bounds.center.x, bounds.max.y + 1, bounds.center.z);
+            float ground = bounds.min.y;
+            foreach (var hit in Physics.RaycastAll(probe, Vector3.down, bounds.size.y + 4, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                if (hit.collider.GetComponentInParent<BuriedFind>() == null && (ground == bounds.min.y || hit.point.y > ground)) ground = hit.point.y;
+            find.MoveRecovered(find.transform.position + Vector3.up * (ground - bounds.min.y), rotation);
         }
 
         private void SetPhase(ExtractionPhase phase) { job.Phase = phase; job.PhaseSeconds = 0; Checkpoint(); }
@@ -409,7 +423,10 @@ namespace SomethingDownThere
                 else mark.Show(payload, job.AttachLocal, Vector3.zero, 1, true);
             }
             else if (player != null && player.TryGetRecoveryMark(out var find, out var hit))
-                mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.HoldProgress, false);
+            {
+                if (find.LiftsByCrown) mark.Show(find, find.CrownLocal, find.transform.up, player.HoldProgress, false);
+                else mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.HoldProgress, false);
+            }
             else mark.Hide();
         }
 

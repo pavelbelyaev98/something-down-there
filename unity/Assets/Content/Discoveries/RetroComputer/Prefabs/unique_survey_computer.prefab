@@ -422,6 +422,7 @@ MonoBehaviour:
   recovery: 1
   lore: The last survey was saved under a file called final_final.
   handPicked: 0
+  liftsByCrown: 0
 --- !u!114 &398252473829156212
 MonoBehaviour:
   m_ObjectHideFlags: 0

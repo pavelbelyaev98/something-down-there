@@ -161,6 +161,13 @@ namespace SomethingDownThere
         {
             if (xrayCamera != null) UpdateXrayVisibility();
             if (clearsStored) ClearStored();
+            // Thinned roofs give way a frame after the cut that opened their hollow, which its change event was still reporting.
+            if (pendingCollapses.Count > 0 && terrain != null && !terrain.IsRestoring)
+            {
+                var due = pendingCollapses.ToArray();
+                pendingCollapses.Clear();
+                foreach (var point in due) terrain.CollapseThin(point, ThinCollapseReach);
+            }
         }
 
         // Developer Ground Lab: its crane scenes' computers and wall rocks instead of the site's population.
@@ -170,7 +177,7 @@ namespace SomethingDownThere
             foreach (var find in finds) { find.gameObject.SetActive(false); Destroy(find.gameObject); }
             finds.Clear();
             ClearChests();
-            var computers = Array.FindAll(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Unique);
+            var computers = Array.FindAll(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Unique && e.AuthoredPlacement);
             var rock = Array.Find(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Common);
             int computer = 0;
             foreach (var (isComputer, position, rotation) in GroundLab.CraneFinds())
@@ -252,27 +259,66 @@ namespace SomethingDownThere
             }
         }
 
-        // The Ground Lab's caves (115): one of each cave crystal, shallow to deep, lined as the site's are.
+        // The Ground Lab's caves (116): its great cave's colour areas lined as the site's are (GreatAreaCrystals of each kind,
+        // shallow to deep along it) with all four crystal trophies, each in the area of its own colour, and a mini cave of each
+        // kind.
         private void SpawnLabCaves()
         {
-            var kinds = new List<DiscoveryCatalog.Entry>(Array.FindAll(catalog.Entries, e => e.Cave));
-            kinds.Sort((a, b) => a.MinDepth.CompareTo(b.MinDepth));
+            var kinds = catalog.CaveKinds();
+            if (kinds.Count == 0) return;
+            var trophies = new List<DiscoveryCatalog.Entry>(Array.FindAll(catalog.Entries, e => e.CaveTrophy));
+            trophies.Sort((a, b) => a.MinDepth.CompareTo(b.MinDepth));
             var random = new System.Random(11);
-            int n = 0;
-            for (int c = 0; c < GroundLab.Caves.Length && c < kinds.Count; c++)
+            int n = 0, mini = 0;
+            void Spawn(DiscoveryCatalog.Entry kind, int look, Vector3 position, Quaternion rotation)
+            {
+                var find = Instantiate(kind.Appearance(look % kind.AppearanceCount), terrain.transform.TransformPoint(position),
+                    terrain.transform.rotation * rotation, transform);
+                find.Initialize(terrain, $"ground-lab-cave-{n}", this);
+                find.name = find.Item.DisplayName + " (lab cave " + n++ + ")";
+                finds.Add(find);
+            }
+            foreach (var cave in GroundLab.Caves)
             {
                 var taken = new List<(Vector3 at, float radius)>();
-                for (int k = 0; k < DiscoveryCatalog.CaveCrystals; k++)
+                if (!cave.Great)
                 {
-                    var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(GroundLab.Caves[c], k, kinds[c], random, taken);
-                    var find = Instantiate(kinds[c].Appearance(k % kinds[c].AppearanceCount), terrain.transform.TransformPoint(position),
-                        terrain.transform.rotation * rotation, transform);
-                    find.Initialize(terrain, $"ground-lab-cave-{n}", this);
-                    find.name = find.Item.DisplayName + " (lab cave " + n++ + ")";
-                    finds.Add(find);
+                    var kind = catalog.Entries[kinds[mini++ % kinds.Count]];
+                    for (int k = 0; k < DiscoveryCatalog.MiniCaveCrystals; k++)
+                    {
+                        var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(cave, 0, kind, random, taken);
+                        Spawn(kind, k, position, rotation);
+                    }
+                    continue;
+                }
+                var areas = DiscoveryCatalog.AreaChambers(cave);
+                for (int a = 0; a < areas.Length; a++)
+                {
+                    if (areas[a].Count == 0) continue;
+                    var kind = catalog.Entries[kinds[a % kinds.Count]];
+                    for (int k = 0; k < DiscoveryCatalog.GreatAreaCrystals; k++)
+                    {
+                        var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(cave, areas[a][k % areas[a].Count], kind, random, taken);
+                        Spawn(kind, k, position, rotation);
+                    }
+                }
+                var stood = new List<Vector3>();
+                for (int t = 0; t < trophies.Count; t++)
+                {
+                    var area = areas[t % areas.Length].Count > 0 ? areas[t % areas.Length] : null;
+                    for (int attempt = 0; attempt < 12; attempt++)
+                    {
+                        if (!DiscoveryCatalog.TrophySeat(cave, trophies[t], random, null, out var position, out var rotation, area)) break;
+                        if (stood.Exists(other => (other - position).sqrMagnitude < Square(trophies[t].RestingReach * 2 + 1.5f))) continue;
+                        stood.Add(position);
+                        Spawn(trophies[t], 0, position, rotation);
+                        break;
+                    }
                 }
             }
         }
+
+        private static float Square(float value) => value * value;
 
         // The Ground Lab's find gallery (user, 2026-10-06): every look of every common find set out on the surface north of
         // the bays, a row each for the minerals, a chest's treasure and the rest, so their looks can be compared in
@@ -383,6 +429,7 @@ namespace SomethingDownThere
 
         private void DeriveGeodes()
         {
+            DeriveCaves();
             var geodes = terrain.GroundLayout.Geodes;
             geodeOpened = new bool[geodes.Length];
             for (int g = 0; g < geodes.Length; g++)
@@ -392,6 +439,29 @@ namespace SomethingDownThere
                     float y = 1 - 2 * (i + .5f) / GeodeProbes, ring = Mathf.Sqrt(1 - y * y), angle = i * 2.39996323f;
                     var (surface, inward) = HollowFace(geodes[g], new Vector3(Mathf.Cos(angle) * ring, y, Mathf.Sin(angle) * ring));
                     geodeOpened[g] = !terrain.IsSolid(surface - inward * GeodeProbe);
+                }
+        }
+
+        // The ground's caves: whether each has been broken into, derived like the geodes' from probes just outside its
+        // hollow's face round each chamber.
+        private const int CaveProbes = 10;
+        private bool[] caveOpened = Array.Empty<bool>();
+        public bool CaveOpened(int index) => index >= 0 && index < caveOpened.Length && caveOpened[index];
+
+        private void DeriveCaves()
+        {
+            var caves = terrain.GroundLayout.Caverns;
+            caveOpened = new bool[caves.Length];
+            for (int c = 0; c < caves.Length; c++)
+                for (int chamber = 0; chamber < caves[c].Centres.Length && !caveOpened[c]; chamber++)
+                {
+                    var heart = TerrainGround.CavernHeart(caves[c], chamber);
+                    for (int i = 0; i < CaveProbes && !caveOpened[c]; i++)
+                    {
+                        float y = 1 - 2 * (i + .5f) / CaveProbes, ring = Mathf.Sqrt(1 - y * y), angle = i * 2.39996323f;
+                        var (face, outward) = TerrainGround.CavernFace(caves[c], heart, new Unity.Mathematics.float3(Mathf.Cos(angle) * ring, y, Mathf.Sin(angle) * ring));
+                        caveOpened[c] = !terrain.IsSolid(terrain.transform.TransformPoint((Vector3)(face + outward * GeodeProbe)));
+                    }
                 }
         }
 
@@ -408,12 +478,15 @@ namespace SomethingDownThere
         // most every BreakAgainSeconds a hollow.
         private const float BreakAgainSeconds = .2f;
         private readonly Dictionary<int, float> lastBreaks = new Dictionary<int, float>();
-        private readonly HashSet<int> cavesBroken = new HashSet<int>();
+        // Each break also lets the thinned ground round it give way (TerrainVolume.CollapseThin) on the next frame.
+        public const float ThinCollapseReach = .9f;
+        private readonly List<Vector3> pendingCollapses = new List<Vector3>();
 
         private void HollowBreak(int key, Vector3 surface, Vector3 inward, bool first)
         {
             if (!first && lastBreaks.TryGetValue(key, out float last) && Time.time - last < BreakAgainSeconds) return;
             lastBreaks[key] = Time.time;
+            pendingCollapses.Add(surface - inward * .1f);
             var crane = FindViewer()?.Crane;
             if (crane == null) return;
             if (first)
@@ -448,7 +521,9 @@ namespace SomethingDownThere
                 for (float t = 0; t <= length && open; t += BreakInStep)
                     open = !terrain.IsSolid(Vector3.Lerp(changed.center, surface, t / Mathf.Max(length, 1e-4f)));
                 if (!open) continue;
-                HollowBreak(1000 + c, surface, inward, cavesBroken.Add(c));
+                bool first = c < caveOpened.Length && !caveOpened[c];
+                if (c < caveOpened.Length) caveOpened[c] = true;
+                HollowBreak(1000 + c, surface, inward, first);
             }
         }
 
@@ -576,7 +651,8 @@ namespace SomethingDownThere
         // seen, so density follows the weight at the same depth; spread ranking then picks
         // inside the group. Depths never move.
         // Seats (NaN x for none) place a find exactly there: a chest's contents on its floor.
-        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null, Func<int, Vector3, float> hostWeight = null, Vector3[] seats = null)
+        // depthGaps: depth ranges no find aims for (a great cave's hall fills the site's width there, 116).
+        public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount, float[] radii, Vector2[] depthBands, Vector2[] shallowCovers, DiscoveryReservation[] reserved = null, Func<Vector2, bool> footprint = null, Func<int, Vector3, float> hostWeight = null, Vector3[] seats = null, Vector2[] depthGaps = null)
         {
             if (!ExcavationGrid.Finite(extent.x) || !ExcavationGrid.Finite(extent.y) || !ExcavationGrid.Finite(extent.z)
                 || extent.x < 8 || extent.y < 4 || extent.z < 8 || total < 1 || total > MaximumPopulation
@@ -594,7 +670,7 @@ namespace SomethingDownThere
                 throw new ArgumentOutOfRangeException(nameof(shallowCovers));
             var random = new System.Random(placementSeed);
             var result = new DiscoveryPlacement[total];
-            var targetDepths = DepthTargets(depthBands, shallowCount, extent.y, placementSeed);
+            var targetDepths = DepthTargets(depthBands, shallowCount, extent.y, placementSeed, depthGaps);
             var levelWeight = new float[MaximumHostLevels]; var levelSeen = new int[MaximumHostLevels];
             var levelBest = new Vector3[MaximumHostLevels]; var levelSpread = new float[MaximumHostLevels];
             // Neighbourhood index: clearance is answered from the immediate cells, the
@@ -709,7 +785,7 @@ namespace SomethingDownThere
             return result;
         }
 
-        private static float[] DepthTargets(Vector2[] bands, int shallow, float height, int seed)
+        private static float[] DepthTargets(Vector2[] bands, int shallow, float height, int seed, Vector2[] gaps = null)
         {
             if (bands == null) return null;
             var targets = new float[bands.Length];
@@ -736,11 +812,32 @@ namespace SomethingDownThere
                     int j = random.Next(i + 1), value = indices[i];
                     indices[i] = indices[j]; indices[j] = value;
                 }
+                float top = band.x, bottom = Mathf.Min(band.y, height - .8f);
                 for (int i = 0; i < indices.Count; i++)
-                    targets[indices[i]] = Mathf.Lerp(band.x, Mathf.Min(band.y, height - .8f),
-                        (i + (float)random.NextDouble()) / indices.Count);
+                    targets[indices[i]] = Skipping(top, bottom, (i + (float)random.NextDouble()) / indices.Count, gaps);
             }
             return targets;
+        }
+
+        // The depth a share of the way down from top to bottom when the gaps are left out of the band (the plain share when
+        // they cover all of it).
+        private static float Skipping(float top, float bottom, float share, Vector2[] gaps)
+        {
+            if (gaps == null || gaps.Length == 0) return Mathf.Lerp(top, bottom, share);
+            float free = bottom - top;
+            foreach (var gap in gaps) free -= Mathf.Max(0, Mathf.Min(bottom, gap.y) - Mathf.Max(top, gap.x));
+            if (free <= .5f) return Mathf.Lerp(top, bottom, share);
+            float left = share * free, depth = top;
+            while (true)
+            {
+                // The next gap below depth, if any, within the band.
+                float next = bottom, end = bottom;
+                foreach (var gap in gaps)
+                    if (gap.y > depth && gap.x < next && gap.x < bottom) { next = Mathf.Max(depth, gap.x); end = Mathf.Min(bottom, gap.y); }
+                if (left <= next - depth || next >= bottom) return Mathf.Min(depth + left, bottom);
+                left -= next - depth;
+                depth = end;
+            }
         }
 
         // Deterministic uniform buckets replace the old all-pairs scan. The cell edge

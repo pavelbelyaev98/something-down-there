@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,24,24,24,24}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,32,32,32,32,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -245,21 +245,30 @@ namespace SomethingDownThere.Tests
             Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount), "Geodes take their crystals from the population.");
         }
 
-        // Concept 03 §5 (115, user 2026-10-07: "many more caves, higher up, one rock type per cave"): the caves lie under
-        // the plot from a few metres down, and each holds CaveCrystals or more crystals of one kind, half out of its walls;
-        // every cave crystal is in a cave, and nothing else is.
+        // Concept 03 §5 (116): a great cave in every zone, almost the site's width, its four colour areas one crystal kind each
+        // and its zone's trophy upright on its floor; mini caves under the plot from a few metres down, each a handful of one
+        // kind half out of its walls; every cave crystal is in a cave, and nothing else is.
         [TestCase(90127)] [TestCase(12)]
-        public void EveryCaveHoldsOneCrystalKindAndNothingElse(int seed)
+        public void CavesHoldTheirCrystalsAndTrophies(int seed)
         {
             var catalog = Catalog; var layout = Layout(seed);
             var caves = GroundLayout.Caverns;
-            Assert.That(caves.Length, Is.EqualTo(TerrainGround.CavesPerZone.Sum()));
-            Assert.That(caves.Min(c => SiteLayout.Extent.y - c.Floor), Is.LessThan(15), "The first cave is a few metres down.");
+            var great = caves.Where(c => c.Great).ToArray();
+            var mini = caves.Where(c => !c.Great).ToArray();
+            Assert.That(great.Length, Is.EqualTo(TerrainGround.ZoneBorders.Length + 1), "A great cave in every zone.");
+            Assert.That(mini.Length, Is.EqualTo(TerrainGround.MiniCavesPerZone.Sum()));
+            Assert.That(mini.Min(c => SiteLayout.Extent.y - c.Floor), Is.LessThan(15), "The first mini cave is a few metres down.");
+            foreach (var cave in great)
+            {
+                Assert.That(cave.Max.x - cave.Min.x, Is.GreaterThan(30), "A great cave runs across most of the site.");
+                Assert.That(cave.Max.z - cave.Min.z, Is.GreaterThan(14));
+                Assert.That(cave.Pillars.Length + cave.Arches.Length, Is.GreaterThan(4), "Rock left standing in the hall.");
+            }
             var footprint = SiteLayout.FindFootprint(SiteLayout.Extent);
-            foreach (var cave in caves)
+            foreach (var cave in mini)
             {
                 var middle = ((Vector3)cave.Min + (Vector3)cave.Max) * .5f;
-                Assert.That(footprint(new Vector2(middle.x, middle.z)), Is.True, "Caves lie under the plot.");
+                Assert.That(footprint(new Vector2(middle.x, middle.z)), Is.True, "Mini caves lie under the plot.");
             }
             var crystals = layout.Where(p => catalog.Entries[p.PrefabIndex].Cave).ToArray();
             Assert.That(crystals.Length, Is.EqualTo(catalog.Entries.Where(e => e.Cave).Sum(e => e.Count)));
@@ -268,15 +277,34 @@ namespace SomethingDownThere.Tests
             {
                 bool In(Vector3 p) => Vector3.Min(Vector3.Max(p, (Vector3)cave.Min), (Vector3)cave.Max) == p && TerrainGround.CavernOuter(cave, p) < 0;
                 var inside = crystals.Where(p => In(p.Position)).ToArray();
-                Assert.That(inside.Length, Is.GreaterThanOrEqualTo(DiscoveryCatalog.CaveCrystals), $"Seed {seed}: a cave at {SiteLayout.Extent.y - cave.Floor:F0} m holds its crystals.");
-                Assert.That(inside.Select(p => p.PrefabIndex).Distinct().Count(), Is.EqualTo(1), "One kind to a cave.");
+                if (cave.Great)
+                {
+                    Assert.That(inside.Select(p => p.PrefabIndex).Distinct().Count(), Is.EqualTo(TerrainGround.GreatAreas), "Every kind in a great cave.");
+                    foreach (var area in inside.GroupBy(p => TerrainGround.AreaOf(cave, p.Position.x)))
+                        Assert.That(area.Select(p => p.PrefabIndex).Distinct().Count(), Is.LessThanOrEqualTo(2), "An area is mostly one kind.");
+                }
+                else
+                {
+                    Assert.That(inside.Length, Is.GreaterThanOrEqualTo(DiscoveryCatalog.MiniCaveCrystals), $"Seed {seed}: a mini cave at {SiteLayout.Extent.y - cave.Floor:F0} m holds its crystals.");
+                    Assert.That(inside.Select(p => p.PrefabIndex).Distinct().Count(), Is.EqualTo(1), "One kind to a mini cave.");
+                }
                 foreach (var p in inside)
                     Assert.That(Mathf.Abs(TerrainGround.CavernHollow(cave, p.Position)), Is.LessThan(.5f), "Half out of the stone.");
                 held += inside.Length;
-                foreach (var p in layout.Where(p => !catalog.Entries[p.PrefabIndex].Cave))
+                foreach (var p in layout.Where(p => !catalog.Entries[p.PrefabIndex].Cave && !catalog.Entries[p.PrefabIndex].CaveTrophy))
                     Assert.That(In(p.Position), Is.False, "Nothing else lies in a cave.");
             }
             Assert.That(held, Is.EqualTo(crystals.Length), "Every cave crystal is in a cave.");
+            foreach (var p in layout.Where(p => catalog.Entries[p.PrefabIndex].CaveTrophy))
+            {
+                var entry = catalog.Entries[p.PrefabIndex];
+                var home = great.Where(c => Vector3.Min(Vector3.Max(p.Position, (Vector3)c.Min), (Vector3)c.Max) == p.Position).ToArray();
+                Assert.That(home.Length, Is.EqualTo(1), $"{entry.ItemId} stands in a great cave.");
+                float depth = SiteLayout.Extent.y - home[0].Floor;
+                Assert.That(depth, Is.InRange(entry.MinDepth, entry.MaxDepth), $"{entry.ItemId} stands in its zone's great cave.");
+                Assert.That(Vector3.Angle(p.Rotation * Vector3.up, Vector3.up), Is.LessThan(1), "Upright.");
+            }
+            Assert.That(layout.Count(p => catalog.Entries[p.PrefabIndex].CaveTrophy), Is.EqualTo(catalog.Entries.Count(e => e.CaveTrophy)));
         }
 
         // The site's pits (soil plus backfill only) still keep clear of every unique's space.

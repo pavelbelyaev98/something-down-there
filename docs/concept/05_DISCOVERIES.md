@@ -18,10 +18,11 @@ aside in the sediment: it looks like gold and sells like rock. Every mineral rea
 material at a glance, never finely detailed (user, 2026-10-06): coal is a black, layered lump, not a
 dark rock; copper is rock and copper in one, with plenty of copper showing; iron, silver and gold are
 solid nuggets of their metal ("gold, silver and others can be full gold/silver"). Gems dug out of
-the ground are big, dusty crystals, never darkly stained. Minerals also show half-buried in the
-caverns' walls ([World §5](03_WORLD_AND_SITE.md#5-geodes)). "Common" means routine to find
+the ground are big, dusty crystals, never darkly stained. Crystals stand half out of the caves'
+walls ([World §5](03_WORLD_AND_SITE.md#5-geodes)). "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
 During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
+Each great cave's crystal trophy is a unique too (World §5): the generator stands it on its cave's floor instead of at an authored place, and it is lifted by its crown.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.
 
 Each type has one purpose: ordinary and repeatable finds sell; a few special exhibits and keys are

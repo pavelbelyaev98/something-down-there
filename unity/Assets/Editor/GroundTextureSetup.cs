@@ -128,15 +128,25 @@ namespace SomethingDownThere.Editor
             material.SetColor("_ShellTint", Color.white);
             material.SetFloat("_ShellTileMetres", 2f);
             material.SetFloat("_ShellNormalStrength", 1f);
+            // Cave rock (116): Crystal Caverns' cave wall stone made seamless (art/pure-nature-crystal-caverns/make_cave_rock.py).
+            material.SetTexture("_CaveAlbedo", Set("CaveRock", "Albedo", "art/pure-nature-crystal-caverns/make_cave_rock.py"));
+            material.SetTexture("_CaveNormal", Set("CaveRock", "Normal", "art/pure-nature-crystal-caverns/make_cave_rock.py"));
+            material.SetTexture("_CaveMask", Set("CaveRock", "Roughness", "art/pure-nature-crystal-caverns/make_cave_rock.py"));
+            material.SetColor("_CaveTint", Color.white);
+            material.SetFloat("_CaveTileMetres", 2.5f);
+            material.SetFloat("_CaveNormalStrength", 1f);
             EditorUtility.SetDirty(material);
         }
 
         // The geode shell's texture set, written by art/pure-nature-crystal-caverns/make_shell.py.
-        private static Texture2D Shell(string channel)
+        private static Texture2D Shell(string channel) => Set("GeodeShell", channel, "art/pure-nature-crystal-caverns/make_shell.py");
+
+        // A ground's texture set <name>_Albedo/Normal/Mask, written by its script.
+        private static Texture2D Set(string name, string channel, string script)
         {
-            string path = Folder + "GeodeShell_" + (channel == "Roughness" ? "Mask" : channel) + ".png";
+            string path = Folder + name + "_" + (channel == "Roughness" ? "Mask" : channel) + ".png";
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null)
-                throw new InvalidOperationException("Missing " + path + " (run art/pure-nature-crystal-caverns/make_shell.py).");
+                throw new InvalidOperationException("Missing " + path + " (run " + script + ").");
             ConfigureImport(path, channel);
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }

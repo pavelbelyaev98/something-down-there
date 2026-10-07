@@ -73,6 +73,7 @@ namespace SomethingDownThere.Editor
             MineralSetup.AppendToCatalog(entries);
             RetroComputerSetup.AppendToCatalog(entries);
             PropFindSetup.AppendToCatalog(entries);
+            CrystalTrophySetup.AppendToCatalog(entries);
             catalog.Entries = entries.ToArray();
             ChestSetup.Configure(catalog);
             catalog.Validate(); EditorUtility.SetDirty(catalog);

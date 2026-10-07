@@ -1026,7 +1026,7 @@ namespace SomethingDownThere
         // Developer ground tuning: dials one ground's bite for the session (EquipmentProgression overrides).
         public TerrainMaterialId AdminGround { get; private set; } = TerrainMaterialId.Soil;
         public bool HasAdminGroundTuning => AdminAvailable && EquipmentProgression.HasResponseOverrides;
-        public static readonly TerrainMaterialId[] TunableGrounds = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill, TerrainMaterialId.GeodeShell };
+        public static readonly TerrainMaterialId[] TunableGrounds = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill, TerrainMaterialId.GeodeShell, TerrainMaterialId.CaveRock };
 
         public void CycleAdminGround()
         {

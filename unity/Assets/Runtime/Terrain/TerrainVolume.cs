@@ -181,7 +181,8 @@ namespace SomethingDownThere
                     var key = new Vector3Int(x / chunkSize, y / chunkSize, z / chunkSize);
                     // The ground plane always exists; everything else only where a hole
                     // reached it. Rebuilding every key would mesh thousands of empty chunks.
-                    if (chunks.ContainsKey(key) || key.y == surfaceLayer || grid.AnyModified(key * chunkSize, chunkSize))
+                    // A great cave's chunks are left to the stream (StreamGreatCaves).
+                    if (chunks.ContainsKey(key) || key.y == surfaceLayer || (grid.AnyModified(key * chunkSize, chunkSize) && !AwaitsGreatCave(key)))
                     {
                         var chunk = Materialize(key);
                         Rebuild(key, chunk);
@@ -303,6 +304,17 @@ namespace SomethingDownThere
             LastRebuiltChunkCount = 0;
             if (grid.RemoveSphere(transform.InverseTransformPoint(centre), radius, out var changed)) CommitEdit(changed);
             return true;
+        }
+
+        // A hollow's thinned roof gives way round a point where a cut opened into it (ExcavationGrid.RemoveThin): ground thinner
+        // than ThinRoof within the reach falls in.
+        public const float ThinRoof = .25f;
+        public bool CollapseThin(Vector3 centre, float reach)
+        {
+            if (!CanDig || IsRestoring) return false;
+            LastRebuiltChunkCount = 0;
+            if (grid.RemoveThin(transform.InverseTransformPoint(centre), reach, ThinRoof, out var changed)) { CommitEdit(changed); return true; }
+            return false;
         }
 
         public bool ClearLoadSweep(Vector3 from, Vector3 to, Quaternion rotation, Vector3 halfExtents)

@@ -197,6 +197,8 @@ namespace SomethingDownThere
                 lastBreak = Time.time;
                 var crane = FindViewer()?.Crane;
                 if (crane != null) crane.EmitGroundBreak(to, inward, Mathf.Max(terrain.LastRemovedVolume, .04f), .4f, 1.1f);
+                // Thinned ground round the opening gives way (116), next frame for the same reason as the cave-in.
+                pendingThin = to + inward * .1f;
                 return;
             }
             Breached = true;
@@ -207,6 +209,7 @@ namespace SomethingDownThere
         }
 
         private (Vector3 point, Vector3 inward)? pendingBreak;
+        private Vector3? pendingThin;
 
         private void BreakIn(Vector3 point, Vector3 inward)
         {
@@ -252,6 +255,12 @@ namespace SomethingDownThere
                 var (point, inward) = pendingBreak.Value;
                 pendingBreak = null;
                 BreakIn(point, inward);
+            }
+            if (pendingThin.HasValue && terrain != null && !terrain.IsRestoring)
+            {
+                var point = pendingThin.Value;
+                pendingThin = null;
+                terrain.CollapseThin(point, DiscoveryField.ThinCollapseReach);
             }
             if (!Opened || field == null || terrain == null || terrain.IsRestoring || opening.isPlaying) return;
             if ((goneCheck -= Time.deltaTime) > 0) return;

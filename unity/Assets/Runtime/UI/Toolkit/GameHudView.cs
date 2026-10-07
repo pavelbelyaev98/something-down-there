@@ -39,6 +39,13 @@ namespace SomethingDownThere
             Root.Query<VisualElement>().ForEach(element => element.pickingMode = PickingMode.Ignore);
         }
 
+        private (int, int, int) shownStatus = (-1, -1, -1);
+        private (int, int, int, int, int, int, int) shownTool;
+        private (bool, bool, bool, bool, bool) shownAdmin = (true, true, true, true, true);
+        private float toolRefresh;
+        private int shownPercent = -1;
+        private string shownBand;
+
         public void Tick()
         {
             GameMenuView.Show(fps, player.GameSettings.Values.ShowFps);
@@ -61,8 +68,14 @@ namespace SomethingDownThere
                 detectorBars[i].EnableInClassList("active", i < signalLevel);
             prompt.text = gameplay ? player.TargetPrompt : "";
             feedback.text = player.Feedback;
-            status.text = "FINDS  " + player.Inventory.Count + " / " + player.Inventory.Capacity;
-            walletStatus.text = "$" + player.Wallet.Balance;
+            // Texts are rebuilt only when what they show changes, so the HUD allocates nothing on an ordinary frame.
+            var statusKey = (player.Inventory.Count, player.Inventory.Capacity, player.Wallet.Balance);
+            if (statusKey != shownStatus)
+            {
+                shownStatus = statusKey;
+                status.text = "FINDS  " + statusKey.Item1 + " / " + statusKey.Item2;
+                walletStatus.text = "$" + statusKey.Item3;
+            }
             if (player.GameplayActive || displayedBattery != player.Battery)
             {
                 UpdateBattery();
@@ -71,18 +84,32 @@ namespace SomethingDownThere
             GameMenuView.Show(inventoryWarning, player.Inventory.IsFull);
             Root.EnableInClassList("stacked-warnings", player.Inventory.IsFull && !fuelWarning.ClassListContains("hidden"));
             shovelStatus.EnableInClassList("hidden", !player.ExcavationAvailable);
-            shovelStatus.text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m cut"
-                + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.DisplayDepth:F1} m";
-            if (player.WorksiteTools != null)
-                shovelStatus.text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {player.WorksiteTools.AvailableLamps}/{player.LampKit.Owned}"
-                    + $"    |    {player.InputSettings.Display(PlayerBinding.Mark)}  MARK";
+            var toolKey = (player.EffectiveShovelLevel, player.Shovel.LevelCount, Mathf.RoundToInt(player.EffectiveShovel.Radius * 200),
+                Mathf.RoundToInt(player.EffectiveDigReach * 10), Mathf.RoundToInt(player.DisplayDepth * 10),
+                player.WorksiteTools != null ? player.WorksiteTools.AvailableLamps : -1, player.WorksiteTools != null ? player.LampKit.Owned : -1);
+            // Key names change only in the settings; a slow refresh picks them up.
+            if (toolKey != shownTool || (toolRefresh -= Time.unscaledDeltaTime) <= 0)
+            {
+                shownTool = toolKey; toolRefresh = 1;
+                string text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m cut"
+                    + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.DisplayDepth:F1} m";
+                if (player.WorksiteTools != null)
+                    text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {player.WorksiteTools.AvailableLamps}/{player.LampKit.Owned}"
+                        + $"    |    {player.InputSettings.Display(PlayerBinding.Mark)}  MARK";
+                shovelStatus.text = text;
+            }
 
-            adminHint.text = !player.AdminAvailable || !gameplay ? ""
-                : "DEVELOPER ADMIN"
-                    + (player.HasAdminOverrides ? "  |  Overrides active" : "")
-                    + (player.UnlimitedBattery ? "  |  Unlimited battery" : "")
-                    + (player.AdminXray ? "  |  X-ray: transparent ground" : "")
-                    + (player.AdminGroundXray ? "\nGround X-ray: " + TerrainVolume.XrayLegend : "");
+            var adminKey = (player.AdminAvailable && gameplay, player.HasAdminOverrides, player.UnlimitedBattery, player.AdminXray, player.AdminGroundXray);
+            if (adminKey != shownAdmin)
+            {
+                shownAdmin = adminKey;
+                adminHint.text = !adminKey.Item1 ? ""
+                    : "DEVELOPER ADMIN"
+                        + (player.HasAdminOverrides ? "  |  Overrides active" : "")
+                        + (player.UnlimitedBattery ? "  |  Unlimited battery" : "")
+                        + (player.AdminXray ? "  |  X-ray: transparent ground" : "")
+                        + (player.AdminGroundXray ? "\nGround X-ray: " + TerrainVolume.XrayLegend : "");
+            }
             float pulse = player.CameraSettings.SteadyCrosshair ? 0 : player.DigPulse;
             reticle.style.scale = new Scale(Vector3.one * (1 + pulse * 0.3f));
             reticle.style.color = Color.Lerp(Color.white, new Color(1, 0.82f, 0.35f), pulse);
@@ -98,7 +125,12 @@ namespace SomethingDownThere
             batteryGroup.EnableInClassList("critical", !unlimited && risk == ReturnRisk.Critical);
             string band = unlimited ? "UNLIMITED" : fraction <= 0 ? "EMPTY"
                 : risk == ReturnRisk.Critical ? "CRITICAL" : risk == ReturnRisk.Risky ? "RISKY" : "SAFE";
-            batteryStatus.text = "BATTERY  " + Mathf.CeilToInt(100f * player.Battery.Charge / player.Battery.Capacity) + "%  |  " + band;
+            int percent = Mathf.CeilToInt(100f * player.Battery.Charge / player.Battery.Capacity);
+            if (percent != shownPercent || !ReferenceEquals(band, shownBand))
+            {
+                shownPercent = percent; shownBand = band;
+                batteryStatus.text = "BATTERY  " + percent + "%  |  " + band;
+            }
             batteryFill.style.width = Length.Percent((unlimited ? 1f : fraction) * 100);
             bool low = !unlimited && risk != ReturnRisk.Safe;
             fuelWarning.text = !low ? "" : fraction <= 0 ? "FUEL EMPTY"

@@ -422,6 +422,7 @@ MonoBehaviour:
   recovery: 0
   lore: 
   handPicked: 0
+  liftsByCrown: 0
 --- !u!114 &1881309482028392007
 MonoBehaviour:
   m_ObjectHideFlags: 0

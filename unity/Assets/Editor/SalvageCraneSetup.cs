@@ -28,7 +28,10 @@ namespace SomethingDownThere.Editor
         // and the set-down spots east of the camp. Its jib rests over those spots, so the swing out to
         // a hole is seen from the dig.
         public static readonly Vector3 Mast = new Vector3(15, 0, -14);
-        public static readonly Vector3[] SetDownSpots = { new Vector3(6.2f, 0, -12.6f), new Vector3(8.4f, 0, -15.2f), new Vector3(6.6f, 0, -17.8f) };
+        // Seven: one for every unique, the computers' three and the great caves' four crystal trophies (116), south of the
+        // first three on open ground, each over 3 m from the next.
+        public static readonly Vector3[] SetDownSpots = { new Vector3(6.2f, 0, -12.6f), new Vector3(8.4f, 0, -15.2f), new Vector3(6.6f, 0, -17.8f),
+            new Vector3(10.8f, 0, -18.4f), new Vector3(8.8f, 0, -21f), new Vector3(12.6f, 0, -21.6f), new Vector3(10.6f, 0, -24.2f) };
         // The base footing sits slightly into the lakebed, whose ground dips under its edges.
         private const float BaseSink = .25f;
         // The trolley stops this far short of the pack's physical stop colliders.

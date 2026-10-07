@@ -49,34 +49,43 @@ namespace SomethingDownThere
         private static TerrainGround.Stash[] Stashes(Bounds pocket) => pocket.size == Vector3.zero ? Array.Empty<TerrainGround.Stash>()
             : new[] { TerrainGround.MakeStash((Unity.Mathematics.float3)Local(LabStashAt), Unity.Mathematics.quaternion.RotateY(Mathf.PI / 2), pocket) };
 
-        // Four separate walkable caverns (115; user, 2026-10-07: "big walkable caverns", "easy to find"), made as the
-        // site's are: three joined chambers each, about 10 m long and 3.4 m from floor to roof, the roof about 1.7 m down;
-        // west, south-east, east and north of the plot, clear of the bays, crane scenes and find gallery (whose rows run
-        // along z -0.8 to 3.2 from x -9); one of each cave crystal, shallow
-        // to deep (DiscoveryField.SpawnLabCaves). Grey geode stone on the surface over each shows its shape (MarkCave).
-        private static readonly Vector2[][] CaveChambers =
-        {
-            new[] { new Vector2(-13.2f, -4.6f), new Vector2(-13.4f, -1.6f), new Vector2(-13.1f, 1.4f) },
-            new[] { new Vector2(8f, -6.8f), new Vector2(10.4f, -5.6f), new Vector2(11.9f, -3.8f) },
-            new[] { new Vector2(3.8f, 2.6f), new Vector2(6.6f, 2.2f), new Vector2(8.8f, 2.6f) },
-            new[] { new Vector2(-10f, 8.1f), new Vector2(-7f, 7.9f), new Vector2(-4f, 8.3f) },
-        };
-        private static readonly Unity.Mathematics.float3[] ChamberRadii =
-            { new Unity.Mathematics.float3(2.2f, 2f, 2.1f), new Unity.Mathematics.float3(2.3f, 2.1f, 2.2f), new Unity.Mathematics.float3(2f, 1.9f, 2f) };
-        private const float CaveCentreY = -3.8f, CaveFloorY = -5.2f, CaveMarkDepth = .375f;
-        public static readonly TerrainGround.Cavern[] Caves = MakeCaves();
+        // The lab's caves (116): a great cave under the whole lab as the site's are made (TerrainGround.TryGreatCave), its roof
+        // about 15 m down (below the bays and crane scenes), with all four crystal trophies (DiscoveryField.SpawnLabCaves),
+        // and a shaft from the surface to GreatShaftLeft above its roof over the chamber nearest GreatShaftNear; then four
+        // mini caves a couple of metres down, one of each cave crystal, each under a patch of cave rock its shape
+        // (MarkCave). (User, 2026-10-07: "easy to find, either pointers or anything", "big walkable caverns".)
+        private const float GreatFloorDepth = 22f, GreatShaftLeft = 1f, GreatShaftRadius = .85f;
+        private static readonly Vector2 GreatShaftNear = new Vector2(-12f, 0f);
+        private static readonly Vector2[] MiniCaveSpots = { new Vector2(-12.6f, -4.6f), new Vector2(-9.6f, 6.8f), new Vector2(-4.2f, 7.6f), new Vector2(9.2f, -6.4f) };
+        private const float MiniCentreY = -3.9f, MiniFloorY = -4.8f, CaveMarkDepth = .375f;
+        public static readonly TerrainGround.Cavern[] Caves = MakeCaves(out GreatShaft);
+        // The shaft down to the great cave: its axis's surface point and bottom (world).
+        public static readonly (Vector3 top, Vector3 bottom) GreatShaft;
 
-        private static TerrainGround.Cavern[] MakeCaves()
+        private static TerrainGround.Cavern[] MakeCaves(out (Vector3 top, Vector3 bottom) shaft)
         {
-            var caves = new TerrainGround.Cavern[CaveChambers.Length];
-            for (int i = 0; i < caves.Length; i++)
-                caves[i] = TerrainGround.MakeCavern(Array.ConvertAll(CaveChambers[i], c => Local3(c.x, CaveCentreY, c.y)), ChamberRadii,
-                    Local3(0, CaveFloorY, 0).y, Array.Empty<Unity.Mathematics.float3>(), .6f,
-                    new Unity.Mathematics.float3(41 + i * 17, 7 + i * 5, 113 - i * 11));
-            return caves;
+            var caves = new List<TerrainGround.Cavern>();
+            var extent = SiteLayout.Extent;
+            if (!TerrainGround.TryGreatCave(extent, extent.y - GreatFloorDepth, 61, (min, max) => false, null, out var great))
+                throw new InvalidOperationException("The Ground Lab's great cave did not fit.");
+            caves.Add(great);
+            var near = Local(new Vector3(GreatShaftNear.x, 0, GreatShaftNear.y));
+            int chamber = 0;
+            for (int c = 1; c < great.Centres.Length; c++)
+                if (Vector2.Distance(new Vector2(great.Centres[c].x, great.Centres[c].z), new Vector2(near.x, near.z))
+                    < Vector2.Distance(new Vector2(great.Centres[chamber].x, great.Centres[chamber].z), new Vector2(near.x, near.z))) chamber = c;
+            var centre = great.Centres[chamber];
+            var (_, roof) = TerrainGround.CavernSpan(great, centre.x, centre.z);
+            var bottom = new Vector3(centre.x, roof + GreatShaftLeft, centre.z) + SiteLayout.Origin;
+            shaft = (new Vector3(bottom.x, 0, bottom.z), bottom);
+            for (int i = 0; i < MiniCaveSpots.Length; i++)
+                caves.Add(TerrainGround.MakeCavern(new[] { Local3(MiniCaveSpots[i].x, MiniCentreY, MiniCaveSpots[i].y) },
+                    new[] { new Unity.Mathematics.float3(1.75f, 1.45f, 1.6f) }, Local3(0, MiniFloorY, 0).y, .6f,
+                    new Unity.Mathematics.float3(41 + i * 17, 7 + i * 5, 113 - i * 11)));
+            return caves.ToArray();
         }
 
-        // The top of the ground over a cavern's chambers in geode stone: a grey patch the cavern's shape to dig down through.
+        // The top of the ground over a mini cave's chamber in cave rock: a patch its shape to dig down through.
         private static void MarkCave(byte[] ids, Vector3Int size, float cellSize, TerrainGround.Cavern cave)
         {
             int strideY = size.x + 1, strideZ = strideY * (size.y + 1), cells = Mathf.CeilToInt(CaveMarkDepth / cellSize);
@@ -86,7 +95,7 @@ namespace SomethingDownThere
             for (int x = x0; x <= x1; x++)
             {
                 if (!Over(cave, x * cellSize, z * cellSize)) continue;
-                for (int y = size.y - cells; y <= size.y; y++) ids[y * strideY + z * strideZ + x] = (byte)TerrainMaterialId.GeodeShell;
+                for (int y = size.y - cells; y <= size.y; y++) ids[y * strideY + z * strideZ + x] = (byte)TerrainMaterialId.CaveRock;
             }
         }
 
@@ -148,31 +157,50 @@ namespace SomethingDownThere
                 }
             }
             TerrainGround.FillGeode(ids, size, cellSize, Geode);
-            foreach (var cave in Caves) { TerrainGround.FillCavern(ids, size, cellSize, cave); MarkCave(ids, size, cellSize, cave); }
+            foreach (var cave in Caves)
+            {
+                TerrainGround.FillCavern(ids, size, cellSize, cave);
+                if (!cave.Great) MarkCave(ids, size, cellSize, cave);
+            }
             foreach (var stash in Stashes(stashPocket)) TerrainGround.FillShell(ids, size, cellSize, stash, new Unity.Mathematics.float4(17, 31, 47, 59));
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
 
-        // The lab's air (grid-local metres): the crane scenes' pockets, pits, shafts and tunnels.
+        // The lab's air (grid-local metres): the crane scenes' pockets, pits, shafts and tunnels, and the great cave's shaft.
         public static List<ExcavationGrid.LabCarve> Cavities()
         {
             var carves = new List<ExcavationGrid.LabCarve>();
             AddCraneCarves(carves);
+            carves.Add(ExcavationGrid.LabCarve.Tube(Local(GreatShaft.top + Vector3.up), Local(GreatShaft.bottom), GreatShaftRadius));
             return carves;
         }
 
         // The aim prompt names the bay or crane scene under the crosshair and the ground actually hit
         // (3D text would draw through the world with the built-in font shader).
+        // The last description, kept while the aim stays in the same half metre on the same ground: the prompt is asked for
+        // every frame.
+        private static (Vector3Int cell, TerrainMaterialId hit, string text) described;
+
         public static string Describe(Vector3 world, TerrainMaterialId hit)
+        {
+            var cell = Vector3Int.FloorToInt(world * 2);
+            if (described.text != null && described.cell == cell && described.hit == hit) return described.text;
+            described = (cell, hit, Describing(world, hit));
+            return described.text;
+        }
+
+        private static string Describing(Vector3 world, TerrainMaterialId hit)
         {
             var crane = DescribeCrane(world);
             if (crane != null) return crane;
             int bay = BayAt(world.x, world.z, out _, out _);
             string ground = "hitting " + hit;
             var local = Local(world);
+            if (Vector2.Distance(new Vector2(world.x, world.z), new Vector2(GreatShaft.top.x, GreatShaft.top.z)) < GreatShaftRadius + 1.2f)
+                return $"Great cave: drop down the shaft ({-GreatShaft.bottom.y:0} m), dig through the last metre of rock  |  " + ground;
             foreach (var cave in Caves)
-                if (Over(cave, local.x, local.z))
-                    return "Cavern: walk-in, one crystal kind; dig down through the grey stone, about 1.7 m  |  " + ground;
+                if (!cave.Great && Over(cave, local.x, local.z))
+                    return "Mini cave: a few crystals of one kind; dig down through the stone patch, about 1.5 m  |  " + ground;
             return bay < 0 ? "Ground Lab  |  " + ground : $"{Bays[bay].Name}: {Bays[bay].Hint}  |  {ground}";
         }
     }

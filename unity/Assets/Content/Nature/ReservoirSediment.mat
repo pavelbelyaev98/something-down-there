@@ -48,6 +48,18 @@ Material:
         m_Texture: {fileID: 2800000, guid: 8066c10484024ce3b1ff17efa6e7340e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _CaveAlbedo:
+        m_Texture: {fileID: 2800000, guid: cf37c2b38a1430944af6f3ec10b9bfea, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CaveMask:
+        m_Texture: {fileID: 2800000, guid: 90e9179be50ed4042905175dd1ba5414, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CaveNormal:
+        m_Texture: {fileID: 2800000, guid: 462383deeb461fb4984cfb6c894da705, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DigEdge:
         m_Texture: {fileID: 2800000, guid: 89124e4aabdde0d4c9d46fa01f8f2457, type: 2}
         m_Scale: {x: 1, y: 1}
@@ -121,6 +133,8 @@ Material:
     - _BandTileMetres: 20
     - _CapGrain: 0.8
     - _CapGrainMetres: 2
+    - _CaveNormalStrength: 1
+    - _CaveTileMetres: 2.5
     - _DstBlend: 0
     - _GroundOpacity: 1
     - _MacroVariation: 0.06
@@ -145,6 +159,7 @@ Material:
     - _BandMaskMax: {r: 0, g: 1, b: 1, a: 0.15}
     - _BandMaskMin: {r: 0, g: 0.5, b: 0, a: 0}
     - _BandTint: {r: 0.8962438, g: 0.8703449, b: 0.8488705, a: 1}
+    - _CaveTint: {r: 1, g: 1, b: 1, a: 1}
     - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
     - _ShellTint: {r: 1, g: 1, b: 1, a: 1}
     - _SoilTint: {r: 0.8094681, g: 0.9911565, b: 1.1067512, a: 1}

@@ -102,7 +102,7 @@ namespace SomethingDownThere
                 return math.lengthsq(gradient)>1e-12f?-math.normalize(gradient):new float3(0,1,0);
             }
 
-            // One stream of ground weights over soil: (free, free, geode shell, 1 - backfill); soil is the remainder.
+            // One stream of ground weights over soil: (free, cave rock, geode shell, 1 - backfill); soil is the remainder.
             // A mesh without it reads (0,0,0,1): plain soil.
             private Vector4 SurfaceMaterials(float3 point)
             {
@@ -110,7 +110,7 @@ namespace SomethingDownThere
                 int3 cell = (int3)math.floor(p);
                 float3 t = p - cell;
                 int index = SampleIndex(cell);
-                float backfill = 0, shell = 0;
+                float backfill = 0, shell = 0, cave = 0;
                 for (int c = 0; c < 8; c++)
                 {
                     int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
@@ -118,8 +118,9 @@ namespace SomethingDownThere
                     byte material = Materials[index + x + y * SampleStrideY + z * SampleStrideZ];
                     if (material == (byte)TerrainMaterialId.Backfill) backfill += weight;
                     else if (material == (byte)TerrainMaterialId.GeodeShell) shell += weight;
+                    else if (material == (byte)TerrainMaterialId.CaveRock) cave += weight;
                 }
-                return new Vector4(0, 0, math.saturate(shell), 1 - math.saturate(backfill));
+                return new Vector4(0, math.saturate(cave), math.saturate(shell), 1 - math.saturate(backfill));
             }
 
             private void Triangle(int a,int b,int c)

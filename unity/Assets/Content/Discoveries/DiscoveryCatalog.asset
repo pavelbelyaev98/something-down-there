@@ -34,6 +34,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 00y
     HostWeights:
     - 3
@@ -57,6 +58,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_copper
@@ -79,6 +81,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_iron
@@ -101,6 +104,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_silver
@@ -123,6 +127,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_gold
@@ -145,6 +150,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_emerald
@@ -167,6 +173,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_ruby
@@ -189,6 +196,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_diamond
@@ -211,6 +219,7 @@ MonoBehaviour:
     RandomOrientation: 1
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_reservoir_computer
@@ -232,6 +241,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_survey_computer
@@ -253,6 +263,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: unique_pump_computer
@@ -274,6 +285,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: junk_tv_portable
@@ -295,6 +307,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -317,6 +330,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -339,6 +353,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -361,6 +376,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -383,6 +399,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 00y
     HostWeights:
     - 2
@@ -406,6 +423,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_ingot_silver
@@ -428,6 +446,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: treasure_ingot_gold
@@ -450,6 +469,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: mineral_pyrite
@@ -472,6 +492,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_celestine
@@ -494,6 +515,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_fluorite
@@ -516,6 +538,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_amethyst
@@ -538,6 +561,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: geode_citrine
@@ -560,6 +584,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 1
     Cave: 0
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: cave_crystal_quartz
@@ -569,7 +594,7 @@ MonoBehaviour:
     Prefab: {fileID: 5986835123767901866, guid: cce930836f84f4c4384cebb05c951a7e, type: 3}
     AppearanceVariants:
     - {fileID: 776528731408168990, guid: 0ec15a30fbcdfe7489cc5ce481bf5388, type: 3}
-    Count: 24
+    Count: 32
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -582,6 +607,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 1
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: cave_crystal_cubes
@@ -591,7 +617,7 @@ MonoBehaviour:
     Prefab: {fileID: 8982656584909271113, guid: 6c7a8bfa6f709b04584d4428d37c5ece, type: 3}
     AppearanceVariants:
     - {fileID: 6239365998796052394, guid: 237d84434c2432743a1340b4c168d635, type: 3}
-    Count: 24
+    Count: 32
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -604,6 +630,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 1
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: cave_crystal_hex
@@ -613,7 +640,7 @@ MonoBehaviour:
     Prefab: {fileID: 6163171290613413180, guid: 4a5b956463402984799ff6ae554d18a2, type: 3}
     AppearanceVariants:
     - {fileID: 3576446387791716423, guid: 600543a0a7b3523408887b704af21f55, type: 3}
-    Count: 24
+    Count: 32
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -626,6 +653,7 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 1
+    CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
   - ItemId: cave_crystal_ruby
@@ -635,7 +663,7 @@ MonoBehaviour:
     Prefab: {fileID: 97788817704618736, guid: a9679f6e2f206714d827edc621bb83de, type: 3}
     AppearanceVariants:
     - {fileID: 1465592506350979641, guid: 06ab470e37d2ce342ab9bf2bf1103970, type: 3}
-    Count: 24
+    Count: 32
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -648,6 +676,95 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 1
+    CaveTrophy: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_trophy_quartz
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 1148048317712376063, guid: bb05338d2095a34478023cb5e35c2e8a, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 0
+    MaxDepth: 37.5
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
+    CaveTrophy: 1
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_trophy_cubes
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 5486548024103175577, guid: 36f341896b0c9fa4e89c4c8a4b9d2b46, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 37.5
+    MaxDepth: 75
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
+    CaveTrophy: 1
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_trophy_hex
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 6346225811424177912, guid: 90f45f4860829134a87c9c8d96f6c425, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 75
+    MaxDepth: 112.5
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
+    CaveTrophy: 1
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_trophy_ruby
+    AuthoredPlacement: 0
+    AuthoredPosition: {x: 0, y: 0, z: 0}
+    AuthoredEuler: {x: 0, y: 0, z: 0}
+    Prefab: {fileID: 610768141988788677, guid: 475104224ad817e439b32e845bf6c0fe, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 112.5
+    MaxDepth: 150
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
+    CaveTrophy: 1
     HostGrounds: 
     HostWeights: []
   Chest: {fileID: 1675408231397968051, guid: d8d95877ed9258f419d3c810b5655c8b, type: 3}

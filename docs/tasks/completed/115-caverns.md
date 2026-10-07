@@ -2,9 +2,8 @@
 
 **Status:** complete:
 - Underground the site is 50 m wide, about 8 m more than the plot on each side.
-- A few small sealed caves lie in every zone under the dig plot, from a few metres down: two or three joined
-  chambers in geode stone, each holding a handful of plain crystal finds of one kind by depth (blue quartz, amber
-  cubes, green hex prisms, ruby). Each crystal glows and carries a small light of its own, like a little lamp.
+- Its caves became `116`'s great and mini caves; each cave crystal glows and carries a small light of its own,
+  like a little lamp, and is a plain find to pick up.
 - Every cut that opens more of a cave, a geode or a chest's pocket drops its own clods and dust inside.
 - Untouched solid ground is one shared page in memory and in saves.
 

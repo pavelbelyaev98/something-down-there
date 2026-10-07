@@ -11,7 +11,8 @@ namespace SomethingDownThere
     // own just in front of it, lighting the stone round it like a little lamp; taking a crystal takes only its light. Made
     // whenever the ground's layout or the population changes, so it saves nothing. The lights cast shadows from the ground
     // only, as lamps do, so they never show through the stone; the nearest few light at once and fade in and out, like
-    // lamps outside their budget.
+    // lamps outside their budget. Only a hollow that has been opened lights (DiscoveryField.CaveOpened, GeodeOpened): a
+    // sealed one can't be seen into, so walking past it costs nothing. A crystal trophy (116) lights further.
     public sealed class CavernScenery : MonoBehaviour
     {
         // A crystal's light: how far in front of its middle (towards its hollow's heart), its reach and brightness; how
@@ -19,6 +20,7 @@ namespace SomethingDownThere
         // would; how many light at once (each takes six small faces of the shared shadow atlas, beside the lamps') and how
         // far off, and how long it takes to fade.
         private const float LightOut = .25f, LightRange = 2f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
+        private const float TrophyRange = 4.5f, TrophyIntensity = 2.2f, TrophyOut = .6f;
         private const int LitCrystals = 10;
 
         [SerializeField] private TerrainVolume terrain;
@@ -38,8 +40,11 @@ namespace SomethingDownThere
             public Renderer Body;
             public Light Light;
             public Vector3 Out;
-            public float Shine, Distance, Strength = 1;
-            public bool Wanted;
+            public float Shine, Distance, Strength = 1, Reach = LightOut;
+            public bool Wanted, Trophy;
+            // Its hollow: a cave's index or a geode's (Geode).
+            public int Hollow;
+            public bool Geode;
         }
 
         private void OnDestroy() { if (root != null) Destroy(root.gameObject); }
@@ -72,14 +77,16 @@ namespace SomethingDownThere
                 if (kept.Remove(find, out var same)) { glows.Add(same); continue; }
                 if (find.Collected) continue;
                 var p = (float3)terrain.transform.InverseTransformPoint(find.transform.position);
-                if (!Heart(layout, p, out var heart)) continue;
+                if (!Heart(layout, p, out var heart, out int hollow, out bool geode)) continue;
                 var body = find.GetComponentInChildren<Renderer>();
                 var middle = body != null ? body.bounds.center : find.transform.position;
                 var toward = terrain.transform.TransformPoint((Vector3)heart) - middle;
+                bool trophy = find.Item.Kind == DiscoveryKind.Unique;
                 glows.Add(new Glow
                 {
-                    Crystal = find, Body = body, Light = MakeLight(Colour(body)),
-                    Out = toward.sqrMagnitude > 1e-6f ? toward.normalized : Vector3.up
+                    Crystal = find, Body = body, Light = MakeLight(Colour(body), trophy ? TrophyRange : LightRange),
+                    Out = toward.sqrMagnitude > 1e-6f ? toward.normalized : Vector3.up, Trophy = trophy,
+                    Reach = trophy ? TrophyOut : LightOut, Hollow = hollow, Geode = geode
                 });
             }
             foreach (var gone in kept.Values) Destroy(gone.Light.gameObject);
@@ -88,15 +95,17 @@ namespace SomethingDownThere
             {
                 int near = 0;
                 foreach (var other in glows)
-                    if (other != glow && !other.Crystal.Collected && (other.Crystal.transform.position - glow.Crystal.transform.position).sqrMagnitude < LightRange * LightRange) near++;
-                glow.Strength = 1 / (1 + Crowding * near);
+                    if (other != glow && !other.Trophy && !other.Crystal.Collected && (other.Crystal.transform.position - glow.Crystal.transform.position).sqrMagnitude < LightRange * LightRange) near++;
+                glow.Strength = glow.Trophy ? TrophyIntensity / LightIntensity : 1 / (1 + Crowding * near);
             }
         }
 
-        private static bool Heart(TerrainGround.GroundLayout layout, float3 p, out float3 heart)
+        private static bool Heart(TerrainGround.GroundLayout layout, float3 p, out float3 heart, out int hollow, out bool geode)
         {
-            foreach (var cave in layout.Caverns)
+            geode = false;
+            for (hollow = 0; hollow < layout.Caverns.Length; hollow++)
             {
+                var cave = layout.Caverns[hollow];
                 if (math.any(p < cave.Min) || math.any(p > cave.Max) || TerrainGround.CavernOuter(cave, p) >= 0) continue;
                 int nearest = 0;
                 for (int i = 1; i < cave.Centres.Length; i++)
@@ -104,19 +113,20 @@ namespace SomethingDownThere
                 heart = TerrainGround.CavernHeart(cave, nearest);
                 return true;
             }
-            foreach (var geode in layout.Geodes)
-                if (math.distance(p, geode.Centre) < geode.Reach) { heart = geode.Centre; return true; }
+            geode = true;
+            for (hollow = 0; hollow < layout.Geodes.Length; hollow++)
+                if (math.distance(p, layout.Geodes[hollow].Centre) < layout.Geodes[hollow].Reach) { heart = layout.Geodes[hollow].Centre; return true; }
             heart = default;
             return false;
         }
 
-        private Light MakeLight(Color colour)
+        private Light MakeLight(Color colour, float range)
         {
             var light = new GameObject("Crystal light", typeof(Light), typeof(UniversalAdditionalLightData)).GetComponent<Light>();
             light.transform.SetParent(root, false);
             light.type = LightType.Point;
             light.color = colour;
-            light.range = LightRange;
+            light.range = range;
             light.shadows = LightShadows.Soft; light.shadowBias = .015f; light.shadowNormalBias = .04f; light.shadowNearPlane = .05f;
             // Shadows from the ground only, as a lamp's: the stone round the hollow holds its light in. Small shadow faces,
             // so ten of them leave the lamps' theirs.
@@ -143,7 +153,7 @@ namespace SomethingDownThere
             foreach (var glow in glows)
             {
                 glow.Wanted = false;
-                if (glow.Crystal == null || glow.Crystal.Collected) continue;
+                if (glow.Crystal == null || glow.Crystal.Collected || !(glow.Geode ? field.GeodeOpened(glow.Hollow) : field.CaveOpened(glow.Hollow))) continue;
                 glow.Distance = (glow.Crystal.transform.position - eye).sqrMagnitude;
                 if (glow.Distance < LightCull * LightCull) order.Add(glow);
             }
@@ -157,7 +167,7 @@ namespace SomethingDownThere
                 if (!on) continue;
                 glow.Light.intensity = LightIntensity * glow.Strength * glow.Shine;
                 // A loose crystal can move: the light follows its middle (a taken one's fades where it was).
-                if (glow.Wanted && glow.Body != null) glow.Light.transform.position = glow.Body.bounds.center + glow.Out * LightOut;
+                if (glow.Wanted && glow.Body != null) glow.Light.transform.position = glow.Body.bounds.center + glow.Out * glow.Reach;
             }
         }
     }

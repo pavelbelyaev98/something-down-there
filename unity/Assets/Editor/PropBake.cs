@@ -16,7 +16,9 @@ namespace SomethingDownThere.Editor
         // budget of 220.
         private const int HullPoints = 112;
 
-        internal static (Mesh mesh, Mesh hull, Material material) Bake(string prefabPath, string id, string meshFolder, float scale, bool boxHull)
+        // trophy: a great cave's crystal trophy (116), seated by the generator rather than buried loose, so no size cap.
+        internal static (Mesh mesh, Mesh hull, Material material) Bake(string prefabPath, string id, string meshFolder, float scale, bool boxHull,
+            bool trophy = false)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (prefab == null) throw new InvalidDataException("Missing prop " + prefabPath);
@@ -27,7 +29,7 @@ namespace SomethingDownThere.Editor
                 throw new InvalidDataException(id + ": a prop find needs one URP Lit material (run Configure Buried Props).");
             var toRoot = prefab.transform.worldToLocalMatrix;
             var mesh = Merge(detail, toRoot, id, out var bounds);
-            if (bounds.extents.magnitude * scale > DiscoveryField.MaximumLargeFindRadius) throw new InvalidDataException(id + " is too big to bury.");
+            if (!trophy && bounds.extents.magnitude * scale > DiscoveryField.MaximumLargeFindRadius) throw new InvalidDataException(id + " is too big to bury.");
             var hull = Save(boxHull ? RetroComputerSetup.BoxHull(new Bounds(Vector3.zero, bounds.size)) : ConvexHull(mesh.vertices, id),
                 meshFolder + "/" + id + "_Hull.asset");
             hull.SetPreBakeCollisionMesh(isConvex: true, preBake: true);

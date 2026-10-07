@@ -5,7 +5,8 @@
     "SomethingDownThere.Editor",
     "Unity.InputSystem",
     "Unity.InputSystem.TestFramework",
-    "Unity.RenderPipelines.Universal.Runtime"
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.Collections"
   ],
   "includePlatforms": [
     "Editor"

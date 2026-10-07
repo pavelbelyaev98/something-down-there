@@ -58,6 +58,17 @@ namespace SomethingDownThere.Editor
         // blue quartz, amber cubes, green hexagonal prisms and ruby. No thin single prisms or slabs: alone they read as
         // sticks (user, 2026-10-06).
         public const string CavernFolder = CrystalFolder + "/Cavern";
+        // The great caves' crystal trophies (116): one of the demo's big formations for each cave crystal, glowing in its
+        // colour (art/pure-nature-crystal-caverns/trophy.json): a cluster of blue quartz, a stack of amber cubes, a sheaf of
+        // green hexagonal columns and a stepped ruby.
+        public const string TrophyFolder = CrystalFolder + "/Trophy";
+        public static readonly (string label, string prop, Color tint)[] Trophies =
+        {
+            ("quartz", "Crystal_Quartz_1", new Color(.3f, .6f, 1f)),
+            ("cubes", "Crystal_Pyrite_2", new Color(1f, .55f, .15f)),
+            ("hex", "Crystal_BigHex_6", new Color(.2f, .95f, .45f)),
+            ("ruby", "Crystal_Ruby_1", new Color(1f, .1f, .07f)),
+        };
         public static readonly (string label, string[] finds, Color tint)[] CaveCrystals =
         {
             ("quartz", new[] { "Crystal_Beryl_03", "Crystal_Beryl_05" }, new Color(.3f, .6f, 1f)),
@@ -127,6 +138,10 @@ namespace SomethingDownThere.Editor
                 foreach (var name in finds)
                     PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CavernFolder}/{name}_{label}.prefab",
                         vendor => FromGlowCrystal(vendor, $"{CavernFolder}/{vendor.name}_{label}.mat", CavernFolder, tint, CrystalGloss));
+            if (!AssetDatabase.IsValidFolder(TrophyFolder)) AssetDatabase.CreateFolder(CrystalFolder, "Trophy");
+            foreach (var (label, prop, tint) in Trophies)
+                PackVariant($"{CrystalVendor}/Prefabs/Crystals/{prop}.prefab", $"{TrophyFolder}/{prop}_trophy.prefab",
+                    vendor => FromGlowCrystal(vendor, $"{TrophyFolder}/{vendor.name}_{label}.mat", TrophyFolder, tint, CrystalGloss));
             AssetDatabase.SaveAssets();
         }
 

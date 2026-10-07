@@ -25,6 +25,19 @@ namespace SomethingDownThere
         // walking past it ever picks it up (a chest's coins and ingots).
         [SerializeField] private bool handPicked;
         public bool HandPicked => handPicked;
+        // Lifted by its crown (116: a great cave's crystal trophy): the crane's lifting eye always goes on the top of it,
+        // wherever the player aims, so it hangs upright and stands upright at camp.
+        [SerializeField] private bool liftsByCrown;
+        public bool LiftsByCrown => liftsByCrown;
+        // The top middle of its mesh (local).
+        public Vector3 CrownLocal
+        {
+            get
+            {
+                var bounds = GetComponent<MeshFilter>().sharedMesh.bounds;
+                return new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+            }
+        }
         private DiscoveryField field;
         public DiscoveryKind Kind => kind;
         public RecoveryMethod Recovery => recovery;
@@ -53,7 +66,9 @@ namespace SomethingDownThere
         // Holding Interact on an exposed unique bolts the crane's lifting eye on where the player aims (concept 05 §3).
         public bool CanHold(FpsPlayer player) => isActiveAndEnabled && CanMark && player.Crane != null && player.Crane.Configured && !player.Crane.Busy;
         public float HoldSeconds(FpsPlayer player) => player.Crane.Settings.MarkSeconds;
-        public bool CompleteHold(FpsPlayer player, RaycastHit hit) => player.Crane.TryMark(this, hit.point, hit.normal);
+        public bool CompleteHold(FpsPlayer player, RaycastHit hit) => liftsByCrown
+            ? player.Crane.TryMark(this, transform.TransformPoint(CrownLocal), transform.up)
+            : player.Crane.TryMark(this, hit.point, hit.normal);
         public Bounds LocalHull => hitCollider.sharedMesh.bounds;
         // Released convex bodies can rest slightly inside the sampled
         // field's smooth collider. Permit only shallow contact on a free item;

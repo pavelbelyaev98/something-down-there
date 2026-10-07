@@ -265,21 +265,32 @@ Geodes keep that moment without cave networks.
   celestine and fluorite in the sediment, amethyst and citrine in the riverbed, apart from the gems
   loose in the ground.
 - Geodes never connect into passages and never form a maze.
-- **Caves** (user, 2026-10-07: "caves on much higher levels, many more of those, and only one rock
-  type per cave"): a few in every zone, the first a few metres down, all under the dig plot so
-  digging down meets them. Each is a small grotto of two or three joined chambers a few metres high
-  with a floor to walk on and a domed roof, in the same hard stone as a geode's shell, so one tell
-  says "a hollow is in there"; never connected to another. A handful of crystals of one kind stand
-  half out of its floor, walls and roof, each glowing and lighting the stone round it like a small
-  lamp: plain finds to pick up (user: "I would rather just pick up normal
-  crystals"; not too many, so caves pay without making the player rich). The kind follows the depth,
-  from pale blue quartz near the top through amber cubes and green hexagonal prisms to ruby at the
-  bottom. Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").
+- **Caves** come in two sizes, both sealed, single and never connected to another, in their own hard
+  stone, the cave rock of the Crystal Caverns demo (user, 2026-10-07: "use the textures from the demo
+  where the rocks were"), so one tell says "a hollow is in there". Their crystals glow like small lamps
+  (above) and are plain finds to pick up (user: "I would rather just pick up normal crystals").
+  Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").
+  - **A great cave in every zone** (user, 2026-10-07: "one cave that is actually very wide, like
+    almost a whole level wide, with plenty of stuff ... like in the demo"; "one per zone is smart"):
+    a hall almost as wide as the site underground and a few metres high, its middle under the dig
+    plot so digging down meets it, its ends out under the bank. Pillars, arches and stalagmites of its
+    rock stand in it, and it glows in the demo's four colour areas, each with its own crystal kind.
+    On its floor stands the zone's **crystal trophy**, a big formation of the crystal (user: "instead
+    of breaking them I want to extract them with the crane like uniques"; "it becomes a unique people
+    look at"): a unique, dug free round its base and lifted by the crane by its crown, so it stands
+    upright at camp for good (05 §8).
+  - **Mini caves**, a few a zone from a few metres down (user: "small ones with just some pickables
+    here and there"): one small chamber holding a handful of crystals of the depth's kind, pale blue
+    quartz near the top through amber cubes and green hexagonal prisms to ruby at the bottom.
+- **Breaking in** opens a cave, a geode or a chest's pocket with a fall of clods and dust, and every
+  later cut that opens it more drops its own. Rock thinned below a hand's breadth round the opening
+  gives way with it, so no lace or sheet of hard stone is left hanging across the hole (user,
+  2026-10-07: "artifacts that don't disappear after digging").
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
   digging"; Keep Digging players loved its hand-built caves. Meltopia's network of identical tunnels
-  got players lost, so there are no networks and caves stay single sealed rooms; cave zones were
-  rejected ([Open Questions](13_OPEN_QUESTIONS.md#closed-ideas)).
+  got players lost, so there are no networks and caves stay single sealed halls and rooms; cave
+  networks were rejected ([Open Questions](13_OPEN_QUESTIONS.md#closed-ideas)).
 
 ## 6. Terrain technology and cleanup
 

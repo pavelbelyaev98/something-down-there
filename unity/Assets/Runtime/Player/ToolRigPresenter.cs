@@ -64,7 +64,7 @@ namespace SomethingDownThere
         public static MotionFamily Family(TerrainMaterialId material) => material switch
         {
             TerrainMaterialId.Backfill => MotionFamily.Bite,
-            TerrainMaterialId.GeodeShell => MotionFamily.Hard,
+            TerrainMaterialId.GeodeShell or TerrainMaterialId.CaveRock => MotionFamily.Hard,
             _ => MotionFamily.Scoop
         };
 

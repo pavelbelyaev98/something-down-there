@@ -60,8 +60,9 @@ Contextual action prompts and the optional controls reference are allowed:
 The emotional record of the run: the finds the crane pulled out of the hole, standing beside the camp.
 
 - **A few special exhibits:** ordinary and repeatable valuables sell; no first-copy exceptions.
-- The crane sets each unique down at its own spot beside the camp, lying as it landed, where it stays. No
- stands, shelves or placement step, and recovery never sells it.
+- The crane sets each unique down at its own spot beside the camp, lying as it landed, where it stays; a
+ crystal trophy, hung from its crown, stands upright. No stands, shelves or placement step, and recovery
+ never sells it.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.
 - Recovered uniques support inspection and story rereading where they stand. The story line first
  appears when the unique is cleaned or recovered, whichever comes first.

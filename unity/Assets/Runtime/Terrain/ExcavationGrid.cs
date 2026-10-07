@@ -129,6 +129,7 @@ namespace SomethingDownThere
             foreach (var geode in Layout.Geodes) CarveGeode(geode);
             foreach (var cavern in Layout.Caverns) CarveCavern(cavern);
             if (labCarves != null) foreach (var carve in labCarves) Carve(carve);
+            FindHollows();
             Revision = 0;
             RemovedVolume = LastRemovedVolume = LastDetachedVolume = 0;
             LastDetachedSamples = LastSupportVisitedSamples = 0;
@@ -617,7 +618,7 @@ namespace SomethingDownThere
             remnantState.Add(index, 1);
             var p = SampleCoordinates(index);
             if (p.x < 2 || p.x > Size.x - 2 || p.y < 2 || p.y >= Size.y
-                || p.z < 2 || p.z > Size.z - 2 || p.y < lowestCarvedY) return;
+                || p.z < 2 || p.z > Size.z - 2 || Deep(p)) return;
             if (bankBeyond != null && Bank(p.x, p.y, p.z) > 0) return;
             float maxWidth = Mathf.Min(CellSize * .5f, .0625f);
             if (ThinAcross(index, 1, maxWidth) || ThinAcross(index, strideY, maxWidth, Size.y - p.y)
@@ -646,7 +647,7 @@ namespace SomethingDownThere
             var p = SampleCoordinates(index);
             // Keep the permanent boundary attachment band and unedited deep soil.
             bool thin = p.x >= 2 && p.x <= Size.x - 2 && p.y >= 2 && p.y < Size.y
-                && p.z >= 2 && p.z <= Size.z - 2 && p.y >= lowestCarvedY
+                && p.z >= 2 && p.z <= Size.z - 2 && !Deep(p)
                 && (ThinAcross(index, 1, maxWidth) || ThinAcross(index, strideY, maxWidth, Size.y - p.y)
                     || ThinAcross(index, strideZ, maxWidth));
             kind = thin ? (byte)1 : (byte)2;
@@ -810,7 +811,7 @@ namespace SomethingDownThere
                 var p = SampleCoordinates(index);
                 // Untouched layers below the deepest cut still join the bedrock.
                 // The top face is deliberately not an anchor: surface islands vanish.
-                anchored = p.y < lowestCarvedY || p.y == 0 || p.x == 0 || p.x == Size.x
+                anchored = Deep(p) || p.y == 0 || p.x == 0 || p.x == Size.x
                     || p.z == 0 || p.z == Size.z;
                 if (anchored) break;
                 // Solid sample edges define support. Iterative depth-first traversal

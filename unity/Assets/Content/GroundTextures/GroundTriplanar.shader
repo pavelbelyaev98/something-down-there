@@ -18,6 +18,12 @@ Shader "Something Down There/Ground Triplanar"
         _ShellTint("Geode shell tint", Color) = (1,1,1,1)
         _ShellTileMetres("Geode shell tile metres", Float) = 3
         _ShellNormalStrength("Geode shell relief", Range(0, 2)) = 1
+        _CaveAlbedo("Cave rock colour", 2D) = "white" {}
+        [Normal] _CaveNormal("Cave rock normal", 2D) = "bump" {}
+        _CaveMask("Cave rock occlusion (G)", 2D) = "white" {}
+        _CaveTint("Cave rock tint", Color) = (1,1,1,1)
+        _CaveTileMetres("Cave rock tile metres", Float) = 3
+        _CaveNormalStrength("Cave rock relief", Range(0, 2)) = 1
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
@@ -80,6 +86,8 @@ Shader "Something Down There/Ground Triplanar"
             float _BackfillTileMetres, _BackfillNormalStrength;
             float4 _ShellTint;
             float _ShellTileMetres, _ShellNormalStrength;
+            float4 _CaveTint;
+            float _CaveTileMetres, _CaveNormalStrength;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -94,6 +102,7 @@ Shader "Something Down There/Ground Triplanar"
         // Identical repeat/trilinear imports share sampler states across layers.
         TEXTURE2D(_BackfillAlbedo); TEXTURE2D(_BackfillNormal); TEXTURE2D(_BackfillMask);
         TEXTURE2D(_ShellAlbedo); TEXTURE2D(_ShellNormal); TEXTURE2D(_ShellMask);
+        TEXTURE2D(_CaveAlbedo); TEXTURE2D(_CaveNormal); TEXTURE2D(_CaveMask);
         #include "../../Runtime/Terrain/ExcavationDaylight.hlsl"
 
         struct GroundAttributes
@@ -345,7 +354,7 @@ Shader "Something Down There/Ground Triplanar"
             normal = ProjectGroundNormal(n, weights, signs, nx, ny, nz);
         }
 
-        // Mesh weights (free, free, geode shell, 1 - backfill) over soil. A missing stream reads (0,0,0,1), so meshes
+        // Mesh weights (free, cave rock, geode shell, 1 - backfill) over soil. A missing stream reads (0,0,0,1), so meshes
         // without weights render as soil.
         void GroundSurface(float3 position, half3 geometricNormal, half4 materials,
             out half3 colour, out half3 normal, out half roughness, out half occlusion)
@@ -382,6 +391,20 @@ Shader "Something Down There/Ground Triplanar"
                 normal = normalize(lerp(normal, layerNormal, shell));
                 occlusion = lerp(occlusion, layerOcclusion, shell);
                 roughness = lerp(roughness, .85, shell);
+            }
+            // Cave rock (116): the Crystal Caverns demo's own cave wall stone, purple-grey flakes with warm flecks.
+            half cave = saturate(materials.y);
+            [branch] if (cave > 0.001)
+            {
+                half3 layerColour, layerNormal; half layerOcclusion;
+                DepositSurface(TEXTURE2D_ARGS(_CaveAlbedo, sampler_SoilAlbedo),
+                    TEXTURE2D_ARGS(_CaveNormal, sampler_SoilNormal), TEXTURE2D_ARGS(_CaveMask, sampler_SoilRoughness),
+                    position, dx, dy, n, _CaveTileMetres, _CaveTint.rgb, _CaveNormalStrength,
+                    layerColour, layerNormal, layerOcclusion);
+                colour = lerp(colour, layerColour, cave);
+                normal = normalize(lerp(normal, layerNormal, cave));
+                occlusion = lerp(occlusion, layerOcclusion, cave);
+                roughness = lerp(roughness, .8, cave);
             }
         }
         ENDHLSL
