@@ -23,7 +23,7 @@ build curiosity about what they add up to.
 | Objects | The five first-slice objects: washing machine, hand drill, gearbox, mammoth bone, buried retro computer; the computer proves unique ownership and crane recovery |
 | Crane recovery | Hold Interact on the exposed computer; the crane parks over the hole, its rope descends, attaches and hauls it through a bent player-dug route, clearing load bottlenecks, and the crane sets it down at camp, preserving in-flight saves |
 | Clusters | One coherent buried scene, using a bone, vehicle, household or workshop template |
-| Geodes | A few hard shells with crystal-lined hollows, diggable by the current tool in seconds; upgrades or C4 are much faster |
+| Geodes | A few hard shells with crystal-lined hollows, diggable by the current tool in seconds; upgrades are much faster |
 | Pressure | Shared action-powered battery, return warning, loot-safe recovery fee/debt with a protected next outing |
 | Economy | Shared sell/upgrade computer, two tracks (Tool, Battery), 1–2 purchases each, transparent shop |
 | Display | Recovered uniques stand at camp where the crane set them, rereadable; no inventory screen |
@@ -58,9 +58,9 @@ and long-session validation before release.
 - Battery drain per powered action vs. outing length; recovery frequency and empty-wallet restart.
 - Bag capacity vs. trip length; where the hard stop actually lands.
 - Recognition: exposure percentage at which players identify each of the five objects; test late
- wide cuts and C4 too. Full-bag overflow and interesting finds must survive.
+ wide cuts too. Full-bag overflow and interesting finds must survive.
 - Cluster spacing: how far players search after finding one related object.
-- Geodes: visible starting-tool progress through the shell vs. using C4 or returning later for a much faster excavation.
+- Geodes: visible starting-tool progress through the shell vs. returning later for a much faster excavation.
 - Rare find value: how many expeditions a "big find" should equal.
 - Station time: seconds spent in the yard per trip; nonblocking selling/upgrades and crane
  recovery without underground carrying.
@@ -70,7 +70,6 @@ and long-session validation before release.
   discovery order, required-find trails, power growth against tougher ground, and useful play after
   the final major upgrade.
 - Tool-tier regression: time-to-clear per material family for each new head vs the previous tier — no new tier may be slower in ground the player already digs.
-- C4 value: digging time saved per charge vs its price — a charge must clearly pay for itself.
 - Impossibility signature: testers read the clean cut, resonance and dust as wrong material — never
   as a presence, a value cue or something reacting — including with audio muted.
 

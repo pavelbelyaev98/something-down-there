@@ -58202,7 +58202,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.CavernScenery
   terrain: {fileID: 486403993}
   field: {fileID: 203558592}
-  dressing: {fileID: 11400000, guid: f87c9e96ee2d2dc4d8d7e62a3ba09fdf, type: 2}
 --- !u!1001 &486552885
 PrefabInstance:
   m_ObjectHideFlags: 0

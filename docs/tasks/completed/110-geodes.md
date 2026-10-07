@@ -5,7 +5,7 @@
   shell of hard stone at about a quarter of soil's dig rate, lie in zones 2–3. The first way in breaks in with a
   fall of clods and dust; every later cut that opens it more drops its own.
 - Sixteen crystals of one kind line each hollow, from the population: celestine and fluorite in the sediment,
-  amethyst and citrine deeper. They glow in their colour and light the hollow, dimming as they are taken.
+  amethyst and citrine deeper. Each glows in its colour and lights the stone round it like a small lamp.
 - The shell is Crystal Caverns' porous rock detail graded dark grey, which won its A/B.
 
 Plan and research: [107](107-asset-only-grounds.md).
@@ -320,3 +320,8 @@ more of them would be nice, but only one type of crystals."
 - `GeodeCrystals` went from ten to sixteen, still one kind; the catalog's geode instances rose to match. Seats keep
   to faces that look into the hollow, and geode placement takes more tries now that caves share the zones.
 - The break-in now repeats: every cut that opens the hollow more drops its own clods and dust.
+
+## Iteration 6 (user, 2026-10-07: the light "doesn't mix well with the light from the sun")
+
+- The hollow-wide light became a small light per crystal, dimmed where crystals crowd, so the geode is dark between
+  its glowing crystals (see [115 iteration 4](115-caverns.md#iteration-4-user-2026-10-07-after-a-fourth-look)).

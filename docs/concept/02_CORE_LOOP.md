@@ -42,7 +42,7 @@ return is as valid as pushing for one more find.
 |---|---|---|
 | Hour 1 | **Recent fill** (soil) | Slow shovel, believable finds, first purchases; the first buried stash (a chest a few metres under the plot centre) teaches that different ground means something |
 | Hours 2–3 | **Old sediment** (lake silt) | Real capability jumps, clusters, the first geodes, first "too modern for this depth" oddity |
-| Hours 3–4 | **Deep sediment** (old riverbed) | The drill arrives around here; richer geodes, C4, lamps, connected major parts; growing power exceeds the tougher ground and the zone never feels like a restart |
+| Hours 3–4 | **Deep sediment** (old riverbed) | The drill arrives around here; richer geodes, lamps, connected major parts; growing power exceeds the tougher ground and the zone never feels like a restart |
 | Hours 4–5 | **Ancient constructed** | Large, fast excavation; the final object reveals what the major finds were for; ending and Continue Playing |
 
 The last meaningful purchase should land near the end of the run so its power gets used (timing

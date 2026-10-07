@@ -4,7 +4,7 @@
 - Underground the site is 50 m wide, about 8 m more than the plot on each side.
 - A few small sealed caves lie in every zone under the dig plot, from a few metres down: two or three joined
   chambers in geode stone, each holding a handful of plain crystal finds of one kind by depth (blue quartz, amber
-  cubes, green hex prisms, ruby), which glow and light the cave, dimming as they are taken.
+  cubes, green hex prisms, ruby). Each crystal glows and carries a small light of its own, like a little lamp.
 - Every cut that opens more of a cave, a geode or a chest's pocket drops its own clods and dust inside.
 - Untouched solid ground is one shared page in memory and in saves.
 
@@ -267,3 +267,24 @@ animation as I continue to break in." The screenshot showed the ruby area's glow
 - **Rejected:** the demo areas with big unbreakable formations ("too big to break"), clusters that crack and burst
   (crack overlay, `CavernShatter` shards and glints, `GlowParticles.shader`), a cavern beside the plot. The sealed
   find state went with the clusters (save version 23). C4 was removed in the same feedback (`026`).
+
+## Iteration 4 (user, 2026-10-07, after a fourth look)
+
+"The light is cool but it doesn't mix well with the light from the sun ... when you remove the last crystal the
+light completely changes; I expected it to act similar to a lamp, a light emitter that doesn't completely modify the
+light too much ... the crystals themselves a light source when it is dark but not illuminate everything around them
+strongly." And: "you removed the caves from the Ground Lab, I kind of want them back"; asked, "easy to find, either
+pointers or anything, but I do want big walkable caverns."
+
+- **A light per crystal:** the hollow-wide light at its heart and the bloom that faded in inside a lit hollow went
+  (`CavernDressing`, `Content/Caverns`). `CavernScenery` now gives each crystal a short-reach point light in its
+  colour a quarter metre in front of it, shadowed by the ground only in low-tier shadow faces so ten of them leave
+  the lamps' room in the atlas; the nearest ten within 25 m light and fade like lamps. In a geode sixteen crystals'
+  pools added up to a purple room, so each light is dimmed by the crystals within its reach (1 / (1 + 0.5 n)). In
+  the lab, with daylight down a shaft into a cavern, taking all its crystals now only takes their small glows.
+- **Lab caverns:** the four small single-chamber caves (3.5 m across, nothing to show where) became four walkable
+  caverns of three joined chambers, about 10 m long and 3.4 m floor to roof, roofs about 1.7 m down, one per crystal
+  kind. Each sits under a patch of geode stone on the surface in its chambers' shape, and the prompt names it. The
+  middle and east ones first sat under the find gallery's rows; they moved to the south-east and north of the rows.
+- **Rejected:** a light per hollow (dominates the cave, changes everything when it goes out); bloom per hollow (a
+  global look change on entering); one light per crystal at full strength in a geode (floods it).

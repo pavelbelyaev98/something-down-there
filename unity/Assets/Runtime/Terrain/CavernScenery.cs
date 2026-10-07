@@ -1,45 +1,45 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace SomethingDownThere
 {
-    // The glow of the caves and geodes (115, 110; user 2026-10-07: "crystals shine inside the caves and geodes so they
-    // illuminate the area"): each hollow's crystals glow in their own colour (their materials), and a light in that
-    // colour at its heart lights its walls, dimming as its crystals are taken and going out with the last. Made whenever
-    // the ground's layout or the population changes, so it saves nothing. The light casts shadows from the ground only,
-    // like a lamp's, so it never shows through the stone; only the nearest few hollows light at once. A bloom fades in
-    // while the view is inside a lit hollow.
+    // The crystals' light in the caves and geodes (115, 110; user, 2026-10-07: "crystals shine inside the caves and
+    // geodes", then "act similar to a lamp ... the crystals themselves a light source when it is dark, but not illuminate
+    // everything around them strongly"): each crystal glows in its colour (its material) and carries a small light of its
+    // own just in front of it, lighting the stone round it like a little lamp; taking a crystal takes only its light. Made
+    // whenever the ground's layout or the population changes, so it saves nothing. The lights cast shadows from the ground
+    // only, as lamps do, so they never show through the stone; the nearest few light at once and fade in and out, like
+    // lamps outside their budget.
     public sealed class CavernScenery : MonoBehaviour
     {
-        // A hollow's light at its heart: its reach beyond the hollow, how bright with all its crystals, and how much is
-        // left with one; how many hollows light at once (each takes six faces of the shared shadow atlas) and how far.
-        private const float LightReach = 3.5f, LightIntensity = 3.5f, LightLeft = .3f, LightCull = 30f, BloomFade = 1.5f;
-        private const int LitHollows = 2;
+        // A crystal's light: how far in front of its middle (towards its hollow's heart), its reach and brightness; how
+        // much each neighbour within its reach dims it, so a geode's crowd of crystals lights its hollow about as a few
+        // would; how many light at once (each takes six small faces of the shared shadow atlas, beside the lamps') and how
+        // far off, and how long it takes to fade.
+        private const float LightOut = .25f, LightRange = 2f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
+        private const int LitCrystals = 10;
 
         [SerializeField] private TerrainVolume terrain;
         [SerializeField] private DiscoveryField field;
-        [SerializeField] private CavernDressing dressing;
         private Transform root;
         private TerrainGround.GroundLayout dressed;
         private long dressedRevision = -1;
-        private readonly List<Hollow> hollows = new List<Hollow>();
-        private readonly List<Hollow> order = new List<Hollow>();
-        private Volume bloom;
+        private readonly List<Glow> glows = new List<Glow>();
+        private readonly List<Glow> order = new List<Glow>();
         private FpsPlayer viewer;
-        public int HollowCount => hollows.Count;
-        public int LitCount { get { int n = 0; foreach (var h in hollows) if (h.Light.enabled) n++; return n; } }
-        public float BloomWeight => bloom != null ? bloom.weight : 0;
+        public int CrystalCount => glows.Count;
+        public int LitCount { get { int n = 0; foreach (var glow in glows) if (glow.Light.enabled) n++; return n; } }
 
-        private sealed class Hollow
+        private sealed class Glow
         {
+            public BuriedFind Crystal;
+            public Renderer Body;
             public Light Light;
-            public Vector3 Heart;
-            public readonly List<BuriedFind> Crystals = new List<BuriedFind>();
-            public System.Func<float3, bool> Inside;
-            public float Share = 1;
+            public Vector3 Out;
+            public float Shine, Distance, Strength = 1;
+            public bool Wanted;
         }
 
         private void OnDestroy() { if (root != null) Destroy(root.gameObject); }
@@ -50,97 +50,115 @@ namespace SomethingDownThere
             var layout = terrain.GroundLayout;
             if (!ReferenceEquals(layout, dressed) || field.PopulationRevision != dressedRevision) Dress(layout);
             if (viewer == null) viewer = FindAnyObjectByType<FpsPlayer>();
-            var eye = viewer != null && viewer.ViewCamera != null ? viewer.ViewCamera.transform.position : transform.position;
-            Shine(eye);
-            UpdateBloom(eye);
+            Shine(viewer != null && viewer.ViewCamera != null ? viewer.ViewCamera.transform.position : transform.position);
         }
+
+        // A light for every crystal in a hollow, its way out the way to the hollow's heart (a cave's nearest chamber's).
+        // Crystals still there keep their light as it is.
+        private readonly Dictionary<BuriedFind, Glow> kept = new Dictionary<BuriedFind, Glow>();
 
         private void Dress(TerrainGround.GroundLayout layout)
         {
-            if (root == null) root = new GameObject("Hollow lights").transform;
-            foreach (Transform child in root) Destroy(child.gameObject);
-            hollows.Clear();
+            if (root == null) root = new GameObject("Crystal lights").transform;
+            kept.Clear();
+            foreach (var glow in glows)
+                if (glow.Crystal != null && ReferenceEquals(layout, dressed)) kept[glow.Crystal] = glow;
+                else Destroy(glow.Light.gameObject);
+            glows.Clear();
             dressed = layout;
             dressedRevision = field.PopulationRevision;
+            foreach (var find in field.Finds)
+            {
+                if (kept.Remove(find, out var same)) { glows.Add(same); continue; }
+                if (find.Collected) continue;
+                var p = (float3)terrain.transform.InverseTransformPoint(find.transform.position);
+                if (!Heart(layout, p, out var heart)) continue;
+                var body = find.GetComponentInChildren<Renderer>();
+                var middle = body != null ? body.bounds.center : find.transform.position;
+                var toward = terrain.transform.TransformPoint((Vector3)heart) - middle;
+                glows.Add(new Glow
+                {
+                    Crystal = find, Body = body, Light = MakeLight(Colour(body)),
+                    Out = toward.sqrMagnitude > 1e-6f ? toward.normalized : Vector3.up
+                });
+            }
+            foreach (var gone in kept.Values) Destroy(gone.Light.gameObject);
+            kept.Clear();
+            foreach (var glow in glows)
+            {
+                int near = 0;
+                foreach (var other in glows)
+                    if (other != glow && !other.Crystal.Collected && (other.Crystal.transform.position - glow.Crystal.transform.position).sqrMagnitude < LightRange * LightRange) near++;
+                glow.Strength = 1 / (1 + Crowding * near);
+            }
+        }
+
+        private static bool Heart(TerrainGround.GroundLayout layout, float3 p, out float3 heart)
+        {
             foreach (var cave in layout.Caverns)
             {
-                var c = cave;
-                Add(TerrainGround.CavernHeart(cave, cave.Centres.Length / 2), math.cmax(cave.Max - cave.Min) * .5f,
-                    p => math.all(p > c.Min) && math.all(p < c.Max) && TerrainGround.CavernOuter(c, p) < 0);
+                if (math.any(p < cave.Min) || math.any(p > cave.Max) || TerrainGround.CavernOuter(cave, p) >= 0) continue;
+                int nearest = 0;
+                for (int i = 1; i < cave.Centres.Length; i++)
+                    if (math.distancesq(cave.Centres[i], p) < math.distancesq(cave.Centres[nearest], p)) nearest = i;
+                heart = TerrainGround.CavernHeart(cave, nearest);
+                return true;
             }
             foreach (var geode in layout.Geodes)
-            {
-                var g = geode;
-                Add(geode.Centre, geode.Reach, p => math.distance(p, g.Centre) < g.Reach);
-            }
+                if (math.distance(p, geode.Centre) < geode.Reach) { heart = geode.Centre; return true; }
+            heart = default;
+            return false;
         }
 
-        private void Add(float3 heart, float size, System.Func<float3, bool> inside)
+        private Light MakeLight(Color colour)
         {
-            var hollow = new Hollow { Heart = terrain.transform.TransformPoint((Vector3)heart), Inside = inside };
-            foreach (var find in field.Finds)
-                if (!find.Collected && inside((float3)terrain.transform.InverseTransformPoint(find.transform.position))) hollow.Crystals.Add(find);
-            if (hollow.Crystals.Count == 0) return;
-            var light = new GameObject("Hollow light", typeof(Light), typeof(UniversalAdditionalLightData)).GetComponent<Light>();
+            var light = new GameObject("Crystal light", typeof(Light), typeof(UniversalAdditionalLightData)).GetComponent<Light>();
             light.transform.SetParent(root, false);
-            light.transform.position = hollow.Heart;
             light.type = LightType.Point;
-            light.color = Colour(hollow.Crystals[0]);
-            light.range = size + LightReach;
+            light.color = colour;
+            light.range = LightRange;
             light.shadows = LightShadows.Soft; light.shadowBias = .015f; light.shadowNormalBias = .04f; light.shadowNearPlane = .05f;
-            // Shadows from the ground only, as a lamp's: the stone round the hollow holds its light in.
+            // Shadows from the ground only, as a lamp's: the stone round the hollow holds its light in. Small shadow faces,
+            // so ten of them leave the lamps' theirs.
             var data = light.GetComponent<UniversalAdditionalLightData>();
             data.usePipelineSettings = false; data.customShadowLayers = true; data.shadowRenderingLayers = TerrainVolume.LampShadowLayer;
+            data.additionalLightsShadowResolutionTier = UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierLow;
             light.enabled = false;
-            hollow.Light = light;
-            hollows.Add(hollow);
+            return light;
         }
 
-        // The crystals' own glow, as bright as it goes, for the light.
-        private static Color Colour(BuriedFind crystal)
+        // The crystal's own glow, as bright as it goes, for its light.
+        private static Color Colour(Renderer body)
         {
-            var renderer = crystal.GetComponentInChildren<Renderer>();
-            var material = renderer != null ? renderer.sharedMaterial : null;
+            var material = body != null ? body.sharedMaterial : null;
             var glow = material != null && material.HasProperty("_EmissionColor") ? material.GetColor("_EmissionColor") : Color.white;
             float most = Mathf.Max(glow.r, Mathf.Max(glow.g, glow.b));
             return most > .001f ? new Color(glow.r / most, glow.g / most, glow.b / most) : Color.white;
         }
 
-        // The nearest LitHollows within LightCull light, each as bright as the share of its crystals still in it.
+        // The nearest LitCrystals still in place within LightCull light, fading in and out; a taken crystal's light fades.
         private void Shine(Vector3 eye)
         {
             order.Clear();
-            foreach (var hollow in hollows)
+            foreach (var glow in glows)
             {
-                int left = 0;
-                foreach (var crystal in hollow.Crystals) if (crystal != null && !crystal.Collected) left++;
-                hollow.Share = left / (float)hollow.Crystals.Count;
-                if (left > 0 && (hollow.Heart - eye).sqrMagnitude < LightCull * LightCull) order.Add(hollow);
-                else hollow.Light.enabled = false;
+                glow.Wanted = false;
+                if (glow.Crystal == null || glow.Crystal.Collected) continue;
+                glow.Distance = (glow.Crystal.transform.position - eye).sqrMagnitude;
+                if (glow.Distance < LightCull * LightCull) order.Add(glow);
             }
-            order.Sort((a, b) => (a.Heart - eye).sqrMagnitude.CompareTo((b.Heart - eye).sqrMagnitude));
-            for (int i = 0; i < order.Count; i++)
+            order.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+            for (int i = 0; i < order.Count && i < LitCrystals; i++) order[i].Wanted = true;
+            foreach (var glow in glows)
             {
-                var light = order[i].Light;
-                light.enabled = i < LitHollows;
-                light.intensity = LightIntensity * Mathf.Lerp(LightLeft, 1, order[i].Share);
+                glow.Shine = Mathf.MoveTowards(glow.Shine, glow.Wanted ? 1 : 0, Time.unscaledDeltaTime / LightFade);
+                bool on = glow.Shine > .001f;
+                if (glow.Light.enabled != on) glow.Light.enabled = on;
+                if (!on) continue;
+                glow.Light.intensity = LightIntensity * glow.Strength * glow.Shine;
+                // A loose crystal can move: the light follows its middle (a taken one's fades where it was).
+                if (glow.Wanted && glow.Body != null) glow.Light.transform.position = glow.Body.bounds.center + glow.Out * LightOut;
             }
-        }
-
-        private void UpdateBloom(Vector3 eye)
-        {
-            if (dressing == null || dressing.Bloom == null) return;
-            if (bloom == null)
-            {
-                var go = new GameObject("Hollow bloom");
-                go.transform.SetParent(transform, false);
-                bloom = go.AddComponent<Volume>();
-                bloom.isGlobal = true; bloom.priority = 20; bloom.sharedProfile = dressing.Bloom; bloom.weight = 0;
-            }
-            var p = (float3)terrain.transform.InverseTransformPoint(eye);
-            float target = 0;
-            foreach (var hollow in hollows) if (hollow.Light.enabled && hollow.Inside(p)) { target = 1; break; }
-            bloom.weight = Mathf.MoveTowards(bloom.weight, target, Time.unscaledDeltaTime * BloomFade);
         }
     }
 }

@@ -33,7 +33,7 @@ See [Fuel and recovery](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery).
 | Punish falls with health/chip damage | Harmless landing feedback; no battery loss, input lock or ordinary-fall recovery |
 | Add hunger, oxygen, warmth, food, overheating or other upkeep meters | No additional upkeep meters |
 | Charge for battery refills | Recharging at camp is free; a price that grows with battery size punishes upgrading (Keep Digging) |
-| Make the ground itself dangerous | Nothing in the ground collapses; C4 only removes the ground it was set to remove and never harms, buries or traps the player; no cave-ins |
+| Make the ground itself dangerous | Nothing in the ground collapses beyond a chest pocket's small cave-in, which only opens ground; nothing harms, buries or traps the player |
 | Make darkness a hazard or horror | Unlit ground is near-black, but lamps are always available and nothing in the dark can hurt the player |
 | Drain battery for looking, reading or standing still | Drain only on powered actions |
 | Add a day/night cycle, forced rest or time-gated content | The battery and the player's greed are the only pressure; the clock never gates digging or content |
@@ -46,8 +46,7 @@ See [Discoveries](05_DISCOVERIES.md) and [World and Site](03_WORLD_AND_SITE.md).
 |---|---|
 | Turn the detector into a value radar | No value/rarity hints, ever |
 | Make ground tells a treasure radar | Tells show presence, never value |
-| Generate caves, tunnel networks or identical corridors | Every passage is player-dug; only small geodes exist, and the player breaks in (Meltopia's getting-lost complaint) |
-| Make C4 weak against a common ground | C4 is strong everywhere and the natural answer to a geode's shell (Keep Digging's "useless" dynamite, Meltopia's dirt nerf) |
+| Generate cave networks or identical corridors | Every passage between places is player-dug; caves and geodes are single sealed hollows the player breaks into, never connected (Meltopia's getting-lost complaint) |
 | Leave floating specks that snag movement | Plain crumbs vanish; valuables collect only with space, overflow persists nonblocking; interesting objects remain |
 | Require archaeology chores (brushing, 100% cleaning, analysis timers) | Recognition without bureaucracy; cleaning a unique at the yard is optional, quick and has no meter |
 | Ship a game where the trailer is the whole game | Four zones, escalating silhouettes, density rules |

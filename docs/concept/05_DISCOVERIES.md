@@ -119,7 +119,7 @@ The detector is passive equipment: the player never equips it. They simply dig.
    decides what is worth revealing.
 
 Small/common finds are quick: a bite or two, instant pickup, clear feedback so nothing is collected
-unseen. Interesting finds remain after wide cuts, support cleanup and C4; exposure makes them
+unseen. Interesting finds remain after wide cuts and support cleanup; exposure makes them
 collectible without requiring full cleaning or waiting for the player to name them.
 For ordinary bag finds, holding the digging action collects an eligible aimed find as soon as it becomes available,
 including while it falls and between digging strokes. Loose finds have a more generous pickup

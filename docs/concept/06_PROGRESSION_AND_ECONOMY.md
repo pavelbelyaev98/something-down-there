@@ -21,7 +21,6 @@
 | **Battery** | Capacity and efficiency of the shared dig+jetpack battery | Longer expeditions; efficiency that makes old trips trivial |
 | **Jetpack** | Speed, efficiency, assists | Sustained ascent, steering assists, hover hold |
 | **Bag capacity** | Bag capacity | Strong steps; a full trip becomes a real haul |
-| **C4** | Blast size, pack size, efficiency | Room-clearing blasts; cheaper demolition |
 
 **Every track has twelve levels**, including its starter level, with eleven sequential purchases. Every purchase must noticeably
 improve the next outing — no "invisible +5%" upgrades or cosmetic bolts standing in for power.
@@ -30,14 +29,14 @@ level six and gains continuous drill motion at level seven; subsequent levels st
 
 The silent detector is fixed starter equipment, not a paid track, and it is frozen: it may be
 removed in favour of the ground tells ([Discoveries](05_DISCOVERIES.md#2-the-detector)). Never sell
-detector range or direction upgrades. Jetpack and C4 tracks enter the shop with their mechanics, not as
-placeholder purchases.
+detector range or direction upgrades. The jetpack track enters the shop with its mechanics, not as a
+placeholder purchase.
 
 ### Complete player upgrade freedom
 Players have total freedom to invest in whichever tracks fit their personal playstyle:
 - If a player wants to pour all their earnings into creating an absurdly overpowered machine cutter while keeping a starter backpack, they can.
 - If a player prioritizes an enormous battery for deep endurance runs, or maxing bag slots first, the game fully supports it.
-- No forced synchronization or locked track dependencies; all five tracks are independent, sequential, and additive.
+- No forced synchronization or locked track dependencies; all four tracks are independent, sequential, and additive.
 - **Power outpaces resistance:** Returning to earlier layers visibly demonstrates overwhelming cutting power, while deeper ground introduces distinct material behavior without ever resetting the player's speed back to square one.
 - **Final major tool timing:** The final major machine upgrade arrives around the last quarter of the campaign (about 75%), leaving substantial deep excavation to enjoy its full power.
 - **Tuned against the zones:** each zone's main ground is balanced with the tool level a player typically owns on arrival, so no zone feels like a restart; the drill milestone lands around the third zone ([zone rules](03_WORLD_AND_SITE.md#zone-rules)).
@@ -59,16 +58,14 @@ Players have total freedom to invest in whichever tracks fit their personal play
 
 ## 4. Money out (including late game)
 
-Primary: the five tracks.
+Primary: the four tracks.
 
 Late-game sinks support remaining discoveries and optional decoration after the tracks are maxed:
 
-- extra C4 charges;
 - reusable lamps (bought one at a time at a flat price from the start and kept for good; the
   deep dark makes them a steady purchase, not only a late one);
 - yard decoration around the recovered uniques;
-- cosmetic tool skins and yard items;
-- spare C4 charges.
+- cosmetic tool skins and yard items.
 
 The site is finite. Once its discoveries and upgrades are complete, money may stop mattering. No
 extra upkeep or repeated chores are added just to sustain spending.
@@ -83,7 +80,7 @@ extra upkeep or repeated chores are added just to sustain spending.
     battery upgrades, because a bigger battery costs more to refill; Keep Digging reviewers said they
     felt "punished for increasing your battery". Meltopia's free refuelling drew no complaints. The
     battery's job is to limit how long one trip lasts and create the "go home or one more thing?"
-    decision; money has its own sinks (upgrades, C4, cosmetics).
+    decision; money has its own sinks (upgrades, lamps, cosmetics).
 - **Return-power warning:** an adaptive indicator with safe / risky / critical states — never exact
  required-energy math. It serves as an estimate, accounting for depth and ascent cost.
 - **Recovery as a supported service:** At zero fuel underground (or called intentionally from pause as an "I'm stuck" option), recovery returns the player to the surface with full fuel, **all finds kept**, and a depth-scaled fee. If broke, interest-free debt is applied; the next outing is never blocked. With free recharging, this fee is the only money cost tied to the battery, so pushing your luck still carries a price.

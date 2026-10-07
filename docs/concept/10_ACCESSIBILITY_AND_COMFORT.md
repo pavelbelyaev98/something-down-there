@@ -9,7 +9,7 @@ avoidable complaints about hands, eyes, motion or pressure. This one does not.
 | Setting | Default | Options |
 |---|---|---|
 | Field of view | 90° | 60–110°, unit toggle |
-| Camera shake | Off | No digging or C4 shake |
+| Camera shake | Off | No digging shake |
 | Head bob | Off | Off / subtle / on |
 | Comfort preset | Available at first launch | One click applies FOV, no bob, no shake, soft transitions |
 | Forced roll / camera lean | Never | Not a feature |
@@ -17,7 +17,7 @@ avoidable complaints about hands, eyes, motion or pressure. This one does not.
 
 Design rules:
 
-- No screen shake from digging or C4.
+- No screen shake from digging.
 - No cinematic camera takeovers, no rotating elevator shots on the critical path.
 - Camera motion is smooth at any frame rate.
 - Start limited to the monitor's refresh rate, including loading. Settings may select VSync or another
@@ -36,7 +36,7 @@ Design rules:
 - **Full rebinding** of everything, including menus.
 - No QTE, no mashing, no rapid double-inputs, no precise timing anywhere in the critical path.
 - Generous input buffering: inputs during animations are never dropped.
-- Aim/placement assistance: snap-to-valid-surface placement for C4 and lamps, generous interaction
+- Aim/placement assistance: snap-to-valid-surface placement for lamps and markings, generous interaction
  radii, no pixel-perfect hotspots.
 - No health management or fall death: ordinary falls give harmless landing feedback, without battery
  loss, input lock or surface recovery. Learning movement does not cost progress.
@@ -58,7 +58,7 @@ Design rules:
 ## 4. Hearing
 
 - All dialogue-equivalent text is on screen.
-- All informational sounds (station feedback, C4 placement confirm, pickup) have visual
+- All informational sounds (station feedback, placement confirm, pickup) have visual
  counterparts.
 - Ambience and SFX volume controls; a mono option is a planned addition if the audio pass supports
  it.

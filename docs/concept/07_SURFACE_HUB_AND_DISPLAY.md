@@ -13,7 +13,6 @@ no doors, no menu mazes, no NPCs.
 | **Salvage crane** | Recover whole objects marked underground | A small tower crane beside the camp swings over the hole and its cable turns smart: the hook rides its end straight down the hole and along the excavated route into the lifting eye the player bolted on; the crane reels the find in through dirt bottlenecks and carries it to camp. Uniques arrive muddy for optional cleaning, oversized salvage awaits cash-in. Being tested: the same rope hauls the player home at zero battery |
 | **Charging point** | Battery refill | Free and automatic: the battery refills by itself while the player is back at camp; a visible cable and charge light, no button, no price ([why](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)) |
 | **Recovered uniques** | Special unsellable exhibits | Each stands where the crane set it down beside the camp, readable (name, depth, story) |
-| **Lamp / charges shelf** | Buy C4 (work lamps are sold at the computer) | Supports remaining play |
 | **Cosmetics rack** | Tool skins and yard decorations | Purely visual; another late sink |
 
 There are no characters, dialogue, or quest-givers. The story is told by the uniques standing at camp
@@ -24,14 +23,14 @@ and what the player digs up.
 Learning happens through the world, not a compulsory tutorial or popup chain.
 Contextual action prompts and the optional controls reference are allowed:
 
-- Stenciled signs and painted arrows: **SELL**, **UPGRADE**, **CHARGE**.
+- Stenciled signs and painted arrows: **SELL**, **UPGRADE**.
 - The standing computer has a visible screen and keyboard for both selling and upgrades.
 - A compact pause reference lists controls, and settings explain options.
 - **First-session full loop:** an unguided newcomer must find, sell and buy without a wiki or video —
  the stenciled signs and the shared computer are the teaching tools, and the
  session ends with a completed loop and a reason to come back (see [Prototype validation](14_PROTOTYPE_PLAN.md#4-validation-metrics-playtest-gates)).
 - First interactions work on the first try: stand at the machine, press the obvious button.
-- **Every system explains itself where it is used:** signs and objects cover the stations, C4,
+- **Every system explains itself where it is used:** signs and objects cover the stations,
  lamps and the detector. Players can learn the loop without a guide or a compulsory tutorial.
 
 ## 3. Selling at the computer

@@ -58,7 +58,7 @@ grow stronger both need to pull the player into the next outing.
 | [Fantasy and Tone](01_FANTASY_AND_TONE.md) | Setting, protagonist, humor, mystery, boundaries |
 | [Core Loop](02_CORE_LOOP.md) | The loop, sessions, pacing, anti-straight-down rules, the core test |
 | [World and Site](03_WORLD_AND_SITE.md) | Site, boundaries, four zones and their main grounds, ground tells, host ground, geodes, lighting, terrain tech |
-| [Tool and Movement](04_TOOL_AND_MOVEMENT.md) | The machine, adaptation, attachments, jetpack, crouch, C4 |
+| [Tool and Movement](04_TOOL_AND_MOVEMENT.md) | The machine, adaptation, attachments, jetpack, crouch |
 | [Discoveries](05_DISCOVERIES.md) | Find tiers, where finds sit, the frozen detector, clusters, slice objects, large finds |
 | [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md) | Tracks, levels, money, fuel, capacity, recovery |
 | [Surface Hub and Display](07_SURFACE_HUB_AND_DISPLAY.md) | Yard, machines, signage, the special display |

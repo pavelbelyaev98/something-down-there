@@ -46,10 +46,9 @@ Decided against. Reopen only with new evidence, and say what changed.
 
 | Idea | Why not |
 |---|---|
-| **Seam cleaving / boulder fields** (cut along a seam so a whole slab or boulder comes loose) | The only payoff was saved time: "a boulder comes loose, for what?" Tool upgrades and C4 already cover hard ground. Tells give the "read the ground" choice with a real reward: a direction and something at its end ([World §4](03_WORLD_AND_SITE.md#4-grounds-and-their-tells)) |
+| **Seam cleaving / boulder fields** (cut along a seam so a whole slab or boulder comes loose) | The only payoff was saved time: "a boulder comes loose, for what?" Tool upgrades already cover hard ground. Tells give the "read the ground" choice with a real reward: a direction and something at its end ([World §4](03_WORLD_AND_SITE.md#4-grounds-and-their-tells)) |
 | **Stuck machinery** (dig away the dirt jamming a flap or hatch so it swings open) | Hard to understand underground, hand-built per object and close to a puzzle. Crackable containers give the second reveal more simply |
 | **Cave zones or tunnel networks** | They break "the hole is yours", mean less digging, show finds fully exposed (skipping the reveal) and recreate Meltopia's getting-lost complaint. Geodes keep the break-through moment, and a few sealed single caverns, one per zone, give walkable rooms without a network (user, 2026-10-06; [World §5](03_WORLD_AND_SITE.md#5-geodes)) |
-| **C4 weak in clay** (or against any common ground) | Keep Digging's dynamite was "beyond useless"; Meltopia's dynamite nerf against dirt made its shovel hated. C4 is strong everywhere and the natural answer to a geode's shell ([Tool §8](04_TOOL_AND_MOVEMENT.md#8-c4)) |
 | **Tells that always lead to treasure** | That is a radar in disguise. Backfill pits always hold *something*, not necessarily something valuable |
 | **Ending timelapse** | Needs every cut recorded from the save's first minute, all for about twenty seconds at the end. Before-and-after shows the same scale cheaply |
 | **Paid surface recharge** | A tax with no decision that punishes battery upgrades (Keep Digging's backlash); the battery's job is trip length |
@@ -60,6 +59,9 @@ Decided against. Reopen only with new evidence, and say what changed.
 
 ## Later work
 
+- C4 charges: built and removed (user, 2026-10-07: tried them and did not like them, "it doesn't give
+  anything to the game"). A possible future idea only, if the user asks for it again; the attempt and
+  its lessons are in [`026`](../tasks/completed/026-sticky-c4-charges.md).
 - Localization languages.
 - Store copy, content disclosure, tags, trailer and exact demo timing.
 - Steam Cloud timing.

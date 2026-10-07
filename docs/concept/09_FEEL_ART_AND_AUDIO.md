@@ -124,7 +124,7 @@ Ambience and feedback only. **No music. No voice acting**.
 - **Zone ambience layers:** wind and distant water near the surface; drips and settling rock deeper;
  a low, almost-silent hum in the ancient zone. Layers crossfade with depth.
 - **Action feedback:** dig loops per material, geode break-throughs,
-  footsteps, jetpack thrust, C4 blast, yard cleaning spray, salvage release
+  footsteps, jetpack thrust, yard cleaning spray, salvage release
   sounds if a special release is adopted, machine interactions, pickup chimes, the computer's sale feedback.
 - **No audio-only clues.** Every sound that carries information has a visual counterpart, and every
   tell is also felt through bite size. The frozen detector is silent by design and readable while muted.
@@ -140,7 +140,7 @@ Ambience and feedback only. **No music. No voice acting**.
 
 Comfort-safe effects:
 
-- Dust, crumbs, sparkles, smoke from C4, splash from water-adjacent areas.
+- Dust, crumbs, sparkles, splash from water-adjacent areas.
 - Rope soil breaks, only when ground is actually removed, throw the earth they tear out: tumbling clods that crumble into crumbs and a little dust where they land, a spray of crumbs that end where they meet the ground, a dust puff that bursts out, stops in the air and thins out within about a second, and a brief trickle off the broken face. Nothing lies around afterwards. The finest dust hangs down in the passage for a few seconds and thins out, catching whatever light reaches it; none hangs over the hole. Debris takes the colour of the ground it came from and is lit like it (dark underground, caught by lamps); harder breaks and a harder-driven machine throw more. Keep the load and nearby excavation readable through the effect.
 - No screen shake, no blood or gore, no full-screen flashes, no chromatic aberration,
  no forced bloom.

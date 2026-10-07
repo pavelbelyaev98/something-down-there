@@ -98,33 +98,7 @@ The machine performs two clean auxiliary interactions without switching tools:
 - **Cleaning at the yard (optional):** holding dig on a muddy unique at the yard sprays its mud off in
  big chunks ([recovered uniques](07_SURFACE_HUB_AND_DISPLAY.md#5-recovered-uniques-at-camp)). Same input, no mode.
 
-## 8. C4
-
-*Parked (user, 2026-10-07): a first build was removed after its playtest, "it doesn't give anything to the game".
-The rules below stay as the brief if it returns; it needs a role the drill and the grounds do not already fill.*
-
-C4 arrives late in the progression as an optional excavation accelerator.
-
-- **Thrown or placed, then remotely detonated.** Multiple charges can be active at once.
-- Charges **stick where they land** — no bouncing or clipping through targets (the reviewed
- anti-pattern).
-- Placement is forgiving: a clear valid/invalid preview; no pixel-perfect hotspots; invalid attempts
- do not consume a charge.
-- The blast is **properly powerful**: a large, predictable volume of ground disappears with matching
- cleanup. Saving for charges must feel worth it.
-- Charges cost money, not battery; C4 is an optional accelerator, never the only way past anything.
-- **Material reactions** make *where* to stick a charge a decision:
-  - every ground gets a big, satisfying blast; C4 is never weak against a common material;
-  - a geode's hard shell cracks open under a charge: its natural target, far faster than the drill
-    ([geodes](03_WORLD_AND_SITE.md#5-geodes)).
-- *Why:* Keep Digging's dynamite was called "beyond useless" (two clicks did more), and Meltopia
- deliberately weakened dynamite against dirt so its shovel would matter, which made the shovel
- hated. A Game About Digging a Hole's dynamite bounced, clipped or vanished; charges here stick.
-- Its own small upgrade track: blast size, pack size, efficiency.
-- **Finds survive:** distinctives and uniques stay visible for deliberate collection after a blast.
- Commons keep their normal pickup behavior; full-bag overflow waits in the world. Lamps survive too.
-
-## 9. Falling and failure (movement side)
+## 8. Falling and failure (movement side)
 
 - **No health bar.** The battery is the only resource.
 - Ordinary falls give harmless landing feedback only: no battery loss, forced input lock or surface
@@ -134,7 +108,7 @@ C4 arrives late in the progression as an optional excavation accelerator.
  hauls them up their own route ([Progression and Economy](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)). Geometry faults are implementation repairs.
 - Falls never delete items, never kill, never roll back progress.
 
-## 10. What the tool is not
+## 9. What the tool is not
 
 - Not a weapon; there is no combat.
 - Not a light source.

@@ -142,7 +142,7 @@ reviewers single out layers that "each have their own surprises"; this is the sa
   Meltopia's #1 complaint: a new material ("blue snow") that suddenly made digging slow and made
   players feel their upgrades were wasted.
 - **Never a wall.** Hard ground is optional, thin or small (a geode's shell, §5): the player can go
-  around it, grind through it or use C4. Depth is never gated by tool level; One Man's Trash's tier
+  around it or grind through it. Depth is never gated by tool level; One Man's Trash's tier
   walls read as walls and forced grinding.
 - **Variety inside a zone.** One main ground must not become one repeated wall: pits, geodes,
   lenses and finds act as landmarks. No glaring pale surfaces: a white rock layer strained Keep
@@ -256,9 +256,11 @@ Geodes keep that moment without cave networks.
   metres across that bulges and pinches, never an egg (user, 2026-10-06: "larger ... weirder
   shape"). The shell reads in a tunnel wall as a curved face of distinct stone, never the bedrock
   shelf's look. The drill crawls through it in seconds.
-- Always sealed: the player always breaks in. Its crystals glow in their colour and light the hollow
-  (user, 2026-10-07: "crystals shine inside the caves and geodes so they illuminate the area"), the
-  light dimming as they are taken. Each geode holds one kind (user, 2026-10-06), lined thickly. They are finds
+- Always sealed: the player always breaks in. Its crystals glow in their colour, each a small light
+  source like a lamp that lights the stone just round it (user, 2026-10-07: "crystals shine inside the
+  caves and geodes", "a light emitter that doesn't completely modify the light", "not illuminate
+  everything around them strongly"); taking one takes only its light. Each geode holds one kind (user,
+  2026-10-06), lined thickly. They are finds
   worth far more than the ground around them, richer the deeper the geode: real geode minerals,
   celestine and fluorite in the sediment, amethyst and citrine in the riverbed, apart from the gems
   loose in the ground.
@@ -268,8 +270,8 @@ Geodes keep that moment without cave networks.
   digging down meets them. Each is a small grotto of two or three joined chambers a few metres high
   with a floor to walk on and a domed roof, in the same hard stone as a geode's shell, so one tell
   says "a hollow is in there"; never connected to another. A handful of crystals of one kind stand
-  half out of its floor, walls and roof, glowing in their colour and lighting the cave, the light
-  dimming as they are taken: plain finds to pick up (user: "I would rather just pick up normal
+  half out of its floor, walls and roof, each glowing and lighting the stone round it like a small
+  lamp: plain finds to pick up (user: "I would rather just pick up normal
   crystals"; not too many, so caves pay without making the player rich). The kind follows the depth,
   from pale blue quartz near the top through amber cubes and green hexagonal prisms to ruby at the
   bottom. Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").
@@ -284,7 +286,7 @@ Geodes keep that moment without cave networks.
 - **Full voxel**: every diggable cube can be removed; tunnels, overhangs and trenches are legal. Chunk size prototype-tuned.
 - **No floating specks**: disconnected valuables become visible pickups and collect if the bag has
   space; plain dirt crumbs vanish. Full-bag overflow persists nearby without blocking movement.
-- **Interesting finds survive cleanup:** terrain removal and C4 never delete them or bypass deliberate
+- **Interesting finds survive cleanup:** terrain removal never deletes them or bypasses deliberate
   collection.
 - **Debris is visual only**: particles never collide and never deal damage.
 - **Collision always matches the visible mesh.**
@@ -337,7 +339,7 @@ Geodes keep that moment without cave networks.
 - **Placeable lamps are the light.** They are the only light underground, apart from the caves' and
   geodes' glow: place them to work, reveal
   finds and hold the route home. Owned lamps are reusable, repositionable and do not expire or drain
-  charge; lost support leaves them recoverable nearby. Digging and C4 cannot destroy them.
+  charge; lost support leaves them recoverable nearby. Digging cannot destroy them.
 - **Diffuse all-around lamps:** a neutral lantern illuminates every direction. Nearby soil retains
   texture instead of becoming an orange-white hotspot; solid ground still blocks the light.
   One lamp lights a useful stretch of tunnel or chamber with a broad, gradual falloff, not just a small pool beside its housing.
@@ -367,8 +369,8 @@ Geodes keep that moment without cave networks.
 No lava, gas, oxygen, hunger, earthquakes, temperature damage, or monsters. The only pressure
 is the shared battery, the bag's capacity, and the player's own greed — all soft, all fair, all
 recoverable (see [Progression and Economy](06_PROGRESSION_AND_ECONOMY.md)). Nothing in the ground
-collapses beyond a chest pocket's small cave-in, which only opens ground, and C4 removes only the
-ground it was set to remove: it never harms, buries or traps the player.
+collapses beyond a chest pocket's small cave-in, which only opens ground: nothing harms, buries or
+traps the player.
 
 *Why:* in the research, survival friction is the steadiest complaint: A Game About Digging a
 Hole's fall damage and exploding battery, One Man's Trash's worms, Keep Digging 2.0 "patched in

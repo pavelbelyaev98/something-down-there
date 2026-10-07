@@ -66,7 +66,7 @@ The object must be readable at a glance and unmistakably manufactured.
 Rules:
 
 - The player reaches and exposes the final object using **the normal upgraded excavation systems**:
- the machine, the jetpack, C4 (and the detector, if it survives its playtest). Nothing is disabled,
+ the machine and the jetpack (and the detector, if it survives its playtest). Nothing is disabled,
  stripped or swapped.
 - There is **no genre switch**: no stealth, no combat, no puzzle, no timed escape, no chase.
 - The sequence is a **presentation break after a normal excavation payoff** — a cutscene, not a

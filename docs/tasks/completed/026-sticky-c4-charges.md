@@ -1,8 +1,8 @@
 # 026 — Sticky C4 Charges & Material Reactions
 
-**Status:** removed (user, 2026-10-07, after a playtest: "the C4 is terrible, remove it for now, it doesn't give anything
-to the game"). The build below was taken out whole; the task is parked. Before it returns, it needs a reason to exist
-the game does not already give (the drill already crawls through geode shell in seconds).
+**Status:** removed (user, 2026-10-07: tried it and did not like it, "it doesn't give anything to the game"). Code,
+assets and the concept's C4 rules are gone; it is not a queued task, only a possible future idea
+([13, later work](../../concept/13_OPEN_QUESTIONS.md#later-work)). This spec keeps the attempt and its lessons.
 
 ## Objective
 
