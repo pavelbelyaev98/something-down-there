@@ -438,7 +438,8 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator UniqueUncoveringRequiresAimingAtSoilEvenWithAFullBag()
         {
-            var find = field.Finds.First(f => f.Kind == DiscoveryKind.Unique);
+            // A buried computer (the crystal trophies stand in caves).
+            var find = field.Finds.First(f => f.Kind == DiscoveryKind.Unique && !f.StandsUpright);
             foreach (var other in field.Finds.Where(f => f != find)) other.gameObject.SetActive(false);
             var state = find.Capture(); state.Rotation = Quaternion.identity; find.Restore(state);
             Physics.SyncTransforms();
@@ -592,7 +593,8 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator XrayRevealsRealFindsWithoutChangingSoilOrExposureAndRestoresAfterDigging()
         {
-            var find = field.Finds.First(f => f.RopeTarget);
+            // A buried computer (the crystal trophies stand in caves).
+            var find = field.Finds.First(f => f.RopeTarget && !f.StandsUpright);
             Aim(new Vector3(find.transform.position.x, terrain.SurfaceHeight + 1.5f, find.transform.position.z), find.transform.position);
             var visual = find.GetComponent<MeshRenderer>();
             var chunks = terrain.transform.Find("Chunks");

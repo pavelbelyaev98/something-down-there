@@ -422,7 +422,7 @@ MonoBehaviour:
   recovery: 1
   lore: Cubes stacked as squarely as a builder's blocks, though nobody laid them. They lit the old sediment's cave amber from within.
   handPicked: 0
-  liftsByCrown: 1
+  standsUpright: 1
 --- !u!114 &6448184258191632373
 MonoBehaviour:
   m_ObjectHideFlags: 0

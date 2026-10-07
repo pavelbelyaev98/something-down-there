@@ -351,7 +351,7 @@ namespace SomethingDownThere
             LetGo();
             var body = payload.GetComponent<FindPhysics>().Body;
             payload.MoveRecovered(body.position, body.rotation);
-            if (payload.LiftsByCrown) StandUpright(payload);
+            if (payload.StandsUpright) StandUpright(payload);
             if (!payload.Transition(FindState.Extracting, FindState.Stored)) throw new InvalidOperationException("Recovery lost its owner.");
             payload.GetComponent<FindPhysics>().Restore(false);
             player.ShowFeedback($"The crane set the {payload.DisplayName} down at camp");
@@ -359,7 +359,7 @@ namespace SomethingDownThere
             Checkpoint();
         }
 
-        // A trophy hung from its crown lands upright; it is set level on its base where it came down, on the ground under it.
+        // A trophy is set level on its base where it came down, on the ground under it, however it hung.
         private void StandUpright(BuriedFind find)
         {
             var rotation = Quaternion.Euler(0, find.transform.eulerAngles.y, 0);
@@ -423,10 +423,7 @@ namespace SomethingDownThere
                 else mark.Show(payload, job.AttachLocal, Vector3.zero, 1, true);
             }
             else if (player != null && player.TryGetRecoveryMark(out var find, out var hit))
-            {
-                if (find.LiftsByCrown) mark.Show(find, find.CrownLocal, find.transform.up, player.HoldProgress, false);
-                else mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.HoldProgress, false);
-            }
+                mark.Show(find, find.transform.InverseTransformPoint(hit.point), hit.normal, player.HoldProgress, false);
             else mark.Hide();
         }
 

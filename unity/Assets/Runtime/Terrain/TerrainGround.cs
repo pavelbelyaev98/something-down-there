@@ -349,8 +349,20 @@ namespace SomethingDownThere
         {
             var spots = OddSpots(oddSpots);
             var pits = Pits(size, cellSize, seed, spots, features);
-            var caverns = Caverns(size, cellSize, seed, pits, spots, features);
-            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), Geodes(size, cellSize, seed, pits, spots, features, caverns), caverns);
+            var (caverns, geodes) = Hollows(size, cellSize, seed, pits, spots, features);
+            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), geodes, caverns);
+        }
+
+        // The ground's hollows in turn: the great caves, which need the room, then the geodes clear of them, then the mini caves
+        // clear of both.
+        private static (Cavern[] caverns, Geode[] geodes) Hollows(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots, Features features)
+        {
+            var great = GreatCaves(size, cellSize, seed, pits, spots, features);
+            var geodes = Geodes(size, cellSize, seed, pits, spots, features, great);
+            var mini = MiniCaves(size, cellSize, seed, pits, spots, features, great, geodes);
+            var caverns = new Cavern[great.Length + mini.Length];
+            great.CopyTo(caverns, 0); mini.CopyTo(caverns, great.Length);
+            return (caverns, geodes);
         }
 
         private static bool Inside(Func<Vector2, bool> footprint, float3 centre, float reach)
@@ -377,9 +389,9 @@ namespace SomethingDownThere
                 .Schedule(size.z + 1, 1).Complete();
             var ids = output.ToArray();
             foreach (var stash in Stashes(pits, seed, stashPocket)) if (stash.HasPocket) FillShell(ids, size, cellSize, stash, offsets);
-            var caverns = Caverns(size, cellSize, seed, pits, spots, features);
+            var (caverns, geodes) = Hollows(size, cellSize, seed, pits, spots, features);
             foreach (var cavern in caverns) FillCavern(ids, size, cellSize, cavern);
-            foreach (var geode in Geodes(size, cellSize, seed, pits, spots, features, caverns)) FillGeode(ids, size, cellSize, geode);
+            foreach (var geode in geodes) FillGeode(ids, size, cellSize, geode);
             return ids;
         }
 

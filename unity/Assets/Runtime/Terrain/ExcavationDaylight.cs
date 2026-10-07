@@ -152,6 +152,23 @@ namespace SomethingDownThere
         public float SampleAmbient(Vector3 worldPosition) =>
             grid.Sample(transform.InverseTransformPoint(worldPosition));
 
+        // An opened hollow's faint light (ExcavationDaylightGrid.Floor): HollowFloor of daylight through its box.
+        public const float HollowFloor = .45f;
+        public void LightHollow(Vector3 localMin, Vector3 localMax)
+        {
+            if (grid == null) return;
+            var box = new Bounds(); box.SetMinMax(localMin, localMax);
+            grid.Floor(box, (byte)Mathf.RoundToInt(255 * HollowFloor));
+            patched = true;
+        }
+
+        public void ClearHollows()
+        {
+            if (grid == null) return;
+            grid.ClearFloors();
+            patched = true;
+        }
+
         internal void RefreshShaderState()
         {
             if (Shader.GetGlobalTexture(MapId) == texture)

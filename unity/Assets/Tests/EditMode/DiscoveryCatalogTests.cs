@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,32,32,32,32,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,24,24,24,24,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -98,7 +98,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(640));
-            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
             foreach (int seed in Seeds(sweep))
             {
                 var layout = Layout(seed);
@@ -245,9 +245,9 @@ namespace SomethingDownThere.Tests
             Assert.That(layout.Length, Is.EqualTo(catalog.TotalCount), "Geodes take their crystals from the population.");
         }
 
-        // Concept 03 §5 (116): a great cave in every zone, almost the site's width, its four colour areas one crystal kind each
-        // and its zone's trophy upright on its floor; mini caves under the plot from a few metres down, each a handful of one
-        // kind half out of its walls; every cave crystal is in a cave, and nothing else is.
+        // Concept 03 §5 (116): a great cave in every zone across the middle of the site, one crystal kind and its zone's trophy
+        // upright on its floor; mini caves under the plot from a few metres down, each a handful of one kind half out of its
+        // walls; every cave crystal is in a cave, and nothing else is.
         [TestCase(90127)] [TestCase(12)]
         public void CavesHoldTheirCrystalsAndTrophies(int seed)
         {
@@ -260,9 +260,9 @@ namespace SomethingDownThere.Tests
             Assert.That(mini.Min(c => SiteLayout.Extent.y - c.Floor), Is.LessThan(15), "The first mini cave is a few metres down.");
             foreach (var cave in great)
             {
-                Assert.That(cave.Max.x - cave.Min.x, Is.GreaterThan(30), "A great cave runs across most of the site.");
+                Assert.That(cave.Max.x - cave.Min.x, Is.GreaterThan(22), "A great cave runs across the middle of the site.");
                 Assert.That(cave.Max.z - cave.Min.z, Is.GreaterThan(14));
-                Assert.That(cave.Pillars.Length + cave.Arches.Length, Is.GreaterThan(4), "Rock left standing in the hall.");
+                Assert.That(cave.Pillars.Length + cave.Stalagmites.Length, Is.GreaterThan(4), "Rock left standing in the hall.");
             }
             var footprint = SiteLayout.FindFootprint(SiteLayout.Extent);
             foreach (var cave in mini)
@@ -277,17 +277,9 @@ namespace SomethingDownThere.Tests
             {
                 bool In(Vector3 p) => Vector3.Min(Vector3.Max(p, (Vector3)cave.Min), (Vector3)cave.Max) == p && TerrainGround.CavernOuter(cave, p) < 0;
                 var inside = crystals.Where(p => In(p.Position)).ToArray();
-                if (cave.Great)
-                {
-                    Assert.That(inside.Select(p => p.PrefabIndex).Distinct().Count(), Is.EqualTo(TerrainGround.GreatAreas), "Every kind in a great cave.");
-                    foreach (var area in inside.GroupBy(p => TerrainGround.AreaOf(cave, p.Position.x)))
-                        Assert.That(area.Select(p => p.PrefabIndex).Distinct().Count(), Is.LessThanOrEqualTo(2), "An area is mostly one kind.");
-                }
-                else
-                {
-                    Assert.That(inside.Length, Is.GreaterThanOrEqualTo(DiscoveryCatalog.MiniCaveCrystals), $"Seed {seed}: a mini cave at {SiteLayout.Extent.y - cave.Floor:F0} m holds its crystals.");
-                    Assert.That(inside.Select(p => p.PrefabIndex).Distinct().Count(), Is.EqualTo(1), "One kind to a mini cave.");
-                }
+                Assert.That(inside.Length, Is.GreaterThanOrEqualTo(cave.Great ? DiscoveryCatalog.GreatCaveCrystals : DiscoveryCatalog.MiniCaveCrystals),
+                    $"Seed {seed}: a cave at {SiteLayout.Extent.y - cave.Floor:F0} m holds its crystals.");
+                Assert.That(inside.Select(p => p.PrefabIndex).Distinct().Count(), Is.EqualTo(1), "One kind to a cave.");
                 foreach (var p in inside)
                     Assert.That(Mathf.Abs(TerrainGround.CavernHollow(cave, p.Position)), Is.LessThan(.5f), "Half out of the stone.");
                 held += inside.Length;
@@ -550,7 +542,8 @@ namespace SomethingDownThere.Tests
                 var accepted = catalog.Generate(SiteLayout.Extent, 90127, Ground, GroundLayout).Take(catalog.ShallowCount).ToArray();
                 foreach (var entry in catalog.Entries)
                 {
-                    if (entry.AuthoredPlacement) continue;
+                    // Uniques stay one each, hand-placed or a cave's trophy.
+                    if (entry.AuthoredPlacement || entry.CaveTrophy) continue;
                     entry.Count = entry.ShallowCount + (entry.Count - entry.ShallowCount) / 2;
                 }
                 CollectionAssert.AreEqual(accepted, catalog.Generate(SiteLayout.Extent, 90127, Ground, GroundLayout).Take(catalog.ShallowCount));
@@ -559,7 +552,8 @@ namespace SomethingDownThere.Tests
         }
 
         // Constant rate, rising value: below the dense entry layer every metre to the floor
-        // keeps meeting finds, so the extra depth is never empty ground.
+        // keeps meeting finds, so the extra depth is never empty ground. A great cave's depths (116) are the hall itself, the
+        // encounter there, and hold only its crystals and trophy; they are left out.
         [TestCase(false)] [TestCase(true, Explicit = true, Reason = PopulationSweep)]
         public void EveryMetreHasFindsDownToTheFloorAcrossSeeds(bool sweep)
         {
@@ -568,19 +562,29 @@ namespace SomethingDownThere.Tests
             foreach (int seed in Seeds(sweep))
             {
                 var slices = new int[bottom - top];
-                foreach (var placement in Layout(seed))
+                var layout = Layout(seed);
+                // Metres a great cave's box reaches, and the metre either side.
+                var hall = new bool[slices.Length];
+                foreach (var cave in GroundLayout.Caverns.Where(c => c.Great))
+                    for (int m = Mathf.FloorToInt(SiteLayout.Extent.y - cave.Max.y) - 1; m <= Mathf.CeilToInt(SiteLayout.Extent.y - cave.Min.y) + 1; m++)
+                        if (m - top >= 0 && m - top < hall.Length) hall[m - top] = true;
+                foreach (var placement in layout)
                 {
                     int index = Mathf.FloorToInt(SiteLayout.Extent.y - placement.Position.y) - top;
                     if (index >= 0 && index < slices.Length) slices[index]++;
                 }
-                Assert.That(slices.Min(), Is.GreaterThanOrEqualTo(30), $"Seed {seed}: sparse metre at {top + Array.IndexOf(slices, slices.Min())} m");
-                // Each zone's cavern (115) lies under a corner of the plot, and finds keep out of it, so its depths hold a
-                // little less (with its walls' minerals as encounters of their own).
+                var open = Enumerable.Range(0, slices.Length).Where(i => !hall[i]).ToArray();
+                int sparsest = open.OrderBy(i => slices[i]).First();
+                Assert.That(slices[sparsest], Is.GreaterThanOrEqualTo(30), $"Seed {seed}: sparse metre at {top + sparsest} m");
+                // Mini caves lie inside the plot, and finds keep out of them, so their depths hold a little less (with their
+                // crystals as encounters of their own).
                 for (int i = 0; i + 4 < slices.Length; i++)
-                    Assert.That(slices.Skip(i).Take(5).Sum(), Is.GreaterThanOrEqualTo(210),
-                        $"Seed {seed}: dry stretch below {top + i} m");
+                    if (!hall.Skip(i).Take(5).Any())
+                        Assert.That(slices.Skip(i).Take(5).Sum(), Is.GreaterThanOrEqualTo(210),
+                            $"Seed {seed}: dry stretch below {top + i} m");
                 // Roughly constant: the deepest quarter holds nearly as many finds per metre as the mid-depths.
-                float mid = (float)slices.Skip(10).Take(40).Average(), deep = (float)slices.Skip(slices.Length - 37).Average();
+                float Average(int from, int count) => (float)Enumerable.Range(from, count).Where(i => !hall[i]).Select(i => slices[i]).Average();
+                float mid = Average(10, 40), deep = Average(slices.Length - 37, 37);
                 Assert.That(deep, Is.GreaterThanOrEqualTo(mid * .7f), $"Seed {seed}: the bottom thins out.");
             }
         }

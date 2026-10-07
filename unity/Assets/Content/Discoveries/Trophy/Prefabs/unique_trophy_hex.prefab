@@ -422,7 +422,7 @@ MonoBehaviour:
   recovery: 1
   lore: A sheaf of green columns, every one six-sided and true, standing upright in the riverbed's cave as if they were waiting for a roof.
   handPicked: 0
-  liftsByCrown: 1
+  standsUpright: 1
 --- !u!114 &6880697691397848041
 MonoBehaviour:
   m_ObjectHideFlags: 0

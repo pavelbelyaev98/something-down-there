@@ -239,8 +239,9 @@ namespace SomethingDownThere
                             + (cavern.Great ? TerrainGround.GreatWarp : TerrainGround.CavernWarp) + DiscoveryField.SoilClearance));
                 SeatChests(stashes, extent, seed, shallow, bands, seats, seatTurns);
                 SeatGeodes(groundLayout.Geodes, extent, seed, shallow, bands, seats, seatTurns);
-                SeatCaves(groundLayout.Caverns, extent, seed, shallow, seats, seatTurns);
-                SeatTrophies(groundLayout.Caverns, extent, seed, shallow, seats, seatTurns);
+                // Trophies first: the caves' crystals keep clear of them.
+                var trophies = SeatTrophies(groundLayout.Caverns, extent, seed, shallow, seats, seatTurns);
+                SeatCaves(groundLayout.Caverns, extent, seed, shallow, seats, seatTurns, trophies);
             }
             Func<int, Vector3, float> weight = null;
             if (ground != null)
@@ -406,7 +407,7 @@ namespace SomethingDownThere
                     bool Good(Vector3 at, Quaternion turn) => Clear(taken, at, Entries[entry].PlacementRadius)
                         && Vector3.Angle(turn * Vector3.up, centre - at) < GeodeFacing;
                     var (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
-                    for (int attempt = 1; attempt < CavernSeatTries && !Good(position, rotation); attempt++)
+                    for (int attempt = 1; attempt < GeodeSeatTries && !Good(position, rotation); attempt++)
                         (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
                     taken.Add((position, Entries[entry].PlacementRadius));
                     seats[seated] = position;
@@ -436,15 +437,14 @@ namespace SomethingDownThere
             return (position, rotation);
         }
 
-        // What each cave holds (115, 116): a mini cave MiniCaveCrystals crystals of the kind whose band covers its floor (one
-        // kind to a cave, user 2026-10-07: "only one rock type per cave"); a great cave GreatAreaCrystals of each kind, one
-        // kind to each of its colour areas (TerrainGround.AreaOf) in a seeded turn, as the demo's areas are. Half-buried round
-        // the chambers. Instances no cave had a seat for go to a cave or area holding their kind, the fewest seated first, so
-        // none lie loose.
-        public const int MiniCaveCrystals = 4, GreatAreaCrystals = 5;
+        // What each cave holds (115, 116): crystals of one kind, the kind whose band covers its floor (user, 2026-10-07: "each
+        // cave MUST have only one colour"): MiniCaveCrystals in a mini cave, GreatCaveCrystals round a great cave's chambers,
+        // half-buried, clear of each other and of its trophy. Instances no cave had a seat for go to a cave of their kind, the
+        // fewest seated first, so none lie loose.
+        public const int MiniCaveCrystals = 4, GreatCaveCrystals = 12;
         public const float CavernSink = .45f;
         private void SeatCaves(TerrainGround.Cavern[] caves, Vector3 extent, int seed, List<int> order, Vector3[] seats,
-            Dictionary<int, Quaternion> turns)
+            Dictionary<int, Quaternion> turns, List<(int cave, Vector3 at, float radius)> standing)
         {
             var random = new System.Random(unchecked(seed ^ 0x0CA7E5));
             var kinds = CaveKinds();
@@ -453,45 +453,30 @@ namespace SomethingDownThere
             foreach (int kind in kinds) pool[kind] = new Queue<int>();
             for (int i = ShallowCount; i < seats.Length; i++)
                 if (Entries[order[i]].Cave && float.IsNaN(seats[i].x)) pool[order[i]].Enqueue(i);
-            var holders = new List<(int cave, int kind, List<int> chambers)>();
+            var held = new int[caves.Length];
             var seated = new int[caves.Length];
             var taken = new List<(Vector3 at, float radius)>[caves.Length];
-            void Seat(int c, int chamber, int i)
+            void Seat(int c, int i)
             {
-                (seats[i], turns[i]) = ClearCavernSeat(caves[c], chamber, Entries[order[i]], random, taken[c]);
+                (seats[i], turns[i]) = ClearCavernSeat(caves[c], seated[c] % caves[c].Centres.Length, Entries[order[i]], random, taken[c]);
                 seated[c]++;
             }
             for (int c = 0; c < caves.Length; c++)
             {
                 taken[c] = new List<(Vector3 at, float radius)>();
-                if (caves[c].Great)
-                {
-                    int turn = random.Next(kinds.Count);
-                    var areas = AreaChambers(caves[c]);
-                    for (int a = 0; a < areas.Length; a++)
-                    {
-                        if (areas[a].Count == 0) continue;
-                        int kind = kinds[(a + turn) % kinds.Count];
-                        holders.Add((c, kind, areas[a]));
-                        for (int k = 0; k < GreatAreaCrystals && pool[kind].Count > 0; k++) Seat(c, areas[a][k % areas[a].Count], pool[kind].Dequeue());
-                    }
-                }
-                else
-                {
-                    int kind = KindAt(kinds, extent.y - caves[c].Floor);
-                    holders.Add((c, kind, new List<int> { 0 }));
-                    for (int k = 0; k < MiniCaveCrystals && pool[kind].Count > 0; k++) Seat(c, 0, pool[kind].Dequeue());
-                }
+                foreach (var stand in standing) if (stand.cave == c) taken[c].Add((stand.at, stand.radius));
+                int kind = held[c] = KindAt(kinds, extent.y - caves[c].Floor);
+                int count = caves[c].Great ? GreatCaveCrystals : MiniCaveCrystals;
+                for (int k = 0; k < count && pool[kind].Count > 0; k++) Seat(c, pool[kind].Dequeue());
             }
             foreach (int kind in kinds)
                 while (pool[kind].Count > 0)
                 {
                     int best = -1;
-                    for (int h = 0; h < holders.Count; h++)
-                        if (holders[h].kind == kind && (best < 0 || seated[holders[h].cave] < seated[holders[best].cave])) best = h;
+                    for (int c = 0; c < caves.Length; c++)
+                        if (held[c] == kind && (best < 0 || seated[c] < seated[best])) best = c;
                     if (best < 0) break;
-                    var holder = holders[best];
-                    Seat(holder.cave, holder.chambers[random.Next(holder.chambers.Count)], pool[kind].Dequeue());
+                    Seat(best, pool[kind].Dequeue());
                 }
         }
 
@@ -517,24 +502,16 @@ namespace SomethingDownThere
             return best;
         }
 
-        // A great cave's chambers by colour area.
-        public static List<int>[] AreaChambers(TerrainGround.Cavern cave)
-        {
-            var areas = new List<int>[TerrainGround.GreatAreas];
-            for (int a = 0; a < areas.Length; a++) areas[a] = new List<int>();
-            for (int c = 0; c < cave.Centres.Length; c++) areas[TerrainGround.AreaOf(cave, cave.Centres[c].x)].Add(c);
-            return areas;
-        }
-
         // Each great cave's crystal trophy (116, user 2026-10-07: "each cave has one crystal to excavate and it becomes a
         // unique people look at"): the trophy whose band covers the cave's floor (its zone's), upright on the floor of one of
         // its chambers under the dig plot (TrophySeat). Without a great cave of its zone, any great cave still without one.
-        private void SeatTrophies(TerrainGround.Cavern[] caves, Vector3 extent, int seed, List<int> order, Vector3[] seats,
-            Dictionary<int, Quaternion> turns)
+        private List<(int cave, Vector3 at, float radius)> SeatTrophies(TerrainGround.Cavern[] caves, Vector3 extent, int seed, List<int> order,
+            Vector3[] seats, Dictionary<int, Quaternion> turns)
         {
             var random = new System.Random(unchecked(seed ^ 0x7209E5));
             var footprint = SiteLayout.FindFootprint(extent);
             var holding = new bool[caves.Length];
+            var standing = new List<(int cave, Vector3 at, float radius)>();
             for (int i = 0; i < seats.Length; i++)
             {
                 var entry = Entries[order[i]];
@@ -549,7 +526,9 @@ namespace SomethingDownThere
                 }
                 if (best < 0 || !TrophySeat(caves[best], entry, random, footprint, out var position, out var rotation)) continue;
                 seats[i] = position; turns[i] = rotation; holding[best] = true;
+                standing.Add((best, position, entry.PlacementRadius));
             }
+            return standing;
         }
 
         // A trophy stands upright on a level stretch of a chamber's floor (grid-local), preferably under the dig plot, sunk
@@ -572,9 +551,12 @@ namespace SomethingDownThere
                 {
                     float angle = a * Mathf.PI / 4;
                     float px = x + Mathf.Cos(angle) * (reach + .5f), pz = z + Mathf.Sin(angle) * (reach + .5f);
+                    // Air at knee and head height, and the floor there within a hand of the trophy's: rock just below, air
+                    // just above.
                     room = TerrainGround.CavernHollow(cave, new Unity.Mathematics.float3(px, floor + .7f, pz)) < -.1f
                         && TerrainGround.CavernHollow(cave, new Unity.Mathematics.float3(px, floor + 1.6f, pz)) < -.1f
-                        && Mathf.Abs(TerrainGround.CavernSpan(cave, px, pz).floor - floor) < .35f;
+                        && TerrainGround.CavernHollow(cave, new Unity.Mathematics.float3(px, floor - .35f, pz)) >= 0
+                        && TerrainGround.CavernHollow(cave, new Unity.Mathematics.float3(px, floor + .35f, pz)) < 0;
                 }
                 if (!room) continue;
                 position = new Vector3(x, floor + half * (1 - 2 * TrophySink), z);
@@ -588,6 +570,8 @@ namespace SomethingDownThere
         // A cavern seat in a chamber clear of those already taken in the cavern: a few seeded tries, the last one kept if
         // none is.
         private const int CavernSeatTries = 8;
+        // A geode's sixteen crystals nearly fill its hollow, so each looks longer for room.
+        private const int GeodeSeatTries = 32;
         internal static (Vector3 position, Quaternion rotation) ClearCavernSeat(TerrainGround.Cavern cavern, int chamber, Entry entry,
             System.Random random, List<(Vector3 at, float radius)> taken)
         {

@@ -422,7 +422,7 @@ MonoBehaviour:
   recovery: 1
   lore: A ruby the height of a door, stepped like a stair, from the deepest cave. Something that old should not be this clear.
   handPicked: 0
-  liftsByCrown: 1
+  standsUpright: 1
 --- !u!114 &3020795858693650250
 MonoBehaviour:
   m_ObjectHideFlags: 0

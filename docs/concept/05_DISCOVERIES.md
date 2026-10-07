@@ -22,7 +22,7 @@ the ground are big, dusty crystals, never darkly stained. Crystals stand half ou
 walls ([World §5](03_WORLD_AND_SITE.md#5-geodes)). "Common" means routine to find
 repeatedly, not merely familiar. **Uniques exist exactly once per save — never in multiples.**
 During mechanics prototyping, independent unique identities may reuse the computer model; this is temporary art reuse, not multiple instances of the same unique.
-Each great cave's crystal trophy is a unique too (World §5): the generator stands it on its cave's floor instead of at an authored place, and it is lifted by its crown.
+Each great cave's crystal trophy is a unique too (World §5): the generator stands it on its cave's floor instead of at an authored place.
 Uniques and ending parts consume **zero bag slots**, so players never have to sacrifice income for the discoveries the game most wants them to appreciate.
 
 Each type has one purpose: ordinary and repeatable finds sell; a few special exhibits and keys are

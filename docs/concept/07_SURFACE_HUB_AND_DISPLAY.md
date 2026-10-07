@@ -61,7 +61,7 @@ The emotional record of the run: the finds the crane pulled out of the hole, sta
 
 - **A few special exhibits:** ordinary and repeatable valuables sell; no first-copy exceptions.
 - The crane sets each unique down at its own spot beside the camp, lying as it landed, where it stays; a
- crystal trophy, hung from its crown, stands upright. No stands, shelves or placement step, and recovery
+ crystal trophy is set upright on its base. No stands, shelves or placement step, and recovery
  never sells it.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.
 - Recovered uniques support inspection and story rereading where they stand. The story line first

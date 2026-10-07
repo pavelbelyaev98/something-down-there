@@ -43,6 +43,8 @@ namespace SomethingDownThere
         // light is what receivers see; a rebuild writes computed and publishes it when complete, so
         // provisional patches stay visible while it runs.
         private readonly byte[] light, computed;
+        // The faint light an opened hollow holds (116): light never falls below it there (Floor).
+        private readonly byte[] floor;
         private readonly List<bool> patchOpen = new List<bool>(), patchFresh = new List<bool>();
         private readonly List<byte> patchAnchor = new List<byte>();
         // Nodes the last rebuild reached, and the cells its final pass covered. Only these can hold
@@ -65,6 +67,7 @@ namespace SomethingDownThere
             Step = new Vector3(extent.x / (Size.x - 1), extent.y / (Size.y - 1), extent.z / (Size.z - 1));
             int count = Size.x * Size.y * Size.z;
             air = new bool[count]; links = new byte[count]; anchor = new byte[count]; light = new byte[count]; computed = new byte[count];
+            floor = new byte[count];
             distance = new ushort[count]; descent = new ushort[count]; aside = new ushort[count];
             for (int i = 0; i < count; i++) distance[i] = MaximumDistance + 1;
             for (int i = 0; i < buckets.Length; i++) buckets[i] = new List<int>();
@@ -162,7 +165,34 @@ namespace SomethingDownThere
                 if (z < Size.z - 1 && Inside(x, y, z + 1) && patchFresh[Local(x, y, z + 1)]) best = Math.Max(best, light[i + layer]);
                 light[i] = (byte)best;
             }
+            for (int z = min.z; z <= max.z; z++)
+            for (int y = min.y; y <= max.y; y++)
+            for (int x = min.x; x <= max.x; x++)
+            {
+                int i = Index(x, y, z);
+                if (light[i] < floor[i]) light[i] = floor[i];
+            }
         }
+
+        // An opened hollow (a cave, a geode) is never pitch black (116; user, 2026-10-07: "there is a hole above me and the
+        // crystals and ground technically reflect light"): its stone and crystals throw back a little light, `level` at
+        // least through the box, whatever the route brings. ClearFloors forgets them (a new population).
+        public void Floor(Bounds changed, byte level)
+        {
+            Range(changed, out var min, out var max);
+            for (int z = min.z; z <= max.z; z++)
+            for (int y = min.y; y <= max.y; y++)
+            for (int x = min.x; x <= max.x; x++)
+            {
+                int i = Index(x, y, z);
+                if (floor[i] < level) floor[i] = level;
+                if (light[i] < level) light[i] = level;
+                if (computed[i] < level) computed[i] = level;
+            }
+        }
+
+        public void ClearFloors() => Array.Clear(floor, 0, floor.Length);
+
         private Vector3 Point(int x, int y, int z) => new Vector3(x * Step.x, y * Step.y, z * Step.z);
 
         // Where node i (at x, y, z) stands: its own point, or its anchor in a narrow hole.
@@ -295,7 +325,7 @@ namespace SomethingDownThere
                     if (z < Size.z - 1) value = Math.Max(value, Lit(i + layer));
                 }
                 // Only connected air transports this light: sealed air (a chest's hollow) stays unlit.
-                computed[i] = (byte)Mathf.RoundToInt(255 * value);
+                computed[i] = (byte)Math.Max(Mathf.RoundToInt(255 * value), floor[i]);
                 if (++work % 512 == 0) yield return null;
             }
             Buffer.BlockCopy(computed, 0, light, 0, light.Length);

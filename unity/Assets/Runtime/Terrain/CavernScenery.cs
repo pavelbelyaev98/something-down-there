@@ -12,14 +12,21 @@ namespace SomethingDownThere
     // whenever the ground's layout or the population changes, so it saves nothing. The lights cast shadows from the ground
     // only, as lamps do, so they never show through the stone; the nearest few light at once and fade in and out, like
     // lamps outside their budget. Only a hollow that has been opened lights (DiscoveryField.CaveOpened, GeodeOpened): a
-    // sealed one can't be seen into, so walking past it costs nothing. A crystal trophy (116) lights further.
+    // sealed one can't be seen into, so walking past it costs nothing. A crystal trophy (116) lights further. A crystal
+    // lights only the dark (user, 2026-10-07: "it shouldn't emit light when it is light, it is not a lamp"): its light
+    // and its own glow fade out where daylight reaches it (ExcavationDaylight.SampleAmbient), from DarkAmbient to
+    // LitAmbient, both above an opened hollow's own faint light (HollowFloor); a trophy standing at camp glows no more.
     public sealed class CavernScenery : MonoBehaviour
     {
         // A crystal's light: how far in front of its middle (towards its hollow's heart), its reach and brightness; how
         // much each neighbour within its reach dims it, so a geode's crowd of crystals lights its hollow about as a few
         // would; how many light at once (each takes six small faces of the shared shadow atlas, beside the lamps') and how
         // far off, and how long it takes to fade.
-        private const float LightOut = .25f, LightRange = 2f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
+        private const float LightOut = .25f, LightRange = 2.5f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
+        private const float DarkAmbient = ExcavationDaylight.HollowFloor + .05f, LitAmbient = ExcavationDaylight.HollowFloor + .35f;
+        // How often the crystals' own glow follows the daylight.
+        private const float ShadeEvery = .25f;
+        private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private const float TrophyRange = 4.5f, TrophyIntensity = 2.2f, TrophyOut = .6f;
         private const int LitCrystals = 10;
 
@@ -30,7 +37,13 @@ namespace SomethingDownThere
         private long dressedRevision = -1;
         private readonly List<Glow> glows = new List<Glow>();
         private readonly List<Glow> order = new List<Glow>();
+        private readonly Dictionary<Renderer, Shaded> shaded = new Dictionary<Renderer, Shaded>();
+        private readonly HashSet<Renderer> shading = new HashSet<Renderer>();
+        private readonly List<Renderer> stale = new List<Renderer>();
+        private MaterialPropertyBlock block;
+        private float shadeAt;
         private FpsPlayer viewer;
+        private ExcavationDaylight daylight;
         public int CrystalCount => glows.Count;
         public int LitCount { get { int n = 0; foreach (var glow in glows) if (glow.Light.enabled) n++; return n; } }
 
@@ -40,11 +53,19 @@ namespace SomethingDownThere
             public Renderer Body;
             public Light Light;
             public Vector3 Out;
-            public float Shine, Distance, Strength = 1, Reach = LightOut;
+            public float Shine, Distance, Strength = 1, Reach = LightOut, Dark = 1;
             public bool Wanted, Trophy;
             // Its hollow: a cave's index or a geode's (Geode).
             public int Hollow;
             public bool Geode;
+        }
+
+        // A crystal's own glow (its material's), dimmed as far as daylight reaches it.
+        private sealed class Shaded
+        {
+            public Renderer Body;
+            public Color Emission;
+            public float Dark = 1;
         }
 
         private void OnDestroy() { if (root != null) Destroy(root.gameObject); }
@@ -56,6 +77,7 @@ namespace SomethingDownThere
             if (!ReferenceEquals(layout, dressed) || field.PopulationRevision != dressedRevision) Dress(layout);
             if (viewer == null) viewer = FindAnyObjectByType<FpsPlayer>();
             Shine(viewer != null && viewer.ViewCamera != null ? viewer.ViewCamera.transform.position : transform.position);
+            ShadeGlows();
         }
 
         // A light for every crystal in a hollow, its way out the way to the hollow's heart (a cave's nearest chamber's).
@@ -72,13 +94,20 @@ namespace SomethingDownThere
             glows.Clear();
             dressed = layout;
             dressedRevision = field.PopulationRevision;
+            shading.Clear();
             foreach (var find in field.Finds)
             {
-                if (kept.Remove(find, out var same)) { glows.Add(same); continue; }
-                if (find.Collected) continue;
+                if (kept.Remove(find, out var same)) { glows.Add(same); Shade(same.Body); continue; }
+                if (find.Collected)
+                {
+                    // A trophy standing at camp keeps its glow to the daylight's measure.
+                    if (find.StandsUpright && find.State == FindState.Stored) Shade(find.GetComponentInChildren<Renderer>());
+                    continue;
+                }
                 var p = (float3)terrain.transform.InverseTransformPoint(find.transform.position);
                 if (!Heart(layout, p, out var heart, out int hollow, out bool geode)) continue;
                 var body = find.GetComponentInChildren<Renderer>();
+                Shade(body);
                 var middle = body != null ? body.bounds.center : find.transform.position;
                 var toward = terrain.transform.TransformPoint((Vector3)heart) - middle;
                 bool trophy = find.Item.Kind == DiscoveryKind.Unique;
@@ -91,6 +120,14 @@ namespace SomethingDownThere
             }
             foreach (var gone in kept.Values) Destroy(gone.Light.gameObject);
             kept.Clear();
+            stale.Clear();
+            foreach (var body in shaded.Keys) if (!shading.Contains(body)) stale.Add(body);
+            foreach (var body in stale)
+            {
+                if (body != null) body.SetPropertyBlock(null);
+                shaded.Remove(body);
+            }
+            shadeAt = 0;
             foreach (var glow in glows)
             {
                 int near = 0;
@@ -100,13 +137,46 @@ namespace SomethingDownThere
             }
         }
 
+        private void Shade(Renderer body)
+        {
+            if (body == null || !shading.Add(body) || shaded.ContainsKey(body)) return;
+            var material = body.sharedMaterial;
+            if (material == null || !material.IsKeywordEnabled("_EMISSION") || !material.HasProperty(EmissionId)) return;
+            shaded.Add(body, new Shaded { Body = body, Emission = material.GetColor(EmissionId) });
+        }
+
+        // Each crystal's own glow to the daylight round it, now and then (the daylight changes only as the ground is dug).
+        private void ShadeGlows()
+        {
+            if (Time.unscaledTime < shadeAt) return;
+            shadeAt = Time.unscaledTime + ShadeEvery;
+            foreach (var shade in shaded.Values)
+            {
+                if (shade.Body == null) continue;
+                float dark = Darkness(shade.Body.bounds.center);
+                if (Mathf.Abs(dark - shade.Dark) < .02f && (dark < 1 || shade.Dark == 1)) continue;
+                shade.Dark = dark;
+                if (dark >= 1) { shade.Body.SetPropertyBlock(null); continue; }
+                block ??= new MaterialPropertyBlock();
+                block.Clear();
+                block.SetColor(EmissionId, shade.Emission * dark);
+                shade.Body.SetPropertyBlock(block);
+            }
+        }
+
+        private float Darkness(Vector3 at)
+        {
+            if (daylight == null) daylight = terrain.GetComponent<ExcavationDaylight>();
+            return daylight == null ? 1 : 1 - Mathf.InverseLerp(DarkAmbient, LitAmbient, daylight.SampleAmbient(at));
+        }
+
         private static bool Heart(TerrainGround.GroundLayout layout, float3 p, out float3 heart, out int hollow, out bool geode)
         {
             geode = false;
             for (hollow = 0; hollow < layout.Caverns.Length; hollow++)
             {
                 var cave = layout.Caverns[hollow];
-                if (math.any(p < cave.Min) || math.any(p > cave.Max) || TerrainGround.CavernOuter(cave, p) >= 0) continue;
+                if (math.any(p < cave.Min) || math.any(p > cave.Max) || !NearChamber(cave, p) || TerrainGround.CavernOuter(cave, p) >= 0) continue;
                 int nearest = 0;
                 for (int i = 1; i < cave.Centres.Length; i++)
                     if (math.distancesq(cave.Centres[i], p) < math.distancesq(cave.Centres[nearest], p)) nearest = i;
@@ -117,6 +187,14 @@ namespace SomethingDownThere
             for (hollow = 0; hollow < layout.Geodes.Length; hollow++)
                 if (math.distance(p, layout.Geodes[hollow].Centre) < layout.Geodes[hollow].Reach) { heart = layout.Geodes[hollow].Centre; return true; }
             heart = default;
+            return false;
+        }
+
+        // Within reach of one of a cave's chambers (its radii grown by its shell and a margin): the cheap test before its shape.
+        private static bool NearChamber(in TerrainGround.Cavern cave, float3 p)
+        {
+            for (int i = 0; i < cave.Centres.Length; i++)
+                if (math.lengthsq((p - cave.Centres[i]) / (cave.Radii[i] + cave.Shell + 1.5f)) < 1) return true;
             return false;
         }
 
@@ -147,6 +225,7 @@ namespace SomethingDownThere
         }
 
         // The nearest LitCrystals still in place within LightCull light, fading in and out; a taken crystal's light fades.
+        // One in daylight has no light to give and leaves its place to the next.
         private void Shine(Vector3 eye)
         {
             order.Clear();
@@ -155,7 +234,9 @@ namespace SomethingDownThere
                 glow.Wanted = false;
                 if (glow.Crystal == null || glow.Crystal.Collected || !(glow.Geode ? field.GeodeOpened(glow.Hollow) : field.CaveOpened(glow.Hollow))) continue;
                 glow.Distance = (glow.Crystal.transform.position - eye).sqrMagnitude;
-                if (glow.Distance < LightCull * LightCull) order.Add(glow);
+                if (glow.Distance >= LightCull * LightCull) continue;
+                glow.Dark = Darkness(glow.Body != null ? glow.Body.bounds.center + glow.Out * glow.Reach : glow.Light.transform.position);
+                if (glow.Dark > .01f) order.Add(glow);
             }
             order.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             for (int i = 0; i < order.Count && i < LitCrystals; i++) order[i].Wanted = true;
@@ -165,7 +246,7 @@ namespace SomethingDownThere
                 bool on = glow.Shine > .001f;
                 if (glow.Light.enabled != on) glow.Light.enabled = on;
                 if (!on) continue;
-                glow.Light.intensity = LightIntensity * glow.Strength * glow.Shine;
+                glow.Light.intensity = LightIntensity * glow.Strength * glow.Shine * glow.Dark;
                 // A loose crystal can move: the light follows its middle (a taken one's fades where it was).
                 if (glow.Wanted && glow.Body != null) glow.Light.transform.position = glow.Body.bounds.center + glow.Out * glow.Reach;
             }

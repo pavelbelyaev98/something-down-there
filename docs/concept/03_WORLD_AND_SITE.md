@@ -270,22 +270,24 @@ Geodes keep that moment without cave networks.
   where the rocks were"), so one tell says "a hollow is in there". Their crystals glow like small lamps
   (above) and are plain finds to pick up (user: "I would rather just pick up normal crystals").
   Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").
-  - **A great cave in every zone** (user, 2026-10-07: "one cave that is actually very wide, like
-    almost a whole level wide, with plenty of stuff ... like in the demo"; "one per zone is smart"):
-    a hall almost as wide as the site underground and a few metres high, its middle under the dig
-    plot so digging down meets it, its ends out under the bank. Pillars, arches and stalagmites of its
-    rock stand in it, and it glows in the demo's four colour areas, each with its own crystal kind.
-    On its floor stands the zone's **crystal trophy**, a big formation of the crystal (user: "instead
-    of breaking them I want to extract them with the crane like uniques"; "it becomes a unique people
-    look at"): a unique, dug free round its base and lifted by the crane by its crown, so it stands
-    upright at camp for good (05 §8).
+  - **A great cave in every zone** (user, 2026-10-07: "one cave that is actually very wide ... with
+    plenty of stuff ... like in the demo"; "one per zone is smart"; then "a bit smaller"): a hall
+    across the middle of the site underground and a few metres high, under the dig plot so digging
+    down meets it. Pillars and stalagmites of its rock stand in it; its crystals are all one kind, the
+    depth's (user: "each cave MUST have only one colour"). On its floor stands the zone's **crystal
+    trophy**, a big formation of that crystal, the only one to extract (user: "instead of breaking
+    them I want to extract them with the crane like uniques"; "ONE crystal to be extracted per cave"):
+    a unique, dug free round its base and marked wherever the player likes, set upright at camp for
+    good (05 §8).
   - **Mini caves**, a few a zone from a few metres down (user: "small ones with just some pickables
     here and there"): one small chamber holding a handful of crystals of the depth's kind, pale blue
     quartz near the top through amber cubes and green hexagonal prisms to ruby at the bottom.
-- **Breaking in** opens a cave, a geode or a chest's pocket with a fall of clods and dust, and every
-  later cut that opens it more drops its own. Rock thinned below a hand's breadth round the opening
-  gives way with it, so no lace or sheet of hard stone is left hanging across the hole (user,
-  2026-10-07: "artifacts that don't disappear after digging").
+- **Breaking in** opens a cave, a geode or a chest's pocket at once: a good piece of its roof or wall
+  falls in with clods and dust (user, 2026-10-07: "the first time it actually removes a larger area,
+  not force me to dig so much"). Digging on into it throws no more debris (user: "no need for effects
+  ... since there is a lot to dig"). Rock thinned below a hand's breadth round an opening gives way,
+  so no lace or sheet of hard stone is left hanging across the hole ("artifacts that don't disappear
+  after digging").
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
   digging"; Keep Digging players loved its hand-built caves. Meltopia's network of identical tunnels
@@ -343,8 +345,12 @@ Geodes keep that moment without cave networks.
   seams, visual tells and find silhouettes stay unreadable until light reaches them. Digging,
   movement and the felt tells (the ground suddenly digging easier) still work in the dark — light
   withholds information, not ability.
-- **Sealed hollows (geodes, caves) glow with their crystals** (§5) and are otherwise dark; no
-  daylight reaches them through solid ground, and their glow never shows through it.
+- **Hollows (geodes, caves) glow with their crystals** (§5); no daylight reaches a sealed one through
+  solid ground, and their glow never shows through it. A crystal glows and lights only the dark round
+  it, never where daylight already reaches, at camp included (user, 2026-10-07: "it shouldn't emit
+  light when it is light, it is not a lamp"). Once opened, a hollow is never pitch black: its stone and crystals throw back a
+  faint light, enough to make out its shape, still a place for lamps (user: "there is a hole above
+  me and the crystals and ground technically reflect light").
 - **More sideways reasons, same short routes.** Tells and geodes pull players sideways, so the
   modest site width, lamps and marks keep every branch short and the way home readable.
 - **Placeable lamps are the light.** They are the only light underground, apart from the caves' and

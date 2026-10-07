@@ -41,7 +41,7 @@ namespace SomethingDownThere.Editor
                 {
                     using (var data = new UnityEditor.SerializedObject(root.GetComponent<BuriedFind>()))
                     {
-                        data.FindProperty("liftsByCrown").boolValue = true;
+                        data.FindProperty("standsUpright").boolValue = true;
                         data.ApplyModifiedPropertiesWithoutUndo();
                     }
                     find = UnityEditor.PrefabUtility.SaveAsPrefabAsset(root, path).GetComponent<BuriedFind>();

@@ -13,9 +13,10 @@ namespace SomethingDownThere
         // A cave (115, 116): a sealed hollow the player breaks into and walks around in, never a passage, in a shell of cave
         // rock (the Crystal Caverns demo's stone). Two kinds:
         // - a great cave, one a zone (user, 2026-10-07: "one cave that is actually very wide, like almost a whole level
-        //   wide, with plenty of stuff ... like in the demo"): chambers on a jittered grid across the underground joined
-        //   into one hall, with pillars, arches and stalagmites of cave rock; four colour areas of crystals and its zone's
-        //   crystal trophy (DiscoveryCatalog.SeatCaves, SeatTrophies);
+        //   wide, with plenty of stuff ... like in the demo"; then "a bit smaller"): chambers on a jittered grid across the
+        //   middle of the underground joined into one hall, with pillars and stalagmites of cave rock; crystals of one kind
+        //   (user: "each cave MUST have only one colour") and its zone's crystal trophy (DiscoveryCatalog.SeatCaves,
+        //   SeatTrophies);
         // - a mini cave, a few a zone (user: "small ones with just some pickables here and there"): one small chamber and
         //   a handful of crystals of its depth's kind.
         // Centres, Radii: the chambers (grid-local metres), smoothly joined and warped; Floor (grid-local y) flattens their
@@ -23,11 +24,9 @@ namespace SomethingDownThere
         public struct Cavern
         {
             public FixedList512Bytes<float3> Centres, Radii;
-            // Rock left standing in the air: pillars (x, z, radius; floor to roof, wider at the foot), arches (x, z,
-            // heading, span: a half ring standing on the floor along the heading) and stalagmites (x, z, foot radius,
-            // height).
+            // Rock left standing in the air: pillars (x, z, radius; floor to roof, wider at the foot) and stalagmites (x, z,
+            // foot radius, height). (Arches went: a half ring on the floor read as a croissant, user 2026-10-07.)
             public FixedList128Bytes<float3> Pillars;
-            public FixedList128Bytes<float4> Arches;
             public FixedList512Bytes<float4> Stalagmites;
             public float3 Min, Max, Seed;
             public float Floor, Shell;
@@ -44,14 +43,11 @@ namespace SomethingDownThere
         // then a great cave's (broader, slower folds).
         public const float CavernBlend = 1f, CavernWarp = .3f, CavernLumps = .06f, CavernFloorRoll = .12f, CavernSlack = .2f;
         public const float GreatBlend = 2f, GreatWarp = .8f, GreatFloorRoll = .35f;
-        // A great cave: GreatColumns x GreatRows chambers across the underground, GreatDrops left out for bays; its floor
-        // GreatFloorShare of the way down its zone, never above GreatTopFloor (below the first zone's uniques); and its
-        // four colour areas, bands across its length (AreaOf).
-        private const int GreatColumns = 7, GreatRows = 3, GreatDrops = 4, GreatMinChambers = 10;
-        private const float GreatFloorShare = .62f, GreatTopFloor = 31f;
-        public const int GreatAreas = 4;
-        // An arch's thickness against its span.
-        private const float ArchThickness = .22f;
+        // A great cave: GreatColumns x GreatRows chambers GreatSpacing apart across the middle of the underground, GreatDrops
+        // left out for bays; its floor GreatFloorShare of the way down its zone, never above GreatTopFloor (below the first
+        // zone's uniques).
+        private const int GreatColumns = 5, GreatRows = 3, GreatDrops = 3, GreatMinChambers = 8;
+        private const float GreatSpacing = 6f, GreatFloorShare = .62f, GreatTopFloor = 31f;
         // Clearance from pits, uniques' spaces and each other, and from the grid's walls.
         private const float CavernClearance = 1.5f, CavernWallMargin = 1f;
 
@@ -65,7 +61,17 @@ namespace SomethingDownThere
             public int Below(int count) => Mathf.Min(count - 1, (int)(Next() * count));
         }
 
-        public static Cavern[] Caverns(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots = null, Features features = Features.All)
+        // Pits and uniques' spaces block a cave (with CavernClearance), and so do the geodes for a mini cave.
+        private static Func<float3, float3, bool> Blocker(Pit[] pits, OddSpot[] spots, Geode[] geodes = null) => (min, max) =>
+        {
+            foreach (var pit in pits) if (!(math.any(min > pit.Max + CavernClearance) || math.any(pit.Min > max + CavernClearance))) return true;
+            if (spots != null) foreach (var spot in spots) if (!(math.any(min > spot.Max + CavernClearance) || math.any(spot.Min > max + CavernClearance))) return true;
+            if (geodes != null) foreach (var geode in geodes) if (!(math.any(min > geode.Max + CavernClearance) || math.any(geode.Min > max + CavernClearance))) return true;
+            return false;
+        };
+
+        // A great cave in each zone (generated first: they need the room).
+        public static Cavern[] GreatCaves(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots = null, Features features = Features.All)
         {
             if (!Has(features, Features.Caverns)) return Array.Empty<Cavern>();
             var extent = (Vector3)size * cellSize;
@@ -73,31 +79,40 @@ namespace SomethingDownThere
             var footprint = SiteLayout.FindFootprint(extent);
             var draws = new Draws(unchecked((uint)seed * 1597334677u ^ 0x3c6ef372u));
             var caverns = new List<Cavern>();
-            bool Blocked(float3 min, float3 max)
-            {
-                foreach (var pit in pits) if (!(math.any(min > pit.Max + CavernClearance) || math.any(pit.Min > max + CavernClearance))) return true;
-                if (spots != null) foreach (var spot in spots) if (!(math.any(min > spot.Max + CavernClearance) || math.any(spot.Min > max + CavernClearance))) return true;
-                return false;
-            }
+            var blocked = Blocker(pits, spots);
             for (int zone = 0; zone <= ZoneBorders.Length; zone++)
             {
                 float zoneTop = zone == 0 ? 0 : ZoneBorders[zone - 1], zoneBottom = zone < ZoneBorders.Length ? ZoneBorders[zone] : extent.y;
                 float depth = Mathf.Max(GreatTopFloor, Mathf.Lerp(zoneTop, zoneBottom, GreatFloorShare)) + draws.Range(-1.5f, 1.5f);
                 for (int attempt = 0; attempt < 12; attempt++)
-                    if (TryGreatCave(extent, extent.y - depth, draws, Blocked, footprint, out var cave)) { caverns.Add(cave); break; }
+                    if (TryGreatCave(extent, extent.y - depth, draws, blocked, footprint, out var cave)) { caverns.Add(cave); break; }
             }
+            return caverns.ToArray();
+        }
+
+        // The mini caves, clear of the great caves and the geodes (placed after both: a small chamber fits almost anywhere).
+        public static Cavern[] MiniCaves(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots, Features features,
+            Cavern[] great, Geode[] geodes)
+        {
+            if (!Has(features, Features.Caverns)) return Array.Empty<Cavern>();
+            var extent = (Vector3)size * cellSize;
+            if (extent != SiteLayout.Extent) return Array.Empty<Cavern>();
+            var footprint = SiteLayout.FindFootprint(extent);
+            var draws = new Draws(unchecked((uint)seed * 2654435761u ^ 0x5bd1e995u));
+            var caverns = new List<Cavern>(great);
+            var blocked = Blocker(pits, spots, geodes);
             for (int zone = 0; zone < MiniCavesPerZone.Length; zone++)
             {
                 float zoneTop = Mathf.Max(CaveTop, zone == 0 ? 0 : ZoneBorders[zone - 1] + 1.5f);
                 float zoneBottom = (zone < ZoneBorders.Length ? ZoneBorders[zone] : extent.y - 3) - 1.5f;
                 // The zone's depths outside its great cave's band (with room for a mini cave's own height and clearance).
                 float bandTop = zoneBottom, bandBottom = zoneBottom;
-                foreach (var great in caverns)
+                foreach (var hall in great)
                 {
-                    float floorDepth = extent.y - great.Floor;
+                    float floorDepth = extent.y - hall.Floor;
                     if (floorDepth < zoneTop || floorDepth > zoneBottom + 1.5f) continue;
-                    bandTop = Mathf.Max(zoneTop, extent.y - great.Max.y - CavernClearance);
-                    bandBottom = Mathf.Min(zoneBottom, extent.y - great.Min.y + CavernClearance + 4);
+                    bandTop = Mathf.Max(zoneTop, extent.y - hall.Max.y - CavernClearance);
+                    bandBottom = Mathf.Min(zoneBottom, extent.y - hall.Min.y + CavernClearance + 4);
                 }
                 float free = (bandTop - zoneTop) + (zoneBottom - bandBottom);
                 float Depth(float u) => u < bandTop - zoneTop ? zoneTop + u : bandBottom + (u - (bandTop - zoneTop));
@@ -115,7 +130,7 @@ namespace SomethingDownThere
                         cavern.Centres.Add(centre); cavern.Radii.Add(radii);
                         if (footprint != null && !Inside(footprint, centre, math.cmax(radii) + cavern.Shell + .5f)) continue;
                         Bound(ref cavern);
-                        if (OutOfGrid(cavern, extent) || Blocked(cavern.Min, cavern.Max)) continue;
+                        if (OutOfGrid(cavern, extent) || blocked(cavern.Min, cavern.Max)) continue;
                         bool clear = true;
                         foreach (var other in caverns) clear &= math.any(cavern.Min > other.Max + CavernClearance) || math.any(other.Min > cavern.Max + CavernClearance);
                         if (!clear) continue;
@@ -124,7 +139,7 @@ namespace SomethingDownThere
                     }
                 }
             }
-            return caverns.ToArray();
+            return caverns.GetRange(great.Length, caverns.Count - great.Length).ToArray();
         }
 
         private static bool OutOfGrid(in Cavern cavern, Vector3 extent)
@@ -149,11 +164,12 @@ namespace SomethingDownThere
             var centres = new float3[GreatColumns, GreatRows];
             var radii = new float3[GreatColumns, GreatRows];
             var kept = new bool[GreatColumns, GreatRows];
-            float x0 = 8, x1 = extent.x - 8, z0 = 7.5f, z1 = extent.z - 7.5f;
+            float x0 = extent.x * .5f - GreatSpacing * (GreatColumns - 1) * .5f, x1 = extent.x * .5f + GreatSpacing * (GreatColumns - 1) * .5f;
+            float z0 = 7.5f, z1 = extent.z - 7.5f;
             for (int c = 0; c < GreatColumns; c++)
             for (int r = 0; r < GreatRows; r++)
             {
-                var radius = new float3(draws.Range(3.6f, 4.2f), draws.Range(3.2f, 4.2f), draws.Range(3.3f, 3.7f));
+                var radius = new float3(draws.Range(3.4f, 3.9f), draws.Range(3f, 3.8f), draws.Range(3.2f, 3.6f));
                 var centre = new float3(Mathf.Lerp(x0, x1, c / (GreatColumns - 1f)) + draws.Range(-.8f, .8f), 0,
                     Mathf.Lerp(z0, z1, r / (GreatRows - 1f)) + draws.Range(-.6f, .6f));
                 centre.y = floor + radius.y * .5f + draws.Range(0, .6f);
@@ -200,8 +216,7 @@ namespace SomethingDownThere
             return true;
         }
 
-        // A great cave's rock left standing, each where its hall has room: pillars, then arches, then stalagmites, clear of
-        // each other.
+        // A great cave's rock left standing, each where its hall has room: pillars, then stalagmites, clear of each other.
         private static void Furnish(ref Cavern cave, Draws draws)
         {
             var standing = new List<(float2 at, float reach)>();
@@ -225,16 +240,6 @@ namespace SomethingDownThere
                 var at = Somewhere(cave, .6f); float radius = draws.Range(.45f, .9f);
                 if (!Open(cave, at, 1.2f, radius + 1.2f) || !Clear(at, radius)) continue;
                 cave.Pillars.Add(new float3(at, radius)); standing.Add((at, radius));
-            }
-            int arches = 2 + draws.Below(2);
-            for (int attempt = 0; attempt < 80 && cave.Arches.Length < arches; attempt++)
-            {
-                var at = Somewhere(cave, .5f); float heading = draws.Range(0, math.PI), span = draws.Range(1.5f, 2.3f);
-                var along = new float2(math.cos(heading), math.sin(heading));
-                float top = span * (1 + ArchThickness) + .7f;
-                if (!Open(cave, at, top, .2f) || !Open(cave, at + along * span, .6f, .6f) || !Open(cave, at - along * span, .6f, .6f)
-                    || !Clear(at, span * (1 + ArchThickness))) continue;
-                cave.Arches.Add(new float4(at, heading, span)); standing.Add((at, span * (1 + ArchThickness)));
             }
             int stalagmites = 6 + draws.Below(5);
             for (int attempt = 0; attempt < 120 && cave.Stalagmites.Length < stalagmites; attempt++)
@@ -263,10 +268,6 @@ namespace SomethingDownThere
             cavern.Min = min - pad; cavern.Max = max + pad;
         }
 
-        // Which of a great cave's colour areas a grid-local x lies in: bands across its length.
-        public static int AreaOf(in Cavern cavern, float x)
-            => math.clamp((int)math.floor((x - cavern.Min.x) / math.max(cavern.Max.x - cavern.Min.x, 1e-3f) * GreatAreas), 0, GreatAreas - 1);
-
         // The chambers joined and warped, solid below the floor: the hollow's shape before its standing rock and lumps,
         // which the shell follows.
         private static float CavernShape(in Cavern cavern, float3 p)
@@ -288,7 +289,7 @@ namespace SomethingDownThere
         }
 
         // Signed distance to a cavern's air (negative inside) and to its shell's outer face (negative inside the stone
-        // or the air). Pillars, arches and stalagmites are stone left standing in the air.
+        // or the air). Pillars and stalagmites are stone left standing in the air.
         public static float CavernHollow(in Cavern cavern, float3 p)
         {
             float d = CavernShape(cavern, p), height = p.y - cavern.Floor;
@@ -298,15 +299,6 @@ namespace SomethingDownThere
                 float foot = math.saturate(1 - height / 1.4f);
                 float column = math.length(p.xz - pillar.xy) - pillar.z * (1 + .6f * foot * foot) + .1f * noise.snoise(p * .9f + cavern.Seed);
                 d = -SmoothMin(-d, column, .4f);
-            }
-            for (int i = 0; i < cavern.Arches.Length; i++)
-            {
-                var arch = cavern.Arches[i];
-                var along = new float2(math.cos(arch.z), math.sin(arch.z));
-                var q = p.xz - arch.xy;
-                float u = math.dot(q, along), v = math.dot(q, new float2(-along.y, along.x));
-                float ring = math.length(new float2(math.length(new float2(u, height)) - arch.w, v)) - arch.w * ArchThickness;
-                d = -SmoothMin(-d, ring, .3f);
             }
             for (int i = 0; i < cavern.Stalagmites.Length; i++)
             {
@@ -329,11 +321,21 @@ namespace SomethingDownThere
             return Face(p => CavernHollow(cavern, p), from, math.normalizesafe(direction, new float3(0, -1, 0)), limit);
         }
 
-        // Where a cave's air stands at a chamber, a little above the floor: rays for seats start here.
+        // Where a cave's air stands at a chamber, a little above the floor: rays for seats start here. Where a great cave's
+        // standing rock covers that point, the nearest open air round it (seat rays from inside rock would all stop at once).
         public static float3 CavernHeart(in Cavern cavern, int chamber)
         {
             var c = cavern.Centres[chamber];
-            return new float3(c.x, math.max(c.y, cavern.Floor + 1.1f), c.z);
+            var heart = new float3(c.x, math.max(c.y, cavern.Floor + 1.1f), c.z);
+            if (cavern.Pillars.Length + cavern.Stalagmites.Length == 0 || CavernHollow(cavern, heart) < -.3f) return heart;
+            for (int ring = 1; ring <= 5; ring++)
+                for (int i = 0; i < 8; i++)
+                {
+                    float angle = i * math.PI / 4;
+                    var p = heart + new float3(math.cos(angle), 0, math.sin(angle)) * (ring * .6f);
+                    if (CavernHollow(cavern, p) < -.3f) return p;
+                }
+            return heart;
         }
 
         // The cave's floor and roof above a grid-local x/z (grid-local y), standing rock included: up from below the floor
@@ -341,11 +343,13 @@ namespace SomethingDownThere
         public static (float floor, float roof) CavernSpan(in Cavern cavern, float x, float z)
         {
             float floor = float.NaN;
-            for (float y = cavern.Floor - .6f; y < cavern.Max.y; y += .05f)
+            for (float y = cavern.Floor - .6f; y < cavern.Max.y;)
             {
-                bool air = CavernHollow(cavern, new float3(x, y, z)) < 0;
+                float d = CavernHollow(cavern, new float3(x, y, z));
+                bool air = d < 0;
                 if (float.IsNaN(floor)) { if (air) floor = y; }
                 else if (!air) return (floor, y);
+                y += math.max(.05f, math.abs(d) * FaceStride);
             }
             return (floor, cavern.Max.y);
         }
@@ -396,15 +400,19 @@ namespace SomethingDownThere
             }
         }
 
-        // Where a ray from `from` along `way` first meets the surface of `distance` within `limit`: marched out
-        // HollowStep at a time, then halved to a millimetre or so, with the outward normal from the distance's gradient.
+        // Where a ray from `from` along `way` first meets the surface of `distance` within `limit`: marched out by a share of
+        // the distance left (FaceStride, never under HollowStep: the distance is only roughly one), then halved to a
+        // millimetre or so, with the outward normal from the distance's gradient.
+        private const float FaceStride = .6f;
         private static (float3 surface, float3 outward) Face(Func<float3, float> distance, float3 from, float3 way, float limit)
         {
             float inside = 0, outside = limit;
-            for (float t = HollowStep; t < limit; t += HollowStep)
+            for (float t = HollowStep; t < limit;)
             {
-                if (distance(from + way * t) >= 0) { outside = t; break; }
+                float d = distance(from + way * t);
+                if (d >= 0) { outside = t; break; }
                 inside = t;
+                t += math.max(HollowStep, -d * FaceStride);
             }
             for (int i = 0; i < 6; i++)
             {

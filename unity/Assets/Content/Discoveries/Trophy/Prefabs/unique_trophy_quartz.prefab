@@ -422,7 +422,7 @@ MonoBehaviour:
   recovery: 1
   lore: A cluster of blue quartz taller than a man, grown in a sealed cave under the lake for longer than the lake has been there. Its glow never quite fades.
   handPicked: 0
-  liftsByCrown: 1
+  standsUpright: 1
 --- !u!114 &4699072168641442021
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -43,14 +43,15 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        // The site admits grounds one at a time (106, 110): soil with backfill pits and geodes, nothing else.
+        // The site admits grounds one at a time (106, 110, 116): soil with backfill pits, geodes and caves, nothing else.
         [Test]
-        public void TheSiteIsSoilWithBackfillPitsAndGeodes()
+        public void TheSiteIsSoilWithBackfillPitsGeodesAndCaves()
         {
             Assert.That(SiteLayout.GroundFor(SiteLayout.Size, SiteLayout.CellSize), Is.EqualTo(SiteLayout.Ground));
             Assert.That(SiteLayout.GroundFor(new Vector3Int(64, 64, 64), SiteLayout.CellSize), Is.EqualTo(TerrainGround.Features.None), "Fixtures stay plain soil.");
             var ids = TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground).ToArray();
-            Assert.That(ids.Distinct().OrderBy(v => v), Is.EqualTo(new[] { (byte)TerrainMaterialId.Soil, (byte)TerrainMaterialId.Backfill, (byte)TerrainMaterialId.GeodeShell }));
+            Assert.That(ids.Distinct().OrderBy(v => v), Is.EqualTo(new[] { (byte)TerrainMaterialId.Soil, (byte)TerrainMaterialId.Backfill,
+                (byte)TerrainMaterialId.GeodeShell, (byte)TerrainMaterialId.CaveRock }));
             var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground);
             Assert.That(layout.Pits.Length, Is.EqualTo(3));
             Assert.That(layout.Pits.All(p => SiteLayout.Extent.y - p.Bottom.y < TerrainGround.ZoneBorders[0]), Is.True);

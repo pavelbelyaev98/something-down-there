@@ -168,7 +168,7 @@ namespace SomethingDownThere
 
         // Breaking into the pocket (user, 2026-10-06: "I like collapses"): the first cut whose open ground reaches the
         // pocket's air sets off the break-in, a part of the pocket's roof or wall caving in with clods and dust
-        // (FpsPlayer.BreakInCollapses), or a fall of crumbs and dust only. The way from the cut to the nearest point of the
+        // The way from the cut to the nearest point of the
         // pocket must be open, so digging beside it does nothing.
         // The cave-in is a ball CollapseRadius across, CollapseDepth beyond the breach, rounded so it takes the thin rims a box
         // left between the way in and the pocket (user, 2026-10-06: "weird gaps, thin, hard to remove").
@@ -195,9 +195,8 @@ namespace SomethingDownThere
             {
                 if (Time.time - lastBreak < BreakAgainSeconds) return;
                 lastBreak = Time.time;
-                var crane = FindViewer()?.Crane;
-                if (crane != null) crane.EmitGroundBreak(to, inward, Mathf.Max(terrain.LastRemovedVolume, .04f), .4f, 1.1f);
-                // Thinned ground round the opening gives way (116), next frame for the same reason as the cave-in.
+                // No debris after the first (user, 2026-10-07: effects are for the break-in); thinned ground round the opening
+                // gives way (116), next frame for the same reason as the cave-in.
                 pendingThin = to + inward * .1f;
                 return;
             }
@@ -214,16 +213,12 @@ namespace SomethingDownThere
         private void BreakIn(Vector3 point, Vector3 inward)
         {
             var viewer = FindViewer();
-            bool collapse = viewer == null || viewer.BreakInCollapses;
-            if (collapse)
-            {
-                // The fill around the breach gives way: a rounded piece of roof or wall drops into the pocket.
-                terrain.ClearSphere(point - inward * CollapseDepth, CollapseRadius);
-            }
+            // The fill around the breach gives way: a rounded piece of roof or wall drops into the pocket.
+            terrain.ClearSphere(point - inward * CollapseDepth, CollapseRadius);
             var crane = viewer != null ? viewer.Crane : null;
             if (crane == null) return;
-            crane.EmitGroundBreak(point, inward, collapse ? .3f : .05f, collapse ? .7f : .35f, collapse ? 1.6f : .7f);
-            if (collapse) crane.EmitGroundBreak(point + Vector3.up * .3f, inward, .2f, .5f, 1f);
+            crane.EmitGroundBreak(point, inward, .3f, .7f, 1.6f);
+            crane.EmitGroundBreak(point + Vector3.up * .3f, inward, .2f, .5f, 1f);
         }
 
         private void FixedUpdate()

@@ -161,7 +161,14 @@ namespace SomethingDownThere
         {
             if (xrayCamera != null) UpdateXrayVisibility();
             if (clearsStored) ClearStored();
-            // Thinned roofs give way a frame after the cut that opened their hollow, which its change event was still reporting.
+            // A hollow breaks open, and thinned roofs give way, a frame after the cut that opened it, which its change event was
+            // still reporting.
+            if (pendingOpenings.Count > 0 && terrain != null && !terrain.IsRestoring)
+            {
+                var due = pendingOpenings.ToArray();
+                pendingOpenings.Clear();
+                foreach (var point in due) terrain.ClearSphere(point, BreakOpenRadius);
+            }
             if (pendingCollapses.Count > 0 && terrain != null && !terrain.IsRestoring)
             {
                 var due = pendingCollapses.ToArray();
@@ -259,9 +266,8 @@ namespace SomethingDownThere
             }
         }
 
-        // The Ground Lab's caves (116): its great cave's colour areas lined as the site's are (GreatAreaCrystals of each kind,
-        // shallow to deep along it) with all four crystal trophies, each in the area of its own colour, and a mini cave of each
-        // kind.
+        // The Ground Lab's caves (116): its great cave lined as the site's are with the shallowest cave crystal, its trophy
+        // on the floor, and a mini cave of each kind.
         private void SpawnLabCaves()
         {
             var kinds = catalog.CaveKinds();
@@ -291,29 +297,17 @@ namespace SomethingDownThere
                     }
                     continue;
                 }
-                var areas = DiscoveryCatalog.AreaChambers(cave);
-                for (int a = 0; a < areas.Length; a++)
+                // The trophy first: the crystals keep clear of it.
+                if (trophies.Count > 0 && DiscoveryCatalog.TrophySeat(cave, trophies[0], random, null, out var at, out var turn))
                 {
-                    if (areas[a].Count == 0) continue;
-                    var kind = catalog.Entries[kinds[a % kinds.Count]];
-                    for (int k = 0; k < DiscoveryCatalog.GreatAreaCrystals; k++)
-                    {
-                        var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(cave, areas[a][k % areas[a].Count], kind, random, taken);
-                        Spawn(kind, k, position, rotation);
-                    }
+                    taken.Add((at, trophies[0].PlacementRadius));
+                    Spawn(trophies[0], 0, at, turn);
                 }
-                var stood = new List<Vector3>();
-                for (int t = 0; t < trophies.Count; t++)
+                var crystal = catalog.Entries[kinds[0]];
+                for (int k = 0; k < DiscoveryCatalog.GreatCaveCrystals; k++)
                 {
-                    var area = areas[t % areas.Length].Count > 0 ? areas[t % areas.Length] : null;
-                    for (int attempt = 0; attempt < 12; attempt++)
-                    {
-                        if (!DiscoveryCatalog.TrophySeat(cave, trophies[t], random, null, out var position, out var rotation, area)) break;
-                        if (stood.Exists(other => (other - position).sqrMagnitude < Square(trophies[t].RestingReach * 2 + 1.5f))) continue;
-                        stood.Add(position);
-                        Spawn(trophies[t], 0, position, rotation);
-                        break;
-                    }
+                    var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(cave, k % cave.Centres.Length, crystal, random, taken);
+                    Spawn(crystal, k, position, rotation);
                 }
             }
         }
@@ -430,6 +424,17 @@ namespace SomethingDownThere
         private void DeriveGeodes()
         {
             DeriveCaves();
+            DeriveGeodesOpened();
+            // Opened hollows keep their faint light (ExcavationDaylight.LightHollow).
+            terrain.GetComponent<ExcavationDaylight>()?.ClearHollows();
+            var caves = terrain.GroundLayout.Caverns;
+            for (int c = 0; c < caves.Length && c < caveOpened.Length; c++) if (caveOpened[c]) LightHollow(caves[c].Min, caves[c].Max);
+            var geodes = terrain.GroundLayout.Geodes;
+            for (int g = 0; g < geodes.Length && g < geodeOpened.Length; g++) if (geodeOpened[g]) LightHollow(geodes[g].Min, geodes[g].Max);
+        }
+
+        private void DeriveGeodesOpened()
+        {
             var geodes = terrain.GroundLayout.Geodes;
             geodeOpened = new bool[geodes.Length];
             for (int g = 0; g < geodes.Length; g++)
@@ -442,9 +447,11 @@ namespace SomethingDownThere
                 }
         }
 
-        // The ground's caves: whether each has been broken into, derived like the geodes' from probes just outside its
-        // hollow's face round each chamber.
+        // The ground's caves: whether each has been broken into, derived from rays out of each chamber through the grid's own
+        // samples: the first ground a ray meets well outside the cave's shape (it left through a hole), or air just behind
+        // the first ground that is not the cave's own, is a way in someone dug.
         private const int CaveProbes = 10;
+        private const float CaveRayStep = .2f, CaveRayReach = 14f;
         private bool[] caveOpened = Array.Empty<bool>();
         public bool CaveOpened(int index) => index >= 0 && index < caveOpened.Length && caveOpened[index];
 
@@ -455,12 +462,21 @@ namespace SomethingDownThere
             for (int c = 0; c < caves.Length; c++)
                 for (int chamber = 0; chamber < caves[c].Centres.Length && !caveOpened[c]; chamber++)
                 {
-                    var heart = TerrainGround.CavernHeart(caves[c], chamber);
+                    Vector3 heart = (Vector3)TerrainGround.CavernHeart(caves[c], chamber);
                     for (int i = 0; i < CaveProbes && !caveOpened[c]; i++)
                     {
                         float y = 1 - 2 * (i + .5f) / CaveProbes, ring = Mathf.Sqrt(1 - y * y), angle = i * 2.39996323f;
-                        var (face, outward) = TerrainGround.CavernFace(caves[c], heart, new Unity.Mathematics.float3(Mathf.Cos(angle) * ring, y, Mathf.Sin(angle) * ring));
-                        caveOpened[c] = !terrain.IsSolid(terrain.transform.TransformPoint((Vector3)(face + outward * GeodeProbe)));
+                        var way = new Vector3(Mathf.Cos(angle) * ring, y, Mathf.Sin(angle) * ring);
+                        bool Solid(Vector3 local) => terrain.IsSolid(terrain.transform.TransformPoint(local));
+                        for (float t = CaveRayStep; t < CaveRayReach; t += CaveRayStep)
+                        {
+                            var p = heart + way * t;
+                            if (!Solid(p)) continue;
+                            var behind = p + way * (GeodeProbe + .1f);
+                            caveOpened[c] = TerrainGround.CavernHollow(caves[c], p) > .3f
+                                || (!Solid(behind) && TerrainGround.CavernHollow(caves[c], behind) >= 0);
+                            break;
+                        }
                     }
                 }
         }
@@ -473,29 +489,32 @@ namespace SomethingDownThere
             return (terrain.transform.TransformPoint((Vector3)surface), -terrain.transform.TransformDirection((Vector3)outward));
         }
 
-        // Every cut that opens into a hollow (a geode's, a cave's) drops the ground it freed into it: the first a big fall of
-        // clods and dust, each later one (user, 2026-10-07: "the animation as I continue to break in") the cut's own, at
-        // most every BreakAgainSeconds a hollow.
-        private const float BreakAgainSeconds = .2f;
+        // The first cut that opens into a hollow (a geode's, a cave's) breaks it open (user, 2026-10-07: "the first time it
+        // actually removes a larger area of ground immediately"): a ball BreakOpenRadius round of its roof or wall falls in
+        // with clods and dust, a frame later (the cut's change event is still being reported). Later cuts into it throw no
+        // debris (user: "no need for effects when digging the cave itself"); each still lets the thinned ground round it
+        // give way (TerrainVolume.CollapseThin), at most every BreakAgainSeconds a hollow.
+        private const float BreakAgainSeconds = .2f, BreakOpenRadius = 1.1f, BreakOpenDepth = .4f;
         private readonly Dictionary<int, float> lastBreaks = new Dictionary<int, float>();
-        // Each break also lets the thinned ground round it give way (TerrainVolume.CollapseThin) on the next frame.
         public const float ThinCollapseReach = .9f;
-        private readonly List<Vector3> pendingCollapses = new List<Vector3>();
+        private readonly List<Vector3> pendingCollapses = new List<Vector3>(), pendingOpenings = new List<Vector3>();
 
         private void HollowBreak(int key, Vector3 surface, Vector3 inward, bool first)
         {
             if (!first && lastBreaks.TryGetValue(key, out float last) && Time.time - last < BreakAgainSeconds) return;
             lastBreaks[key] = Time.time;
             pendingCollapses.Add(surface - inward * .1f);
+            if (!first) return;
+            pendingOpenings.Add(surface - inward * BreakOpenDepth);
             var crane = FindViewer()?.Crane;
             if (crane == null) return;
-            if (first)
-            {
-                crane.EmitGroundBreak(surface, inward, .3f, .6f, 1.5f);
-                crane.EmitGroundBreak(surface + Vector3.up * .3f, inward, .2f, .5f, 1f);
-            }
-            else crane.EmitGroundBreak(surface, inward, Mathf.Max(terrain.LastRemovedVolume, .04f), .4f, 1.1f);
+            crane.EmitGroundBreak(surface, inward, .35f, .7f, 1.6f);
+            crane.EmitGroundBreak(surface + Vector3.up * .3f, inward, .25f, .55f, 1.1f);
         }
+
+        // An opened hollow's faint light (ExcavationDaylight.LightHollow).
+        private void LightHollow(Unity.Mathematics.float3 min, Unity.Mathematics.float3 max)
+            => terrain.GetComponent<ExcavationDaylight>()?.LightHollow((Vector3)min, (Vector3)max);
 
         private void CheckCaveBreaks(Bounds changed)
         {
@@ -523,6 +542,7 @@ namespace SomethingDownThere
                 if (!open) continue;
                 bool first = c < caveOpened.Length && !caveOpened[c];
                 if (c < caveOpened.Length) caveOpened[c] = true;
+                if (first) LightHollow(cave.Min, cave.Max);
                 HollowBreak(1000 + c, surface, inward, first);
             }
         }
@@ -549,6 +569,7 @@ namespace SomethingDownThere
                 if (!open) continue;
                 bool first = !geodeOpened[g];
                 geodeOpened[g] = true;
+                if (first) LightHollow(geode.Min, geode.Max);
                 HollowBreak(g, surface, inward, first);
             }
         }

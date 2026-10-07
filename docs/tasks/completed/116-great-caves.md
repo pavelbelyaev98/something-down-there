@@ -1,9 +1,9 @@
 # 116 — Great Caves, Crystal Trophies and Cave Rock
 
-**Status:** complete: each zone holds one great cave, a hall almost the site's width with pillars, arches, stalagmites,
-four glowing colour areas and its crystal trophy (a unique the crane lifts by its crown to stand at camp), plus three
-mini caves of a few crystals, all in the demo's cave rock; thinned roofs give way when opened and sealed hollows' crystals
-don't light.
+**Status:** complete: each zone holds one great cave, a hall across the middle of the site with pillars and stalagmites,
+crystals of one kind and its one crystal trophy (a unique marked anywhere, set upright at camp), plus three mini caves of
+a few crystals, all in the demo's cave rock. Breaking in opens a hollow at once; opened hollows hold a faint light;
+crystals light only the dark.
 
 ## Objective
 
@@ -192,3 +192,38 @@ digs free and sends up with the crane, to stand at camp for good. Small caves wi
   0.25 m; the support and sliver shortcuts no longer treat ground beside seeded air as untouched deep ground.
 - **Stutter:** no game-side spikes in the Editor; sealed hollows' crystals stopped lighting (up to ten shadowed lights
   switched as the player walked the lab) and the HUD and the lab prompt stopped allocating every frame.
+
+## Iteration 1 (user, 2026-10-07, after a playtest)
+
+"The light from crystals is still bad, especially in light places ... it shouldn't emit light when it is light, it is
+not a lamp. The first break-in into a cave or geode is unsatisfactory: make it actually remove a larger area of ground
+immediately. Far away crystals just appear red and I don't see anything else in the dark, super unnatural; once I drop
+into a cave it is absolute darkness, which is not correct since there is a hole above me and crystals and ground reflect
+light. Some shapes make no sense, like a croissant. No need for effects when digging the cave itself; particles are for
+the break-in and extracting; remove the admin option to turn off dust. I want ONE crystal to be extracted per cave and
+each cave MUST have only one colour. Extracting forces one place for the hook; I want to place it anywhere. The caves can
+be a bit smaller."
+
+- **Crystal light only in the dark:** each crystal's light and its own glow (a property block scaling its emission)
+  fade out between ambient 0.5 and 0.8 (`ExcavationDaylight.SampleAmbient`, just above the hollow floor), so a geode
+  dug open near the surface shows plain coloured crystals and unlit walls, and a trophy at camp doesn't glow. A
+  crystal in daylight gives up its place among the `LitCrystals` (its light used to stay on at zero, still rendering
+  shadows).
+- **Opened hollows are never pitch black:** the daylight grid keeps a floor (`ExcavationDaylightGrid.Floor`, 0.45)
+  through an opened cave's or geode's box, set when it opens and on load, kept by rebuilds and patches. The route's
+  light still fades with depth as tuned; the floor stands for light the stone and crystals throw back. 0.08, 0.2 and
+  0.3 rendered near black (the cave rock is dark); 0.45 shows the hall's shape dimly and still asks for a lamp. Far
+  crystals had read as lone red dots (the ruby's emission) in black; with the floor their stone shows round them.
+- **Breaking open:** the first cut into a cave or geode drops a ball 1.1 m round of its roof or wall (centred 0.4 m out
+  from the face) with a bigger fall of clods and dust; later cuts into any hollow (and a chest's pocket) throw no debris,
+  only the thin-roof collapse. The admin break-in toggle went; a chest always caves in.
+- **One colour, one trophy:** a great cave seats `GreatCaveCrystals` (12) of its depth's kind round its chambers; colour
+  areas went. The lab's great cave holds the shallowest kind and its trophy only.
+- **Arches removed** (a half ring standing on the floor read as a croissant); pillars and stalagmites stay.
+- **Smaller:** 5 x 3 chambers 6 m apart across the middle of the site (radii 3.4-3.9 x 3-3.8 x 3.2-3.6), 3 left out.
+- **Crane:** the lifting eye goes where the player aims; a trophy is still set level on its base at camp
+  (`BuriedFind.StandsUpright`).
+- **Tests (session close, before this iteration):** the full run showed geodes not all placed (great caves now come
+  first, then geodes, then mini caves), crystals piled inside standing rock at a chamber's heart (the heart now moves to
+  open air), a crowded amethyst geode (32 tries for a geode seat), camp spots too far out (moved within 11.5 m of the
+  opening), and tests assuming every unique is a buried computer.

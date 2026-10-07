@@ -88,7 +88,6 @@ namespace SomethingDownThere
         private bool adminHoverOnRelease;
         private bool adminGroundXray;
         // Break-in A/B (109): breaking into a chest's pocket caves part of it in (default) or only drops crumbs and dust.
-        private bool adminBreakInDust;
         // Drill look comparison (playtest 001): the step picked on each DrillDial.
         private readonly int[] adminDrillDials = new int[DrillDialSteps.Length];
         // Ground contact shading (SSAO) strength set from the admin slider for the session.
@@ -148,12 +147,10 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminHoverOnRelease || adminGroundXray || adminContactShading || adminBreakInDust);
+            || adminHoverOnRelease || adminGroundXray || adminContactShading);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
-        public bool BreakInCollapses => !(AdminAvailable && adminBreakInDust);
-        public string AdminBreakInLabel => BreakInCollapses ? "collapse" : "dust only";
         // The first-person drill's look (ToolRigPresenter), dialled per session in developer admin; each dial's first
         // step is the default. Size scales the drill (1 = the purchased model); Position moves it along the tool (metres,
         // + away from the eye).
@@ -348,7 +345,7 @@ namespace SomethingDownThere
             Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = adminBreakInDust = false;
+            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = false;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             motor.enabled = false;
@@ -841,7 +838,6 @@ namespace SomethingDownThere
             adminDetectorOff = false;
             adminHoverOnRelease = false;
             adminGroundXray = false;
-            adminBreakInDust = false;
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
@@ -875,13 +871,6 @@ namespace SomethingDownThere
             MenuChanged?.Invoke();
         }
 
-        public void ToggleAdminBreakIn()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminBreakInDust = !adminBreakInDust;
-            ShowFeedback("Breaking into a chest's pocket: " + AdminBreakInLabel);
-            MenuChanged?.Invoke();
-        }
 
         public void CycleAdminDrill(DrillDial dial)
         {

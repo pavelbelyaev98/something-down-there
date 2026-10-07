@@ -175,10 +175,12 @@ namespace SomethingDownThere.Tests
             var field = player.Discoveries;
             var terrain = player.ExcavationTerrain;
             var crane = player.Crane;
-            var uniques = field.Finds.Where(f => f.Kind == DiscoveryKind.Unique).ToArray();
+            var all = field.Finds.Where(f => f.Kind == DiscoveryKind.Unique).ToArray();
+            Assert.That(all.Select(f => f.SaveContentId).Distinct().Count(), Is.EqualTo(all.Length));
+            Assert.That(crane.SpotCount, Is.GreaterThanOrEqualTo(all.Length), "Every unique has room beside the camp.");
+            // The computers, buried by hand near the surface; a great cave's crystal trophy comes up from its cave (lab-checked).
+            var uniques = all.Where(f => !f.StandsUpright).ToArray();
             Assert.That(uniques.Length, Is.GreaterThan(1));
-            Assert.That(uniques.Select(f => f.SaveContentId).Distinct().Count(), Is.EqualTo(uniques.Length));
-            Assert.That(crane.SpotCount, Is.GreaterThanOrEqualTo(uniques.Length), "Every unique has room beside the camp.");
             foreach (var common in field.Finds.Where(f => f.Kind == DiscoveryKind.Common)) common.gameObject.SetActive(false);
             var arrivals = new System.Collections.Generic.List<Vector3>();
             foreach (var find in uniques)
@@ -214,7 +216,7 @@ namespace SomethingDownThere.Tests
             var loaded = WorldSaveCodec.Read(bytes);
             crane.ValidateRestore(loaded); field.Restore(loaded.Finds, loaded.DiscoverySeed);
             crane.Restore(loaded.Extraction);
-            var restored = field.Finds.Where(f => f.Kind == DiscoveryKind.Unique).ToArray();
+            var restored = field.Finds.Where(f => f.Kind == DiscoveryKind.Unique && !f.StandsUpright).ToArray();
             Assert.That(restored.Length, Is.EqualTo(uniques.Length));
             foreach (var find in restored)
             {

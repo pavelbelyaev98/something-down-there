@@ -49,6 +49,11 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator AGeodeIsSealedUntilTheWayInReachesItsHollowAndStaysOpenAfterALoad()
         {
+            // The whole population: an earlier suite's layer fixture leaves this scene's field without finds.
+            TestInputPreferences.RestoreLayerFixture(field);
+            TestInputPreferences.RestoreGeneratedPopulation(field);
+            yield return null;
+            Physics.SyncTransforms();
             var geodes = terrain.GroundLayout.Geodes;
             Assert.That(geodes.Length, Is.EqualTo(TerrainGround.GeodesPerZone.Sum()));
             Assert.That(Enumerable.Range(0, geodes.Length).Any(field.GeodeOpened), Is.False, "Sealed from New Game.");
