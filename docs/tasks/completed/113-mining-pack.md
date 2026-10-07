@@ -164,3 +164,11 @@ items. AGENTS.md "Bought Before Made" now says so.
   7 gold. The lab's chests are full, the kinds in turn.
 - Copper ore "a bit higher quality, like silver and gold": the pack's own map size, relief and gloss on the
   copper-rich maps; the plainer ore style is gone.
+
+## Iteration (user, 2026-10-07: "make ingots in game less dusty and more colorful as in the pack")
+
+- The ingots dropped the aged copy (0.62 of the pack's colour, 0.5 metal, 0.42 smoothness): they take the pack's
+  colour map at full colour, 0.65 metal and 0.6 smoothness (`IngotMetal`, `IngotGloss`). The pack's own metal map was
+  compared and still reads as before (silver sky blue, gold olive, black under a lamp), so the ingots stay part metal.
+- The whole pack is committed now, its binaries in LFS (user: "commit as LFS or ignore, I don't care"); the nested
+  installers stay ignored.

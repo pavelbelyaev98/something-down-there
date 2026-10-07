@@ -82,10 +82,11 @@ namespace SomethingDownThere.Editor
         private const float CrystalGloss = .75f;
         // Small props seen from a metre or two in a stylized game: their maps import no larger than this.
         private const int PackMapSize = 1024;
-        // Ingots after decades in the ground are aged, dull metal: their colour map at AgedTint, half metal and AgedGloss
-        // smooth, so the light shades their faces. Fully metal, they showed only the reflected sky, as a flat glowing
-        // colour (user, 2026-10-06: "ingots light is fucked"); mirror silver read sky blue.
-        private const float AgedTint = .62f, AgedMetal = .5f, AgedGloss = .42f;
+        // Ingots in the pack's own colours, shiny (user, 2026-10-07: "less dusty and more colorful as in the pack"), but not
+        // fully metal: as the pack has them they show only the reflected sky, as a flat glowing colour, mirror silver sky
+        // blue (2026-10-06: "ingots light is fucked"), and go black under a lamp underground. IngotMetal and IngotGloss
+        // keep the light shading their faces. (Aged copies at 0.62 of their colour, half metal and 0.42 gloss read dusty.)
+        private const float IngotMetal = .65f, IngotGloss = .6f;
 
         [MenuItem("Tools/Something Down There/Configure Buried Props")]
         public static void Configure()
@@ -122,7 +123,7 @@ namespace SomethingDownThere.Editor
 
             foreach (var name in MiningProps)
                 PackVariant($"{MiningVendor}/Prefabs/{name}.prefab", $"{MiningFolder}/{name}.prefab",
-                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? PackStyle.Pack : PackStyle.Aged));
+                    vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? PackStyle.Pack : PackStyle.Ingot));
             if (!AssetDatabase.IsValidFolder(MiningFolder + "/Rocks")) AssetDatabase.CreateFolder(MiningFolder, "Rocks");
             foreach (var find in RockFinds) RockFind(find);
             if (!AssetDatabase.IsValidFolder(CrystalFolder + "/Dirty")) AssetDatabase.CreateFolder(CrystalFolder, "Dirty");
@@ -155,29 +156,28 @@ namespace SomethingDownThere.Editor
         }
 
         // How a Mining pack material is copied: as the pack has it (copper ore, user 2026-10-06: "a bit higher quality,
-        // like silver and gold"), or as aged metal (AgedTint, AgedMetal, AgedGloss). Copper ore takes its copper-rich maps
-        // (OreMaps).
-        internal enum PackStyle { Pack, Aged }
+        // like silver and gold"), or as an ingot (IngotMetal, IngotGloss). Copper ore takes its copper-rich maps (OreMaps).
+        internal enum PackStyle { Pack, Ingot }
 
         // A URP Lit copy of a Mining Tools, Ore & Ingots HDRP Lit material: its colour map in its tint, its normal map, and
-        // its mask, whose metallic (R), occlusion (G) and smoothness (A) URP Lit reads from the same map. Aged metal keeps
+        // its mask, whose metallic (R), occlusion (G) and smoothness (A) URP Lit reads from the same map. An ingot keeps
         // the mask's occlusion only.
         internal static Material FromHdrp(Material vendor, string path, PackStyle style = PackStyle.Pack)
         {
             var (maps, floats, colors) = Saved(vendor);
             int size = PackMapSize;
-            bool aged = style == PackStyle.Aged;
+            bool ingot = style == PackStyle.Ingot;
             bool own = OreMaps.TryGetValue(vendor.name, out var ours);
             var colour = own ? Project(ours.colour, "art/mining-pack/make_maps.py", size) : Sized(maps["_BaseColorMap"], size);
             var material = LitMaterial(path, colour, Sized(maps["_NormalMap"], size));
-            var tint = aged ? colors["_BaseColor"] * AgedTint : colors["_BaseColor"]; tint.a = 1;
+            var tint = colors["_BaseColor"]; tint.a = 1;
             material.SetColor("_BaseColor", tint);
             material.SetFloat("_BumpScale", floats["_NormalScale"]);
             var mask = own ? Project(ours.mask, "art/mining-pack/make_maps.py", size, false, true) : Sized(maps["_MaskMap"], size);
-            if (aged)
+            if (ingot)
             {
                 material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
-                material.SetFloat("_Metallic", AgedMetal); material.SetFloat("_Smoothness", AgedGloss);
+                material.SetFloat("_Metallic", IngotMetal); material.SetFloat("_Smoothness", IngotGloss);
             }
             else
             {
@@ -294,28 +294,30 @@ namespace SomethingDownThere.Editor
         // (art/mining-pack/make_maps.py):
         // - coal on the layered rocks, blocky with bedding planes, black with a dull sheen (user, 2026-10-06: the photo
         //   rock's coal "looks too much like a rock");
-        // - native iron and silver on the knobbly jagged ones and gold on the rounded ones, solid metal (user, 2026-10-06:
-        //   "gold, silver and others can be full gold/silver"): the rock's light and dark only (its _Metal map) in the
-        //   metal's colour, iron a dull dark grey, silver bright, gold warm yellow. Gold on the jagged rocks, glossier,
-        //   read as crumpled foil ("like gold wrappers"): a water-worn lump with a softer sheen reads as a nugget.
+        // - native iron, silver and gold on the knobbly jagged ones, solid metal (user, 2026-10-06: "gold, silver and others
+        //   can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, iron a mid
+        //   steel grey, silver bright, gold yellow. Iron and gold are part metal only, so a lamp underground still shows
+        //   their colour: dark and fully metal, iron passed for coal (user, 2026-10-07). Gold's rocks are flattened
+        //   (Flatten of their height) into a nugget: mirror-glossy on the jagged rock it read as crumpled foil ("like gold
+        //   wrappers"), on the pack's rounded rock as a blob ("poop shape").
         internal readonly struct RockFindLook
         {
             public readonly string Rock, Output;
             public readonly Color Tint;
-            public readonly float Metal, Gloss;
-            public RockFindLook(string rock, string output, Color tint, float metal, float gloss)
-            { Rock = rock; Output = output; Tint = tint; Metal = metal; Gloss = gloss; }
+            public readonly float Metal, Gloss, Flatten;
+            public RockFindLook(string rock, string output, Color tint, float metal, float gloss, float flatten = 1)
+            { Rock = rock; Output = output; Tint = tint; Metal = metal; Gloss = gloss; Flatten = flatten; }
         }
         internal static readonly RockFindLook[] RockFinds =
         {
             new RockFindLook("Layered_Large", "Coal_Layered_Large", new Color(.17f, .17f, .18f), 0, .5f),
             new RockFindLook("Layered_Small", "Coal_Layered_Small", new Color(.17f, .17f, .18f), 0, .5f),
-            new RockFindLook("Jagged_Large", "Iron_Native_A", new Color(.46f, .44f, .43f), .85f, .5f),
-            new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.46f, .44f, .43f), .85f, .5f),
+            new RockFindLook("Jagged_Large", "Iron_Native_A", new Color(.6f, .58f, .56f), .5f, .45f),
+            new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.6f, .58f, .56f), .5f, .45f),
             new RockFindLook("Jagged_Large", "Silver_Native_A", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Small", "Silver_Native_B", new Color(.86f, .87f, .89f), .85f, .6f),
-            new RockFindLook("Rounded_Large", "Gold_Native_A", new Color(1f, .77f, .34f), .85f, .48f),
-            new RockFindLook("Rounded_Small", "Gold_Native_B", new Color(1f, .77f, .34f), .85f, .48f),
+            new RockFindLook("Jagged_Large", "Gold_Native_A", new Color(1f, .8f, .34f), .65f, .5f, .8f),
+            new RockFindLook("Jagged_Small", "Gold_Native_B", new Color(1f, .8f, .34f), .65f, .5f, .8f),
         };
 
         private static void RockFind(RockFindLook look)
@@ -325,18 +327,23 @@ namespace SomethingDownThere.Editor
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(source) ?? throw new InvalidOperationException("Missing " + source + " (reimport the pack).");
             var lods = prefab.GetComponentInChildren<LODGroup>(true)?.GetLODs();
             var detail = (lods != null ? lods[0].renderers[0].GetComponent<MeshFilter>() : prefab.GetComponentInChildren<MeshFilter>(true)).sharedMesh;
-            string meshPath = $"{MiningFolder}/Rocks/{rock}.asset";
+            string shape = look.Flatten < 1 ? rock + "_Flat" : rock, meshPath = $"{MiningFolder}/Rocks/{shape}.asset";
             var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
-            if (mesh == null) { mesh = UnityEngine.Object.Instantiate(detail); AssetDatabase.CreateAsset(mesh, meshPath); }
-            else
+            bool fresh = mesh == null;
+            if (fresh) mesh = new Mesh();
+            // Refilled in place, never copied over (PropBake.Save: a serialized copy scrambles the triangles).
+            var vertices = detail.vertices; var normals = detail.normals;
+            for (int i = 0; look.Flatten < 1 && i < vertices.Length; i++)
             {
-                // Refilled in place, never copied over (PropBake.Save: a serialized copy scrambles the triangles).
-                mesh.Clear(); mesh.indexFormat = detail.indexFormat;
-                mesh.SetVertices(detail.vertices); mesh.SetNormals(detail.normals); mesh.SetTangents(detail.tangents);
-                mesh.SetUVs(0, detail.uv); mesh.SetTriangles(detail.triangles, 0); mesh.RecalculateBounds();
-                EditorUtility.SetDirty(mesh);
+                vertices[i].y *= look.Flatten;
+                normals[i] = new Vector3(normals[i].x, normals[i].y / look.Flatten, normals[i].z).normalized;
             }
-            mesh.name = rock;
+            mesh.Clear(); mesh.indexFormat = detail.indexFormat;
+            mesh.SetVertices(vertices); mesh.SetNormals(normals); mesh.SetUVs(0, detail.uv); mesh.SetTriangles(detail.triangles, 0);
+            if (look.Flatten < 1) mesh.RecalculateTangents(); else mesh.SetTangents(detail.tangents);
+            mesh.RecalculateBounds();
+            mesh.name = shape;
+            if (fresh) AssetDatabase.CreateAsset(mesh, meshPath); else EditorUtility.SetDirty(mesh);
 
             string maps = $"{MiningFolder}/Rocks/{rock}";
             var material = LitMaterial($"{MiningFolder}/{output}.mat", Project(maps + (look.Metal > 0 ? "_Metal.png" : "_BC.png"), "art/mining-pack/make_maps.py"),

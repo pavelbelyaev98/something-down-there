@@ -33,6 +33,7 @@ unity/Assets/Content/ToolRig/WesternShovel/*.png filter=lfs diff=lfs merge=lfs -
 unity/Assets/REAL_DEDICATED/**/*.tga filter=lfs diff=lfs merge=lfs -text
 unity/Assets/REAL_DEDICATED/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 unity/Assets/REAL_DEDICATED/**/*.exr filter=lfs diff=lfs merge=lfs -text
+unity/Assets/REAL_DEDICATED/**/*.hdr filter=lfs diff=lfs merge=lfs -text
 
 # Free buried-prop packs (old chest, big old TV, TV set): binary payloads in LFS, as are the project's masks.
 unity/Assets/NOT_Lonely/**/*.tga filter=lfs diff=lfs merge=lfs -text

@@ -16,14 +16,14 @@ from PIL import Image, ImageFilter
 textures = Path('unity/Assets/REAL_DEDICATED/MiningTools_Ore_Ingots/Textures')
 target = Path('unity/Assets/Content/BuriedProps/MiningPack')
 size = 1024
-rocks = ['Layered_Large', 'Layered_Small', 'Jagged_Large', 'Jagged_Small', 'Rounded_Large', 'Rounded_Small']
+rocks = ['Layered_Large', 'Layered_Small', 'Jagged_Large', 'Jagged_Small']
 # Copper: what counts as a copper fleck (hue in degrees, saturation), how far the flecks grow (px at 1024), the share of
 # the stone the added patches take, and the copper's metal and smoothness in the mask (the pack's own, measured).
 copper_hue, copper_saturation = 45, .3
 grow, patches = 9, .3
 copper_metal, copper_gloss = .73, .58
 # Nugget maps: the rock's luminance over its mean, kept within metal_range, so the tint sets the colour.
-metal_rocks, metal_range = ['Jagged_Large', 'Jagged_Small', 'Rounded_Large', 'Rounded_Small'], (.6, 1.1)
+metal_rocks, metal_range = ['Jagged_Large', 'Jagged_Small'], (.6, 1.1)
 
 
 def load(path, mode):

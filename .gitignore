@@ -1,4 +1,4 @@
-﻿/unity/Library/
+/unity/Library/
 /unity/Temp/
 /unity/Obj/
 /unity/Logs/
@@ -24,3 +24,9 @@ games/
 # Bought packs ship nested installers for other render pipelines; the import is all the project needs.
 /unity/Assets/**/*.unitypackage
 /unity/Assets/**/*.unitypackage.meta
+
+# The test runner's scratch scenes (it deletes them after a run) and the folder the performance test package writes
+# its run info into during a build.
+/unity/Assets/InitTestScene*
+/unity/Assets/Resources/PerformanceTestRun*
+/unity/Assets/Resources.meta

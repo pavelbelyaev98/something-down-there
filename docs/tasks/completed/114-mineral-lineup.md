@@ -3,7 +3,7 @@
 **Status:** complete. Each zone has its own pair of minerals: coal and copper, iron and silver, gold and emerald,
 ruby and diamond, with pyrite as a cheap aside in zone 2. Coal is the Mining pack's layered rocks in black; copper is
 its ore chunks at the pack's quality with copper over about half the stone; iron, silver and gold are solid native
-nuggets, gold on the pack's rounded rocks; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
+nuggets on the pack's jagged rocks, gold's flattened, iron and gold part metal; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
 
 ## Objective
 
@@ -232,3 +232,17 @@ at the bottom, and cut in the old chests.
 
 - Plain rocks are about 0.5 x 0.3 x 0.4 m. Iron and silver nuggets grew 1.3 times (to about 0.34 x 0.22 x 0.53 m),
   pyrite 1.8 times (about 0.36 x 0.43 x 0.38 m) and gold 1.15 times.
+
+## Iteration 5 (user, 2026-10-07: "make the gold look more like gold and less like poop shape and make iron look more like iron since now it looks like coal")
+
+- Underground the nuggets went black: fully metal, they reflect only the environment, which the excavation daylight
+  takes away, and a lamp gives them a highlight and nothing else. Iron (0.46, 0.44, 0.43 at 0.85 metal) read as coal;
+  lighter steel greys read as silver. Iron is now a mid grey with a warm undertone (0.6, 0.58, 0.56), 0.5 metal, 0.45
+  smoothness: grey metal in daylight, its colour still there under a lamp.
+- Gold (user chose "solid metal lumps, new look" over the pack's gold ore) left the rounded rocks ("poop shape") for the
+  jagged ones flattened to 0.8 of their height (`RockFindLook.Flatten`, meshes `Rocks/Jagged_*_Flat`): a craggy, flat
+  nugget, (1, 0.8, 0.34), 0.65 metal, 0.5 smoothness, so the crumpled-foil look of the glossy jagged rock (iteration 3)
+  does not return; scale 0.21 and 0.31. The rounded rocks' copies are gone.
+- Compared in the Ground Lab in a dug tray in daylight and under a lamp in the great cave: the rounded gold,
+  flattened rounded, plain and flattened jagged gold; iron at 0.46 / 0.6-0.66 grey and 0.4-0.85 metal beside coal and
+  silver.
