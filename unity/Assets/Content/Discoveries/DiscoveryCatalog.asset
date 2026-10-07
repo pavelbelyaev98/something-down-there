@@ -594,7 +594,7 @@ MonoBehaviour:
     Prefab: {fileID: 5986835123767901866, guid: cce930836f84f4c4384cebb05c951a7e, type: 3}
     AppearanceVariants:
     - {fileID: 776528731408168990, guid: 0ec15a30fbcdfe7489cc5ce481bf5388, type: 3}
-    Count: 24
+    Count: 31
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -617,7 +617,7 @@ MonoBehaviour:
     Prefab: {fileID: 8982656584909271113, guid: 6c7a8bfa6f709b04584d4428d37c5ece, type: 3}
     AppearanceVariants:
     - {fileID: 6239365998796052394, guid: 237d84434c2432743a1340b4c168d635, type: 3}
-    Count: 24
+    Count: 31
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -640,7 +640,7 @@ MonoBehaviour:
     Prefab: {fileID: 6163171290613413180, guid: 4a5b956463402984799ff6ae554d18a2, type: 3}
     AppearanceVariants:
     - {fileID: 3576446387791716423, guid: 600543a0a7b3523408887b704af21f55, type: 3}
-    Count: 24
+    Count: 31
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -663,7 +663,7 @@ MonoBehaviour:
     Prefab: {fileID: 97788817704618736, guid: a9679f6e2f206714d827edc621bb83de, type: 3}
     AppearanceVariants:
     - {fileID: 1465592506350979641, guid: 06ab470e37d2ce342ab9bf2bf1103970, type: 3}
-    Count: 24
+    Count: 31
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0

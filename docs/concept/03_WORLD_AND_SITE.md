@@ -275,7 +275,8 @@ Geodes keep that moment without cave networks.
     plenty of stuff ... like in the demo"; "one per zone is smart"; then "a bit smaller"): a hall
     across the middle of the site underground and a few metres high, under the dig plot so digging
     down meets it. Pillars and stalagmites of its rock stand in it; its crystals are all one kind, the
-    depth's (user: "each cave MUST have only one colour"). On its floor stands the zone's **crystal
+    depth's (user: "each cave MUST have only one colour"), round its walls and a few hanging from its
+    roof (user: "a bit more crystals ... and on the roof as well"). On its floor stands the zone's **crystal
     trophy**, a big formation of that crystal, the only one to extract (user: "instead of breaking
     them I want to extract them with the crane like uniques"; "ONE crystal to be extracted per cave"):
     a unique, dug free round its base and marked wherever the player likes, set upright at camp for

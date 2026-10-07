@@ -306,7 +306,8 @@ namespace SomethingDownThere
                 var crystal = catalog.Entries[kinds[0]];
                 for (int k = 0; k < DiscoveryCatalog.GreatCaveCrystals; k++)
                 {
-                    var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(cave, k % cave.Centres.Length, crystal, random, taken);
+                    var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(cave, k % cave.Centres.Length, crystal, random, taken,
+                        DiscoveryCatalog.OnRoof(cave, k));
                     Spawn(crystal, k, position, rotation);
                 }
             }
@@ -494,7 +495,7 @@ namespace SomethingDownThere
         // with clods and dust, a frame later (the cut's change event is still being reported). Later cuts into it throw no
         // debris (user: "no need for effects when digging the cave itself"); each still lets the thinned ground round it
         // give way (TerrainVolume.CollapseThin), at most every BreakAgainSeconds a hollow.
-        private const float BreakAgainSeconds = .2f, BreakOpenRadius = 1.1f, BreakOpenDepth = .4f;
+        private const float BreakAgainSeconds = .2f, BreakOpenRadius = .8f, BreakOpenDepth = .4f;
         private readonly Dictionary<int, float> lastBreaks = new Dictionary<int, float>();
         public const float ThinCollapseReach = .9f;
         private readonly List<Vector3> pendingCollapses = new List<Vector3>(), pendingOpenings = new List<Vector3>();

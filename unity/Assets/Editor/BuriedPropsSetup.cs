@@ -221,6 +221,9 @@ namespace SomethingDownThere.Editor
             tint.a = 1;
             var lit = tint * CrystalLit; lit.a = 1;
             material.SetColor("_BaseColor", lit);
+            // Glass, never metal: the amber cubes are cut from the pack's pyrite, whose sheen darkened them to brown in
+            // daylight (user, 2026-10-07: "on light some rocks are hard to see").
+            material.SetFloat("_Metallic", 0);
             material.SetFloat("_Smoothness", gloss);
             material.SetTexture("_EmissionMap", GlowMap(vendor, glowFolder));
             float luminance = .2126f * tint.r + .7152f * tint.g + .0722f * tint.b;

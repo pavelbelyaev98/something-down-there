@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,24,24,24,24,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,16,16,32,16,31,31,31,31,1,1,1,1}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];

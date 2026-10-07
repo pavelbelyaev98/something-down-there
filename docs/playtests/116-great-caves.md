@@ -16,8 +16,11 @@ from about 8 m down. Developer admin → **Ground X-ray** marks cave rock yellow
   of light fades out over a few metres; beyond it only the crystals (each lighting the stone round it,
   no bright spot inside the crystal) and your lamps.
 - Crystals where daylight reaches (a mini cave or geode dug open near the surface, a trophy at camp):
-  no light on the stone, but still bright, coloured crystals rather than dark ones. Mini caves are
-  back in grey geode stone.
+  no light on the stone, but bright, easy to spot coloured crystals (the amber cubes orange, not
+  brown). Mini caves are back in grey geode stone.
+- A great cave has a few more crystals, some hanging from its roof; a mini cave one more.
+- Breaking in opens a somewhat smaller hole than before.
+- Mark a trophy anywhere: the lifting eye sits on the crystal itself, never in the air beside it.
 - An extractable item (the crystal trophy, a computer): aim at it where soil still covers it nearby
   and dig, and the soil round that spot comes away; aimed where it is bare, nothing is dug, so you
   walk round it for the rest.

@@ -57,7 +57,55 @@ namespace SomethingDownThere
         // Holding Interact on an exposed unique bolts the crane's lifting eye on where the player aims (concept 05 §3).
         public bool CanHold(FpsPlayer player) => isActiveAndEnabled && CanMark && player.Crane != null && player.Crane.Configured && !player.Crane.Busy;
         public float HoldSeconds(FpsPlayer player) => player.Crane.Settings.MarkSeconds;
-        public bool CompleteHold(FpsPlayer player, RaycastHit hit) => player.Crane.TryMark(this, hit.point, hit.normal);
+        public bool CompleteHold(FpsPlayer player, RaycastHit hit)
+        {
+            var (point, normal) = OnBody(new Ray(player.ViewCamera.transform.position, player.ViewCamera.transform.forward), hit);
+            return player.Crane.TryMark(this, point, normal);
+        }
+
+        // Where the aim meets the find itself (user, 2026-10-07: "the eye hook doesn't attach exactly to the crystal"): its
+        // collider is a convex hull, which spans the air between a formation's spires, so the aim goes on to the visible
+        // mesh's first triangle along it, or, passing between the spires, to the mesh's vertex nearest the hull's hit. The
+        // hull's hit stands when the mesh can't be read.
+        private (Vector3 point, Vector3 normal) OnBody(Ray aim, RaycastHit hit)
+        {
+            var mesh = GetComponent<MeshFilter>().sharedMesh;
+            if (mesh == null || !mesh.isReadable) return (hit.point, hit.normal);
+            var toLocal = transform.worldToLocalMatrix;
+            Vector3 origin = toLocal.MultiplyPoint3x4(aim.origin), direction = toLocal.MultiplyVector(aim.direction);
+            var vertices = mesh.vertices;
+            var triangles = mesh.triangles;
+            float nearest = float.MaxValue; Vector3 face = default;
+            for (int t = 0; t < triangles.Length; t += 3)
+            {
+                Vector3 a = vertices[triangles[t]], ab = vertices[triangles[t + 1]] - a, ac = vertices[triangles[t + 2]] - a;
+                var p = Vector3.Cross(direction, ac);
+                float det = Vector3.Dot(ab, p);
+                if (Mathf.Abs(det) < 1e-9f) continue;
+                var s = origin - a;
+                float u = Vector3.Dot(s, p) / det;
+                if (u < 0 || u > 1) continue;
+                var q = Vector3.Cross(s, ab);
+                float v = Vector3.Dot(direction, q) / det;
+                if (v < 0 || u + v > 1) continue;
+                float along = Vector3.Dot(ac, q) / det;
+                if (along <= 0 || along >= nearest) continue;
+                nearest = along; face = Vector3.Cross(ab, ac);
+            }
+            var toWorld = transform.localToWorldMatrix;
+            if (nearest < float.MaxValue)
+            {
+                if (Vector3.Dot(face, direction) > 0) face = -face;
+                return (toWorld.MultiplyPoint3x4(origin + direction * nearest), toWorld.inverse.transpose.MultiplyVector(face).normalized);
+            }
+            var local = toLocal.MultiplyPoint3x4(hit.point);
+            int closest = 0;
+            for (int i = 1; i < vertices.Length; i++)
+                if ((vertices[i] - local).sqrMagnitude < (vertices[closest] - local).sqrMagnitude) closest = i;
+            var normals = mesh.normals;
+            var outward = normals.Length == vertices.Length ? normals[closest] : -direction;
+            return (toWorld.MultiplyPoint3x4(vertices[closest]), toWorld.inverse.transpose.MultiplyVector(outward).normalized);
+        }
         public Bounds LocalHull => hitCollider.sharedMesh.bounds;
         // Released convex bodies can rest slightly inside the sampled
         // field's smooth collider. Permit only shallow contact on a free item;

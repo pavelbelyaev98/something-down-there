@@ -439,9 +439,10 @@ namespace SomethingDownThere
 
         // What each cave holds (115, 116): crystals of one kind, the kind whose band covers its floor (user, 2026-10-07: "each
         // cave MUST have only one colour"): MiniCaveCrystals in a mini cave, GreatCaveCrystals round a great cave's chambers,
+        // every GreatRoofEvery-th hanging from its roof (user, 2026-10-07: "a bit more crystals ... and on the roof as well"),
         // half-buried, clear of each other and of its trophy. Instances no cave had a seat for go to a cave of their kind, the
         // fewest seated first, so none lie loose.
-        public const int MiniCaveCrystals = 4, GreatCaveCrystals = 12;
+        public const int MiniCaveCrystals = 5, GreatCaveCrystals = 16, GreatRoofEvery = 4;
         public const float CavernSink = .45f;
         private void SeatCaves(TerrainGround.Cavern[] caves, Vector3 extent, int seed, List<int> order, Vector3[] seats,
             Dictionary<int, Quaternion> turns, List<(int cave, Vector3 at, float radius)> standing)
@@ -458,7 +459,8 @@ namespace SomethingDownThere
             var taken = new List<(Vector3 at, float radius)>[caves.Length];
             void Seat(int c, int i)
             {
-                (seats[i], turns[i]) = ClearCavernSeat(caves[c], seated[c] % caves[c].Centres.Length, Entries[order[i]], random, taken[c]);
+                (seats[i], turns[i]) = ClearCavernSeat(caves[c], seated[c] % caves[c].Centres.Length, Entries[order[i]], random, taken[c],
+                    OnRoof(caves[c], seated[c]));
                 seated[c]++;
             }
             for (int c = 0; c < caves.Length; c++)
@@ -573,12 +575,12 @@ namespace SomethingDownThere
         // A geode's sixteen crystals nearly fill its hollow, so each looks longer for room.
         private const int GeodeSeatTries = 32;
         internal static (Vector3 position, Quaternion rotation) ClearCavernSeat(TerrainGround.Cavern cavern, int chamber, Entry entry,
-            System.Random random, List<(Vector3 at, float radius)> taken)
+            System.Random random, List<(Vector3 at, float radius)> taken, bool roof = false)
         {
             (Vector3 position, Quaternion rotation) seat = default;
             for (int attempt = 0; attempt < CavernSeatTries; attempt++)
             {
-                seat = CavernSeat(cavern, chamber, entry, random);
+                seat = CavernSeat(cavern, chamber, entry, random, roof);
                 var at = seat.position;
                 if (taken.TrueForAll(t => (t.at - at).sqrMagnitude >= Square(t.radius + entry.PlacementRadius + DiscoveryField.SoilClearance))) break;
             }
@@ -591,12 +593,17 @@ namespace SomethingDownThere
         private static bool Clear(List<(Vector3 at, float radius)> taken, Vector3 at, float radius)
             => taken.TrueForAll(t => (t.at - at).sqrMagnitude >= Square(t.radius + radius + DiscoveryField.SoilClearance));
 
+        // Whether a cave's n-th crystal hangs from a great cave's roof.
+        internal static bool OnRoof(in TerrainGround.Cavern cavern, int n) => cavern.Great && n % GreatRoofEvery == GreatRoofEvery - 1;
+
         // A crystal's seat in a cave's chamber (grid-local): a seeded direction from the chamber's heart into the floor, the
-        // walls or the roof (a great cave's roof is out of reach, so only its lower walls), where it meets the stone; pointing
-        // out of it, sunk CavernSink.
-        internal static (Vector3 position, Quaternion rotation) CavernSeat(TerrainGround.Cavern cavern, int chamber, Entry entry, System.Random random)
+        // walls or the roof (a great cave's lower walls, or with `roof` its roof), where it meets the stone; pointing out of
+        // it, sunk CavernSink.
+        internal static (Vector3 position, Quaternion rotation) CavernSeat(TerrainGround.Cavern cavern, int chamber, Entry entry, System.Random random,
+            bool roof = false)
         {
-            float around = (float)random.NextDouble() * 360f, elevation = Mathf.Lerp(-65f, cavern.Great ? 30f : 70f, (float)random.NextDouble());
+            float around = (float)random.NextDouble() * 360f, elevation = roof ? Mathf.Lerp(55f, 85f, (float)random.NextDouble())
+                : Mathf.Lerp(-65f, cavern.Great ? 30f : 70f, (float)random.NextDouble());
             var direction = Quaternion.Euler(-elevation, around, 0) * Vector3.forward;
             var (surface, outward) = TerrainGround.CavernFace(cavern, TerrainGround.CavernHeart(cavern, chamber), direction);
             var inward = -(Vector3)outward;

@@ -251,3 +251,18 @@ is way too light: I see the full cave though there is no light source. Remove th
   own light as a hot spot.
 - **Frame rate (30 FPS screenshot looking down the hall):** in the Editor about 1,100 shadow casters a frame come from
   the sun's cascades over the ground above, about 350 more from the crystal lights; not changed in this iteration.
+
+## Iteration 3 (user, 2026-10-07, after a playtest)
+
+"In light some rocks are hard to see. Breaking in makes a larger hole than I need, reduce it a bit. The eye hook doesn't
+attach exactly to the crystal. The caves are really good now; maybe add a tiny bit more crystals, and on the roof as
+well."
+
+- **Crystals in daylight:** `DayGlow` 0.4 -> 0.75; the glow crystals are glass, never metal (the amber cubes are cut
+  from the pack's pyrite and had kept its 0.6 metallic, which darkened them to brown in daylight).
+- **Break-in:** `BreakOpenRadius` 1.1 -> 0.8 m, an opening about 1.4 m across instead of 2.
+- **Lifting eye on the crystal:** a trophy's collider is a convex hull that spans the air between its spires, and the
+  mark landed on it up to 0.8 m off the crystal. Marking now carries the aim on to the visible mesh's first triangle
+  (or, between spires, the mesh vertex nearest the hull's hit).
+- **More crystals:** 16 a great cave (every fourth hanging from its roof, elevations 55-85 degrees from the chamber's
+  heart), 5 a mini cave; 31 instances of each kind.

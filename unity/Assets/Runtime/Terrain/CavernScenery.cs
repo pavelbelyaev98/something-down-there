@@ -26,7 +26,7 @@ namespace SomethingDownThere
         private const float LightOut = .25f, LightRange = 2.5f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
         private const float DarkAmbient = .3f, LitAmbient = .7f;
         // How much of its glow a crystal keeps in daylight, and how often the glow follows the daylight.
-        private const float DayGlow = .4f, ShadeEvery = .25f;
+        private const float DayGlow = .75f, ShadeEvery = .25f;
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private const float TrophyRange = 4.5f, TrophyIntensity = 2.2f, TrophyOut = .6f;
         private const int LitCrystals = 10;
