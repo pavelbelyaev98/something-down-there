@@ -354,9 +354,12 @@ namespace SomethingDownThere
             return (floor, cavern.Max.y);
         }
 
-        // A cavern's stone: everything inside its shell's outer face, its air's samples too, so its walls read as stone.
+        // A cavern's stone: everything inside its shell's outer face, its air's samples too, so its walls read as stone. A
+        // great cave's is cave rock, the Crystal Caverns demo's; a mini cave's the geodes' shell (user, 2026-10-07: "why
+        // did you switch it from the geode's ground type, which was fine?").
         public static void FillCavern(byte[] ids, Vector3Int size, float cellSize, Cavern cavern)
         {
+            byte stone = (byte)(cavern.Great ? TerrainMaterialId.CaveRock : TerrainMaterialId.GeodeShell);
             int stride = size.x + 1, plane = stride * (size.y + 1);
             var first = Vector3Int.Max(Vector3Int.zero, Vector3Int.FloorToInt((Vector3)cavern.Min / cellSize));
             var last = Vector3Int.Min(size, Vector3Int.CeilToInt((Vector3)cavern.Max / cellSize));
@@ -365,7 +368,7 @@ namespace SomethingDownThere
             for (int z = first.z; z <= last.z; z++)
             for (int y = first.y; y <= last.y; y++)
             for (int x = first.x; x <= last.x; x++, i++)
-                if (field[i] < 0) ids[x + y * stride + z * plane] = (byte)TerrainMaterialId.CaveRock;
+                if (field[i] < 0) ids[x + y * stride + z * plane] = stone;
         }
 
         // A cavern's signed distances, to its air or to its shell's outer face, at every sample from first to last

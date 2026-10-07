@@ -14,8 +14,9 @@ namespace SomethingDownThere
     // lamps outside their budget. Only a hollow that has been opened lights (DiscoveryField.CaveOpened, GeodeOpened): a
     // sealed one can't be seen into, so walking past it costs nothing. A crystal trophy (116) lights further. A crystal
     // lights only the dark (user, 2026-10-07: "it shouldn't emit light when it is light, it is not a lamp"): its light
-    // and its own glow fade out where daylight reaches it (ExcavationDaylight.SampleAmbient), from DarkAmbient to
-    // LitAmbient, both above an opened hollow's own faint light (HollowFloor); a trophy standing at camp glows no more.
+    // fades out where daylight reaches it (ExcavationDaylight.SampleAmbient), from DarkAmbient to LitAmbient, and its own
+    // glow down to DayGlow, so in daylight it still reads as a bright crystal ("too dark when there is light"), a trophy
+    // standing at camp too. Its light lights the ground only, never a crystal, so none shows a hot spot inside.
     public sealed class CavernScenery : MonoBehaviour
     {
         // A crystal's light: how far in front of its middle (towards its hollow's heart), its reach and brightness; how
@@ -23,9 +24,9 @@ namespace SomethingDownThere
         // would; how many light at once (each takes six small faces of the shared shadow atlas, beside the lamps') and how
         // far off, and how long it takes to fade.
         private const float LightOut = .25f, LightRange = 2.5f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
-        private const float DarkAmbient = ExcavationDaylight.HollowFloor + .05f, LitAmbient = ExcavationDaylight.HollowFloor + .35f;
-        // How often the crystals' own glow follows the daylight.
-        private const float ShadeEvery = .25f;
+        private const float DarkAmbient = .3f, LitAmbient = .7f;
+        // How much of its glow a crystal keeps in daylight, and how often the glow follows the daylight.
+        private const float DayGlow = .4f, ShadeEvery = .25f;
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private const float TrophyRange = 4.5f, TrophyIntensity = 2.2f, TrophyOut = .6f;
         private const int LitCrystals = 10;
@@ -159,7 +160,7 @@ namespace SomethingDownThere
                 if (dark >= 1) { shade.Body.SetPropertyBlock(null); continue; }
                 block ??= new MaterialPropertyBlock();
                 block.Clear();
-                block.SetColor(EmissionId, shade.Emission * dark);
+                block.SetColor(EmissionId, shade.Emission * Mathf.Lerp(DayGlow, 1, dark));
                 shade.Body.SetPropertyBlock(block);
             }
         }
@@ -210,6 +211,9 @@ namespace SomethingDownThere
             // so ten of them leave the lamps' theirs.
             var data = light.GetComponent<UniversalAdditionalLightData>();
             data.usePipelineSettings = false; data.customShadowLayers = true; data.shadowRenderingLayers = TerrainVolume.LampShadowLayer;
+            // It lights the ground only (the chunks carry the same layer): a crystal it sits in front of would show it as a
+            // hot spot inside.
+            data.renderingLayers = TerrainVolume.LampShadowLayer;
             data.additionalLightsShadowResolutionTier = UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierLow;
             light.enabled = false;
             return light;

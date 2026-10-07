@@ -64,7 +64,7 @@ namespace SomethingDownThere
             TerrainMaterialId.Soil => "Plain ground; never collapses",
             TerrainMaterialId.Backfill => "Rubble fill: stony and hard; never collapses",
             TerrainMaterialId.GeodeShell => "Geode shell: hard stone around a sealed hollow",
-            TerrainMaterialId.CaveRock => "Cave rock: hard stone around a cave",
+            TerrainMaterialId.CaveRock => "Cave rock: hard stone around a great cave",
             _ => ""
         };
         public static MaterialToolResponse AuthoredResponse(TerrainMaterialId material) => material switch

@@ -32,6 +32,8 @@ namespace SomethingDownThere
             new Bay("Geode shell", "geode stone to 3 m: about a quarter of soil's speed", (u, d, v) =>
                 d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil),
             new Bay("Geode", "a big geode 2 m down: dig in and break through", Only(TerrainMaterialId.Soil)),
+            new Bay("Cave rock", "a great cave's stone to 3 m: as hard as geode shell", (u, d, v) =>
+                d < 3f ? TerrainMaterialId.CaveRock : TerrainMaterialId.Soil),
         };
 
         // The geode bay's geode (110) with its crystals (DiscoveryField), as large as the site's, under the bay's centre: a
@@ -52,7 +54,7 @@ namespace SomethingDownThere
         // The lab's caves (116): a great cave under the whole lab as the site's are made (TerrainGround.TryGreatCave), its roof
         // about 15 m down (below the bays and crane scenes), with all four crystal trophies (DiscoveryField.SpawnLabCaves),
         // and a shaft from the surface to GreatShaftLeft above its roof over the chamber nearest GreatShaftNear; then four
-        // mini caves a couple of metres down, one of each cave crystal, each under a patch of cave rock its shape
+        // mini caves a couple of metres down, one of each cave crystal, each under a patch of its geode stone its shape
         // (MarkCave). (User, 2026-10-07: "easy to find, either pointers or anything", "big walkable caverns".)
         private const float GreatFloorDepth = 22f, GreatShaftLeft = 1f, GreatShaftRadius = .85f;
         private static readonly Vector2 GreatShaftNear = new Vector2(-12f, 0f);
@@ -85,7 +87,7 @@ namespace SomethingDownThere
             return caves.ToArray();
         }
 
-        // The top of the ground over a mini cave's chamber in cave rock: a patch its shape to dig down through.
+        // The top of the ground over a mini cave's chamber in its stone (geode shell): a patch its shape to dig down through.
         private static void MarkCave(byte[] ids, Vector3Int size, float cellSize, TerrainGround.Cavern cave)
         {
             int strideY = size.x + 1, strideZ = strideY * (size.y + 1), cells = Mathf.CeilToInt(CaveMarkDepth / cellSize);
@@ -95,7 +97,7 @@ namespace SomethingDownThere
             for (int x = x0; x <= x1; x++)
             {
                 if (!Over(cave, x * cellSize, z * cellSize)) continue;
-                for (int y = size.y - cells; y <= size.y; y++) ids[y * strideY + z * strideZ + x] = (byte)TerrainMaterialId.CaveRock;
+                for (int y = size.y - cells; y <= size.y; y++) ids[y * strideY + z * strideZ + x] = (byte)TerrainMaterialId.GeodeShell;
             }
         }
 

@@ -265,9 +265,10 @@ Geodes keep that moment without cave networks.
   celestine and fluorite in the sediment, amethyst and citrine in the riverbed, apart from the gems
   loose in the ground.
 - Geodes never connect into passages and never form a maze.
-- **Caves** come in two sizes, both sealed, single and never connected to another, in their own hard
-  stone, the cave rock of the Crystal Caverns demo (user, 2026-10-07: "use the textures from the demo
-  where the rocks were"), so one tell says "a hollow is in there". Their crystals glow like small lamps
+- **Caves** come in two sizes, both sealed, single and never connected to another, in hard stone, so
+  one tell says "a hollow is in there": a great cave in the cave rock of the Crystal Caverns demo
+  (user, 2026-10-07: "use the textures from the demo where the rocks were"), a mini cave in the geodes'
+  shell (user: "why did you switch it from the geode's ground type, which was fine?"). Their crystals glow like small lamps
   (above) and are plain finds to pick up (user: "I would rather just pick up normal crystals").
   Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").
   - **A great cave in every zone** (user, 2026-10-07: "one cave that is actually very wide ... with
@@ -346,11 +347,14 @@ Geodes keep that moment without cave networks.
   movement and the felt tells (the ground suddenly digging easier) still work in the dark — light
   withholds information, not ability.
 - **Hollows (geodes, caves) glow with their crystals** (§5); no daylight reaches a sealed one through
-  solid ground, and their glow never shows through it. A crystal glows and lights only the dark round
-  it, never where daylight already reaches, at camp included (user, 2026-10-07: "it shouldn't emit
-  light when it is light, it is not a lamp"). Once opened, a hollow is never pitch black: its stone and crystals throw back a
-  faint light, enough to make out its shape, still a place for lamps (user: "there is a hole above
-  me and the crystals and ground technically reflect light").
+  solid ground, and their glow never shows through it. A crystal lights only the dark round it, never
+  where daylight already reaches, at camp included (user, 2026-10-07: "it shouldn't emit light when it
+  is light, it is not a lamp"); in daylight it keeps a little of its glow, so it still reads as a bright
+  crystal ("too dark when there is light"). Its light falls on the stone, never shows as a lamp inside
+  the crystal. An opened hollow is dark but for its light sources: daylight coming in through its hole
+  lands on the floor below and spreads a few metres, fading into the dark, as much as reaches the hole
+  (user: "there is a hole above me"; then "I see the full cave even though there is NO light source");
+  beyond that only its crystals and the player's lamps light it.
 - **More sideways reasons, same short routes.** Tells and geodes pull players sideways, so the
   modest site width, lamps and marks keep every branch short and the way home readable.
 - **Placeable lamps are the light.** They are the only light underground, apart from the caves' and

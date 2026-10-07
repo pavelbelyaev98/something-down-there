@@ -242,19 +242,27 @@ namespace SomethingDownThere
             return $"{Item.DisplayName}  |  {collect}";
         }
 
-        internal bool TryGetCoveringSoil(FpsPlayer player, int worldMask, out RaycastHit soil)
+        // A stroke aimed at a find still in the ground digs the soil covering it, seen from the eye. A common's: the nearest
+        // anywhere on it. A unique's only round where the player aims at it (user, 2026-10-07: "the user can aim at a
+        // location of the item and the dirt around that location uncovers"; "it is supposed to assist the user only, so he
+        // has to actually move around"): within AimedSoil of the aimed point, the soil nearest that point, and none once
+        // that part is clear ("if no dirt is in view and the player hovers directly at the item, stop").
+        public const float AimedSoil = .45f;
+
+        internal bool TryGetCoveringSoil(FpsPlayer player, int worldMask, Vector3 aimed, out RaycastHit soil)
         {
             soil = default;
-            // Uniques must be excavated by aiming at their surrounding dirt.
-            // A visible fragment must never redirect a stroke around the whole object.
-            if (kind == DiscoveryKind.Unique || Collectible || State != FindState.World || terrain == null || !terrain.CanDig) return false;
+            if (Collectible || State != FindState.World || terrain == null || !terrain.CanDig) return false;
             Vector3 eye = player.ViewCamera.transform.position;
             if (terrain.IsSolid(eye)) return false;
             float nearest = float.PositiveInfinity;
             float proximity = player.EffectiveShovel.Radius + terrain.CellSize;
+            bool local = kind == DiscoveryKind.Unique;
+            float around = player.EffectiveShovel.Radius + AimedSoil;
             foreach (Vector3 sample in exposureSamples)
             {
                 Vector3 covered = transform.TransformPoint(sample);
+                if (local && (covered - aimed).sqrMagnitude > around * around) continue;
                 if (!terrain.IsSolid(covered)) continue;
                 Vector3 direction = (covered - eye).normalized;
                 int count = Physics.RaycastNonAlloc(eye, direction, coveringHits, player.EffectiveDigReach,
@@ -271,10 +279,11 @@ namespace SomethingDownThere
                     first = candidate;
                     distance = candidate.distance;
                 }
+                float rank = local ? (first.point - aimed).sqrMagnitude : distance;
                 if (first.collider == null || first.collider.GetComponentInParent<TerrainVolume>() != terrain
                     || (first.point - covered).sqrMagnitude > proximity * proximity
-                    || WorldBounds.SqrDistance(first.point) > proximity * proximity || distance >= nearest) continue;
-                nearest = distance;
+                    || WorldBounds.SqrDistance(first.point) > proximity * proximity || rank >= nearest) continue;
+                nearest = rank;
                 soil = first;
             }
             return soil.collider != null;

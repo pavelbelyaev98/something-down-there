@@ -152,21 +152,28 @@ namespace SomethingDownThere
         public float SampleAmbient(Vector3 worldPosition) =>
             grid.Sample(transform.InverseTransformPoint(worldPosition));
 
-        // An opened hollow's faint light (ExcavationDaylightGrid.Floor): HollowFloor of daylight through its box.
-        public const float HollowFloor = .45f;
+        // An opened hollow: the light coming in through its hole spreads through it (ExcavationDaylightGrid.Hollow), from the
+        // next rebuild, which this asks for (a rebuild routes the whole grid; a point is enough to start one).
         public void LightHollow(Vector3 localMin, Vector3 localMax)
         {
             if (grid == null) return;
             var box = new Bounds(); box.SetMinMax(localMin, localMax);
-            grid.Floor(box, (byte)Mathf.RoundToInt(255 * HollowFloor));
-            patched = true;
+            grid.Hollow(box);
+            Reroute(box.center);
         }
 
         public void ClearHollows()
         {
             if (grid == null) return;
-            grid.ClearFloors();
-            patched = true;
+            grid.ClearHollows();
+            Reroute(grid.Extent * .5f);
+        }
+
+        private void Reroute(Vector3 local)
+        {
+            var point = new Bounds(local, Vector3.zero);
+            if (dirty) pending.Encapsulate(point); else pending = point;
+            dirty = true;
         }
 
         internal void RefreshShaderState()

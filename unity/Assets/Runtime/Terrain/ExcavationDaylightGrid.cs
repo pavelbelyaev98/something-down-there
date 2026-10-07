@@ -43,8 +43,13 @@ namespace SomethingDownThere
         // light is what receivers see; a rebuild writes computed and publishes it when complete, so
         // provisional patches stay visible while it runs.
         private readonly byte[] light, computed;
-        // The faint light an opened hollow holds (116): light never falls below it there (Floor).
-        private readonly byte[] floor;
+        // Nodes inside an opened hollow (116, Hollow): light that reaches one spreads through it rather than down a shaft.
+        private readonly bool[] hollow;
+        // In a hollow, light falls straight down undimmed, as through a hole onto the floor below, and fades by
+        // HollowAside quarter tallies a node across (against 4 outside): HollowReach metres to a third, a pool of light
+        // under the hole and dark beyond it.
+        private const int HollowAside = 3;
+        public const float HollowReach = SidewaysReach * 4 / HollowAside;
         private readonly List<bool> patchOpen = new List<bool>(), patchFresh = new List<bool>();
         private readonly List<byte> patchAnchor = new List<byte>();
         // Nodes the last rebuild reached, and the cells its final pass covered. Only these can hold
@@ -67,7 +72,7 @@ namespace SomethingDownThere
             Step = new Vector3(extent.x / (Size.x - 1), extent.y / (Size.y - 1), extent.z / (Size.z - 1));
             int count = Size.x * Size.y * Size.z;
             air = new bool[count]; links = new byte[count]; anchor = new byte[count]; light = new byte[count]; computed = new byte[count];
-            floor = new byte[count];
+            hollow = new bool[count];
             distance = new ushort[count]; descent = new ushort[count]; aside = new ushort[count];
             for (int i = 0; i < count; i++) distance[i] = MaximumDistance + 1;
             for (int i = 0; i < buckets.Length; i++) buckets[i] = new List<int>();
@@ -165,33 +170,21 @@ namespace SomethingDownThere
                 if (z < Size.z - 1 && Inside(x, y, z + 1) && patchFresh[Local(x, y, z + 1)]) best = Math.Max(best, light[i + layer]);
                 light[i] = (byte)best;
             }
-            for (int z = min.z; z <= max.z; z++)
-            for (int y = min.y; y <= max.y; y++)
-            for (int x = min.x; x <= max.x; x++)
-            {
-                int i = Index(x, y, z);
-                if (light[i] < floor[i]) light[i] = floor[i];
-            }
         }
 
-        // An opened hollow (a cave, a geode) is never pitch black (116; user, 2026-10-07: "there is a hole above me and the
-        // crystals and ground technically reflect light"): its stone and crystals throw back a little light, `level` at
-        // least through the box, whatever the route brings. ClearFloors forgets them (a new population).
-        public void Floor(Bounds changed, byte level)
+        // An opened hollow (a cave, a geode; 116): the light that comes in through its hole lands on the floor below and
+        // spreads from there (user, 2026-10-07: "there is a hole above me"), but no further than light would, so the rest
+        // stays dark without a lamp ("I see the full cave even though there is no light source"). Takes effect at the next
+        // rebuild; ClearHollows forgets them (a new population).
+        public void Hollow(Bounds box)
         {
-            Range(changed, out var min, out var max);
+            Range(box, out var min, out var max);
             for (int z = min.z; z <= max.z; z++)
             for (int y = min.y; y <= max.y; y++)
-            for (int x = min.x; x <= max.x; x++)
-            {
-                int i = Index(x, y, z);
-                if (floor[i] < level) floor[i] = level;
-                if (light[i] < level) light[i] = level;
-                if (computed[i] < level) computed[i] = level;
-            }
+            for (int x = min.x; x <= max.x; x++) hollow[Index(x, y, z)] = true;
         }
 
-        public void ClearFloors() => Array.Clear(floor, 0, floor.Length);
+        public void ClearHollows() => Array.Clear(hollow, 0, hollow.Length);
 
         private Vector3 Point(int x, int y, int z) => new Vector3(x * Step.x, y * Step.y, z * Step.z);
 
@@ -281,23 +274,23 @@ namespace SomethingDownThere
                     int d = descent[i], s = aside[i];
                     // Sideways and climbing moves add to the aside tally (a rising diagonal counts both its
                     // climb and its sideways step), descending ones to descent.
-                    if ((own & 1) != 0) Visit(i + 1, cost + Across, d, s + 4);
-                    if ((own & 2) != 0) Visit(i + Size.x, cost + Up, d, s + 4);
-                    if ((own & 4) != 0) Visit(i + layer, cost + Across, d, s + 4);
-                    if ((own & 8) != 0) Visit(i + 1 + Size.x, cost + UpDiagonal, d, s + 8);
-                    if ((own & 16) != 0) Visit(i - 1 + Size.x, cost + UpDiagonal, d, s + 8);
-                    if ((own & 32) != 0) Visit(i + layer + Size.x, cost + UpDiagonal, d, s + 8);
-                    if ((own & 64) != 0) Visit(i - layer + Size.x, cost + UpDiagonal, d, s + 8);
-                    if (x > 0 && (links[i - 1] & 1) != 0) Visit(i - 1, cost + Across, d, s + 4);
-                    if (z > 0 && (links[i - layer] & 4) != 0) Visit(i - layer, cost + Across, d, s + 4);
+                    if ((own & 1) != 0) Move(i + 1, cost + Across, d, s, 0, 4);
+                    if ((own & 2) != 0) Move(i + Size.x, cost + Up, d, s, 0, 4);
+                    if ((own & 4) != 0) Move(i + layer, cost + Across, d, s, 0, 4);
+                    if ((own & 8) != 0) Move(i + 1 + Size.x, cost + UpDiagonal, d, s, 0, 8);
+                    if ((own & 16) != 0) Move(i - 1 + Size.x, cost + UpDiagonal, d, s, 0, 8);
+                    if ((own & 32) != 0) Move(i + layer + Size.x, cost + UpDiagonal, d, s, 0, 8);
+                    if ((own & 64) != 0) Move(i - layer + Size.x, cost + UpDiagonal, d, s, 0, 8);
+                    if (x > 0 && (links[i - 1] & 1) != 0) Move(i - 1, cost + Across, d, s, 0, 4);
+                    if (z > 0 && (links[i - layer] & 4) != 0) Move(i - layer, cost + Across, d, s, 0, 4);
                     if (y > 0)
                     {
                         int below = i - Size.x;
-                        if ((links[below] & 2) != 0) Visit(below, cost + Down, d + 4, s);
-                        if (x < Size.x - 1 && (links[below + 1] & 16) != 0) Visit(below + 1, cost + DownDiagonal, d + 5, s);
-                        if (x > 0 && (links[below - 1] & 8) != 0) Visit(below - 1, cost + DownDiagonal, d + 5, s);
-                        if (z < Size.z - 1 && (links[below + layer] & 64) != 0) Visit(below + layer, cost + DownDiagonal, d + 5, s);
-                        if (z > 0 && (links[below - layer] & 32) != 0) Visit(below - layer, cost + DownDiagonal, d + 5, s);
+                        if ((links[below] & 2) != 0) Move(below, cost + Down, d, s, 4, 0);
+                        if (x < Size.x - 1 && (links[below + 1] & 16) != 0) Move(below + 1, cost + DownDiagonal, d, s, 5, 0);
+                        if (x > 0 && (links[below - 1] & 8) != 0) Move(below - 1, cost + DownDiagonal, d, s, 5, 0);
+                        if (z < Size.z - 1 && (links[below + layer] & 64) != 0) Move(below + layer, cost + DownDiagonal, d, s, 5, 0);
+                        if (z > 0 && (links[below - layer] & 32) != 0) Move(below - layer, cost + DownDiagonal, d, s, 5, 0);
                     }
                     if (++work % 128 == 0) yield return null;
                 }
@@ -325,7 +318,7 @@ namespace SomethingDownThere
                     if (z < Size.z - 1) value = Math.Max(value, Lit(i + layer));
                 }
                 // Only connected air transports this light: sealed air (a chest's hollow) stays unlit.
-                computed[i] = (byte)Math.Max(Mathf.RoundToInt(255 * value), floor[i]);
+                computed[i] = (byte)Mathf.RoundToInt(255 * value);
                 if (++work % 512 == 0) yield return null;
             }
             Buffer.BlockCopy(computed, 0, light, 0, light.Length);
@@ -339,6 +332,14 @@ namespace SomethingDownThere
         }
 
         private float Lit(int i) => air[i] && distance[i] <= MaximumDistance ? descentFalloff[descent[i]] * asideFalloff[aside[i]] : 0;
+
+        // A move into node j adding `down` to the descent tally and `side` to the aside one; in a hollow, falling straight
+        // down adds nothing and every node across (a falling diagonal's too) HollowAside.
+        private void Move(int j, int cost, int d, int s, int down, int side)
+        {
+            if (hollow[j]) { side = (side + (down == 5 ? 4 : 0)) * HollowAside / 4; down = 0; }
+            Visit(j, cost, d + down, s + side);
+        }
 
         private void Visit(int i, int cost, int down, int side)
         {

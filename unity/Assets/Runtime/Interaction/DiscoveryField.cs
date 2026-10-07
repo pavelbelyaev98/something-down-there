@@ -425,7 +425,7 @@ namespace SomethingDownThere
         {
             DeriveCaves();
             DeriveGeodesOpened();
-            // Opened hollows keep their faint light (ExcavationDaylight.LightHollow).
+            // Light coming into an opened hollow spreads through it (ExcavationDaylight.LightHollow).
             terrain.GetComponent<ExcavationDaylight>()?.ClearHollows();
             var caves = terrain.GroundLayout.Caverns;
             for (int c = 0; c < caves.Length && c < caveOpened.Length; c++) if (caveOpened[c]) LightHollow(caves[c].Min, caves[c].Max);
@@ -512,7 +512,7 @@ namespace SomethingDownThere
             crane.EmitGroundBreak(surface + Vector3.up * .3f, inward, .25f, .55f, 1.1f);
         }
 
-        // An opened hollow's faint light (ExcavationDaylight.LightHollow).
+        // Light coming into an opened hollow spreads through it (ExcavationDaylight.LightHollow).
         private void LightHollow(Unity.Mathematics.float3 min, Unity.Mathematics.float3 max)
             => terrain.GetComponent<ExcavationDaylight>()?.LightHollow((Vector3)min, (Vector3)max);
 

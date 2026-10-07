@@ -1,9 +1,9 @@
 # 116 — Great Caves, Crystal Trophies and Cave Rock
 
 **Status:** complete: each zone holds one great cave, a hall across the middle of the site with pillars and stalagmites,
-crystals of one kind and its one crystal trophy (a unique marked anywhere, set upright at camp), plus three mini caves of
-a few crystals, all in the demo's cave rock. Breaking in opens a hollow at once; opened hollows hold a faint light;
-crystals light only the dark.
+crystals of one kind and its one crystal trophy (a unique marked anywhere, set upright at camp, dug free with aim-local
+assist), in the demo's cave rock, plus three mini caves of a few crystals in geode shell. Breaking in opens a hollow at
+once; light from its hole pools under it; crystals light only the dark and keep some glow in daylight.
 
 ## Objective
 
@@ -227,3 +227,27 @@ be a bit smaller."
   first, then geodes, then mini caves), crystals piled inside standing rock at a chamber's heart (the heart now moves to
   open air), a crowded amethyst geode (32 tries for a geode seat), camp spots too far out (moved within 11.5 m of the
   opening), and tests assuming every unique is a buried computer.
+
+## Iteration 2 (user, 2026-10-07, after a playtest)
+
+"Normal minerals automatically uncover while extractable items do not: aim at a location of the item and the dirt around
+that location uncovers; no dirt in view and hovering at the item stops it; it assists only, so the player still moves
+around. The mini cave ground is not one of the Ground Lab's ground types; why switch it from the geode's, which was fine?
+The crystals are too dark when there is light and blend with the new ground. Underground they are better, but the cave
+is way too light: I see the full cave though there is no light source. Remove the lamp inside the crystals."
+
+- **Aim-local uncovering for uniques:** a stroke aimed at a unique digs its covering soil within `AimedSoil` (0.45 m)
+  past the tool's radius of the aimed point, the soil nearest that point; with none there it digs nothing. Commons keep
+  the whole-find assist. (`UniqueUncoveringDigsRoundTheAimedPointEvenWithAFullBag` replaces the test that forbade it.)
+- **Mini caves in geode shell again**, their lab marks too; cave rock stays the great caves' stone and gets a Ground Lab
+  bay ("Cave rock").
+- **The uniform hollow floor (0.45) is rejected:** it lit the whole hall with no source. In its place an opened hollow's
+  box is marked in the daylight grid: light that reaches its hole falls straight down undimmed and spreads sideways with
+  3 quarter tallies a node instead of 4 (`HollowReach` 4 m to a third). In the lab: 0.37 under the hole, 0.2 at 3 m,
+  0.09 at 6 m, nothing at 12 m. Deep site caves under a dark shaft stay dark but for crystals and lamps.
+- **Crystals in daylight keep 40% of their glow** (`DayGlow`); their light still goes out, now between ambient 0.3 and
+  0.7, so a crystal in the pool under a hole still glows.
+- **No lamp inside a crystal:** crystal lights light only the ground's rendering layer, so a crystal no longer shows its
+  own light as a hot spot.
+- **Frame rate (30 FPS screenshot looking down the hall):** in the Editor about 1,100 shadow casters a frame come from
+  the sun's cascades over the ground above, about 350 more from the crystal lights; not changed in this iteration.

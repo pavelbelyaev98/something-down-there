@@ -719,7 +719,7 @@ namespace SomethingDownThere
             var find = Contract<BuriedFind>(hit.collider);
             if (find == null) return true;
             if (!Inventory.IsFull || find.Kind != DiscoveryKind.Common)
-                return find.TryGetCoveringSoil(this, worldMask, out hit);
+                return find.TryGetCoveringSoil(this, worldMask, hit.point, out hit);
 
             // Bag capacity must never make common finds a barrier to excavation.
             // Only this cutting ray ignores them; physical bodies and pickup stay intact.
