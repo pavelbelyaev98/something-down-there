@@ -255,37 +255,28 @@ Geodes keep that moment without cave networks.
 - A few lie in zones 2–3, off the main descent, big enough to stand in: an uneven hollow a few
   metres across that bulges and pinches, never an egg (user, 2026-10-06: "larger ... weirder
   shape"). The shell reads in a tunnel wall as a curved face of distinct stone, never the bedrock
-  shelf's look. The drill crawls through it in
-  seconds; C4 cracks it fast ([Tool and Movement](04_TOOL_AND_MOVEMENT.md#8-c4)).
-- Always sealed: the player always breaks in. Inside it is dark until the player's opening or a lamp
-  lights it; crystals catch the light. Each geode holds one kind (user, 2026-10-06). They are finds
+  shelf's look. The drill crawls through it in seconds.
+- Always sealed: the player always breaks in. Its crystals glow in their colour and light the hollow
+  (user, 2026-10-07: "crystals shine inside the caves and geodes so they illuminate the area"), the
+  light dimming as they are taken. Each geode holds one kind (user, 2026-10-06), lined thickly. They are finds
   worth far more than the ground around them, richer the deeper the geode: real geode minerals,
   celestine and fluorite in the sediment, amethyst and citrine in the riverbed, apart from the gems
   loose in the ground.
 - Geodes never connect into passages and never form a maze.
-- **Caverns** (user, 2026-10-06: "areas where the user can walk more, like caves at some places"):
-  one in each zone, sideways off the plot, a chamber a few metres high and up to twenty long with a
-  floor to walk on, a domed roof and a stone pillar or two, in the same hard stone as a geode's
-  shell, so one tell says "a hollow is in there". Its near side lies under the plot's edge; the rest
-  runs out under the permanent ground. Sealed and dark until the player breaks in and lights it;
-  never connected to another. Minerals of its zone sit half-buried in its walls: a lamp shows them,
-  digging frees them.
-- **The crystal cavern**, the deepest: the Crystal Caverns demo's four areas, one to a chamber
-  (user, 2026-10-06: "exactly as in the demo: areas of only one type, sticking out from top and
-  bottom, larger things"): a forest of green hexagonal columns, a blue grotto of quartz, red ruby
-  and amber cubic blocks. Each area's big formations stand from the floor, jut from the walls and
-  hang from the roof, glowing in its colour and lighting it. It is the one place underground that
-  needs no lamp, a reward for reaching the bottom. The formations are too big to break and stay as
-  they are, so the cave keeps its look. Among them stand smaller clusters of the same crystal that
-  the tool cracks, glowing fractures spreading over them, until they burst and the small crystals
-  sealed inside fall out (user: "I don't want a static cave to look at but something to interact
-  with"; "don't shrink, crack"). More small ones lie half-buried in the floor and walls. The take is
-  a handful of crystals a chamber, so the bottom pays for the trip without making the player rich at
-  once. Its far end is kept for the ending's gate.
+- **Caves** (user, 2026-10-07: "caves on much higher levels, many more of those, and only one rock
+  type per cave"): a few in every zone, the first a few metres down, all under the dig plot so
+  digging down meets them. Each is a small grotto of two or three joined chambers a few metres high
+  with a floor to walk on and a domed roof, in the same hard stone as a geode's shell, so one tell
+  says "a hollow is in there"; never connected to another. A handful of crystals of one kind stand
+  half out of its floor, walls and roof, glowing in their colour and lighting the cave, the light
+  dimming as they are taken: plain finds to pick up (user: "I would rather just pick up normal
+  crystals"; not too many, so caves pay without making the player rich). The kind follows the depth,
+  from pale blue quartz near the top through amber cubes and green hexagonal prisms to ruby at the
+  bottom. Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").
 - *Why:* Dome Keeper's gadgets under tougher tiles and Minecraft's geodes make a hard shell read as
   "something's inside", a toll the player chooses. One Man's Trash's pocket areas "broke up the
   digging"; Keep Digging players loved its hand-built caves. Meltopia's network of identical tunnels
-  got players lost, so there are no networks and caverns stay single sealed rooms; cave zones were
+  got players lost, so there are no networks and caves stay single sealed rooms; cave zones were
   rejected ([Open Questions](13_OPEN_QUESTIONS.md#closed-ideas)).
 
 ## 6. Terrain technology and cleanup
@@ -339,12 +330,12 @@ Geodes keep that moment without cave networks.
   seams, visual tells and find silhouettes stay unreadable until light reaches them. Digging,
   movement and the felt tells (the ground suddenly digging easier) still work in the dark — light
   withholds information, not ability.
-- **Sealed hollows (geodes, caverns) are dark** until the player's own opening or a lamp lights
-  them; no daylight reaches them through solid ground. The crystal cavern's crystals glow (§5).
+- **Sealed hollows (geodes, caves) glow with their crystals** (§5) and are otherwise dark; no
+  daylight reaches them through solid ground, and their glow never shows through it.
 - **More sideways reasons, same short routes.** Tells and geodes pull players sideways, so the
   modest site width, lamps and marks keep every branch short and the way home readable.
-- **Placeable lamps are the light.** They are the only light underground, apart from the crystal
-  cavern's glow: place them to work, reveal
+- **Placeable lamps are the light.** They are the only light underground, apart from the caves' and
+  geodes' glow: place them to work, reveal
   finds and hold the route home. Owned lamps are reusable, repositionable and do not expire or drain
   charge; lost support leaves them recoverable nearby. Digging and C4 cannot destroy them.
 - **Diffuse all-around lamps:** a neutral lantern illuminates every direction. Nearby soil retains

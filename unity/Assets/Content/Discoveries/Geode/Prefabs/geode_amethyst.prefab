@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Amethyst
   minor: 1
   detectorEligible: 0
-  saleValue: 55
+  saleValue: 38
   collectionThreshold: 0.6
   exposureSamples:
   - {x: -0.006637506, y: -0.3850666, z: 0.5408714}

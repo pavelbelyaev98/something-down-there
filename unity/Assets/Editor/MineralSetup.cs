@@ -45,7 +45,7 @@ namespace SomethingDownThere.Editor
                     ShallowCount = e.shallow_instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m,
                     CoreMinDepth = e.core_minimum_depth_m, CoreMaxDepth = e.core_maximum_depth_m, CoreShare = e.core_share,
                     HostGrounds = DiscoveryContentSetup.HostGrounds(e.host_grounds, e.host_weights), HostWeights = DiscoveryContentSetup.HostWeights(e.host_grounds, e.host_weights),
-                    RandomOrientation = true, Cavern = e.cavern });
+                    RandomOrientation = true });
             }
         }
     }

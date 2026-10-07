@@ -399,11 +399,22 @@ namespace SomethingDownThere.Editor
             }
             material.SetFloat("_Dust", dust ? 1 : 0); material.SetFloat("_Solid", solid ? 1 : 0);
             material.SetFloat("_Flipbook", dust ? 1 : 0);
-            material.SetTexture("_DustTex", dust ? CavernSetup.Capped("Assets/BK/PureNature_CrystalCaverns/Textures/Fx/Dust_a.png", 1024) : null);
+            material.SetTexture("_DustTex", dust ? Capped("Assets/BK/PureNature_CrystalCaverns/Textures/Fx/Dust_a.png", 1024) : null);
             material.SetTexture("_SoilTex", solid ? AssetDatabase.LoadAssetAtPath<Texture2D>(GroundTextureSetup.Folder + "Backfill_Albedo.png") : null);
             material.SetFloat("_SoilMean", SoilGrainMean); material.SetFloat("_SoilDetail", solid ? SoilGrain : 0);
             EditorUtility.SetDirty(material);
             return material;
+        }
+
+        // A pack FX texture capped at size (the import is the pack's, only its size changes).
+        private static Texture2D Capped(string path, int size)
+        {
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer && importer.maxTextureSize != size)
+            {
+                importer.maxTextureSize = size;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path) ?? throw new InvalidOperationException("Missing " + path + " (reimport the pack).");
         }
 
         private static Material RecoveryMark()

@@ -32,10 +32,8 @@ namespace SomethingDownThere.Editor
             public bool detector_eligible, lay_on_side;
             // Taken by hand with Interact, never by digging or walking past (113: a chest's coins and ingots).
             public bool hand_picked;
-            // Lines geodes only (110): its instances are the geodes' seats.
-            public bool geode, cavern;
-            // A crystal cavern area's crystal: the area's name (CavernScenery.AreaNames).
-            public string cavern_area;
+            // Lines geodes only (110) or caves only (115): its instances are their seats, one kind to a hollow.
+            public bool geode, cave;
             public float required_exposure;
             public float minimum_depth_m, maximum_depth_m, core_minimum_depth_m, core_maximum_depth_m, core_share;
             // Host ground: ground names (soil, backfill) and a density weight for each (unlisted ground is 1).

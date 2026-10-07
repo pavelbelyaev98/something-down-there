@@ -163,7 +163,7 @@ namespace SomethingDownThere
             var reach = new Bounds(transform.position, Vector3.one * (radius * 2 + .5f));
             if (!changed.Intersects(reach)) return;
             supportDirty = true;
-            if (!Breached && !terrain.IsRestoring) CheckBreach(changed);
+            if (!terrain.IsRestoring) CheckBreach(changed);
         }
 
         // Breaking into the pocket (user, 2026-10-06: "I like collapses"): the first cut whose open ground reaches the
@@ -174,20 +174,35 @@ namespace SomethingDownThere
         // left between the way in and the pocket (user, 2026-10-06: "weird gaps, thin, hard to remove").
         private const float BreakInStep = .08f, CollapseDepth = .2f, CollapseRadius = .7f;
 
+        // Every later cut that opens more of the pocket (user, 2026-10-07: "the animation as I continue to break in") drops
+        // the ground it freed into it: clods, crumbs and dust from the cut's edge, at most every BreakAgainSeconds.
+        private const float BreakAgainSeconds = .2f;
+        private float lastBreak = float.NegativeInfinity;
+
         private void CheckBreach(Bounds changed)
         {
             var local = transform.InverseTransformPoint(changed.center);
             var pocket = Pocket;
-            if (pocket.Contains(local)) return;
+            if (pocket.Contains(local) && !Breached) return;
             var nearest = pocket.ClosestPoint(local);
             if ((local - nearest).magnitude > changed.extents.magnitude + .3f) return;
             Vector3 from = changed.center, to = transform.TransformPoint(nearest);
             float length = Vector3.Distance(from, to);
             for (float t = 0; t <= length; t += BreakInStep)
                 if (terrain.IsSolid(Vector3.Lerp(from, to, t / Mathf.Max(length, 1e-4f)))) return;
+            var inward = length > 1e-4f ? (to - from) / length : Vector3.down;
+            if (Breached)
+            {
+                if (Time.time - lastBreak < BreakAgainSeconds) return;
+                lastBreak = Time.time;
+                var crane = FindViewer()?.Crane;
+                if (crane != null) crane.EmitGroundBreak(to, inward, Mathf.Max(terrain.LastRemovedVolume, .04f), .4f, 1.1f);
+                return;
+            }
             Breached = true;
+            lastBreak = Time.time;
             // On the next frame: the cave-in cuts the ground, which this change event is still reporting.
-            pendingBreak = (to, length > 1e-4f ? (to - from) / length : Vector3.down);
+            pendingBreak = (to, inward);
             field?.NotifyMotion();
         }
 

@@ -215,9 +215,7 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator WalkingCollectsEveryUncoveredAppearanceWithoutAimOrDig()
         {
-            // A crystal sealed in a cavern cluster (115) is out of the world until the cluster breaks; its look is checked loose.
-            var variants = field.Finds.Where(f => f.Kind == DiscoveryKind.Common && f.State != FindState.Sealed)
-                .GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
+            var variants = field.Finds.Where(f => f.Kind == DiscoveryKind.Common).GroupBy(f => f.SaveContentId).Select(g => g.First()).ToArray();
             Assert.That(variants.Any(f => f.HandPicked), Is.True);
             foreach (var find in variants)
             {

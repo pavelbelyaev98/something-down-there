@@ -738,8 +738,7 @@ namespace SomethingDownThere.Tests
                 "Buried finds render: " + Named(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideSeededAir(f) && f.GetComponent<MeshRenderer>().enabled));
             Assert.That(field.Finds.Where(f => !BesideSeededAir(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True,
                 "Buried finds poll: " + Named(f => !BesideSeededAir(f) && f.GetComponent<FindPhysics>().enabled));
-            // A crystal sealed in a cavern cluster (115) is out of physics until the cluster breaks.
-            Assert.That(field.Finds.Where(f => f.State != FindState.Sealed).All(f => f.GetComponent<MeshCollider>().enabled), Is.True,
+            Assert.That(field.Finds.All(f => f.GetComponent<MeshCollider>().enabled), Is.True,
                 "Soil-occluded targeting and collision remain available, including tiny slivers.");
             var before = field.Capture();
             var find = field.Finds[0];

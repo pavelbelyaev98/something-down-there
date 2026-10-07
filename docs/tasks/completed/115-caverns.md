@@ -1,11 +1,11 @@
-# 115 — Caverns and a Wider Underground
+# 115 — Caves and a Wider Underground
 
 **Status:** complete:
 - Underground the site is 50 m wide, about 8 m more than the plot on each side.
-- One sealed cavern per zone lies beside the plot, east and west in turn: a walkable chamber in geode stone with
-  minerals half-buried in its walls. The deepest is the crystal cavern: the Crystal Caverns demo's four areas, one
-  to a chamber, their big formations standing from floor, walls and roof, lighting it and never breaking. The tool
-  cracks and bursts the smaller clusters among them for the crystals sealed inside; more lie half-buried round them.
+- A few small sealed caves lie in every zone under the dig plot, from a few metres down: two or three joined
+  chambers in geode stone, each holding a handful of plain crystal finds of one kind by depth (blue quartz, amber
+  cubes, green hex prisms, ruby), which glow and light the cave, dimming as they are taken.
+- Every cut that opens more of a cave, a geode or a chest's pocket drops its own clods and dust inside.
 - Untouched solid ground is one shared page in memory and in saves.
 
 Concept: [03 §1, §5, §7](../../concept/03_WORLD_AND_SITE.md), [05 §1](../../concept/05_DISCOVERIES.md),
@@ -238,3 +238,32 @@ diggable things around them."
   turned and raised until clear of a neighbouring cluster's) and geode crystals (on a face that looks into the hollow)
   take a few seeded tries for a spot clear of the seats already taken; a piece or shard that finds none goes to its
   area's walls.
+
+## Iteration 3 (user, 2026-10-07, after a third look)
+
+"The animations are horrible, I would rather just pick up normal crystals and I don't want to say something is too
+big to break ... the caves you did are terrible, I expected caves on much higher levels, many more of those and only
+one rock type per cave ... crystals can shine when inside the caves/geodes so they illuminate the area ... you didn't
+make new break-in animations ... right now only when I first break in I get the animation but I would like the
+animation as I continue to break in." The screenshot showed the ruby area's glow blown out white-orange.
+
+- **Many small caves, high up:** the one cavern a zone beside the plot became `CavesPerZone` caves a zone under the
+  plot, from `CaveTop` down, each in its own depth slice of its zone so digging down meets one every few metres: two
+  or three joined chambers along a seeded heading, a few metres across, in geode stone, clear of pits, uniques'
+  spaces, geodes and each other. Areas, groves and `AreaOf` went.
+- **One kind a cave, plain finds:** four cave crystals (`cavern.json`, flagged `cave`), one to a quarter of the depth.
+  `DiscoveryCatalog.SeatCaves` gives each cave the kind with the most unseated instances whose band covers its floor
+  and seats `CaveCrystals` of them half-buried round its floor, walls and roof, clear of each other; instances left
+  over go to the cave of their kind with the fewest. Taken like any find.
+- **Glow that lights the hollow:** caves and geodes alike (`CavernScenery`, now the hollow glow): a point light at the
+  hollow's heart in its crystals' emission colour, its intensity the share of crystals left, shadows from the ground
+  only (the lamps' layer) so it never shows through stone; the nearest two within 30 m light. Glow materials
+  (`FromGlowCrystal`) take a darker base and an emission scaled down by the colour's luminance, which fixed the
+  blow-out: bloom only fades in inside a lit hollow.
+- **Break-in as you keep digging:** a chest's pocket, a geode and a cave each throw the cut's own clods and dust on
+  every cut that opens more of them (at most every 0.2 s a hollow), the first a bigger fall
+  (`DiscoveryField.HollowBreak`, `BuriedChest.CheckBreach`).
+- **Ground Lab:** four separate small caves, one of each kind, two west of the bays and two north of them.
+- **Rejected:** the demo areas with big unbreakable formations ("too big to break"), clusters that crack and burst
+  (crack overlay, `CavernShatter` shards and glints, `GlowParticles.shader`), a cavern beside the plot. The sealed
+  find state went with the clusters (save version 23). C4 was removed in the same feedback (`026`).

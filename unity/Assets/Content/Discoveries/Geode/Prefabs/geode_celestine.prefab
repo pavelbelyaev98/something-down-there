@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Celestine
   minor: 1
   detectorEligible: 0
-  saleValue: 30
+  saleValue: 22
   collectionThreshold: 0.6
   exposureSamples:
   - {x: -0.073630445, y: -0.9623965, z: -0.4462414}

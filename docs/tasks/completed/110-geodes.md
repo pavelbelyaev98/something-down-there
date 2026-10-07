@@ -2,11 +2,11 @@
 
 **Status:** complete:
 - Five geodes, sealed hollows a few metres across (an ellipsoid smoothly joined to side lobes and warped) in a
-  shell of hard stone at about a quarter of soil's dig rate, lie in zones 2–3. The first way in opens each one
-  once, with crumbs and dust.
-- Ten crystals of one kind line each hollow, from the population: celestine and fluorite in the sediment,
-  amethyst and citrine deeper.
-- The shell is Crystal Caverns' porous rock detail graded dark grey, which won its A/B. The crystals don't glow.
+  shell of hard stone at about a quarter of soil's dig rate, lie in zones 2–3. The first way in breaks in with a
+  fall of clods and dust; every later cut that opens it more drops its own.
+- Sixteen crystals of one kind line each hollow, from the population: celestine and fluorite in the sediment,
+  amethyst and citrine deeper. They glow in their colour and light the hollow, dimming as they are taken.
+- The shell is Crystal Caverns' porous rock detail graded dark grey, which won its A/B.
 
 Plan and research: [107](107-asset-only-grounds.md).
 
@@ -307,3 +307,16 @@ Pulpí geode in Spain is big enough to walk into.
   up close a 0.2 m ball spans a wide angle. Two rings of 12 rays now look 1.75 and 3.5 degrees round the aim, and the
   nearest hit across an edge wins, so only ground visually at the crosshair counts. In the lab, aimed 14 degrees off a
   trench's near edge, nothing beside the player was cut.
+
+## Iteration 5 (user, 2026-10-07: "the geodes are super boring")
+
+"I would prefer if crystals can shine when inside the caves/geodes so they illuminate the area, which is cooler, and
+more of them would be nice, but only one type of crystals."
+
+- The crystals glow again, now as the light of the hollow: glow materials like the caves' (`FromGlowCrystal`, brighter
+  tints) and a point light at the hollow's heart in their colour, dimming with the share taken (`CavernScenery`, see
+  [115 iteration 3](115-caverns.md#iteration-3-user-2026-10-07-after-a-third-look)). The first iteration's "glow
+  makes no difference" was a trace of emission with no light; this one lights the hollow.
+- `GeodeCrystals` went from ten to sixteen, still one kind; the catalog's geode instances rose to match. Seats keep
+  to faces that look into the hollow, and geode placement takes more tries now that caves share the zones.
+- The break-in now repeats: every cut that opens the hollow more drops its own clods and dust.

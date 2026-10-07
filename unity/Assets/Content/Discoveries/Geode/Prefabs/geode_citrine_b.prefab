@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Citrine
   minor: 1
   detectorEligible: 0
-  saleValue: 75
+  saleValue: 52
   collectionThreshold: 0.6
   exposureSamples:
   - {x: -0.15702648, y: 0.03509792, z: -0.106628396}

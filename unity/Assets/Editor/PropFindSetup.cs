@@ -45,8 +45,7 @@ namespace SomethingDownThere.Editor
                     e.prefab = prop.prefab;
                     var looks = ImportLooks(e, folder, boxHull, prop.mass_kg);
                     entries.Add(new DiscoveryCatalog.Entry { ItemId = e.content_id, Prefab = looks[0], AppearanceVariants = looks.Skip(1).ToArray(),
-                        Count = e.instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m, Geode = e.geode,
-                        CavernArea = string.IsNullOrEmpty(e.cavern_area) ? -1 : Array.IndexOf(CavernScenery.AreaNames, e.cavern_area),
+                        Count = e.instances, MinDepth = e.minimum_depth_m, MaxDepth = e.maximum_depth_m, Geode = e.geode, Cave = e.cave,
                         HostGrounds = DiscoveryContentSetup.HostGrounds(e.host_grounds, e.host_weights),
                         HostWeights = DiscoveryContentSetup.HostWeights(e.host_grounds, e.host_weights) });
                 }

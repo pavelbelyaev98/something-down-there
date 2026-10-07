@@ -164,37 +164,16 @@ namespace SomethingDownThere
             State = state.State;
             DepthRecorded = state.DepthRecorded; DiscoveryDepth = state.DiscoveryDepth;
             if (physical != null) physical.Restore(state.PhysicsReleased);
-            bool present = State != FindState.Collected && State != FindState.Sealed;
+            bool present = State != FindState.Collected;
             visual.enabled = hitCollider.enabled = present;
             gameObject.SetActive(present);
-            RefreshExposure();
-        }
-
-        // A find sealed in a cavern crystal (115) waits out of the world until the crystal breaks; then it falls out
-        // as an ordinary find, released into the cavern's air.
-        internal void Seal()
-        {
-            captured = null;
-            State = FindState.Sealed;
-            visual.enabled = hitCollider.enabled = false;
-            gameObject.SetActive(false);
-        }
-
-        internal void Unseal()
-        {
-            if (State != FindState.Sealed) return;
-            captured = null;
-            State = FindState.World;
-            gameObject.SetActive(true);
-            visual.enabled = hitCollider.enabled = true;
-            if (physical != null) physical.Restore(false);
             RefreshExposure();
         }
 
         public void RefreshExposure(bool terrainChanged = true)
         {
             using var profile = ExposureMarker.Auto();
-            if (terrain == null || State == FindState.Collected || State == FindState.Sealed) return;
+            if (terrain == null || State == FindState.Collected) return;
             if (State != FindState.World) { visual.enabled = hitCollider.enabled = true; return; }
             // Sample the local density neighbourhood in one compiled batch;
             // no per-find native allocation or full-world density copy.
@@ -219,7 +198,7 @@ namespace SomethingDownThere
             RefreshVisibility();
         }
 
-        private void RefreshVisibility() => visual.enabled = State != FindState.Collected && State != FindState.Sealed
+        private void RefreshVisibility() => visual.enabled = State != FindState.Collected
             && (State != FindState.World || xrayVisible || Exposure > 0 || terrain.MayExpose(SoilVisibilityBounds));
 
         internal bool HasSoilAttachment(float surfaceTolerance = .005f)

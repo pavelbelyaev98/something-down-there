@@ -16,10 +16,8 @@ namespace SomethingDownThere
         public readonly Quaternion Rotation;
         public readonly int PrefabIndex;
         public readonly int AppearanceIndex;
-        // Sealed in a cavern crystal until it breaks (FindState.Sealed).
-        public readonly bool Sealed;
-        public DiscoveryPlacement(Vector3 position, Quaternion rotation, int prefabIndex, int appearanceIndex = 0, bool sealedIn = false)
-        { Position = position; Rotation = rotation; PrefabIndex = prefabIndex; AppearanceIndex = appearanceIndex; Sealed = sealedIn; }
+        public DiscoveryPlacement(Vector3 position, Quaternion rotation, int prefabIndex, int appearanceIndex = 0)
+        { Position = position; Rotation = rotation; PrefabIndex = prefabIndex; AppearanceIndex = appearanceIndex; }
     }
 
     [DisallowMultipleComponent]
@@ -185,7 +183,7 @@ namespace SomethingDownThere
             }
             SpawnLabChest();
             SpawnLabGeode();
-            SpawnLabCavern();
+            SpawnLabCaves();
             foreach (var find in finds) find.RefreshExposure();
             SpawnGallery();
             DeriveGeodes();
@@ -254,46 +252,26 @@ namespace SomethingDownThere
             }
         }
 
-        // The Ground Lab's crystal cavern (115), as the site's are made: each area's pieces sealed in its clusters, its
-        // shards in the stone.
-        private void SpawnLabCavern()
+        // The Ground Lab's caves (115): one of each cave crystal, shallow to deep, lined as the site's are.
+        private void SpawnLabCaves()
         {
-            var cavern = GroundLab.Cavern;
+            var kinds = new List<DiscoveryCatalog.Entry>(Array.FindAll(catalog.Entries, e => e.Cave));
+            kinds.Sort((a, b) => a.MinDepth.CompareTo(b.MinDepth));
             var random = new System.Random(11);
             int n = 0;
-            for (int chamber = 0; chamber < cavern.Centres.Length; chamber++)
-                foreach (var crystal in TerrainGround.Grove(cavern, chamber))
+            for (int c = 0; c < GroundLab.Caves.Length && c < kinds.Count; c++)
+            {
+                var taken = new List<(Vector3 at, float radius)>();
+                for (int k = 0; k < DiscoveryCatalog.CaveCrystals; k++)
                 {
-                    var entry = Array.Find(catalog.Entries, e => e.CavernArea == (int)crystal.Area);
-                    if (entry == null) continue;
-                    for (int j = 0; j < crystal.Pieces; j++)
-                    {
-                        var (position, rotation) = DiscoveryCatalog.GroveSeat(crystal, j, entry, random);
-                        var find = Instantiate(entry.Appearance(n % entry.AppearanceCount), terrain.transform.TransformPoint(position),
-                            terrain.transform.rotation * rotation, transform);
-                        find.Initialize(terrain, $"ground-lab-cavern-{n}", this);
-                        find.name = find.Item.DisplayName + " (lab cavern " + n++ + ")";
-                        if (crystal.Kind != TerrainGround.GroveKind.Shard) find.Seal();
-                        finds.Add(find);
-                    }
+                    var (position, rotation) = DiscoveryCatalog.ClearCavernSeat(GroundLab.Caves[c], k, kinds[c], random, taken);
+                    var find = Instantiate(kinds[c].Appearance(k % kinds[c].AppearanceCount), terrain.transform.TransformPoint(position),
+                        terrain.transform.rotation * rotation, transform);
+                    find.Initialize(terrain, $"ground-lab-cave-{n}", this);
+                    find.name = find.Item.DisplayName + " (lab cave " + n++ + ")";
+                    finds.Add(find);
                 }
-        }
-
-        // Cavern crystals (115): whether any find is still sealed within reach of a point (world), and breaking them out.
-        public bool AnySealedWithin(Vector3 centre, float reach)
-        {
-            foreach (var find in finds)
-                if (find.State == FindState.Sealed && (find.transform.position - centre).sqrMagnitude <= reach * reach) return true;
-            return false;
-        }
-
-        public int UnsealWithin(Vector3 centre, float reach)
-        {
-            int count = 0;
-            foreach (var find in finds)
-                if (find.State == FindState.Sealed && (find.transform.position - centre).sqrMagnitude <= reach * reach) { find.Unseal(); count++; }
-            if (count > 0) NotifyMotion();
-            return count;
+            }
         }
 
         // The Ground Lab's find gallery (user, 2026-10-06): every look of every common find set out on the surface north of
@@ -385,7 +363,6 @@ namespace SomethingDownThere
                     terrain.transform.rotation * placement.Rotation, transform);
                 find.Initialize(terrain, $"find-{seed}-{i:D3}", this);
                 find.name = find.Item.DisplayName + " " + i;
-                if (placement.Sealed) find.Seal();
                 finds.Add(find);
             }
             if (catalog != null && catalog.Chest != null)
@@ -426,13 +403,61 @@ namespace SomethingDownThere
             return (terrain.transform.TransformPoint((Vector3)surface), -terrain.transform.TransformDirection((Vector3)outward));
         }
 
+        // Every cut that opens into a hollow (a geode's, a cave's) drops the ground it freed into it: the first a big fall of
+        // clods and dust, each later one (user, 2026-10-07: "the animation as I continue to break in") the cut's own, at
+        // most every BreakAgainSeconds a hollow.
+        private const float BreakAgainSeconds = .2f;
+        private readonly Dictionary<int, float> lastBreaks = new Dictionary<int, float>();
+        private readonly HashSet<int> cavesBroken = new HashSet<int>();
+
+        private void HollowBreak(int key, Vector3 surface, Vector3 inward, bool first)
+        {
+            if (!first && lastBreaks.TryGetValue(key, out float last) && Time.time - last < BreakAgainSeconds) return;
+            lastBreaks[key] = Time.time;
+            var crane = FindViewer()?.Crane;
+            if (crane == null) return;
+            if (first)
+            {
+                crane.EmitGroundBreak(surface, inward, .3f, .6f, 1.5f);
+                crane.EmitGroundBreak(surface + Vector3.up * .3f, inward, .2f, .5f, 1f);
+            }
+            else crane.EmitGroundBreak(surface, inward, Mathf.Max(terrain.LastRemovedVolume, .04f), .4f, 1.1f);
+        }
+
+        private void CheckCaveBreaks(Bounds changed)
+        {
+            if (terrain.IsRestoring) return;
+            var caves = terrain.GroundLayout.Caverns;
+            for (int c = 0; c < caves.Length; c++)
+            {
+                var cave = caves[c];
+                var bounds = new Bounds(); bounds.SetMinMax(terrain.transform.TransformPoint((Vector3)cave.Min), terrain.transform.TransformPoint((Vector3)cave.Max));
+                if (!changed.Intersects(bounds)) continue;
+                // From the chamber nearest the cut, the face toward it, a little inside; the way there must be open.
+                var cut = (Unity.Mathematics.float3)terrain.transform.InverseTransformPoint(changed.center);
+                int nearest = 0;
+                for (int i = 1; i < cave.Centres.Length; i++)
+                    if (Unity.Mathematics.math.distancesq(cave.Centres[i], cut) < Unity.Mathematics.math.distancesq(cave.Centres[nearest], cut)) nearest = i;
+                var heart = TerrainGround.CavernHeart(cave, nearest);
+                if (Unity.Mathematics.math.lengthsq(cut - heart) < 1e-6f) continue;
+                var (face, outward) = TerrainGround.CavernFace(cave, heart, Unity.Mathematics.math.normalize(cut - heart));
+                Vector3 surface = terrain.transform.TransformPoint((Vector3)(face - outward * .05f)), inward = -terrain.transform.TransformDirection((Vector3)outward);
+                float length = Vector3.Distance(changed.center, surface);
+                if (length > changed.extents.magnitude + .3f) continue;
+                bool open = true;
+                for (float t = 0; t <= length && open; t += BreakInStep)
+                    open = !terrain.IsSolid(Vector3.Lerp(changed.center, surface, t / Mathf.Max(length, 1e-4f)));
+                if (!open) continue;
+                HollowBreak(1000 + c, surface, inward, cavesBroken.Add(c));
+            }
+        }
+
         private void CheckGeodeBreaks(Bounds changed)
         {
             if (terrain.IsRestoring) return;
             var geodes = terrain.GroundLayout.Geodes;
             for (int g = 0; g < geodes.Length && g < geodeOpened.Length; g++)
             {
-                if (geodeOpened[g]) continue;
                 var geode = geodes[g];
                 var bounds = new Bounds(terrain.transform.TransformPoint((Vector3)geode.Centre), Vector3.one * geode.Reach * 2);
                 if (!changed.Intersects(bounds)) continue;
@@ -447,9 +472,9 @@ namespace SomethingDownThere
                 for (float t = 0; t <= length && open; t += BreakInStep)
                     open = !terrain.IsSolid(Vector3.Lerp(from, to, t / Mathf.Max(length, 1e-4f)));
                 if (!open) continue;
+                bool first = !geodeOpened[g];
                 geodeOpened[g] = true;
-                var crane = FindViewer()?.Crane;
-                if (crane != null) crane.EmitGroundBreak(surface, inward, .06f, .4f, .8f);
+                HollowBreak(g, surface, inward, first);
             }
         }
 
@@ -487,6 +512,7 @@ namespace SomethingDownThere
         {
             using var profile = ExposureMarker.Auto();
             CheckGeodeBreaks(changed);
+            CheckCaveBreaks(changed);
             // Every world find retains its collider even while soil hides its mesh.
             // Reuse PhysX's spatial index instead of reading thousands of renderer
             // bounds for every local cut. Synchronize moved/restored finds first.

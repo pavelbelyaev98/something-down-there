@@ -210,7 +210,7 @@ namespace SomethingDownThere
             {
                 float zoneTop = zone == 0 ? 0 : ZoneBorders[zone - 1], zoneBottom = zone < ZoneBorders.Length ? ZoneBorders[zone] : extent.y;
                 for (int n = 0; n < GeodesPerZone[zone]; n++)
-                    for (int attempt = 0; attempt < 200; attempt++)
+                    for (int attempt = 0; attempt < 1000; attempt++)
                     {
                         float radius = Range(1.5f, 1.85f), heading = Range(0, 2 * math.PI);
                         var radii = new float3(radius, radius * Range(.7f, .85f), radius * Range(.85f, 1.05f));

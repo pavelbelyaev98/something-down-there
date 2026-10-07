@@ -25,9 +25,10 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _EMISSION
   - _NORMALMAP
   m_InvalidKeywords: []
-  m_LightmapFlags: 0
+  m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -60,7 +61,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a4f427f55a4a28c47bd9d1ee0e03caa5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -132,9 +133,9 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.82, g: 0.52, b: 0.14, a: 1}
-    - _Color: {r: 0.82, g: 0.52, b: 0.13999996, a: 1}
-    - _EmissionColor: {r: 0.0082, g: 0.0051999995, b: 0.0014, a: 0.01}
+    - _BaseColor: {r: 0.45, g: 0.315, b: 0.089999996, a: 1}
+    - _Color: {r: 0.45, g: 0.31499997, b: 0.08999997, a: 1}
+    - _EmissionColor: {r: 0.7695691, g: 0.5386984, b: 0.15391383, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

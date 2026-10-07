@@ -159,7 +159,7 @@ MonoBehaviour:
   displayName: Fluorite
   minor: 1
   detectorEligible: 0
-  saleValue: 40
+  saleValue: 28
   collectionThreshold: 0.6
   exposureSamples:
   - {x: -0.15246499, y: 0.02017558, z: -0.24603426}
