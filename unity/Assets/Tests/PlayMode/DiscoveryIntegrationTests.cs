@@ -127,9 +127,10 @@ namespace SomethingDownThere.Tests
             Assert.That(generated.Select(f => f.Item.Id).Distinct().Count(), Is.EqualTo(field.Catalog.TotalCount));
             Assert.That(generated.Count(f => f.ContentId.StartsWith("mineral_")),
                 Is.EqualTo(field.Catalog.Entries.Where(e => e.ItemId.StartsWith("mineral_")).Sum(e => e.Count)));
-            // Every find starts buried, except those lying loose in a closed stash chest (106) and those lining a
-            // sealed geode (110), exposed to its dark air but out of reach until the player breaks in.
-            Assert.That(field.Finds.Where(f => !InChest(f) && !InGeode(f)).All(f => f.Exposure == 0), Is.True);
+            // Every find starts buried, except those lying loose in a closed stash chest (106), those lining a sealed
+            // geode (110) and those in a cavern's walls or crystals (115), exposed to its dark air but out of reach until
+            // the player breaks in.
+            Assert.That(field.Finds.Where(f => !InChest(f) && !InGeode(f) && !InCavern(f)).All(f => f.Exposure == 0), Is.True);
             Assert.That(field.Finds.Count(InChest), Is.EqualTo(field.Chests.Count * field.Catalog.ChestItems));
             var find = PrepareUprightFind();
             Aim(find.transform.position + Vector3.up * 2, find.transform.position);
@@ -171,8 +172,8 @@ namespace SomethingDownThere.Tests
             terrain.ResetExcavation();
             Assert.That(find.Collected, Is.True);
             Assert.That(find.gameObject.activeSelf, Is.False);
-            // Reset reburies everything except what lies in the re-carved stash chests and lines the re-carved geodes.
-            Assert.That(field.Finds.Skip(1).Where(f => !InChest(f) && !InGeode(f)).All(f => f.Exposure == 0), Is.True);
+            // Reset reburies everything except what lies in the re-carved stash chests, geodes and caverns.
+            Assert.That(field.Finds.Skip(1).Where(f => !InChest(f) && !InGeode(f) && !InCavern(f)).All(f => f.Exposure == 0), Is.True);
             Assert.That(player.Inventory.Count, Is.EqualTo(1));
         }
 
@@ -737,7 +738,8 @@ namespace SomethingDownThere.Tests
                 "Buried finds render: " + Named(f => f.WorldBounds.max.y < terrain.SurfaceHeight && !BesideSeededAir(f) && f.GetComponent<MeshRenderer>().enabled));
             Assert.That(field.Finds.Where(f => !BesideSeededAir(f)).All(f => !f.GetComponent<FindPhysics>().enabled), Is.True,
                 "Buried finds poll: " + Named(f => !BesideSeededAir(f) && f.GetComponent<FindPhysics>().enabled));
-            Assert.That(field.Finds.All(f => f.GetComponent<MeshCollider>().enabled), Is.True,
+            // A crystal sealed in a cavern cluster (115) is out of physics until the cluster breaks.
+            Assert.That(field.Finds.Where(f => f.State != FindState.Sealed).All(f => f.GetComponent<MeshCollider>().enabled), Is.True,
                 "Soil-occluded targeting and collision remain available, including tiny slivers.");
             var before = field.Capture();
             var find = field.Finds[0];
@@ -765,7 +767,18 @@ namespace SomethingDownThere.Tests
         private bool InGeode(BuriedFind find) => terrain.GroundLayout.Geodes.Any(g =>
             Vector3.Distance(terrain.transform.TransformPoint((Vector3)g.Centre), find.transform.position) < g.Reach + 1f);
 
-        private bool BesideSeededAir(BuriedFind find) => BesideChest(find) || InGeode(find);
+        // In a cavern's walls (115: its minerals stand half out of the stone, so a lamp shows them) or within a metre of it.
+        private bool InCavern(BuriedFind find)
+        {
+            var local = terrain.transform.InverseTransformPoint(find.transform.position);
+            return terrain.GroundLayout.Caverns.Any(c =>
+            {
+                var bounds = new Bounds(); bounds.SetMinMax((Vector3)c.Min, (Vector3)c.Max); bounds.Expand(2f);
+                return bounds.Contains(local);
+            });
+        }
+
+        private bool BesideSeededAir(BuriedFind find) => BesideChest(find) || InGeode(find) || InCavern(find);
 
         // In a chest or within a metre of the pocket it stands in (109): seeded air is modified ground, and buried finds
         // beside it wake conservatively (TerrainVolume.MayExpose checks modified samples in coarse blocks).
@@ -774,6 +787,11 @@ namespace SomethingDownThere.Tests
             var local = chest.transform.InverseTransformPoint(find.transform.position) - chest.Pocket.center;
             var d = new Vector3(Mathf.Abs(local.x), Mathf.Abs(local.y), Mathf.Abs(local.z)) - chest.Pocket.extents;
             return Vector3.Max(d, Vector3.zero).magnitude < 1f;
+        }) || terrain.GroundLayout.Stashes.Any(stash =>
+        {
+            // The pocket's uneven dome above the chest (113).
+            var dome = TerrainGround.PocketDomeReserve(stash);
+            return Vector3.Distance(terrain.transform.TransformPoint((Vector3)dome.centre), find.transform.position) < dome.radius + 1f;
         });
 
         // Loose in a stash chest's seeded hollow (106).

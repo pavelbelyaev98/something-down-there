@@ -532,6 +532,7 @@ namespace SomethingDownThere
         public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed)
             => Generate(extent, total, placementSeed, Math.Min(total, 24));
 
+        private const float FootprintStep = .25f;
         public static DiscoveryPlacement[] Generate(Vector3 extent, int total, int placementSeed, int shallowCount)
             => Generate(extent, total, placementSeed, shallowCount, null);
 
@@ -579,6 +580,21 @@ namespace SomethingDownThere
                 for (int i = 0; i < total; i++)
                     if (!float.IsNaN(seats[i].x)) grid.Add(i, seats[i], radii == null ? MaximumFindRadius : radii[i]);
             float Range(float min, float max) => Mathf.Lerp(min, max, (float)random.NextDouble());
+            // Candidates are drawn inside the footprint's box: the grid is wider than the plot (115), and redrawing the
+            // misses outside it cost more than the placement itself.
+            float xMin = .8f, xMax = extent.x - .8f, zMin = .8f, zMax = extent.z - .8f;
+            if (footprint != null)
+            {
+                float bx0 = float.MaxValue, bx1 = float.MinValue, bz0 = float.MaxValue, bz1 = float.MinValue;
+                for (float bx = .8f; bx <= extent.x - .8f; bx += FootprintStep)
+                    for (float bz = .8f; bz <= extent.z - .8f; bz += FootprintStep)
+                        if (footprint(new Vector2(bx, bz))) { bx0 = Mathf.Min(bx0, bx); bx1 = Mathf.Max(bx1, bx); bz0 = Mathf.Min(bz0, bz); bz1 = Mathf.Max(bz1, bz); }
+                if (bx0 <= bx1)
+                {
+                    xMin = Mathf.Max(xMin, bx0 - FootprintStep); xMax = Mathf.Min(xMax, bx1 + FootprintStep);
+                    zMin = Mathf.Max(zMin, bz0 - FootprintStep); zMax = Mathf.Min(zMax, bz1 + FootprintStep);
+                }
+            }
             for (int i = 0; i < total; i++)
             {
                 if (seats != null && !float.IsNaN(seats[i].x))
@@ -609,12 +625,12 @@ namespace SomethingDownThere
                 for (int attempt = 0; attempt < maxAttempts && (!placed || ((shallow || banded) && attempt < refinement)); attempt++)
                 {
                     // The first finds lie a few metres in from the camp side, measured from the site centre.
-                    float x = i < 6 ? Range(extent.x * 0.5f - 2.5f, extent.x * 0.5f + 2.5f) : Range(0.8f, extent.x - 0.8f);
+                    float x = i < 6 ? Range(extent.x * 0.5f - 2.5f, extent.x * 0.5f + 2.5f) : Range(xMin, xMax);
                     float near = Mathf.Max(1, extent.z * .5f - 11);
                     // The catalog covers the whole layer; the legacy three-prefab
                     // validation field keeps its small entrance allocation.
                     float z = i < 6 ? Range(near, near + 2.5f) : radii == null && i < Math.Min(shallowCount, 48)
-                        ? Range(0.8f, 6) : Range(0.8f, extent.z - 0.8f);
+                        ? Range(0.8f, 6) : Range(zMin, zMax);
                     // Candidates outside the footprint are redrawn rather than spent as attempts.
                     if (footprint != null && !footprint(new Vector2(x, z)))
                     {
@@ -715,7 +731,11 @@ namespace SomethingDownThere
             private readonly int width, height, depth;
             private readonly float cell, distantSquared;
             private float largestRadius;
-            private readonly List<int> largeReservations = new List<int>();
+            // Large reservations (stash pockets, geodes, cavern chambers, big finds) bucketed in coarse cells, each listed in
+            // every cell its sphere could reach a candidate from, so a candidate checks only the few near it.
+            private const float CoarseCell = 4f;
+            private readonly int coarseWidth, coarseHeight, coarseDepth;
+            private readonly Dictionary<int, List<int>> largeReservations = new Dictionary<int, List<int>>();
 
             public PlacementGrid(Vector3 extent, float cellSize, int capacity)
             {
@@ -724,6 +744,9 @@ namespace SomethingDownThere
                 width = Mathf.Max(1, Mathf.CeilToInt(extent.x / cellSize));
                 height = Mathf.Max(1, Mathf.CeilToInt(extent.y / cellSize));
                 depth = Mathf.Max(1, Mathf.CeilToInt(extent.z / cellSize));
+                coarseWidth = Mathf.Max(1, Mathf.CeilToInt(extent.x / CoarseCell));
+                coarseHeight = Mathf.Max(1, Mathf.CeilToInt(extent.y / CoarseCell));
+                coarseDepth = Mathf.Max(1, Mathf.CeilToInt(extent.z / CoarseCell));
                 head = new int[width * height * depth];
                 for (int i = 0; i < head.Length; i++) head[i] = -1;
                 next = new int[capacity];
@@ -736,12 +759,30 @@ namespace SomethingDownThere
                 positions[index] = position;
                 radii[index] = radius;
                 // A rare authored load must not enlarge every common-find bucket scan.
-                if (radius > MaximumFindRadius) { largeReservations.Add(index); return; }
+                if (radius > MaximumFindRadius) { AddLarge(index, position, radius); return; }
                 largestRadius = Mathf.Max(largestRadius, radius);
                 int slot = Slot(position);
                 next[index] = head[slot];
                 head[slot] = index;
             }
+
+            private void AddLarge(int index, Vector3 position, float radius)
+            {
+                float reach = radius + MaximumLargeFindRadius + SoilClearance;
+                int x0 = Mathf.Clamp((int)((position.x - reach) / CoarseCell), 0, coarseWidth - 1), x1 = Mathf.Clamp((int)((position.x + reach) / CoarseCell), 0, coarseWidth - 1);
+                int y0 = Mathf.Clamp((int)((position.y - reach) / CoarseCell), 0, coarseHeight - 1), y1 = Mathf.Clamp((int)((position.y + reach) / CoarseCell), 0, coarseHeight - 1);
+                int z0 = Mathf.Clamp((int)((position.z - reach) / CoarseCell), 0, coarseDepth - 1), z1 = Mathf.Clamp((int)((position.z + reach) / CoarseCell), 0, coarseDepth - 1);
+                for (int z = z0; z <= z1; z++) for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++)
+                {
+                    int key = x + coarseWidth * (y + coarseHeight * z);
+                    if (!largeReservations.TryGetValue(key, out var list)) largeReservations[key] = list = new List<int>();
+                    list.Add(index);
+                }
+            }
+
+            private int Coarse(Vector3 position) => Mathf.Clamp((int)(position.x / CoarseCell), 0, coarseWidth - 1)
+                + coarseWidth * (Mathf.Clamp((int)(position.y / CoarseCell), 0, coarseHeight - 1)
+                + coarseHeight * Mathf.Clamp((int)(position.z / CoarseCell), 0, coarseDepth - 1));
 
             // radius < 0 marks the legacy uniform three-prefab path. The nearest
             // neighbour decides how spread out the candidate sits; the lowest cell
@@ -751,7 +792,8 @@ namespace SomethingDownThere
             {
                 clear = true;
                 nearest = distantSquared;
-                foreach (int other in largeReservations)
+                if (largeReservations.TryGetValue(Coarse(position), out var near))
+                foreach (int other in near)
                 {
                     float spacing = Mathf.Max(0, radius) + radii[other] + (banded ? BandedSoilClearance : SoilClearance);
                     if ((positions[other] - position).sqrMagnitude < spacing * spacing) { clear = false; return; }

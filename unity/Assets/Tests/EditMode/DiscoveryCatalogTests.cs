@@ -48,7 +48,7 @@ namespace SomethingDownThere.Tests
             var extent = SiteLayout.Extent; var layout = Layout(seed);
             CollectionAssert.AreEqual(layout,catalog.Generate(extent,seed,Ground,GroundLayout));
             Assert.That(layout.Length,Is.EqualTo(catalog.TotalCount));
-            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,6,4,3,2,2,1,150,7,5,10,8}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
+            CollectionAssert.AreEqual(new[] {5390,1200,1280,1280,1400,1510,1400,1160,1060,1,1,1,1,2,13,10,7,150,10,10,20,10,20,10,20,10}, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e=>e.Count));
             for(int index=0;index<catalog.Entries.Length;index++)
             {
                 var entry=catalog.Entries[index];
@@ -98,7 +98,7 @@ namespace SomethingDownThere.Tests
             var catalog = Catalog;
             var radii = catalog.Entries.Select(e => e.PlacementRadius).ToArray();
             Assert.That(catalog.ShallowCount, Is.EqualTo(640));
-            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
+            CollectionAssert.AreEqual(new[] { 640, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, catalog.Entries.Where(e=>!e.AuthoredPlacement).Select(e => e.ShallowCount));
             foreach (int seed in Seeds(sweep))
             {
                 var layout = Layout(seed);
@@ -400,9 +400,13 @@ namespace SomethingDownThere.Tests
             Assert.That(outlierSeeds, Is.GreaterThanOrEqualTo(4), "The set carries outliers in both directions.");
         }
 
+        // The ground's own mix: what chests, geodes and caverns hold is their reward, seated in them, not the ground's
+        // (a zone-1 chest's ingots would otherwise outweigh the whole recent fill).
         private static float MeanValue(DiscoveryPlacement[] layout, DiscoveryCatalog catalog, float from, float to)
         {
-            var values = layout.Where(p => SiteLayout.Extent.y - p.Position.y >= from && SiteLayout.Extent.y - p.Position.y < to)
+            bool Feature(DiscoveryCatalog.Entry e) => e.Geode || e.CavernArea >= 0 || catalog.ChestContents.Any(c => c.ItemId == e.ItemId);
+            var values = layout.Where(p => SiteLayout.Extent.y - p.Position.y >= from && SiteLayout.Extent.y - p.Position.y < to
+                    && !Feature(catalog.Entries[p.PrefabIndex]))
                 .Select(p => catalog.Entries[p.PrefabIndex].Prefab.SaleValue).ToArray();
             return values.Length == 0 ? 0 : (float)values.Average();
         }
@@ -508,8 +512,10 @@ namespace SomethingDownThere.Tests
                     if (index >= 0 && index < slices.Length) slices[index]++;
                 }
                 Assert.That(slices.Min(), Is.GreaterThanOrEqualTo(30), $"Seed {seed}: sparse metre at {top + Array.IndexOf(slices, slices.Min())} m");
+                // Each zone's cavern (115) lies under a corner of the plot, and finds keep out of it, so its depths hold a
+                // little less (with its walls' minerals as encounters of their own).
                 for (int i = 0; i + 4 < slices.Length; i++)
-                    Assert.That(slices.Skip(i).Take(5).Sum(), Is.GreaterThanOrEqualTo(220),
+                    Assert.That(slices.Skip(i).Take(5).Sum(), Is.GreaterThanOrEqualTo(210),
                         $"Seed {seed}: dry stretch below {top + i} m");
                 // Roughly constant: the deepest quarter holds nearly as many finds per metre as the mid-depths.
                 float mid = (float)slices.Skip(10).Take(40).Average(), deep = (float)slices.Skip(slices.Length - 37).Average();

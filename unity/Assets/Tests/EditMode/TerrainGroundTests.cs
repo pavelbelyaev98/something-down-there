@@ -163,7 +163,10 @@ namespace SomethingDownThere.Tests
                 }
                 Assert.That(seen.Count, Is.GreaterThan(100), "A chest's worth of air.");
             }
-            var above = (Vector3)stashes[0].Centre + Vector3.up * (pocket.max.y + .3f);
+            // Above the pocket's uneven dome (113), in the fill.
+            var dome = TerrainGround.PocketDomeReserve(stashes[0]);
+            var above = (Vector3)dome.centre + Vector3.up * (dome.radius + .4f);
+            Assert.That(grid.IsSolid(above), Is.True, "Fill above the pocket's dome.");
             grid.RemoveSphere(above, .3f, out _);
             Assert.That(grid.IsSolid(above), Is.False);
             grid.Reset();

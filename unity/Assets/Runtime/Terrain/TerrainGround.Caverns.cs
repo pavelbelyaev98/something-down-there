@@ -218,7 +218,24 @@ namespace SomethingDownThere
         // The area's formations' sizes (metres along their length): cubic blocks are short, the crystals long.
         private static readonly Vector2[] FormationSize = { new Vector2(1.8f, 3.4f), new Vector2(1.5f, 3f), new Vector2(1.8f, 3.2f), new Vector2(.9f, 1.8f) };
 
+        // Groves are a pure function of the cavern and cost a few hundred face marches each, so each is made once and shared
+        // (placement, scenery and the Ground Lab ask for the same ones); callers only read them.
+        private static readonly Dictionary<(float3 seed, float3 centre, int chamber), List<GroveCrystal>> Groves
+            = new Dictionary<(float3, float3, int), List<GroveCrystal>>();
+
         public static List<GroveCrystal> Grove(Cavern cavern, int chamber)
+        {
+            var key = (cavern.Seed, cavern.Centres[chamber], chamber);
+            lock (Groves)
+            {
+                if (Groves.TryGetValue(key, out var made)) return made;
+                made = MakeGrove(cavern, chamber);
+                Groves[key] = made;
+                return made;
+            }
+        }
+
+        private static List<GroveCrystal> MakeGrove(Cavern cavern, int chamber)
         {
             var grove = new List<GroveCrystal>();
             uint state = math.hash(new float4(cavern.Seed, chamber)) | 1u;

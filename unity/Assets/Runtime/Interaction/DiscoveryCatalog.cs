@@ -379,6 +379,7 @@ namespace SomethingDownThere
                         list.Add(i);
                     }
                 int entry = -1;
+                var taken = new List<(Vector3 at, float radius)>();
                 for (int k = 0; k < GeodeCrystals; k++)
                 {
                     if (!left.ContainsKey(entry))
@@ -393,7 +394,15 @@ namespace SomethingDownThere
                     int seated = instances[0];
                     instances.RemoveAt(0);
                     if (instances.Count == 0) left.Remove(entry);
+                    // Big crystals in an uneven hollow: a few seeded tries for a seat clear of those already there, on a face
+                    // that looks into the hollow (a bulge's flank can face sideways).
+                    var centre = (Vector3)geodes[g].Centre;
+                    bool Good(Vector3 at, Quaternion turn) => Clear(taken, at, Entries[entry].PlacementRadius)
+                        && Vector3.Angle(turn * Vector3.up, centre - at) < GeodeFacing;
                     var (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
+                    for (int attempt = 1; attempt < CavernSeatTries && !Good(position, rotation); attempt++)
+                        (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
+                    taken.Add((position, Entries[entry].PlacementRadius));
                     seats[seated] = position;
                     turns[seated] = rotation;
                 }
@@ -404,7 +413,7 @@ namespace SomethingDownThere
         // rest higher, spread round it, each where the ray from the centre meets the hollow's face, pointing into the
         // hollow (its up along the inward normal, a seeded twist) and sunk GeodeSink of its height into the shell, so it
         // stays anchored until the shell around it is dug.
-        public const float GeodeSink = 1 / 3f;
+        public const float GeodeSink = 1 / 3f, GeodeFacing = 50f;
         private const int GeodeLow = 6;
         internal static (Vector3 position, Quaternion rotation) GeodeSeat(TerrainGround.Geode geode, int k, Entry entry, System.Random random)
         {
@@ -435,7 +444,8 @@ namespace SomethingDownThere
             foreach (var cavern in caverns)
             {
                 float depth = extent.y - cavern.Floor;
-                if (cavern.Crystal) { SeatGroves(cavern, depth, order, bands, seats, turns, sealedSeats, random); continue; }
+                var taken = new List<(Vector3 at, float radius)>();
+                if (cavern.Crystal) { SeatGroves(cavern, depth, order, bands, seats, turns, sealedSeats, random, taken); continue; }
                 var left = new SortedDictionary<int, List<int>>();
                 for (int i = ShallowCount; i < seats.Length; i++)
                     if (Entries[order[i]].Cavern && float.IsNaN(seats[i].x) && bands[i].y > 0 && depth >= bands[i].x && depth <= bands[i].y)
@@ -452,7 +462,7 @@ namespace SomethingDownThere
                     int seated = instances[0];
                     instances.RemoveAt(0);
                     if (instances.Count == 0) left.Remove(entry);
-                    var (position, rotation) = CavernSeat(cavern, k, Entries[entry], random);
+                    var (position, rotation) = ClearCavernSeat(cavern, k, Entries[entry], random, taken);
                     seats[seated] = position;
                     turns[seated] = rotation;
                 }
@@ -464,7 +474,7 @@ namespace SomethingDownThere
         // wall. Formations hold none. An area whose type has run out keeps what it got; instances left over (a chamber
         // too tight for all its clusters) sit in their area's walls like a plain cavern's minerals, never loose in the soil.
         private void SeatGroves(TerrainGround.Cavern cavern, float depth, List<int> order, Vector2[] bands, Vector3[] seats,
-            Dictionary<int, Quaternion> turns, HashSet<int> sealedSeats, System.Random random)
+            Dictionary<int, Quaternion> turns, HashSet<int> sealedSeats, System.Random random, List<(Vector3 at, float radius)> taken)
         {
             int Next(TerrainGround.CavernArea area)
             {
@@ -478,7 +488,19 @@ namespace SomethingDownThere
                     {
                         int seated = Next(crystal.Area);
                         if (seated < 0) break;
-                        (seats[seated], turns[seated]) = GroveSeat(crystal, j, Entries[order[seated]], random);
+                        var entry = Entries[order[seated]];
+                        // Neighbouring clusters stand close: a piece turns and rises round the middle until it is clear; a
+                        // shard has one spot. One that never clears is left for its area's walls (below).
+                        bool clear = false;
+                        int tries = crystal.Kind == TerrainGround.GroveKind.Shard ? 1 : CavernSeatTries;
+                        for (int attempt = 0; attempt < tries && !clear; attempt++)
+                        {
+                            var (at, turn) = GroveSeat(crystal, j, entry, random, attempt * 47f, .5f + .08f * (attempt % 3 - 1));
+                            clear = taken.TrueForAll(t => (t.at - at).sqrMagnitude >= Square(t.radius + entry.PlacementRadius + DiscoveryField.SoilClearance));
+                            if (clear) (seats[seated], turns[seated]) = (at, turn);
+                        }
+                        if (!clear) continue;
+                        taken.Add((seats[seated], entry.PlacementRadius));
                         if (crystal.Kind != TerrainGround.GroveKind.Shard) sealedSeats.Add(seated);
                     }
             for (int area = 0; area < TerrainGround.CavernAreaCount; area++)
@@ -488,19 +510,44 @@ namespace SomethingDownThere
                     if ((int)TerrainGround.AreaOf(cavern, chamber) == area) chambers.Add(chamber);
                 if (chambers.Count == 0) continue;
                 for (int n = 0, seated; (seated = Next((TerrainGround.CavernArea)area)) >= 0; n++)
-                    (seats[seated], turns[seated]) = CavernSeat(cavern, chambers[n % chambers.Count], Entries[order[seated]], random);
+                    (seats[seated], turns[seated]) = ClearCavernSeat(cavern, chambers[n % chambers.Count], Entries[order[seated]], random, taken);
             }
         }
 
         // The jth find's seat in a grove crystal (grid-local): a cluster's pieces lie along its middle, sealed; a shard
         // stands in the stone, sunk CavernSink of its height.
-        internal static (Vector3 position, Quaternion rotation) GroveSeat(TerrainGround.GroveCrystal crystal, int j, Entry entry, System.Random random)
+        internal static (Vector3 position, Quaternion rotation) GroveSeat(TerrainGround.GroveCrystal crystal, int j, Entry entry, System.Random random,
+            float spin = 0, float height = .5f)
         {
             Vector3 up = crystal.Up, foot = crystal.Foot;
             var turn = Quaternion.FromToRotation(Vector3.up, up) * Quaternion.Euler(0, (float)random.NextDouble() * 360f, 0);
             if (crystal.Kind == TerrainGround.GroveKind.Shard) return (foot + up * (entry.RestingHalfHeight * (1 - 2 * CavernSink)), turn);
-            return (foot + up * (crystal.Size * (.25f + .5f * (j + .5f) / crystal.Pieces)), turn);
+            // Side by side across its middle, clear of each other, so they fall out apart when it breaks.
+            var across = Vector3.Cross(up, Mathf.Abs(up.y) < .9f ? Vector3.up : Vector3.forward).normalized;
+            across = Quaternion.AngleAxis(crystal.Turn + spin + j * 360f / crystal.Pieces, up) * across;
+            return (foot + up * (crystal.Size * height) + across * (entry.PlacementRadius + DiscoveryField.SoilClearance), turn);
         }
+
+        // A cavern wall seat clear of those already taken in the cavern: a few seeded tries, the last one kept if none is.
+        private const int CavernSeatTries = 8;
+        private static (Vector3 position, Quaternion rotation) ClearCavernSeat(TerrainGround.Cavern cavern, int k, Entry entry,
+            System.Random random, List<(Vector3 at, float radius)> taken)
+        {
+            (Vector3 position, Quaternion rotation) seat = default;
+            for (int attempt = 0; attempt < CavernSeatTries; attempt++)
+            {
+                seat = CavernSeat(cavern, k, entry, random);
+                var at = seat.position;
+                if (taken.TrueForAll(t => (t.at - at).sqrMagnitude >= Square(t.radius + entry.PlacementRadius + DiscoveryField.SoilClearance))) break;
+            }
+            taken.Add((seat.position, entry.PlacementRadius));
+            return seat;
+        }
+
+        private static float Square(float value) => value * value;
+
+        private static bool Clear(List<(Vector3 at, float radius)> taken, Vector3 at, float radius)
+            => taken.TrueForAll(t => (t.at - at).sqrMagnitude >= Square(t.radius + radius + DiscoveryField.SoilClearance));
 
         // The kth find's seat in a cavern's wall (grid-local): round the chambers in turn, a seeded direction from the
         // chamber's heart, mostly sideways and a little up, where it meets the stone; pointing out of it, sunk.

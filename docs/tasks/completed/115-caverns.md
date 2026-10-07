@@ -229,3 +229,12 @@ diggable things around them."
 - **Rejected:** shrinking while cracking; the crystals' colour map as their glow (flat, plastic); the pack's own
   emissive contrasts (hex white-hot, rubies dark); the pale palette (washed out under tonemapping); single prisms and
   slabs as clusters (ruby 3, 4, 7, 8 and the long red sprays), which read as sticks.
+- **Placement time** (end-of-session tests): the wider grid, the caverns' reservations and their groves had taken New
+  Game's find placement from under one second to 1.6 s. Groves are now made once per cavern chamber and shared, large
+  reservations are bucketed in 4 m cells so a candidate checks only those near it, and candidates are drawn inside the
+  plot footprint's box: 0.6 s. Finds keep out of the corner a zone's cavern takes under the plot, so its depths hold a
+  little fewer (a 5 m window's floor in the depth test went from 220 to 210 finds).
+- **Seats keep clear of each other:** cavern wall minerals, a cluster's sealed pieces (side by side across its middle,
+  turned and raised until clear of a neighbouring cluster's) and geode crystals (on a face that looks into the hollow)
+  take a few seeded tries for a spot clear of the seats already taken; a piece or shard that finds none goes to its
+  area's walls.

@@ -159,11 +159,12 @@ namespace SomethingDownThere.Tests
             Assert.That(terrain.RemovedVolume, Is.Zero);
             Assert.That(terrain.Dimensions, Is.EqualTo(SiteLayout.Size));
             // A deep volume only materializes the top layer that owns the ground plane, plus seeded air's
-            // chunks (stash chests' pockets, geodes' hollows) so it exists the moment the player reaches it.
+            // chunks (stash chests' pockets, geodes' hollows, caverns) so it exists the moment the player reaches it.
             var chunks = SiteLayout.Size / SiteLayout.ChunkSize;
             Assert.That(terrain.ChunkKeyCount, Is.EqualTo(chunks.x * chunks.y * chunks.z));
             var hollows = terrain.GroundLayout.Stashes.Where(s => s.HasPocket).Select(s => (s.Min, s.Max))
-                .Concat(terrain.GroundLayout.Geodes.Select(g => (g.Min, g.Max))).ToArray();
+                .Concat(terrain.GroundLayout.Geodes.Select(g => (g.Min, g.Max)))
+                .Concat(terrain.GroundLayout.Caverns.Select(c => (c.Min, c.Max))).ToArray();
             int surfaceLayer = (terrain.Dimensions.y - 1) / 16, deep = 0;
             foreach (var chunk in terrain.GetComponentsInChildren<MeshFilter>())
             {
