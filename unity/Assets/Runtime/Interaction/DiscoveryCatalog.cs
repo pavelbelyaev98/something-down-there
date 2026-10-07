@@ -402,13 +402,14 @@ namespace SomethingDownThere
                     instances.RemoveAt(0);
                     if (instances.Count == 0) left.Remove(entry);
                     // Big crystals in an uneven hollow: a few seeded tries for a seat clear of those already there, on a face
-                    // that looks into the hollow (a bulge's flank can face sideways).
+                    // that looks into the hollow (a bulge's flank can face sideways); its own slot first, then, should its
+                    // neighbours crowd it, anywhere round the hollow (seed 2 kept two celestines in one another).
                     var centre = (Vector3)geodes[g].Centre;
                     bool Good(Vector3 at, Quaternion turn) => Clear(taken, at, Entries[entry].PlacementRadius)
                         && Vector3.Angle(turn * Vector3.up, centre - at) < GeodeFacing;
                     var (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
-                    for (int attempt = 1; attempt < GeodeSeatTries && !Good(position, rotation); attempt++)
-                        (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random);
+                    for (int attempt = 1; attempt < GeodeSeatTries * 2 && !Good(position, rotation); attempt++)
+                        (position, rotation) = GeodeSeat(geodes[g], k, Entries[entry], random, attempt >= GeodeSeatTries);
                     taken.Add((position, Entries[entry].PlacementRadius));
                     seats[seated] = position;
                     turns[seated] = rotation;
@@ -417,17 +418,20 @@ namespace SomethingDownThere
         }
 
         // The kth crystal's seat on a geode's hollow (grid-local): the first GeodeLow round the floor and lower walls, the
-        // rest higher, spread round it, each where the ray from the centre meets the hollow's face, pointing into the
-        // hollow (its up along the inward normal, a seeded twist) and sunk GeodeSink of its height into the shell, so it
-        // stays anchored until the shell around it is dug.
+        // rest higher, spread round it (or `anywhere` round it), each where the ray from the centre meets the hollow's
+        // face, pointing into the hollow (its up along the inward normal, a seeded twist) and sunk GeodeSink of its height
+        // into the shell, so it stays anchored until the shell around it is dug.
         public const float GeodeSink = 1 / 3f, GeodeFacing = 50f;
         private const int GeodeLow = 6;
-        internal static (Vector3 position, Quaternion rotation) GeodeSeat(TerrainGround.Geode geode, int k, Entry entry, System.Random random)
+        internal static (Vector3 position, Quaternion rotation) GeodeSeat(TerrainGround.Geode geode, int k, Entry entry, System.Random random,
+            bool anywhere = false)
         {
             bool low = k < GeodeLow;
             float step = 360f / Mathf.Max(1, low ? GeodeLow : GeodeCrystals - GeodeLow);
-            float around = (low ? k : k - GeodeLow + .5f) * step + ((float)random.NextDouble() - .5f) * step * .6f;
-            float elevation = low ? Mathf.Lerp(-55f, -15f, (float)random.NextDouble()) : Mathf.Lerp(5f, 40f, (float)random.NextDouble());
+            float around = anywhere ? (float)random.NextDouble() * 360f
+                : (low ? k : k - GeodeLow + .5f) * step + ((float)random.NextDouble() - .5f) * step * .6f;
+            float elevation = anywhere ? Mathf.Lerp(-55f, 40f, (float)random.NextDouble())
+                : low ? Mathf.Lerp(-55f, -15f, (float)random.NextDouble()) : Mathf.Lerp(5f, 40f, (float)random.NextDouble());
             var direction = Quaternion.Euler(-elevation, around, 0) * Vector3.forward;
             var (surface, outward) = TerrainGround.HollowFace(geode, direction);
             var inward = -(Vector3)outward;

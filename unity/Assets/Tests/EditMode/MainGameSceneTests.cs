@@ -303,8 +303,10 @@ namespace SomethingDownThere.Tests
                 {
                     Assert.That(trickle.GetComponent<Collider>(), Is.Null, "Trickles are walkable.");
                     Assert.That(AssetDatabase.GetAssetPath(trickle.GetComponent<Renderer>().sharedMaterial), Is.EqualTo(LakebedSiteSetup.TrickleMaterialPath));
-                    Assert.That(trickle.GetComponent<Renderer>().sharedMaterial.renderQueue, Is.LessThan(lakeQueue),
-                        "Trickles draw first so their mouths hide the lake beneath instead of doubling the water.");
+                    // Without a graphics device (batchmode -nographics) a shader's own queue reads as Geometry, the lake's too.
+                    if (SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Null)
+                        Assert.That(trickle.GetComponent<Renderer>().sharedMaterial.renderQueue, Is.LessThan(lakeQueue),
+                            "Trickles draw first so their mouths hide the lake beneath instead of doubling the water.");
                     Assert.That(trickle.GetComponent<MeshFilter>().sharedMesh.vertices.Min(v => SiteLayout.BeyondOpening(new Vector2(v.x, v.z))),
                         Is.GreaterThan(LakebedSiteSetup.DressingClearance - .5f), trickle.name);
                 }

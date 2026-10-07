@@ -266,3 +266,7 @@ well."
   (or, between spires, the mesh vertex nearest the hull's hit).
 - **More crystals:** 16 a great cave (every fourth hanging from its roof, elevations 55-85 degrees from the chamber's
   heart), 5 a mini cave; 31 instances of each kind.
+- **Tests (session close):** the seed sweep found two celestines in one geode on seed 2: a crystal whose own slot round
+  the geode is crowded now tries seats anywhere round the hollow before keeping an overlapping one. A lakebed scene
+  check compared shader render queues, which read as Geometry without a graphics device (batchmode), so it runs only
+  with one.

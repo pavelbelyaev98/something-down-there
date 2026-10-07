@@ -343,7 +343,8 @@ namespace SomethingDownThere.Tests
                         float required = radii[layout[i].PrefabIndex] + radii[layout[j].PrefabIndex]
                             + (i < shallowCount ? DiscoveryField.SoilClearance : DiscoveryField.BandedSoilClearance) - .0001f;
                         if ((p - layout[j].Position).sqrMagnitude < required * required)
-                            Assert.Fail($"Seed {seed}: placements {i} and {j} overlap their soil envelopes.");
+                            Assert.Fail($"Seed {seed}: placements {i} ({Catalog.Entries[layout[i].PrefabIndex].ItemId} at {p:F2}) and {j} "
+                                + $"({Catalog.Entries[layout[j].PrefabIndex].ItemId} at {layout[j].Position:F2}) overlap their soil envelopes.");
                     }
                 }
             }
