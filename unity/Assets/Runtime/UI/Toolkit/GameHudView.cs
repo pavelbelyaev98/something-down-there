@@ -75,9 +75,7 @@ namespace SomethingDownThere
                 + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.DisplayDepth:F1} m";
             if (player.WorksiteTools != null)
                 shovelStatus.text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {player.WorksiteTools.AvailableLamps}/{player.LampKit.Owned}"
-                    + $"    |    {player.InputSettings.Display(PlayerBinding.Mark)}  MARK"
-                    + (player.Charges.Owned == 0 ? "" : $"    |    {player.InputSettings.Display(PlayerBinding.Charge)}  C4 {player.WorksiteTools.AvailableCharges}/{player.Charges.Owned}"
-                        + (player.WorksiteTools.ArmedCharges == 0 ? "" : $"  {player.InputSettings.Display(PlayerBinding.Detonate)} FIRE"));
+                    + $"    |    {player.InputSettings.Display(PlayerBinding.Mark)}  MARK";
 
             adminHint.text = !player.AdminAvailable || !gameplay ? ""
                 : "DEVELOPER ADMIN"

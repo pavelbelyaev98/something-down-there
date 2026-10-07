@@ -48,7 +48,7 @@ persist immediately and across launches.
 | Work lamp | L | Preview; primary places, secondary cancels, Interact retrieves |
 | World marking | M | Preview arrow/home/return-here; repeat to change symbol, Interact erases |
 | Rotate placement | R | Rotate the current lamp or marking preview |
-| C4: throw / detonate | G / B | Preview with the blast volume; multiple charges; remote detonation |
+| C4: throw / detonate | Rebindable pair | Multiple charges; remote detonation |
 | Photo mode | Rebindable | Pause-only |
 
 Rules:

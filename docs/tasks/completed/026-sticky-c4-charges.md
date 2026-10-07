@@ -1,9 +1,8 @@
 # 026 — Sticky C4 Charges & Material Reactions
 
-**Status:** complete: C4 charges are bought one at a time at the computer and stuck on diggable ground through a
-preview that shows the ball they take; one key sets them all off. A blast removes that ball through the dig pipeline
-in every ground and cracks geode shell further, leaving finds, chests and lamps whole. A twelve-level C4 track blasts
-wider, packs more and makes charges cheaper.
+**Status:** removed (user, 2026-10-07, after a playtest: "the C4 is terrible, remove it for now, it doesn't give anything
+to the game"). The build below was taken out whole; the task is parked. Before it returns, it needs a reason to exist
+the game does not already give (the drill already crawls through geode shell in seconds).
 
 ## Objective
 

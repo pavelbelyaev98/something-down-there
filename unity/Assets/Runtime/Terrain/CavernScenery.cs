@@ -195,15 +195,6 @@ namespace SomethingDownThere
             Destroy(crystal.gameObject);
         }
 
-        // A C4 blast (026): every cluster whose middle lies within `radius` of `point` bursts.
-        public int BlastWithin(Vector3 point, float radius)
-        {
-            if (root == null) return 0;
-            int burst = 0;
-            foreach (var crystal in root.GetComponentsInChildren<CavernCrystal>()) if (crystal.Blast(point, radius)) burst++;
-            return burst;
-        }
-
         internal void Chipped(Vector3 point, Vector3 normal, Color colour) => shatter?.Burst(point + normal * .02f, normal, .04f, colour, 9);
 
         // The work of one tool stroke, in seconds of the tool working: the viewer's stroke interval.

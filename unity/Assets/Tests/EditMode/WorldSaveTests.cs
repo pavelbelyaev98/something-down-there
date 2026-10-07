@@ -46,11 +46,8 @@ namespace SomethingDownThere.Tests
         public void HighEquipmentLevelsRoundTripWithoutClamping(int level)
         {
             var saved = Snapshot(1);
-            saved.ShovelLevel = saved.InventoryLevel = saved.FuelLevel = saved.JetpackLevel = saved.C4Level = level;
+            saved.ShovelLevel = saved.InventoryLevel = saved.FuelLevel = saved.JetpackLevel = level;
             saved.LampsOwned = level * 15;
-            saved.ChargesOwned = EquipmentProgression.C4(level).PackSize;
-            saved.Worksite.Charges = new[] { new ChargeSnapshot { Position = new Vector3(1, 2, 3), Rotation = Quaternion.Euler(0, 40, 0), Stuck = true },
-                new ChargeSnapshot { Position = new Vector3(2, 1.5f, 3), Rotation = Quaternion.Euler(20, 0, 70) } };
             saved.InventoryCapacity = 10 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.InventoryIncrease);
             saved.BatteryCapacity = 100 + Enumerable.Range(1, level - 1).Sum(EquipmentProgression.FuelIncrease);
             using var memory = new MemoryStream();
@@ -68,20 +65,6 @@ namespace SomethingDownThere.Tests
             saved.InventoryLevel = 1; saved.FuelLevel = level;
             Assert.Throws<InvalidDataException>(saved.Validate);
             saved.FuelLevel = 1; saved.JetpackLevel = level;
-            Assert.Throws<InvalidDataException>(saved.Validate);
-        }
-
-        // C4 (026): the level is a track level, the pack bounds what is owned and armed charges are owned.
-        [TestCase(0, 0, 0)]
-        [TestCase(EquipmentProgression.LevelCount + 1, 0, 0)]
-        [TestCase(1, -1, 0)]
-        [TestCase(1, 3, 0)]
-        [TestCase(1, 1, 2)]
-        public void C4KitIsBoundedAndCoversEveryArmedCharge(int level, int owned, int armed)
-        {
-            var saved = Snapshot(1); saved.C4Level = level; saved.ChargesOwned = owned;
-            saved.Worksite.Charges = new ChargeSnapshot[armed];
-            for (int i = 0; i < armed; i++) saved.Worksite.Charges[i] = new ChargeSnapshot { Rotation = Quaternion.identity, Stuck = true };
             Assert.Throws<InvalidDataException>(saved.Validate);
         }
 
@@ -389,10 +372,6 @@ namespace SomethingDownThere.Tests
             Assert.That(actual.FuelLevel, Is.EqualTo(expected.FuelLevel));
             Assert.That(actual.JetpackLevel, Is.EqualTo(expected.JetpackLevel));
             Assert.That(actual.LampsOwned, Is.EqualTo(expected.LampsOwned));
-            Assert.That(actual.C4Level, Is.EqualTo(expected.C4Level));
-            Assert.That(actual.ChargesOwned, Is.EqualTo(expected.ChargesOwned));
-            Assert.That(actual.Worksite.Charges.Select(c => (c.Position, c.Rotation, c.Stuck)),
-                Is.EqualTo(expected.Worksite.Charges.Select(c => (c.Position, c.Rotation, c.Stuck))));
             Assert.That(actual.BatteryCapacity, Is.EqualTo(expected.BatteryCapacity));
             Assert.That(actual.PlayerPosition, Is.EqualTo(expected.PlayerPosition));
             Assert.That(actual.PlayerRotation, Is.EqualTo(expected.PlayerRotation));

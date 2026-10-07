@@ -100,6 +100,9 @@ The machine performs two clean auxiliary interactions without switching tools:
 
 ## 8. C4
 
+*Parked (user, 2026-10-07): a first build was removed after its playtest, "it doesn't give anything to the game".
+The rules below stay as the brief if it returns; it needs a role the drill and the grounds do not already fill.*
+
 C4 arrives late in the progression as an optional excavation accelerator.
 
 - **Thrown or placed, then remotely detonated.** Multiple charges can be active at once.

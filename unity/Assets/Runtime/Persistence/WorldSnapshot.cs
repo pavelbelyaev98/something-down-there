@@ -23,7 +23,6 @@ namespace SomethingDownThere
         public int InventoryCapacity, Credits, ShovelLevel, SuccessfulStrokes;
         public int InventoryLevel = 1, FuelLevel = 1, JetpackLevel = 1;
         public int LampsOwned = EquipmentProgression.StarterLamps;
-        public int C4Level = 1, ChargesOwned;
         public float BatteryCapacity, BatteryCharge, Pitch, VerticalSpeed;
         public float CrouchAmount;
         public Vector3 PlayerPosition;
@@ -54,8 +53,6 @@ namespace SomethingDownThere
                 && JetpackLevel >= 1 && JetpackLevel <= EquipmentProgression.LevelCount, "Invalid capacity upgrades.");
             Require(LampsOwned >= EquipmentProgression.StarterLamps && LampsOwned <= EquipmentProgression.MaximumLamps
                 && Worksite.Lamps.Length <= LampsOwned, "Invalid work lamp ownership.");
-            Require(C4Level >= 1 && C4Level <= EquipmentProgression.LevelCount && ChargesOwned >= 0
-                && ChargesOwned <= EquipmentProgression.C4(C4Level).PackSize && Worksite.Charges.Length <= ChargesOwned, "Invalid C4 kit.");
             Require(Finite(BatteryCapacity) && BatteryCapacity > 0 && Finite(BatteryCharge)
                 && BatteryCharge >= 0 && BatteryCharge <= BatteryCapacity, "Invalid battery.");
             Require(Finds != null && Finds.Length <= DiscoveryField.MaximumPopulation && Inventory != null && Inventory.Length <= InventoryCapacity, "Invalid discovery population.");

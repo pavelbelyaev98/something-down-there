@@ -4,19 +4,17 @@ namespace SomethingDownThere
 {
     public sealed class ComputerStation : StationTarget
     {
-        private readonly StationTrade.UpgradeOffer[] offers = new StationTrade.UpgradeOffer[5];
+        private readonly StationTrade.UpgradeOffer[] offers = new StationTrade.UpgradeOffer[4];
         private StationTrade.SaleOffer[] sales = System.Array.Empty<StationTrade.SaleOffer>();
-        public const int RefillCommand = 5;
-        public const int LampCommand = 6;
-        public const int ChargeCommand = 7;
-        public const int SellAllCommand = 8;
+        public const int RefillCommand = 4;
+        public const int LampCommand = 5;
+        public const int SellAllCommand = 6;
         public bool Selling => Items.Count > 0;
         public IReadOnlyList<InventoryItem> Items => sales.Length == 0 ? System.Array.Empty<InventoryItem>() : sales[0].Items;
         public long TotalValue => sales.Length == 0 ? 0 : sales[0].Value;
         public StationTrade.UpgradeOffer OfferAt(int index) => index >= 0 && index < offers.Length ? offers[index] : null;
         public StationTrade.RefillOffer Refill { get; private set; }
         public StationTrade.LampOffer Lamp { get; private set; }
-        public StationTrade.ChargeOffer Charge { get; private set; }
         public override string Title => "Computer";
         public override string GetPrompt(FpsPlayer player) => "Use";
         public override int CommandCount => Selling ? SellAllCommand + sales.Length : SellAllCommand;
@@ -29,7 +27,6 @@ namespace SomethingDownThere
             for (int i = 0; i < offers.Length; i++) offers[i] = player.Trade.OfferUpgrade((EquipmentKind)i);
             Refill = player.Trade.OfferRefill();
             Lamp = player.Trade.OfferLamp();
-            Charge = player.Trade.OfferCharge();
         }
         public override string CommandLabel(int index, FpsPlayer player)
         {
@@ -42,7 +39,6 @@ namespace SomethingDownThere
             if (index == RefillCommand) return Refill == null || Refill.Full ? "Tank full"
                 : Refill.Cost == 0 ? "Need $1" : $"Refill / ${Refill.Cost:0}";
             if (index == LampCommand) return Lamp == null || Lamp.Full ? "Kit full" : $"Buy lamp / ${Lamp.Cost}";
-            if (index == ChargeCommand) return Charge == null || Charge.Full ? "Pack full" : $"Buy C4 / ${Charge.Cost}";
             var offer = OfferAt(index);
             return offer == null || offer.Complete ? "Max level" : $"Upgrade / ${offer.Cost}";
         }
@@ -52,8 +48,7 @@ namespace SomethingDownThere
         public override bool CanExecute(int index, FpsPlayer player) => isActiveAndEnabled && (Selling
             ? player.Trade.Check(SaleAt(index))
             : index == RefillCommand ? player.Trade.Check(Refill)
-            : index == LampCommand ? player.Trade.Check(Lamp)
-            : index == ChargeCommand ? player.Trade.Check(Charge) : player.Trade.Check(OfferAt(index))) == TradeResult.Ready;
+            : index == LampCommand ? player.Trade.Check(Lamp) : player.Trade.Check(OfferAt(index))) == TradeResult.Ready;
 
         public override bool TryExecute(int index, FpsPlayer player)
         {
@@ -75,11 +70,6 @@ namespace SomethingDownThere
             {
                 if (!player.Trade.TryBuyLamp(Lamp)) return false;
                 player.ShowStationFeedback($"+1 work lamp  |  -${Lamp.Cost}");
-            }
-            else if (index == ChargeCommand)
-            {
-                if (!player.Trade.TryBuyCharge(Charge)) return false;
-                player.ShowStationFeedback($"+1 C4 charge  |  -${Charge.Cost}");
             }
             else
             {

@@ -25,28 +25,6 @@ namespace SomethingDownThere.Tests
             Assert.That(grid.IsSolid(new Vector3(2.2f, top - 1.6f, .8f)), Is.False, "Lateral digging under the site starts below the bank.");
         }
 
-        // C4 (026): a blast takes its ball in common ground, within its wobble, and geode shell to ShellReach of it.
-        [TestCase(TerrainMaterialId.Soil, 1f)]
-        [TestCase(TerrainMaterialId.Backfill, 1f)]
-        [TestCase(TerrainMaterialId.GeodeShell, EquipmentProgression.ShellReach)]
-        public void BlastTakesItsBallInEveryGroundAndGeodeShellFurther(TerrainMaterialId ground, float reach)
-        {
-            var grid = new ExcavationGrid(new Vector3Int(64, 64, 64), .125f);
-            var saved = grid.Capture();
-            saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Density.Length, ground);
-            grid.Restore(saved);
-            const float radius = 1.5f;
-            var centre = new Vector3(4, 4, 4);
-            Assert.That(grid.RemoveBlast(centre, radius, radius * EquipmentProgression.ShellReach, 11, out var changed), Is.True);
-            float expected = 4f / 3 * Mathf.PI * Mathf.Pow(radius * reach, 3);
-            Assert.That(grid.LastRemovedVolume, Is.EqualTo(expected).Within(expected * .12f));
-            Assert.That(grid.IsSolid(centre + Vector3.right * radius * reach * (1 - ExcavationGrid.BlastWobble - .05f)), Is.False);
-            Assert.That(grid.IsSolid(centre + Vector3.right * radius * reach * (1 + ExcavationGrid.BlastWobble + .1f)), Is.True);
-            Assert.That(changed.size.x, Is.GreaterThan(0));
-            Assert.That(grid.RemoveBlast(centre, 0, 1, 11, out _), Is.False, "No blast without a radius.");
-            Assert.That(grid.RemoveBlast(centre, 2, 1, 11, out _), Is.False, "Shell never takes less than common ground.");
-        }
-
         [Test]
         public void BatchedExposureMatchesScalarSamplingAfterCutsRotationScalingAndRestore()
         {

@@ -404,10 +404,9 @@ namespace SomethingDownThere
 
         private void BuildUpgradeRow(VisualElement parent, ComputerStation station, int index, long revision)
         {
-            bool refill = index == ComputerStation.RefillCommand, lamp = index == ComputerStation.LampCommand,
-                charge = index == ComputerStation.ChargeCommand, serviceRow = refill || lamp || charge;
+            bool refill = index == ComputerStation.RefillCommand, lamp = index == ComputerStation.LampCommand, serviceRow = refill || lamp;
             var offer = station.OfferAt(index);
-            string track = refill ? "Refill fuel" : lamp ? "Work lamp" : charge ? "C4 charge" : EquipmentProgression.Name(offer.Kind);
+            string track = refill ? "Refill fuel" : lamp ? "Work lamp" : EquipmentProgression.Name(offer.Kind);
             // The row is decoration; only the price button is interactive.
             var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", serviceRow ? "station-row service" : "station-row");
             var main = ToolkitStationRows.Block(row, track + " main", "station-row-main");
@@ -429,12 +428,6 @@ namespace SomethingDownThere
                 if (sale.Full) { price = "MAX"; maxed = true; }
                 else { price = $"${sale.Cost}"; shortfall = player.Wallet.Balance < sale.Cost; }
             }
-            else if (charge)
-            {
-                var sale = station.Charge;
-                if (sale.Full) { price = "FULL"; maxed = true; }
-                else { price = $"${sale.Cost}"; shortfall = player.Wallet.Balance < sale.Cost; }
-            }
             else if (offer.Complete) { price = "MAX"; maxed = true; }
             else { price = $"${offer.Cost}"; shortfall = player.Wallet.Balance < offer.Cost; }
             // One activation of this button buys. Out of reach or finished means the
@@ -451,12 +444,10 @@ namespace SomethingDownThere
             var progress = ToolkitStationRows.Block(bottom, track + " bar slot", "station-bar-slot");
             if (!serviceRow) ToolkitStationRows.Segments(progress, track + " pips", offer.OwnedLevel, offer.LevelCount);
             ToolkitStationRows.Text(bottom, track + " effect", refill ? RefillHeadline(station) : lamp ? LampHeadline(station)
-                : charge ? ChargeHeadline(station) : UpgradeHeadline(offer), "station-cell-effect");
+                : UpgradeHeadline(offer), "station-cell-effect");
             // Everything else the purchase changes stays one hover away instead of
             // adding another column or sentence to the table.
-            buy.tooltip = refill ? RefillDetail(station) : lamp ? "Yours for good: pick a lamp up to place it again"
-                : charge ? $"{player.InputSettings.Display(PlayerBinding.Charge)} sticks one on the ground, {player.InputSettings.Display(PlayerBinding.Detonate)} sets off all armed charges. The C4 track packs more"
-                : UpgradeDetail(offer);
+            buy.tooltip = refill ? RefillDetail(station) : lamp ? "Yours for good: pick a lamp up to place it again" : UpgradeDetail(offer);
             if (buy.name == purchasedCard)
             {
                 buy.schedule.Execute(() => buy.AddToClassList("just-bought"));
@@ -479,9 +470,6 @@ namespace SomethingDownThere
             if (offer.Kind == EquipmentKind.Jetpack)
                 return Compared($"{player.Jetpack.Current.MaxAscentSpeed:0} m/s",
                     $"{EquipmentProgression.Jetpack(offer.Complete ? offer.OwnedLevel : offer.NextLevel).MaxAscentSpeed:0} m/s", offer.Complete);
-            if (offer.Kind == EquipmentKind.C4)
-                return "Blast " + Compared($"{player.Charges.Current.BlastRadius * 2:0.#} m",
-                    $"{EquipmentProgression.C4(offer.Complete ? offer.OwnedLevel : offer.NextLevel).BlastRadius * 2:0.#} m", offer.Complete);
             if (offer.Kind == EquipmentKind.Inventory)
                 return Compared($"{player.Inventory.Capacity}",
                     $"{player.Inventory.Capacity + (offer.Complete ? 0 : EquipmentProgression.InventoryIncrease(offer.OwnedLevel))}", offer.Complete);
@@ -508,18 +496,8 @@ namespace SomethingDownThere
                 return "Fuel per metre climbed " + Compared($"{player.Jetpack.Current.EnergyPerMetre:0.00}", $"{next.EnergyPerMetre:0.00}", offer.Complete)
                     + (next.HoverHold ? "  |  Hover hold in the air" : "");
             }
-            if (offer.Kind == EquipmentKind.C4)
-            {
-                var next = EquipmentProgression.C4(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
-                return "Pack " + Compared($"{player.Charges.Current.PackSize}", $"{next.PackSize}", offer.Complete)
-                    + "  |  Charge " + Compared($"${player.Charges.Current.ChargePrice}", $"${next.ChargePrice}", offer.Complete)
-                    + "  |  Geode shell breaks wider";
-            }
             return offer.Kind == EquipmentKind.Fuel ? "Refill sold separately" : "";
         }
-
-        private static string ChargeHeadline(ComputerStation station) => station.Charge.Full
-            ? $"{station.Charge.Owned}/{station.Charge.PackSize} packed" : $"{station.Charge.Owned} → {station.Charge.Owned + 1} of {station.Charge.PackSize}";
 
         private static string RefillDetail(ComputerStation station) =>
             $"$1 per {EquipmentProgression.FuelPerCredit:0.#} fuel, rounded up";
@@ -655,7 +633,6 @@ namespace SomethingDownThere
             Button(grid, "Ground X-ray: " + (player.AdminGroundXray ? "ON" : "OFF"), player.ToggleAdminGroundXray);
             Button(grid, "Detector: " + (player.DetectorShown ? "ON" : "OFF"), player.ToggleAdminDetector);
             Button(grid, "Add $500", player.GrantAdminMoney);
-            Button(grid, "Fill C4 pack", player.FillAdminCharges);
             Button(grid, "Restore normal rules", player.RestoreAdminOverrides, player.HasAdminOverrides);
             Button(actions, "Resume digging", player.CloseMenu, true, "primary");
         }

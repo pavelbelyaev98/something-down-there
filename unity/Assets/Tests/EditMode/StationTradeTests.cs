@@ -166,45 +166,6 @@ namespace SomethingDownThere.Tests
             Assert.That(kind == EquipmentKind.Inventory ? fuel.Level : bag.Level, Is.EqualTo(1));
         }
 
-        // C4 (026): charges cost money, never battery, one at a time up to the pack; the track blasts wider, packs more
-        // and makes a charge cheaper at the shared prices.
-        [Test]
-        public void C4TrackPacksMoreBlastsWiderAndChargesCostOnlyMoney()
-        {
-            var kit = new ChargeKit(); var battery = new Battery(100);
-            var c4 = new StationTrade(bag, wallet, shovel, battery, charges: kit);
-            Assert.Throws<System.InvalidOperationException>(() => trade.OfferCharge());
-            Assert.That(kit.Owned, Is.Zero, "New Game brings no charges.");
-            Assert.That(c4.Check(c4.OfferCharge()), Is.EqualTo(TradeResult.Unaffordable));
-            wallet.TryCredit(100000);
-            var stale = c4.OfferCharge();
-            for (int i = 0; i < EquipmentProgression.C4(1).PackSize; i++)
-            {
-                var offer = c4.OfferCharge();
-                Assert.That(offer.Cost, Is.EqualTo(EquipmentProgression.C4(1).ChargePrice));
-                Assert.That(c4.TryBuyCharge(offer), Is.True);
-                Assert.That(c4.TryBuyCharge(offer), Is.False, "An offer buys once.");
-            }
-            Assert.That(c4.TryBuyCharge(stale), Is.False, "An older quote cannot buy another charge.");
-            Assert.That(kit.Owned, Is.EqualTo(EquipmentProgression.C4(1).PackSize));
-            Assert.That(c4.Check(c4.OfferCharge()), Is.EqualTo(TradeResult.Complete), "A full pack takes no more.");
-            Assert.That(battery.Charge, Is.EqualTo(100), "Charges never cost battery.");
-            for (int level = 2; level <= EquipmentProgression.LevelCount; level++)
-            {
-                var previous = kit.Current;
-                var offer = c4.OfferUpgrade(EquipmentKind.C4);
-                Assert.That(offer.Cost, Is.EqualTo(EquipmentProgression.Price(level - 1)));
-                Assert.That(c4.TryUpgrade(offer), Is.True);
-                Assert.That(kit.Level, Is.EqualTo(level));
-                Assert.That(kit.Current.BlastRadius, Is.GreaterThan(previous.BlastRadius), "Every purchase blasts wider.");
-                Assert.That(kit.Current.PackSize, Is.GreaterThanOrEqualTo(previous.PackSize));
-                Assert.That(kit.Current.ChargePrice, Is.LessThan(previous.ChargePrice), "Every purchase makes a charge cheaper.");
-            }
-            Assert.That(c4.Check(c4.OfferUpgrade(EquipmentKind.C4)), Is.EqualTo(TradeResult.Complete));
-            Assert.That(kit.Current.PackSize, Is.EqualTo(EquipmentProgression.MaximumCharges));
-            Assert.That(shovel.Level, Is.EqualTo(1));
-        }
-
         [Test]
         public void JetpackTrackClimbsFasterAndCheaperEveryLevelAtTheSharedPrices()
         {

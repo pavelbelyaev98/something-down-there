@@ -25,7 +25,6 @@ namespace SomethingDownThere
         public bool ReturnPressed;
         public bool XrayPressed;
         public bool LampPressed, MarkPressed, RotatePlacementPressed, CancelPlacementPressed;
-        public bool ChargePressed, DetonatePressed;
     }
 
     public sealed class FpsInput : IDisposable
@@ -33,8 +32,8 @@ namespace SomethingDownThere
         private readonly InputActionMap actions = new InputActionMap("FPS");
         private readonly InputAction move, look, dig, jetpack, crouch, sprint, interact, inventory, back, escape;
         private readonly InputAction refill, returnToSurface, adminMenu, adminCtrl, adminShift, xray;
-        private readonly InputAction lamp, mark, rotatePlacement, cancelPlacement, charge, detonate;
-        private bool lampArmed, markArmed, rotateArmed, cancelArmed, chargeArmed, detonateArmed;
+        private readonly InputAction lamp, mark, rotatePlacement, cancelPlacement;
+        private bool lampArmed, markArmed, rotateArmed, cancelArmed;
         // Ctrl+Shift+1..9 pick levels 1-9; 0 picks the last level.
         private readonly InputAction[] adminLevels = new InputAction[10];
         private bool digArmed, jetpackArmed, interactArmed, inventoryArmed, backArmed, escapeArmed, toggleIntent;
@@ -59,8 +58,6 @@ namespace SomethingDownThere
             lamp = actions.AddAction("Lamp", InputActionType.Button, "<Keyboard>/l");
             mark = actions.AddAction("Mark", InputActionType.Button, "<Keyboard>/m");
             rotatePlacement = actions.AddAction("RotatePlacement", InputActionType.Button, "<Keyboard>/r");
-            charge = actions.AddAction("Charge", InputActionType.Button, "<Keyboard>/g");
-            detonate = actions.AddAction("Detonate", InputActionType.Button, "<Keyboard>/b");
             cancelPlacement = actions.AddAction("CancelPlacement", InputActionType.Button, "<Mouse>/rightButton");
             inventory = actions.AddAction("Inventory", InputActionType.Button, "<Keyboard>/tab");
             back = actions.AddAction("Back", InputActionType.Button, "<Keyboard>/escape");
@@ -106,8 +103,6 @@ namespace SomethingDownThere
             mark.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Mark));
             rotatePlacement.ApplyBindingOverride(0, preferences.Path(PlayerBinding.RotatePlacement));
             cancelPlacement.ApplyBindingOverride(0, preferences.Path(PlayerBinding.CancelPlacement));
-            charge.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Charge));
-            detonate.ApplyBindingOverride(0, preferences.Path(PlayerBinding.Detonate));
             preferenceRevision = preferences.Revision;
             SuppressHeldActions();
             if (enabled) actions.Enable();
@@ -125,7 +120,7 @@ namespace SomethingDownThere
         {
             SuppressDig();
             jetpackArmed = interactArmed = false;
-            lampArmed = markArmed = rotateArmed = cancelArmed = chargeArmed = detonateArmed = false;
+            lampArmed = markArmed = rotateArmed = cancelArmed = false;
             inventoryArmed = !inventory.IsPressed();
             backArmed = !back.IsPressed();
             escapeArmed = !escape.IsPressed();
@@ -152,8 +147,6 @@ namespace SomethingDownThere
             if (!mark.IsPressed()) markArmed = true;
             if (!rotatePlacement.IsPressed()) rotateArmed = true;
             if (!cancelPlacement.IsPressed()) cancelArmed = true;
-            if (!charge.IsPressed()) chargeArmed = true;
-            if (!detonate.IsPressed()) detonateArmed = true;
             bool toggle = preferences != null && preferences.ToggleDig;
             bool digPressed = digArmed && dig.WasPressedThisFrame();
             if (!gameplayActive) toggleIntent = false;
@@ -189,9 +182,7 @@ namespace SomethingDownThere
                 LampPressed = gameplayActive && !adminChord && lampArmed && lamp.WasPressedThisFrame(),
                 MarkPressed = gameplayActive && !adminChord && markArmed && mark.WasPressedThisFrame(),
                 RotatePlacementPressed = gameplayActive && !adminChord && rotateArmed && rotatePlacement.WasPressedThisFrame(),
-                CancelPlacementPressed = gameplayActive && cancelArmed && cancelPlacement.WasPressedThisFrame(),
-                ChargePressed = gameplayActive && !adminChord && chargeArmed && charge.WasPressedThisFrame(),
-                DetonatePressed = gameplayActive && !adminChord && detonateArmed && detonate.WasPressedThisFrame()
+                CancelPlacementPressed = gameplayActive && cancelArmed && cancelPlacement.WasPressedThisFrame()
             };
         }
 

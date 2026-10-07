@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 namespace SomethingDownThere
 {
     [DisallowMultipleComponent]
-    public sealed partial class WorksiteTools : MonoBehaviour
+    public sealed class WorksiteTools : MonoBehaviour
     {
         public const int MaximumMarks = 96;
         // Only the nearest lamps shine: each needs six faces of the shared shadow atlas, and the
@@ -31,7 +31,7 @@ namespace SomethingDownThere
         private GameObject lampGhost;
         private Renderer[] ghostRenderers;
         private WorldMark markGhost;
-        private int placement; // 0 none, 1 lamp, 2..4 stencils, 5 a C4 charge (ChargePlacement).
+        private int placement; // 0 none, 1 lamp, 2..4 stencils.
         private float rotation;
         private RaycastHit surface;
         private Vector3 proposedPosition;
@@ -49,14 +49,11 @@ namespace SomethingDownThere
         public bool PlacementValid => IsPlacing && valid;
         public bool Configured => player != null && terrain != null && lampPrefab != null && lampPrefab.WorkLight != null
             && stencils != null && stencils.Length == 3 && Array.TrueForAll(stencils, mesh => mesh != null)
-            && markMaterial != null && validPreview != null && invalidPreview != null && ChargesConfigured;
+            && markMaterial != null && validPreview != null && invalidPreview != null;
         // A round lamp has no visible heading, so only markings offer rotation.
-        public string PlacementPrompt => !IsPlacing ? "" : placement == ChargePlacement ? ChargePrompt
-            : (valid ? $"{Binding(PlayerBinding.Dig)}  Place {SelectionName}" : reason)
+        public string PlacementPrompt => !IsPlacing ? "" : (valid ? $"{Binding(PlayerBinding.Dig)}  Place {SelectionName}" : reason)
             + (placement > 1 ? $"\n{Binding(PlayerBinding.RotatePlacement)} Rotate  |  " : "\n") + $"{Binding(PlayerBinding.CancelPlacement)} Cancel"
             + (placement > 1 ? $"  |  {Binding(PlayerBinding.Mark)} Next symbol" : "");
-        private string ChargePrompt => (valid ? $"{Binding(PlayerBinding.Dig)}  Stick C4 charge  ({AvailableCharges} left)" : reason)
-            + $"\n{Binding(PlayerBinding.CancelPlacement)} Cancel" + (ArmedCharges > 0 ? $"  |  {Binding(PlayerBinding.Detonate)} Detonate {ArmedCharges}" : "");
         private string SelectionName => placement == 1 ? "work lamp" : MarkName((WorldMarkKind)(placement - 2));
         private string Binding(PlayerBinding binding) => player.InputSettings.Display(binding);
         private static string MarkName(WorldMarkKind kind) => kind == WorldMarkKind.Home ? "home" : kind == WorldMarkKind.ReturnHere ? "return-here" : "arrow";
@@ -85,29 +82,24 @@ namespace SomethingDownThere
             for (int i = 0; i < Mathf.Min(candidates, LitLampBudget); i++)
                 lamps[lampOrder[i]].Shine = Mathf.Clamp01((LightCullDistance - Mathf.Sqrt(lampDistances[i])) / LightFadeDistance);
             foreach (var lamp in lamps) lamp.Tick(player.GameplayActive, Time.unscaledDeltaTime);
-            TickCharges(player.GameplayActive, player.GameplayActive ? Time.unscaledDeltaTime : 0);
         }
 
         public bool HandleInput(FpsInputFrame frame)
         {
-            if (frame.DetonatePressed && ChargesConfigured) { Detonate(); return true; }
-            if (frame.ChargePressed && !ChargesConfigured) return false;
-            if (frame.LampPressed || frame.MarkPressed || frame.ChargePressed)
+            if (frame.LampPressed || frame.MarkPressed)
             {
-                int next = frame.ChargePressed ? placement == ChargePlacement ? 0 : ChargePlacement
-                    : frame.LampPressed ? placement == 1 ? 0 : 1 : placement < 2 || placement == ChargePlacement ? 2 : placement == 4 ? 2 : placement + 1;
+                int next = frame.LampPressed ? placement == 1 ? 0 : 1 : placement < 2 ? 2 : placement == 4 ? 2 : placement + 1;
                 Cancel(); placement = next; player.SuppressWorldActions();
                 if (IsPlacing) UpdatePreview();
                 return true;
             }
-            if (!IsPlacing) return false;
+            if (!IsPlacing) return frame.LampPressed || frame.MarkPressed;
             if (frame.CancelPlacementPressed) { Cancel(); player.SuppressWorldActions(); return true; }
             if (frame.RotatePlacementPressed) rotation = Mathf.Repeat(rotation + 45, 360);
             UpdatePreview();
             if (frame.DigPressed)
             {
-                // Charges keep the preview open while any remain, so several go out quickly.
-                if (valid && Commit()) { if (placement != ChargePlacement || AvailableCharges == 0) Cancel(); player.SuppressWorldActions(); }
+                if (valid && Commit()) { Cancel(); player.SuppressWorldActions(); }
                 else player.ShowFeedback(reason);
             }
             return true;
@@ -117,14 +109,12 @@ namespace SomethingDownThere
         {
             placement = 0; rotation = 0; valid = false;
             if (lampGhost != null) lampGhost.SetActive(false);
-            HideChargeGhosts();
             markGhost?.Dispose(); markGhost = null;
         }
 
         private void UpdatePreview()
         {
             valid = false; reason = "Aim at ground within reach";
-            if (placement == ChargePlacement) { UpdateChargePreview(); return; }
             if (placement == 1)
             {
                 var eye = player.ViewCamera.transform;
@@ -171,8 +161,6 @@ namespace SomethingDownThere
         private bool Commit()
         {
             if (placement == 1) return PlaceLamp(lampPose) != null;
-            if (placement == ChargePlacement) return PlaceCharge(chargePose, player.ViewCamera.transform.position
-                + player.ViewCamera.transform.forward * .5f - player.ViewCamera.transform.up * .2f) != null;
             return PlaceMark(new MarkSnapshot { Kind = (WorldMarkKind)(placement - 2), Position = proposedPosition, Rotation = proposedRotation });
         }
 
@@ -325,7 +313,6 @@ namespace SomethingDownThere
             for (int i = marks.Count - 1; i >= 0; i--)
                 if (bounds.Intersects(marks[i].Bounds) && !marks[i].Supported())
                 { marks[i].Dispose(); marks.RemoveAt(i); Dirty(); }
-            ChargesChanged(bounds);
         }
 
         public WorksiteSnapshot Capture()
@@ -337,7 +324,6 @@ namespace SomethingDownThere
                 var mark = marks[i].State;
                 result.Marks[i] = new MarkSnapshot { Kind = mark.Kind, Position = mark.Position, Rotation = mark.Rotation };
             }
-            CaptureCharges(result);
             return result;
         }
 
@@ -353,7 +339,6 @@ namespace SomethingDownThere
                 if (!mark.Project(saved)) { mark.Dispose(); throw new System.IO.InvalidDataException("A saved marking has no supporting surface."); }
                 marks.Add(mark); RegisterRenderer(mark.Renderer);
             }
-            RestoreCharges(state);
             Dirty();
         }
 
