@@ -28,10 +28,10 @@ namespace SomethingDownThere
         private Texture3D texture;
         private IEnumerator rebuild;
         private Bounds pending;
-        private bool dirty, patched;
+        private bool dirty, patched, reroute;
         private double accumulatedMilliseconds;
         public int PublishedRevision { get; private set; }
-        public bool IsUpdating => dirty || rebuild != null;
+        public bool IsUpdating => dirty || reroute || rebuild != null;
         public double LastRebuildMilliseconds { get; private set; }
         public int CacheBytes => grid == null ? 0 : grid.Count;
 
@@ -117,24 +117,29 @@ namespace SomethingDownThere
         private void LateUpdate()
         {
             if (terrain.IsRestoring) return;
-            if (rebuild == null && dirty)
+            if (rebuild == null && (dirty || reroute))
             {
-                rebuild = grid.Rebuild(pending, Density);
-                dirty = false;
+                // A reroute alone (an opened hollow) only needs the routes walked again, which every rebuild does over the
+                // whole grid: its own area is a point, so no ground is resampled for it.
+                rebuild = grid.Rebuild(dirty ? pending : new Bounds(grid.Extent * .5f, Vector3.zero), Density);
+                dirty = reroute = false;
                 accumulatedMilliseconds = 0;
             }
             if (rebuild != null)
             {
                 timer.Restart();
                 bool more;
-                do { more = rebuild.MoveNext(); }
-                while (more && timer.Elapsed.TotalMilliseconds < 1.25);
+                using (RebuildMarker.Auto())
+                    do { more = rebuild.MoveNext(); }
+                    while (more && timer.Elapsed.TotalMilliseconds < 1.25);
                 accumulatedMilliseconds += timer.Elapsed.TotalMilliseconds;
                 if (!more)
                 {
                     rebuild = null;
-                    // Cuts made while it ran are not in this result yet: light them again.
-                    if (dirty) grid.Patch(pending, Density);
+                    // Cuts made while it ran are not in this result yet: light them again, if they are a tool's few cuts. A
+                    // larger change (a restore reports the whole grid) waits for the next rebuild, which is spread over frames:
+                    // patched at once it froze the game for most of a second.
+                    if (dirty && pending.size.x * pending.size.y * pending.size.z <= PatchVolume) using (PatchMarker.Auto()) grid.Patch(pending, Density);
                     patched = true;
                     PublishedRevision++;
                     LastRebuildMilliseconds = accumulatedMilliseconds;
@@ -146,34 +151,33 @@ namespace SomethingDownThere
                     }
                 }
             }
-            if (patched) { texture.SetPixelData(grid.Light, 0); texture.Apply(false, false); patched = false; }
+            if (patched) using (UploadMarker.Auto()) { texture.SetPixelData(grid.Light, 0); texture.Apply(false, false); patched = false; }
         }
+
+        // The most a rebuild's catch-up patch covers, cubic metres: a drill's shaft, never a restored grid.
+        private const float PatchVolume = 64;
+        private static readonly Unity.Profiling.ProfilerMarker RebuildMarker = new Unity.Profiling.ProfilerMarker("Daylight.Rebuild"),
+            PatchMarker = new Unity.Profiling.ProfilerMarker("Daylight.Patch"), UploadMarker = new Unity.Profiling.ProfilerMarker("Daylight.Upload");
 
         public float SampleAmbient(Vector3 worldPosition) =>
             grid.Sample(transform.InverseTransformPoint(worldPosition));
 
         // An opened hollow: the light coming in through its hole spreads through it (ExcavationDaylightGrid.Hollow), from the
-        // next rebuild, which this asks for (a rebuild routes the whole grid; a point is enough to start one).
+        // next rebuild, which this asks for. Never by widening the cuts' pending area: the patch that follows a rebuild covers
+        // that area at once, and stretched from a cut to a great cave's middle it froze the game for most of a second.
         public void LightHollow(Vector3 localMin, Vector3 localMax)
         {
             if (grid == null) return;
             var box = new Bounds(); box.SetMinMax(localMin, localMax);
             grid.Hollow(box);
-            Reroute(box.center);
+            reroute = true;
         }
 
         public void ClearHollows()
         {
             if (grid == null) return;
             grid.ClearHollows();
-            Reroute(grid.Extent * .5f);
-        }
-
-        private void Reroute(Vector3 local)
-        {
-            var point = new Bounds(local, Vector3.zero);
-            if (dirty) pending.Encapsulate(point); else pending = point;
-            dirty = true;
+            reroute = true;
         }
 
         internal void RefreshShaderState()

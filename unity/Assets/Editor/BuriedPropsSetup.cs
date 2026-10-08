@@ -291,27 +291,28 @@ namespace SomethingDownThere.Editor
         // (art/mining-pack/make_maps.py):
         // - coal on the layered rocks, blocky with bedding planes, black with a dull sheen (user, 2026-10-06: the photo
         //   rock's coal "looks too much like a rock");
-        // - native iron, silver and gold on the knobbly jagged ones, solid metal (user, 2026-10-06: "gold, silver and others
-        //   can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, iron a dark,
-        //   rust-tinged grey, silver bright, gold yellow. Iron and gold are part metal only, so a lamp underground still
-        //   shows their colour: dark and fully metal, iron passed for coal; a light steel grey passed for silver (user,
-        //   2026-10-07: "barely any difference between iron and silver"). Gold's rocks are flattened
+        // - native silver and gold on the knobbly jagged ones, solid metal (user, 2026-10-06: "gold, silver and others
+        //   can be full gold/silver"): the rock's light and dark only (its _Metal map) in the metal's colour, silver bright,
+        //   gold yellow; gold part metal only, so a lamp underground still shows its colour. Gold's rocks are flattened
         //   (Flatten of their height) into a nugget: mirror-glossy on the jagged rock it read as crumpled foil ("like gold
         //   wrappers"), on the pack's rounded rock as a blob ("poop shape").
+        // - iron ore on the rounded ones, from its own maps (Maps: Rocks/<rock>_Iron.png and _Iron_Mask.png, whose metal and
+        //   smoothness the material reads): red-brown hematite with bluish-silver metal flakes, as in the user's reference
+        //   (2026-10-07). As a metal lump it passed for coal when dark, for silver when light, and read as "poop" when rusty.
         internal readonly struct RockFindLook
         {
-            public readonly string Rock, Output;
+            public readonly string Rock, Output, Maps;
             public readonly Color Tint;
             public readonly float Metal, Gloss, Flatten;
-            public RockFindLook(string rock, string output, Color tint, float metal, float gloss, float flatten = 1)
-            { Rock = rock; Output = output; Tint = tint; Metal = metal; Gloss = gloss; Flatten = flatten; }
+            public RockFindLook(string rock, string output, Color tint, float metal, float gloss, float flatten = 1, string maps = null)
+            { Rock = rock; Output = output; Tint = tint; Metal = metal; Gloss = gloss; Flatten = flatten; Maps = maps; }
         }
         internal static readonly RockFindLook[] RockFinds =
         {
             new RockFindLook("Layered_Large", "Coal_Layered_Large", new Color(.17f, .17f, .18f), 0, .5f),
             new RockFindLook("Layered_Small", "Coal_Layered_Small", new Color(.17f, .17f, .18f), 0, .5f),
-            new RockFindLook("Jagged_Large", "Iron_Native_A", new Color(.45f, .39f, .34f), .42f, .38f),
-            new RockFindLook("Jagged_Small", "Iron_Native_B", new Color(.45f, .39f, .34f), .42f, .38f),
+            new RockFindLook("Rounded_Large", "Iron_Native_A", Color.white, 1, 1, maps: "Iron"),
+            new RockFindLook("Rounded_Small", "Iron_Native_B", Color.white, 1, 1, maps: "Iron"),
             new RockFindLook("Jagged_Large", "Silver_Native_A", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Small", "Silver_Native_B", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Large", "Gold_Native_A", new Color(1f, .8f, .34f), .65f, .5f, .8f),
@@ -344,10 +345,13 @@ namespace SomethingDownThere.Editor
             if (fresh) AssetDatabase.CreateAsset(mesh, meshPath); else EditorUtility.SetDirty(mesh);
 
             string maps = $"{MiningFolder}/Rocks/{rock}";
-            var material = LitMaterial($"{MiningFolder}/{output}.mat", Project(maps + (look.Metal > 0 ? "_Metal.png" : "_BC.png"), "art/mining-pack/make_maps.py"),
+            string colour = look.Maps != null ? $"_{look.Maps}.png" : look.Metal > 0 ? "_Metal.png" : "_BC.png";
+            var material = LitMaterial($"{MiningFolder}/{output}.mat", Project(maps + colour, "art/mining-pack/make_maps.py"),
                 Project(maps + "_N.png", "art/mining-pack/make_maps.py", PackMapSize, true));
-            var mask = Project(maps + "_Mask.png", "art/mining-pack/make_maps.py", PackMapSize, false, true);
-            material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
+            var mask = Project(maps + (look.Maps != null ? $"_{look.Maps}_Mask.png" : "_Mask.png"), "art/mining-pack/make_maps.py", PackMapSize, false, true);
+            // Own maps carry the metal and smoothness (Metal and Gloss scale them); otherwise the look sets them throughout.
+            if (look.Maps != null) material.SetTexture("_MetallicGlossMap", mask);
+            else { material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP"); }
             material.SetTexture("_OcclusionMap", mask); material.SetFloat("_OcclusionStrength", 1); material.EnableKeyword("_OCCLUSIONMAP");
             material.SetColor("_BaseColor", look.Tint);
             material.SetFloat("_Metallic", look.Metal);

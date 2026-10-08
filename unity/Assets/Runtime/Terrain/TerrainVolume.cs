@@ -456,6 +456,7 @@ namespace SomethingDownThere
         {
             var chunk = chunks[key];
             chunks.Remove(key);
+            chunk.DensityCache.Recycle();
             if (Application.isPlaying)
             {
                 Destroy(chunk.Mesh);

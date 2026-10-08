@@ -7,11 +7,15 @@ namespace SomethingDownThere
     // Seeded air (stash chests' pockets, geodes' hollows, caves, a lab's hollows and dug scenes) exists from the start, below the surface
     // layer, with no cut to create its chunks, so they are built with the session. A great cave (116) holds well over a
     // thousand chunks, so it is built as the view nears it instead: within GreatReach of its box, nearest first, GreatBudget
-    // milliseconds a frame; all at once from inside the box. Until then it is sealed inside solid ground, unseen.
+    // milliseconds a frame, far enough out that it is done before anyone digs or falls that far; from inside the box, before
+    // it is done, GreatInsideBudget, the nearest to the eye first. Never all at once: one frame building the rest froze the
+    // game for 0.2 s with 30 MB to collect (user, 2026-10-07: "microfreezes" dropping into a cave). Until it is built it is
+    // sealed inside solid ground, unseen.
     public sealed partial class TerrainVolume
     {
         public TerrainGround.GroundLayout GroundLayout => grid?.Layout ?? TerrainGround.GroundLayout.Empty;
-        private const float GreatReach = 15f, GreatBudget = 2.5f;
+        private const float GreatReach = 40f, GreatBudget = 2.5f, GreatInsideBudget = 6f, GreatResort = 2f;
+        private Vector3 greatSortedAt;
         private readonly List<int> greatPending = new List<int>();
         private readonly List<Vector3Int> greatQueue = new List<Vector3Int>();
         private int greatBuilding = -1;
@@ -80,16 +84,18 @@ namespace SomethingDownThere
                     greatPending.RemoveAt(i);
                     greatQueue.Clear();
                     greatQueue.AddRange(ChunksAround(cave.Min, cave.Max));
-                    // Nearest last, so the queue is taken from its end.
-                    greatQueue.Sort((a, b) => ChunkDistance(b, eye).CompareTo(ChunkDistance(a, eye)));
+                    SortGreatQueue(eye);
                 }
                 if (greatBuilding < 0) return;
             }
             var building = caverns[greatBuilding];
             bool inside = eye.x >= building.Min.x && eye.x <= building.Max.x && eye.y >= building.Min.y && eye.y <= building.Max.y
                 && eye.z >= building.Min.z && eye.z <= building.Max.z;
+            // The eye moves on (falling, flying): what lies nearest it now comes first.
+            if ((eye - greatSortedAt).sqrMagnitude > GreatResort * GreatResort) SortGreatQueue(eye);
+            float budget = inside ? GreatInsideBudget : GreatBudget;
             var watch = Stopwatch.StartNew();
-            while (greatQueue.Count > 0 && (inside || watch.Elapsed.TotalMilliseconds < GreatBudget))
+            while (greatQueue.Count > 0 && watch.Elapsed.TotalMilliseconds < budget)
             {
                 var key = greatQueue[greatQueue.Count - 1];
                 greatQueue.RemoveAt(greatQueue.Count - 1);
@@ -100,6 +106,13 @@ namespace SomethingDownThere
                 if (chunk.Mesh.GetIndexCount(0) == 0) Release(key);
             }
             if (greatQueue.Count == 0) greatBuilding = -1;
+        }
+
+        // Nearest last, so the queue is taken from its end.
+        private void SortGreatQueue(Vector3 eye)
+        {
+            greatSortedAt = eye;
+            greatQueue.Sort((a, b) => ChunkDistance(b, eye).CompareTo(ChunkDistance(a, eye)));
         }
 
         private float ChunkDistance(Vector3Int key, Vector3 eye)

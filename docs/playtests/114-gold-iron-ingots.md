@@ -11,8 +11,8 @@ In a run, iron lies mostly in zone 2 (about 35–60 m), gold in zone 3 (about 75
 - The TVs: only the wood-cased and the CRT set are left, three of each in a run.
 - Open a chest and look at the ingots in the light of a lamp and in daylight.
 
-**Good feels like:** gold is a bright, craggy, flattish nugget, never a smooth blob; iron is dark, rusty metal you
-would never take for coal or silver; the ingots are clean, shiny bronze, silver and gold in the pack's colours, and none
+**Good feels like:** gold is a bright, craggy, flattish nugget, never a smooth blob; iron is a red-brown ore stone
+with silvery flecks that glint, like your reference; the ingots are clean, shiny bronze, silver and gold in the pack's colours, and none
 of them goes black under a lamp.
 
 **Tell the agent:**

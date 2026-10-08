@@ -253,3 +253,10 @@ at the bottom, and cut in the old chests.
   0.38 smoothness: rust says iron, and it stays apart from black coal and silver's bright blue-white in daylight and
   under a lamp. Compared: dark steel grey, rust brown and a blue gunmetal, which mirrored the sky like silver.
 - Pyrite pays between iron and silver (`ground.json`), well short of gold, instead of a plain rock's price.
+
+## Iteration 7 (user, 2026-10-07: "iron ore looks like poop, make it as in the attached image")
+
+- The reference: a rounded stone, red-brown with bluish-silver flecks. Iron is now the pack's rounded rocks on its own
+  maps (`make_maps.py`: the rock's light and dark in a red-brown hematite, the pack's mineral-deposit flakes tiled over
+  it as metal flecks, their metal and sheen in the mask; `RockFindLook.Maps`), scale 0.34 and 0.47. The dark rust lump
+  of iteration 6 is gone.

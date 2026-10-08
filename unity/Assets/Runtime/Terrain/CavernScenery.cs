@@ -9,9 +9,12 @@ namespace SomethingDownThere
     // geodes", then "act similar to a lamp ... the crystals themselves a light source when it is dark, but not illuminate
     // everything around them strongly"): each crystal glows in its colour (its material) and carries a small light of its
     // own just in front of it, lighting the stone round it like a little lamp; taking a crystal takes only its light. Made
-    // whenever the ground's layout or the population changes, so it saves nothing. The lights cast shadows from the ground
-    // only, as lamps do, so they never show through the stone; the nearest few light at once and fade in and out, like
-    // lamps outside their budget. Only a hollow that has been opened lights (DiscoveryField.CaveOpened, GeodeOpened): a
+    // whenever the ground's layout or the population changes, so it saves nothing. The lights cast no shadows: shadowed,
+    // each one that came on or went out as the player moved or turned changed URP's shadow atlas, which it reallocates to
+    // fit, a GPU stall of 20-40 ms (user, 2026-10-07: "microfreezes" flying out of a cave); a light's short reach can
+    // show through a thin wall beside an opened hollow. Every crystal within LightCull lights, fading out from LightFull,
+    // so none starts to shine as the player comes near ("from a distance a rock is not shining, but when I get closer it
+    // shines"). Only a hollow that has been opened lights (DiscoveryField.CaveOpened, GeodeOpened): a
     // sealed one can't be seen into, so walking past it costs nothing. A crystal trophy (116) lights further. A crystal
     // lights only the dark (user, 2026-10-07: "it shouldn't emit light when it is light, it is not a lamp"): its light
     // fades out where daylight reaches it (ExcavationDaylight.SampleAmbient), from DarkAmbient to LitAmbient, and its own
@@ -21,15 +24,16 @@ namespace SomethingDownThere
     {
         // A crystal's light: how far in front of its middle (towards its hollow's heart), its reach and brightness; how
         // much each neighbour within its reach dims it, so a geode's crowd of crystals lights its hollow about as a few
-        // would; how many light at once (each takes six small faces of the shared shadow atlas, beside the lamps') and how
-        // far off, and how long it takes to fade.
-        private const float LightOut = .25f, LightRange = 2.5f, LightIntensity = .6f, Crowding = .5f, LightCull = 25f, LightFade = .35f;
+        // would; how far from the eye it is at full strength and how far it reaches at all (fading between), the most lit at
+        // once, nearest first, and how long a light takes to come and go.
+        private const float LightOut = .25f, LightRange = 2.5f, LightIntensity = .6f, Crowding = .5f, LightFull = 28f, LightCull = 40f,
+            LightFade = .35f;
         private const float DarkAmbient = .3f, LitAmbient = .7f;
         // How much of its glow a crystal keeps in daylight, and how often the glow follows the daylight.
         private const float DayGlow = .75f, ShadeEvery = .25f;
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private const float TrophyRange = 4.5f, TrophyIntensity = 2.2f, TrophyOut = .6f;
-        private const int LitCrystals = 10;
+        private const int LitCrystals = 48;
 
         [SerializeField] private TerrainVolume terrain;
         [SerializeField] private DiscoveryField field;
@@ -206,15 +210,11 @@ namespace SomethingDownThere
             light.type = LightType.Point;
             light.color = colour;
             light.range = range;
-            light.shadows = LightShadows.Soft; light.shadowBias = .015f; light.shadowNormalBias = .04f; light.shadowNearPlane = .05f;
-            // Shadows from the ground only, as a lamp's: the stone round the hollow holds its light in. Small shadow faces,
-            // so ten of them leave the lamps' theirs.
+            light.shadows = LightShadows.None;
+            // It lights the ground only (the chunks carry the lamps' ground layer): a crystal it sits in front of would show
+            // it as a hot spot inside.
             var data = light.GetComponent<UniversalAdditionalLightData>();
-            data.usePipelineSettings = false; data.customShadowLayers = true; data.shadowRenderingLayers = TerrainVolume.LampShadowLayer;
-            // It lights the ground only (the chunks carry the same layer): a crystal it sits in front of would show it as a
-            // hot spot inside.
             data.renderingLayers = TerrainVolume.LampShadowLayer;
-            data.additionalLightsShadowResolutionTier = UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierLow;
             light.enabled = false;
             return light;
         }
@@ -228,8 +228,8 @@ namespace SomethingDownThere
             return most > .001f ? new Color(glow.r / most, glow.g / most, glow.b / most) : Color.white;
         }
 
-        // The nearest LitCrystals still in place within LightCull light, fading in and out; a taken crystal's light fades.
-        // One in daylight has no light to give and leaves its place to the next.
+        // The nearest LitCrystals still in place within LightCull light, fading in and out, weaker past LightFull; a taken
+        // crystal's light fades. One in daylight has no light to give and leaves its place to the next.
         private void Shine(Vector3 eye)
         {
             order.Clear();
@@ -250,7 +250,8 @@ namespace SomethingDownThere
                 bool on = glow.Shine > .001f;
                 if (glow.Light.enabled != on) glow.Light.enabled = on;
                 if (!on) continue;
-                glow.Light.intensity = LightIntensity * glow.Strength * glow.Shine * glow.Dark;
+                float far = 1 - Mathf.InverseLerp(LightFull * LightFull, LightCull * LightCull, glow.Distance);
+                glow.Light.intensity = LightIntensity * glow.Strength * glow.Shine * glow.Dark * far;
                 // A loose crystal can move: the light follows its middle (a taken one's fades where it was).
                 if (glow.Wanted && glow.Body != null) glow.Light.transform.position = glow.Body.bounds.center + glow.Out * glow.Reach;
             }

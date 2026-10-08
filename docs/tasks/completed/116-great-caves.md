@@ -270,3 +270,22 @@ well."
   the geode is crowded now tries seats anywhere round the hollow before keeping an overlapping one. A lakebed scene
   check compared shader render queues, which read as Geometry without a graphics device (batchmode), so it runs only
   with one.
+
+## Iteration 4 (user, 2026-10-07: "3-5 stutters or microfreezes" dropping into a cave and jetpacking out; crystals that shine only up close)
+
+Reproduced in the Ground Lab: a shaft through the cave-rock bay into the great cave, the player dropped down it and
+then lifted out at jetpack speed, profiled.
+- **Great cave built at once:** entering its box before the stream finished built the rest in one frame (194 ms, 30 MB
+  of density caches and chunk objects, then 20 ms of PhysX taking the colliders). The stream now starts at 40 m
+  (`GreatReach`), so it is done before anyone digs or falls that far, and from inside the box keeps a 6 ms budget,
+  re-sorting by the eye every 2 m. Released chunks hand their density cache arrays to the next chunk built: the fall's
+  allocations went from 57 MB to under 1 MB.
+- **Daylight catch-up patch:** the patch that re-lights cuts made during a route rebuild covered whatever was pending;
+  after a restore (the whole grid) it ran for 0.9 s, and the opened-hollow reroute of iteration 2 stretched it from a
+  cut to the cave's middle. It now runs only up to 64 cubic metres (`PatchVolume`); a reroute is its own request.
+- **Crystal lights without shadows:** each shadowed light that came on or went out (with distance, or entering view)
+  made URP reallocate its trimmed shadow atlas, a 20-40 ms GPU stall; climbing out of the cave showed 7-8 of them,
+  none with the lights off. They cast no shadows now, so they can all light: up to 48 within 40 m, full to 28 m and
+  fading beyond, instead of the nearest 10 within 25 m popping in ("from a distance a rock is not shining, but when I
+  get closer it shines"). Their 2.5 m reach can show through a thin wall beside an opened hollow.
+- After: the fall's slowest frame about 28 ms (was 194 ms and 0.9 s), the climb's only Editor overhead.

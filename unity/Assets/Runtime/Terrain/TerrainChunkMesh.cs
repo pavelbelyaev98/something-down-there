@@ -16,6 +16,10 @@ namespace SomethingDownThere
         {
             private float[] samples;
             private TerrainMaterialSnapshot materials;
+            // Sample arrays of released chunks, reused by the next chunks built: a streamed great cave makes and drops
+            // hundreds of empty chunks, each array a 27 KB allocation to collect (116).
+            private static readonly System.Collections.Generic.Stack<float[]> Spare = new System.Collections.Generic.Stack<float[]>();
+            private const int SpareLimit = 256;
             internal bool Matches(float[] current, int count, TerrainMaterialSnapshot currentMaterials)
             {
                 if (samples == null || samples.Length != count || materials != currentMaterials) return false;
@@ -25,8 +29,16 @@ namespace SomethingDownThere
             internal void Store(float[] current, int count, TerrainMaterialSnapshot currentMaterials)
             {
                 materials = currentMaterials;
-                if (samples == null || samples.Length != count) samples = new float[count];
+                if (samples == null || samples.Length != count)
+                    samples = Spare.Count > 0 && Spare.Peek().Length == count ? Spare.Pop() : new float[count];
                 Array.Copy(current, samples, count);
+            }
+
+            // Its chunk is gone: its array goes to the next chunk built.
+            internal void Recycle()
+            {
+                if (samples != null && Spare.Count < SpareLimit) Spare.Push(samples);
+                samples = null; materials = null;
             }
         }
 

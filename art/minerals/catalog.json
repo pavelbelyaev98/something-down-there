@@ -60,7 +60,7 @@
         {
           "content_id": "mineral_iron_b",
           "prefab": "Assets/Content/BuriedProps/MiningPack/Iron_Native_B.prefab",
-          "model_scale": 0.286
+          "model_scale": 0.47
         }
       ],
       "instances": 1280,
@@ -75,7 +75,7 @@
       "core_minimum_depth_m": 34,
       "core_maximum_depth_m": 58,
       "core_share": 0.86,
-      "model_scale": 0.195
+      "model_scale": 0.34
     },
     {
       "content_id": "mineral_silver",
