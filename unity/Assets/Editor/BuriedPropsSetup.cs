@@ -138,7 +138,23 @@ namespace SomethingDownThere.Editor
             foreach (var (label, prop, tint) in Trophies)
                 PackVariant($"{CrystalVendor}/Prefabs/Crystals/{prop}.prefab", $"{TrophyFolder}/{prop}_trophy.prefab",
                     vendor => FromGlowCrystal(vendor, $"{TrophyFolder}/{vendor.name}_{label}.mat", TrophyFolder, tint, CrystalGloss));
+            SyncLegacyColours();
             AssetDatabase.SaveAssets();
+        }
+
+        // Every project material's legacy colour as Unity keeps it, the base colour read back through its colour-space round
+        // trip: left white or exact, Unity rewrote it on its next save, a change in every run's diff.
+        private static void SyncLegacyColours()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { Folder }))
+            {
+                var material = AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
+                if (material == null || !material.HasProperty("_Color") || !material.HasProperty("_BaseColor")) continue;
+                var colour = material.GetColor("_BaseColor");
+                if (material.GetColor("_Color") == colour) continue;
+                material.SetColor("_Color", colour);
+                EditorUtility.SetDirty(material);
+            }
         }
 
         // A variant of a pack prefab with each of its materials replaced by a project URP copy.
@@ -216,8 +232,6 @@ namespace SomethingDownThere.Editor
             tint.a = 1;
             var lit = tint * CrystalLit; lit.a = 1;
             material.SetColor("_BaseColor", lit);
-            // The legacy colour as Unity keeps it, matching the base colour, so a rerun leaves the material unchanged.
-            material.SetColor("_Color", lit);
             // Glass, never metal: the amber cubes are cut from the pack's pyrite, whose sheen darkened them to brown in
             // daylight (user, 2026-10-07: "on light some rocks are hard to see").
             material.SetFloat("_Metallic", 0);
@@ -296,9 +310,10 @@ namespace SomethingDownThere.Editor
         //   gold yellow; gold part metal only, so a lamp underground still shows its colour. Gold's rocks are flattened
         //   (Flatten of their height) into a nugget: mirror-glossy on the jagged rock it read as crumpled foil ("like gold
         //   wrappers"), on the pack's rounded rock as a blob ("poop shape").
-        // - iron ore on the rounded ones, from its own maps (Maps: Rocks/<rock>_Iron.png and _Iron_Mask.png, whose metal and
-        //   smoothness the material reads): red-brown hematite with bluish-silver metal flakes, as in the user's reference
-        //   (2026-10-07). As a metal lump it passed for coal when dark, for silver when light, and read as "poop" when rusty.
+        // - iron ore on the jagged ones too, from its own maps (Maps: Rocks/<rock>_Iron.png and _Iron_Mask.png, whose metal
+        //   and smoothness the material reads): grey stone with rust red in its cracks, as in the user's reference
+        //   (2026-10-08). As a metal lump it passed for coal when dark and for silver when light; red-brown with silver
+        //   flakes on the rounded rock it read as copper and its shape as "horrible".
         internal readonly struct RockFindLook
         {
             public readonly string Rock, Output, Maps;
@@ -311,8 +326,8 @@ namespace SomethingDownThere.Editor
         {
             new RockFindLook("Layered_Large", "Coal_Layered_Large", new Color(.17f, .17f, .18f), 0, .5f),
             new RockFindLook("Layered_Small", "Coal_Layered_Small", new Color(.17f, .17f, .18f), 0, .5f),
-            new RockFindLook("Rounded_Large", "Iron_Native_A", Color.white, 1, 1, maps: "Iron"),
-            new RockFindLook("Rounded_Small", "Iron_Native_B", Color.white, 1, 1, maps: "Iron"),
+            new RockFindLook("Jagged_Large", "Iron_Native_A", Color.white, 1, 1, maps: "Iron"),
+            new RockFindLook("Jagged_Small", "Iron_Native_B", Color.white, 1, 1, maps: "Iron"),
             new RockFindLook("Jagged_Large", "Silver_Native_A", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Small", "Silver_Native_B", new Color(.86f, .87f, .89f), .85f, .6f),
             new RockFindLook("Jagged_Large", "Gold_Native_A", new Color(1f, .8f, .34f), .65f, .5f, .8f),

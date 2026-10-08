@@ -3,7 +3,7 @@
 **Status:** complete. Each zone has its own pair of minerals: coal and copper, iron and silver, gold and emerald,
 ruby and diamond, with pyrite as a cheap aside in zone 2. Coal is the Mining pack's layered rocks in black; copper is
 its ore chunks at the pack's quality with copper over about half the stone; iron, silver and gold are solid native
-nuggets on the pack's jagged rocks, gold's flattened, iron and gold part metal; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
+nuggets on the pack's jagged rocks, gold's flattened and part metal; iron is grey ore stone with rust in its cracks on the same rocks; ground gems and pyrite are dusty Crystal Caverns crystals. Chests hold ingots only.
 
 ## Objective
 
@@ -260,3 +260,12 @@ at the bottom, and cut in the old chests.
   maps (`make_maps.py`: the rock's light and dark in a red-brown hematite, the pack's mineral-deposit flakes tiled over
   it as metal flecks, their metal and sheen in the mask; `RockFindLook.Maps`), scale 0.34 and 0.47. The dark rust lump
   of iteration 6 is gone.
+
+## Iteration 8 (user, 2026-10-08: "the iron looks more like copper and the shape is horrible ... you made the brown colour the dominant one")
+
+- Rejected: iteration 7's red-brown rounded stone with silver flakes. The second reference is grey stone with rust red
+  in its cracks. Iron is back on the jagged rocks (the shape the user prefers, silver's), at 0.195 and 0.286 (the
+  rounded stones at 0.34 and 0.47 also overfilled the shallow bands: the seed sweeps failed to place every find), on
+  maps of grey stone with rust in the strongest 14% of its creases: texels darker than their surroundings in its
+  occlusion and colour (`make_maps.py`; the occlusion alone also traced the UV islands' edges). The rounded rocks'
+  copies and the flakes are gone.
