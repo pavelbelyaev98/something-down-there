@@ -32,6 +32,8 @@ from about 8 m down. Developer admin → **Ground X-ray** marks cave rock yellow
 - Drill or dig down into the great cave and drop in, then fly out with the jetpack: no freezes or hitches on the
   way (dropping in used to freeze for a moment, climbing out to stutter a few times).
 - From across the hall, crystals already light the stone round them; none starts to shine only as you come near.
+- The great cave's stone is a dark brown cave rock now (the cave-rock bay in the lab shows it in daylight).
+- Pick up a geode crystal: it keeps its colour as it flies to you (it used to turn pink).
 
 **Tell the agent:**
 - The cave's darkness and the pool of light under the hole; crystals in light and in the dark.

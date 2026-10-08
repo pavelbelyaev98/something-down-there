@@ -266,8 +266,8 @@ Geodes keep that moment without cave networks.
   loose in the ground.
 - Geodes never connect into passages and never form a maze.
 - **Caves** come in two sizes, both sealed, single and never connected to another, in hard stone, so
-  one tell says "a hollow is in there": a great cave in the cave rock of the Crystal Caverns demo
-  (user, 2026-10-07: "use the textures from the demo where the rocks were"), a mini cave in the geodes'
+  one tell says "a hollow is in there": a great cave in dark brown cave rock (user, 2026-10-08: "caves are brownish darkish"; the Crystal Caverns demo's
+  flaky stone first used "looks like it is from an apartment"), a mini cave in the geodes'
   shell (user: "why did you switch it from the geode's ground type, which was fine?"). Their crystals glow like small lamps
   (above) and are plain finds to pick up (user: "I would rather just pick up normal crystals").
   Nothing in a cave is scenery the tool cannot touch (user: no "too big to break").

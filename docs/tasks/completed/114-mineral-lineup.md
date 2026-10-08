@@ -269,3 +269,6 @@ at the bottom, and cut in the old chests.
   maps of grey stone with rust in the strongest 14% of its creases: texels darker than their surroundings in its
   occlusion and colour (`make_maps.py`; the occlusion alone also traced the UV islands' edges). The rounded rocks'
   copies and the flakes are gone.
+
+- Then (2026-10-08: "a tiny bit of shine so it looks more like actual metal"): iron's stone 0.3 metal and 0.5 smooth,
+  its rust still matte.

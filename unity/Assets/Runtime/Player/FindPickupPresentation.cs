@@ -22,6 +22,7 @@ namespace SomethingDownThere
         private readonly Transform owner;
         private readonly Camera camera;
         private readonly List<Flight> copies = new List<Flight>(MaximumCopies);
+        private MaterialPropertyBlock block;
 
         public FindPickupPresentation(Transform owner, Camera camera) { this.owner = owner; this.camera = camera; }
 
@@ -36,8 +37,6 @@ namespace SomethingDownThere
                 visual.transform.SetParent(owner, false);
                 flight = new Flight { Object = visual, Mesh = visual.AddComponent<MeshFilter>(), Renderer = visual.AddComponent<MeshRenderer>() };
                 flight.Renderer.shadowCastingMode = ShadowCastingMode.Off;
-                flight.Renderer.receiveShadows = false;
-                flight.Renderer.lightProbeUsage = LightProbeUsage.Off;
                 flight.Renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
                 copies.Add(flight);
             }
@@ -48,6 +47,14 @@ namespace SomethingDownThere
             }
             flight.Mesh.sharedMesh = mesh.sharedMesh;
             flight.Renderer.sharedMaterials = source.sharedMaterials;
+            // Lit as the find was where it lay (user, 2026-10-08: a crystal "light pink" in the pickup, "bluish" before):
+            // shadowed by the ground as it was, not lit through it by the sun, with its glow as dimmed (CavernScenery).
+            flight.Renderer.receiveShadows = source.receiveShadows;
+            flight.Renderer.lightProbeUsage = source.lightProbeUsage;
+            flight.Renderer.renderingLayerMask = source.renderingLayerMask;
+            block ??= new MaterialPropertyBlock();
+            source.GetPropertyBlock(block);
+            flight.Renderer.SetPropertyBlock(block);
             flight.Start = source.transform.TransformPoint(mesh.sharedMesh.bounds.center);
             flight.Scale = source.transform.lossyScale;
             flight.Rotation = source.transform.rotation;

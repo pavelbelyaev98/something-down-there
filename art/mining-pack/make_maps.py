@@ -33,7 +33,7 @@ metal_rocks, metal_range = ['Jagged_Large', 'Jagged_Small'], (.6, 1.1)
 iron_rocks = ['Jagged_Large', 'Jagged_Small']
 iron_stone, iron_range = np.array([.37, .36, .35]), (.6, 1.3)
 rust_colour, rust_share, rust_soft = np.array([.46, .28, .22]), .12, 3.5
-stone_metal, stone_gloss, rust_metal, rust_gloss = .06, .38, 0, .22
+stone_metal, stone_gloss, rust_metal, rust_gloss = .3, .5, 0, .22
 
 
 def load(path, mode):

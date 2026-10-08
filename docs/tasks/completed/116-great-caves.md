@@ -289,3 +289,14 @@ then lifted out at jetpack speed, profiled.
   fading beyond, instead of the nearest 10 within 25 m popping in ("from a distance a rock is not shining, but when I
   get closer it shines"). Their 2.5 m reach can show through a thin wall beside an opened hollow.
 - After: the fall's slowest frame about 28 ms (was 194 ms and 0.9 s), the climb's only Editor overhead.
+
+## Iteration 5 (user, 2026-10-08: the cave rock "looks like it is from an apartment"; a crystal "light pink" in its pickup, "bluish" before)
+
+- **Cave rock:** every Crystal Caverns rock texture is the same flaky purple-grey stone, and the mountain packs' are
+  stylized beige or grey. The Mining pack's jagged small rock is a scanned brown stone: a 1200 px square from inside the
+  largest island of its 4K atlas (clear of the islands' stretched padding), its colour, normal and occlusion made seamless
+  and the colour darkened (`art/mining-pack/make_cave_rock.py`, moved from the Crystal Caverns card).
+- **Pickup copy:** the flying copy of a collected find left out the find's material property block, so a crystal whose
+  glow daylight had dimmed flew at full glow, and it took no shadows, so the sun could light it through the ground; warm
+  light on purple read pink. It now takes the find's shadows, probes, rendering layers and property block
+  (`FindPickupPresentation`).
