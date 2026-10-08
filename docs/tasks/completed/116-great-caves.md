@@ -313,3 +313,10 @@ then lifted out at jetpack speed, profiled.
   shrinks away over a second); a reload with its bed dug leaves it out. A/B: Developer admin **Cave puddles**.
 - Concept `03` §2's "water never enters the excavation" is about the lake flooding the dig; a puddle is old water in
   a sealed cave, harmless and only ever drained.
+- Puddles, first build: the water was a URP Lit material adapted at runtime (`ExcavationDaylight.Register`), so the
+  player kept only its opaque variant and drew it near-black, invisible on a dark floor (user: "I saw no cave puddles in
+  the Ground Lab"; the Editor compiles every variant and showed it right). `CavePuddle.mat` now uses `Excavation Lit`
+  directly with its transparent keywords, so the build keeps them. The water's edge is traced along the floor's contour
+  (marching squares over the floor's heights) after a grid of cells showed straight edges where the rendered floor sat a
+  centimetre below the computed one; it is see-through (half) so the floor shows under it. The lab's prompts point to
+  the puddles (bring a lamp: in the dark, water shows only by what it reflects).

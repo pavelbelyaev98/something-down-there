@@ -14,11 +14,14 @@ namespace SomethingDownThere.Editor
         // The puddles' water: muddy and see-through (PuddleColour's alpha), so the floor shows darkened under it and the
         // waterline reads as a wet edge, not a hole (an opaque dark first try read as a black cut-out); glossy, its
         // highlights kept whole, so lamps and crystals glint in it; rippled by Crystal Caverns' own water normal map over
-        // PuddleRippleMetres.
+        // PuddleRippleMetres. It uses the excavation's own Lit (daylight faded underground) directly rather than being
+        // adapted at runtime: a build keeps only the shader variants its materials use, so an adapted copy lost its
+        // transparency in the player and drew near-black (user, 2026-10-08: "I saw no cave puddles").
         public const string PuddlePath = "Assets/Content/Environment/CavePuddle.mat";
+        private const string PuddleShader = "Assets/Runtime/Terrain/ExcavationLit.shader";
         private const string PuddleRipples = "Assets/BK/PureNature_CrystalCaverns/Textures/Water/Water_n.png";
-        private static readonly Color PuddleColour = new Color(.1f, .085f, .065f, .5f);
-        private const float PuddleGloss = .93f, PuddleRipple = .2f, PuddleRippleMetres = 1.6f;
+        private static readonly Color PuddleColour = new Color(.09f, .08f, .065f, .62f);
+        private const float PuddleGloss = .88f, PuddleRipple = .3f, PuddleRippleMetres = 1.6f;
 
         [MenuItem("Tools/Something Down There/Configure Caverns")]
         public static void Configure()
@@ -45,11 +48,13 @@ namespace SomethingDownThere.Editor
         private static Material PuddleMaterial()
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(PuddlePath);
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(PuddleShader) ?? throw new InvalidOperationException("Missing " + PuddleShader);
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "CavePuddle" };
+                material = new Material(shader) { name = "CavePuddle" };
                 AssetDatabase.CreateAsset(material, PuddlePath);
             }
+            material.shader = shader;
             var ripples = AssetDatabase.LoadAssetAtPath<Texture2D>(PuddleRipples)
                 ?? throw new InvalidOperationException("Missing " + PuddleRipples + " (reimport Crystal Caverns).");
             material.SetColor("_BaseColor", PuddleColour);

@@ -181,3 +181,5 @@ items. AGENTS.md "Bought Before Made" now says so.
   "please never use this rock shape ... I had fine shape before but just colors were weird". The original model stays.
 - Its three colour maps are graded to a warm grey-brown (110, 97, 82) with a little more spread in brightness, each
   texel keeping its hue relative to the mean (`art/photo-rock/grade_colour.py`, idempotent).
+- Then (user, same day): "remove the rock variation that looks like it has a hole at the top": the recipe's variant `a`
+  (its top dented, a dark patch in the dent) is gone from the catalog, the manifests and the content; `b` and `c` remain.

@@ -210,10 +210,10 @@ namespace SomethingDownThere
             string ground = "hitting " + EquipmentProgression.GroundName(hit).ToLowerInvariant();
             var local = Local(world);
             if (Vector2.Distance(new Vector2(world.x, world.z), new Vector2(GreatShaft.top.x, GreatShaft.top.z)) < GreatShaftRadius + 1.2f)
-                return $"Great cave: drop down the shaft ({-GreatShaft.bottom.y:0} m), dig through the last metre of rock  |  " + ground;
+                return $"Great cave: drop down the shaft ({-GreatShaft.bottom.y:0} m), dig through the last metre of rock; puddles stand in its low spots (bring a lamp)  |  " + ground;
             foreach (var cave in Caves)
                 if (!cave.Great && Over(cave, local.x, local.z))
-                    return "Mini cave: a few crystals of one kind; dig down through the stone patch, about 1.5 m  |  " + ground;
+                    return "Mini cave: a few crystals of one kind, maybe a puddle; dig down through the stone patch, about 1.5 m  |  " + ground;
             return bay < 0 ? "Ground Lab  |  " + ground : $"{Bays[bay].Name}: {Bays[bay].Hint}  |  {ground}";
         }
     }

@@ -78,6 +78,7 @@ namespace SomethingDownThere
             if (root != null) Destroy(root.gameObject);
             ClearPuddles();
             if (puddleRoot != null) Destroy(puddleRoot.gameObject);
+            if (puddleWater != null) Destroy(puddleWater);
         }
 
         private void LateUpdate()

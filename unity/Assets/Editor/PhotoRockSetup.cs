@@ -7,7 +7,8 @@ using UnityEngine;
 
 namespace SomethingDownThere.Editor
 {
-    // One source item contract owns all three replaceable appearances and their gameplay tuning.
+    // One source item contract owns the rock's replaceable appearances (two since 2026-10-08: the user dropped the one with
+    // a dented top) and their gameplay tuning.
     public static class PhotoRockSetup
     {
         public const string Folder = "Assets/Content/PhotoRocks";
@@ -32,14 +33,14 @@ namespace SomethingDownThere.Editor
         {
             var source = JsonUtility.FromJson<RockCatalog>(File.ReadAllText(Path.Combine(Source, "catalog.json")));
             if (source == null || source.schema_version != 1 || source.item_id != "common_rock"
-                || source.appearances == null || source.appearances.Length != 3 || source.slots != 1
+                || source.appearances == null || source.appearances.Length == 0 || source.slots != 1
                 // A retained batch may be disabled: zero-count entries still resolve old saves.
                 || source.instances < 0 || source.shallow_instances < 0 || source.shallow_instances > source.instances || source.sale_value < 0
                 || string.IsNullOrWhiteSpace(source.display_name) || source.required_exposure != .6f
                 || !float.IsFinite(source.mass_kg) || source.mass_kg <= 0
                 || !float.IsFinite(source.minimum_depth_m) || !float.IsFinite(source.maximum_depth_m)
                 || source.minimum_depth_m < .6f || source.maximum_depth_m <= source.minimum_depth_m || source.maximum_depth_m > 31.2f)
-                throw new InvalidDataException("Invalid three-appearance common rock source contract.");
+                throw new InvalidDataException("Invalid common rock source contract.");
             if (!float.IsFinite(source.core_minimum_depth_m) || !float.IsFinite(source.core_maximum_depth_m)
                 || !float.IsFinite(source.core_share) || source.core_share <= 0 || source.core_share > 1
                 || source.core_minimum_depth_m < source.minimum_depth_m || source.core_maximum_depth_m > source.maximum_depth_m

@@ -185,14 +185,18 @@ Shader "Something Down There/Ground Triplanar"
         }
 
         // Ground layers (user, 2026-10-08: digging straight down "the texture just moves down", the same stones in the
-        // same places at every depth): each projection takes another part of its texture every GROUND_LAYER_METRES along
-        // its own axis, so a shaft's floor or a tunnel's end shows new ground as it goes. A layer's edge wanders by a third
-        // of a layer with a broad noise across the face and gives way to the next over GROUND_LAYER_BLEND of a layer by
-        // height (LayerBlend: the brighter grains of either win, so the next layer's stones come through instead of two
-        // patterns ghosting over each other). The shift moves only the texture coordinates; derivatives come from the
-        // position, so mips never jump.
+        // same places at every depth; then "better but still seems repetitive"): each projection takes another part of its
+        // texture every GROUND_LAYER_METRES along its own axis, turned to one of eight orientations (quarter turns, mirrored
+        // or not) and a shade lighter or darker (GROUND_LAYER_TONE, like soil horizons), so a shaft's floor or a tunnel's end
+        // shows new ground as it goes. A layer's edge wanders by up to GROUND_LAYER_WANDER of a layer with a broad noise
+        // across the face, so one face shows patches of several, and gives way to the next over GROUND_LAYER_BLEND of a
+        // layer by height (LayerBlend: the brighter grains of either win, so the next layer's stones come through instead of
+        // two patterns ghosting over each other). Only texture coordinates change; derivatives come from the position (turned
+        // with the layer), so mips never jump; normals turn back with them.
         #define GROUND_LAYER_METRES 0.35
         #define GROUND_LAYER_BLEND 0.3
+        #define GROUND_LAYER_WANDER 1.2
+        #define GROUND_LAYER_TONE 0.14
         float GroundHash(float2 p) { return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
         float GroundNoise(float2 p)
         {
@@ -200,15 +204,28 @@ Shader "Something Down There/Ground Triplanar"
             f = f * f * (3 - 2 * f);
             return lerp(lerp(GroundHash(i), GroundHash(i + float2(1, 0)), f.x), lerp(GroundHash(i + float2(0, 1)), GroundHash(i + 1), f.x), f.y);
         }
-        float2 LayerShift(float layer) { return frac(sin(float2(layer * 12.9898 + 1.3, layer * 78.233 + 4.1)) * 43758.5453); }
-        // along: metres along the projection's axis; across: metres across its face. shiftB is the layer below's shift,
-        // blended in by blend near this layer's lower edge.
-        void GroundLayer(float along, float2 across, out float2 shiftA, out float2 shiftB, out half blend)
+        // A layer's look: where in its texture it starts, how it is turned (a quarter turn times a mirror, so its inverse is
+        // its transpose) and its shade.
+        struct GroundLayerPose { float2 shift; float2x2 turn; half tone; };
+        GroundLayerPose LayerPose(float layer)
         {
-            float t = along / GROUND_LAYER_METRES + (GroundNoise(across * 1.3) - 0.5) * 0.7;
+            float4 h = frac(sin(float4(layer * 12.9898 + 1.3, layer * 78.233 + 4.1, layer * 39.346 + 2.7, layer * 11.135 + 6.2)) * 43758.5453);
+            float k = floor(h.z * 4), m = h.w > 0.5 ? -1 : 1;
+            float c = k == 0 ? 1 : k == 2 ? -1 : 0, s = k == 1 ? 1 : k == 3 ? -1 : 0;
+            GroundLayerPose pose;
+            pose.shift = h.xy;
+            pose.turn = float2x2(c * m, -s, s * m, c);
+            pose.tone = 1 + (frac(h.w * 17.31) - 0.5) * GROUND_LAYER_TONE;
+            return pose;
+        }
+        // along: metres along the projection's axis; across: metres across its face. below is the layer below's pose,
+        // blended in by blend near this layer's lower edge.
+        void GroundLayer(float along, float2 across, out GroundLayerPose above, out GroundLayerPose below, out half blend)
+        {
+            float t = along / GROUND_LAYER_METRES + (GroundNoise(across * 1.3) - 0.5) * GROUND_LAYER_WANDER;
             float layer = floor(t);
-            shiftA = LayerShift(layer);
-            shiftB = LayerShift(layer - 1);
+            above = LayerPose(layer);
+            below = LayerPose(layer - 1);
             blend = 1 - smoothstep(0, GROUND_LAYER_BLEND, t - layer);
         }
 
@@ -222,25 +239,27 @@ Shader "Something Down There/Ground Triplanar"
             return wb / max(wa + wb, 0.0001);
         }
 
-        void SoilTexel(float2 uv, float2 dxUV, float2 dyUV, float maskLayout, float normalStrength, float stoneNormalStrength,
-            out half3 colour, out half3 mask, out half3 normal)
+        void SoilTexel(float2 uv, float2 dxUV, float2 dyUV, GroundLayerPose pose, float maskLayout, float normalStrength,
+            float stoneNormalStrength, out half3 colour, out half3 mask, out half3 normal)
         {
-            colour = SAMPLE_TEXTURE2D_GRAD(_SoilAlbedo, sampler_SoilAlbedo, uv, dxUV, dyUV).rgb;
+            uv = mul(pose.turn, uv) + pose.shift; dxUV = mul(pose.turn, dxUV); dyUV = mul(pose.turn, dyUV);
+            colour = SAMPLE_TEXTURE2D_GRAD(_SoilAlbedo, sampler_SoilAlbedo, uv, dxUV, dyUV).rgb * pose.tone;
             mask = DecodeGroundMask(SAMPLE_TEXTURE2D_GRAD(_SoilRoughness, sampler_SoilRoughness, uv, dxUV, dyUV), maskLayout);
             normal = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_SoilNormal, sampler_SoilNormal, uv, dxUV, dyUV), lerp(normalStrength, stoneNormalStrength, mask.b));
+            normal.xy = mul(normal.xy, pose.turn);
         }
 
         // One soil projection in its layer, blended with the layer below across the layer's edge.
         void SoilProjection(float2 uv, float2 dxUV, float2 dyUV, float along, float2 across, float maskLayout, float normalStrength,
             float stoneNormalStrength, out half3 colour, out half3 mask, out half3 normal)
         {
-            float2 shiftA, shiftB; half blend;
-            GroundLayer(along, across, shiftA, shiftB, blend);
-            SoilTexel(uv + shiftA, dxUV, dyUV, maskLayout, normalStrength, stoneNormalStrength, colour, mask, normal);
+            GroundLayerPose above, below; half blend;
+            GroundLayer(along, across, above, below, blend);
+            SoilTexel(uv, dxUV, dyUV, above, maskLayout, normalStrength, stoneNormalStrength, colour, mask, normal);
             [branch] if (blend > 0.001)
             {
                 half3 c2, m2, n2;
-                SoilTexel(uv + shiftB, dxUV, dyUV, maskLayout, normalStrength, stoneNormalStrength, c2, m2, n2);
+                SoilTexel(uv, dxUV, dyUV, below, maskLayout, normalStrength, stoneNormalStrength, c2, m2, n2);
                 blend = LayerBlend(colour, c2, blend);
                 colour = lerp(colour, c2, blend);
                 mask = lerp(mask, m2, blend);
@@ -391,23 +410,35 @@ Shader "Something Down There/Ground Triplanar"
                 occlusion = lerp(occlusion, turfMask.g, turf);
             }
         }
+        void DepositTexel(TEXTURE2D_PARAM(albedoMap, albedoSampler), TEXTURE2D_PARAM(normalMap, normalSampler),
+            TEXTURE2D_PARAM(maskMap, maskSampler), float2 uv, float2 dxUV, float2 dyUV, GroundLayerPose pose, half strength,
+            out half3 colour, out half3 normal, out half occlusion)
+        {
+            uv = mul(pose.turn, uv) + pose.shift; dxUV = mul(pose.turn, dxUV); dyUV = mul(pose.turn, dyUV);
+            colour = SAMPLE_TEXTURE2D_GRAD(albedoMap, albedoSampler, uv, dxUV, dyUV).rgb * pose.tone;
+            normal = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(normalMap, normalSampler, uv, dxUV, dyUV), strength);
+            normal.xy = mul(normal.xy, pose.turn);
+            occlusion = SAMPLE_TEXTURE2D_GRAD(maskMap, maskSampler, uv, dxUV, dyUV).g;
+        }
+
         // One deposit projection in its layer (GroundLayer), blended with the layer below across the layer's edge.
         void DepositProjection(TEXTURE2D_PARAM(albedoMap, albedoSampler), TEXTURE2D_PARAM(normalMap, normalSampler),
             TEXTURE2D_PARAM(maskMap, maskSampler), float2 uv, float2 dxUV, float2 dyUV, float along, float2 across, half strength,
             out half3 colour, out half3 normal, out half occlusion)
         {
-            float2 shiftA, shiftB; half blend;
-            GroundLayer(along, across, shiftA, shiftB, blend);
-            colour = SAMPLE_TEXTURE2D_GRAD(albedoMap, albedoSampler, uv + shiftA, dxUV, dyUV).rgb;
-            normal = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(normalMap, normalSampler, uv + shiftA, dxUV, dyUV), strength);
-            occlusion = SAMPLE_TEXTURE2D_GRAD(maskMap, maskSampler, uv + shiftA, dxUV, dyUV).g;
+            GroundLayerPose above, below; half blend;
+            GroundLayer(along, across, above, below, blend);
+            DepositTexel(TEXTURE2D_ARGS(albedoMap, albedoSampler), TEXTURE2D_ARGS(normalMap, normalSampler),
+                TEXTURE2D_ARGS(maskMap, maskSampler), uv, dxUV, dyUV, above, strength, colour, normal, occlusion);
             [branch] if (blend > 0.001)
             {
-                half3 below = SAMPLE_TEXTURE2D_GRAD(albedoMap, albedoSampler, uv + shiftB, dxUV, dyUV).rgb;
-                blend = LayerBlend(colour, below, blend);
-                colour = lerp(colour, below, blend);
-                normal = normalize(lerp(normal, UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(normalMap, normalSampler, uv + shiftB, dxUV, dyUV), strength), blend));
-                occlusion = lerp(occlusion, SAMPLE_TEXTURE2D_GRAD(maskMap, maskSampler, uv + shiftB, dxUV, dyUV).g, blend);
+                half3 c2, n2; half o2;
+                DepositTexel(TEXTURE2D_ARGS(albedoMap, albedoSampler), TEXTURE2D_ARGS(normalMap, normalSampler),
+                    TEXTURE2D_ARGS(maskMap, maskSampler), uv, dxUV, dyUV, below, strength, c2, n2, o2);
+                blend = LayerBlend(colour, c2, blend);
+                colour = lerp(colour, c2, blend);
+                normal = normalize(lerp(normal, n2, blend));
+                occlusion = lerp(occlusion, o2, blend);
             }
         }
 

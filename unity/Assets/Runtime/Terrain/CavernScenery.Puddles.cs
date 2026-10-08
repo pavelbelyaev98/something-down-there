@@ -27,6 +27,10 @@ namespace SomethingDownThere
         private const float PuddleShore = .015f;
         // Session-only (Developer admin): whether the puddles show.
         public static bool PuddlesShown = true;
+        // The water's ripples drift this far (texture repeats a second) on a copy of the material, so lamps and crystals
+        // glint and shimmer in it the way water does.
+        private static readonly Vector2 RippleDrift = new Vector2(.013f, .008f);
+        private Material puddleWater;
 
         [SerializeField] private Material puddleMaterial;
         private Transform puddleRoot;
@@ -72,6 +76,7 @@ namespace SomethingDownThere
                 else Debug.LogWarning("Cave puddles: " + planning.Exception);
                 planning = null;
             }
+            if (puddleWater != null) puddleWater.mainTextureOffset = RippleDrift * Time.time;
             if (puddlesShown != PuddlesShown)
             {
                 puddlesShown = PuddlesShown;
@@ -112,7 +117,6 @@ namespace SomethingDownThere
         private void BuildPuddles(List<PuddlePlan> plans)
         {
             if (puddleRoot == null) puddleRoot = new GameObject("Cave puddles").transform;
-            var daylight = terrain.GetComponent<ExcavationDaylight>();
             foreach (var plan in plans)
             {
                 var centre = new float3(plan.Centre.x, plan.Level, plan.Centre.y);
@@ -122,11 +126,12 @@ namespace SomethingDownThere
                 var mesh = WaterMesh(plan);
                 go.GetComponent<MeshFilter>().sharedMesh = mesh;
                 var body = go.GetComponent<MeshRenderer>();
-                body.sharedMaterial = puddleMaterial;
+                if (puddleWater == null) puddleWater = new Material(puddleMaterial) { name = "Cave puddle water", hideFlags = HideFlags.DontSave };
+                body.sharedMaterial = puddleWater;
                 body.shadowCastingMode = ShadowCastingMode.Off;
-                // Lit by the crystals, whose lights reach only the ground's layer.
+                // Lit by the crystals, whose lights reach only the ground's layer. Its material is the excavation's Lit already
+                // (CavernSetup), so the daylight needs no adapted copy.
                 body.renderingLayerMask |= TerrainVolume.LampShadowLayer;
-                daylight?.Register(body);
                 var puddle = new Puddle { Body = body, Bounds = body.bounds, Bed = plan.Bed.ToArray() };
                 puddle.Bounds.Expand(new Vector3(0, PuddleBed * 2 + .2f, 0));
                 puddle.Drained = Dug(puddle);

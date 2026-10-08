@@ -24,22 +24,6 @@
   ],
   "appearances": [
     {
-      "content_id": "common_rock_a",
-      "atlas_group": "RockA",
-      "dimensions_m": [
-        0.7,
-        0.55,
-        0.45
-      ],
-      "fbx": "variants/a/models/ordinary_weathered_rock.fbx",
-      "collision_fbx": "variants/a/collisions/ordinary_weathered_rock.fbx",
-      "textures": {
-        "BaseColor": "variants/a/textures/Rock_BaseColor.png",
-        "Normal": "variants/a/textures/Rock_Normal.png",
-        "Masks": "variants/a/textures/Rock_Masks.png"
-      }
-    },
-    {
       "content_id": "common_rock_b",
       "atlas_group": "RockB",
       "dimensions_m": [

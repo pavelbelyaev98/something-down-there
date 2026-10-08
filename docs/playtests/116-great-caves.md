@@ -35,9 +35,10 @@ from about 8 m down. Developer admin → **Ground X-ray** marks cave rock yellow
 - The great cave's stone is a dark brown cave rock now (the cave-rock bay in the lab shows it in daylight).
 - Pick up a geode crystal: it keeps its colour as it flies to you (it used to turn pink).
 
-- **Puddles (A/B):** water stands in the low spots of each great cave and some mini caves, dark and glossy;
-  lamps and crystals glint in it. Dig into a puddle's bed: it drains away. Developer admin → **Cave puddles**
-  turns them all off and on.
+- **Puddles (A/B):** water stands in the low spots of each great cave and some mini caves, see-through and glossy;
+  bring a lamp (in the dark, water shows only by what it reflects). In the lab one lies just beside the foot of the
+  great cave's shaft. Dig into a puddle's bed: it drains away. Developer admin → **Cave puddles** turns them all off
+  and on. (The last build drew them near-black, which is why none showed.)
 
 **Tell the agent:**
 - The cave's darkness and the pool of light under the hole; crystals in light and in the dark.

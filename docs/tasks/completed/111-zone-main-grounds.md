@@ -236,3 +236,7 @@ Bays get explicit slots instead of slot = index.
   with a value noise across the face; over the lowest 30 % of a layer the layer below gives way by brightness,
   `LayerBlend`, so the next layer's stones come through instead of two patterns ghosting). Only texture coordinates
   shift; derivatives come from the position, so mips stay steady. Cost: a second set of samples only inside the band.
+- User, after that build: "it is better but still seems repetitive". A shifted copy of an evenly pebbled texture still
+  looks alike, so each layer is now also turned to one of eight orientations (quarter turns, mirrored or not; its normals
+  turned back with it) and shaded up to 7 % lighter or darker, like soil horizons, and its edge wanders by up to 1.2
+  layers across a face, so one face shows patches of several layers.

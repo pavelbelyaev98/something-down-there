@@ -31,22 +31,6 @@
   },
   "appearances": [
     {
-      "id": "a",
-      "save_content_id": "common_rock_a",
-      "shape": "single central hollow",
-      "scene": "SDT_PhotoRock_A_Studio",
-      "folder": "variants/a",
-      "dimensions_m_blender_xyz": [
-        0.7,
-        0.55,
-        0.45
-      ],
-      "visual_triangles": 12500,
-      "collision_triangles": 82,
-      "visual_vertices": 6252,
-      "collision_vertices": 43
-    },
-    {
       "id": "b",
       "save_content_id": "common_rock_b",
       "shape": "solid uneven top; no hollow",
