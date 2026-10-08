@@ -125,22 +125,24 @@ namespace SomethingDownThere.Editor
         // The zone grounds' looks (111), each ground's first the authored one: texture sets written by
         // art/pure-nature-highlands/make_zone_grounds.py (a look may share another set's maps). Tile metres keep the
         // packs' grains at a real size: silt specks of a few centimetres, pebbles of 2-10 cm.
-        private const string ZoneScript = "art/pure-nature-highlands/make_zone_grounds.py";
+        private const string ZoneScript = "art/pure-nature-highlands/make_zone_grounds.py", RiverScript = "art/mining-pack/make_riverbed.py";
         private static GroundLook[] ZoneLooks() => new[]
         {
             Look(TerrainMaterialId.LakeSediment, "A grey silt", "LakeSediment", "LakeSediment", "LakeSediment", 4, 1, 2.5f, 6),
             Look(TerrainMaterialId.LakeSediment, "B blue-grey clay", "LakeSedimentClay", "LakeSedimentClay", "LakeSediment", 4, .8f, 3.5f, 4),
             Look(TerrainMaterialId.LakeSediment, "C puddled mud", "LakeSedimentMud", "LakeSedimentMud", "LakeSedimentMud", 4, 1, 1.5f, 6),
-            Look(TerrainMaterialId.Riverbed, "A sand and gravel", "Riverbed", "Riverbed", "Riverbed", 1.8f, 1, 0, 20),
-            Look(TerrainMaterialId.Riverbed, "B gravel", "RiverbedGravel", "RiverbedGravel", "RiverbedGravel", 2.5f, 1, 1, 20),
-            Look(TerrainMaterialId.Riverbed, "C gravel in sand", "RiverbedMixed", "RiverbedMixed", "RiverbedMixed", 3, 1, 1, 20),
+            // The riverbed in the cave rock's scanned-stone style (user, 2026-10-08), from the Mining pack's rounded rocks
+            // (art/mining-pack/make_riverbed.py): its pebbles a few centimetres across.
+            Look(TerrainMaterialId.Riverbed, "A conglomerate", "RiverbedConglomerate", "RiverbedConglomerate", "RiverbedConglomerate", 3, 1, .6f, 20, RiverScript),
+            Look(TerrainMaterialId.Riverbed, "B brown conglomerate", "RiverbedBrown", "RiverbedBrown", "RiverbedBrown", 3, 1, .6f, 20, RiverScript),
+            Look(TerrainMaterialId.Riverbed, "C grit", "RiverbedGrit", "RiverbedGrit", "RiverbedGrit", 2.5f, 1, .6f, 20, RiverScript),
         };
 
         private static GroundLook Look(TerrainMaterialId ground, string name, string albedo, string normal, string mask,
-            float tileMetres, float relief, float bedding, float bedMetres) => new GroundLook
+            float tileMetres, float relief, float bedding, float bedMetres, string script = ZoneScript) => new GroundLook
         {
-            Ground = ground, Name = name, Albedo = Set(albedo, "Albedo", ZoneScript), Normal = Set(normal, "Normal", ZoneScript),
-            Mask = Set(mask, "Roughness", ZoneScript), Tint = Color.white, TileMetres = tileMetres, Relief = relief,
+            Ground = ground, Name = name, Albedo = Set(albedo, "Albedo", script), Normal = Set(normal, "Normal", script),
+            Mask = Set(mask, "Roughness", script), Tint = Color.white, TileMetres = tileMetres, Relief = relief,
             Bedding = bedding, BedMetres = bedMetres
         };
 

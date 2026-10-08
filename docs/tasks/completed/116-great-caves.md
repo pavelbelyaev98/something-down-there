@@ -300,3 +300,16 @@ then lifted out at jetpack speed, profiled.
   glow daylight had dimmed flew at full glow, and it took no shadows, so the sun could light it through the ground; warm
   light on purple read pink. It now takes the find's shadows, probes, rendering layers and property block
   (`FindPickupPresentation`).
+
+## Iteration 4 (playtest, 2026-10-08): puddles
+
+- User: the cave rock "is AMAZING ... the vibe I want"; "add water inside the caves like puddles ... when digging they
+  could disappear? we can see if they are good or not".
+- `CavernScenery` lays up to five puddles in each great cave's lowest floor spots and one in half the mini caves,
+  planned on a worker thread from the cave's shape so nothing is saved and nothing hitches: the lowest floor in a search
+  grid, flooded cell by cell up to 9 cm deep while it stays within 2.2 m (shallower when it would spill or run off a
+  drop). Water: a level mesh, `Content/Environment/CavePuddle.mat` (URP Lit, dark, 0.93 smooth, Crystal Caverns'
+  water normal), adapted by `ExcavationDaylight` and on the crystals' light layer. A cut reaching its bed drains it (it
+  shrinks away over a second); a reload with its bed dug leaves it out. A/B: Developer admin **Cave puddles**.
+- Concept `03` §2's "water never enters the excavation" is about the lake flooding the dig; a puddle is old water in
+  a sealed cave, harmless and only ever drained.

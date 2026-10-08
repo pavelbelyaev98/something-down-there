@@ -55847,34 +55847,34 @@ MonoBehaviour:
     Bedding: 1.5
     BedMetres: 6
   - Ground: 5
-    Name: A sand and gravel
-    Albedo: {fileID: 2800000, guid: 0741c2fedc7335b42b31ca4248eb0ed4, type: 3}
-    Normal: {fileID: 2800000, guid: 48d86c9ed35c8ad4c8754dbd6b5f9cc1, type: 3}
-    Mask: {fileID: 2800000, guid: f4a25b11bdc0a9a47adc0f549e22acb5, type: 3}
-    Tint: {r: 1, g: 1, b: 1, a: 1}
-    TileMetres: 1.8
-    Relief: 1
-    Bedding: 0
-    BedMetres: 20
-  - Ground: 5
-    Name: B gravel
-    Albedo: {fileID: 2800000, guid: 1cfb15eca5fe97042b04bb89b1df759f, type: 3}
-    Normal: {fileID: 2800000, guid: f12954b3eec809848a3e0f29839b4dba, type: 3}
-    Mask: {fileID: 2800000, guid: 2fa5ba7ad3c2db440bd4cc63c3278ace, type: 3}
-    Tint: {r: 1, g: 1, b: 1, a: 1}
-    TileMetres: 2.5
-    Relief: 1
-    Bedding: 1
-    BedMetres: 20
-  - Ground: 5
-    Name: C gravel in sand
-    Albedo: {fileID: 2800000, guid: c0113e66a78f58140b622782eed47ff8, type: 3}
-    Normal: {fileID: 2800000, guid: aaa433e01badae6448bb1b9d91a4f5b8, type: 3}
-    Mask: {fileID: 2800000, guid: bcdc854c430578e4c841501ffcee68b7, type: 3}
+    Name: A conglomerate
+    Albedo: {fileID: 2800000, guid: cbb531b9fc2ad2d418de05c0a2ac1523, type: 3}
+    Normal: {fileID: 2800000, guid: 3809108116164f94ca3bb0efdc05813a, type: 3}
+    Mask: {fileID: 2800000, guid: 70eb67e90f82d4349a06ba08ed2322a2, type: 3}
     Tint: {r: 1, g: 1, b: 1, a: 1}
     TileMetres: 3
     Relief: 1
-    Bedding: 1
+    Bedding: 0.6
+    BedMetres: 20
+  - Ground: 5
+    Name: B brown conglomerate
+    Albedo: {fileID: 2800000, guid: a0b345b0d42b1bd4eaaa7c45c8c41b7b, type: 3}
+    Normal: {fileID: 2800000, guid: 2d4a2738b8f09a24e9f72da92a2c3fc4, type: 3}
+    Mask: {fileID: 2800000, guid: 4af223db2db423a47b38572380572e51, type: 3}
+    Tint: {r: 1, g: 1, b: 1, a: 1}
+    TileMetres: 3
+    Relief: 1
+    Bedding: 0.6
+    BedMetres: 20
+  - Ground: 5
+    Name: C grit
+    Albedo: {fileID: 2800000, guid: 20166cfab3f32ad4dba6d4ac4bdedd3f, type: 3}
+    Normal: {fileID: 2800000, guid: 1f3accabe68050043a264a0fba510745, type: 3}
+    Mask: {fileID: 2800000, guid: 3fe367517d7610241802529f6e5bee8f, type: 3}
+    Tint: {r: 1, g: 1, b: 1, a: 1}
+    TileMetres: 2.5
+    Relief: 1
+    Bedding: 0.6
     BedMetres: 20
   groundXrayMarker: {fileID: 2100000, guid: 8a97902bbd05f924badb906f5ce4d110, type: 2}
   dimensions: {x: 400, y: 1200, z: 208}
@@ -55916,6 +55916,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ee42e014b2f56d4183d1f8012cdc26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.CavernScenery
+  puddleMaterial: {fileID: 2100000, guid: 25304e5f442b6ef41b9dd9a8b8cca50d, type: 2}
   terrain: {fileID: 486403993}
   field: {fileID: 203558592}
 --- !u!1001 &487584416

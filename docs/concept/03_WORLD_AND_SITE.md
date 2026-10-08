@@ -124,7 +124,7 @@ ancient material.
 | --- | ----------------------- | ---------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
 | 1   | **Recent fill**         | Soil, with backfill pits                             | Bottles, scrap, household junk, coins, coal, copper, old TVs; stashes in the pits | Bright, familiar, hopeful |
 | 2   | **Old sediment**        | Old grey lake silt and clay, finely bedded           | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
-| 3   | **Deep sediment**       | An old riverbed of sand with pebbles                 | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
+| 3   | **Deep sediment**       | An old riverbed, packed to pebbled stone             | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
 | 4   | **Ancient constructed** | Its own ancient material (defined with the zone-4 work) | Impossibilities, final components, the final object | Cold, quiet, wrong in a good way |
 
 That is the real order under a drained lake: recent mud, then the older lake's grey silt and clay,
@@ -170,7 +170,7 @@ cut's shape carry it. Nothing in the ground collapses: no pours, slumps or break
 | Soil     | Fast, broad rounded cuts; plain ground         | —                                      | Rubbish, junk, plain rocks                          |
 | Backfill | Rubble fill: small, hard bites, about three quarters of soil's speed | It *is* the tell              | Whatever someone buried                             |
 | Lake sediment | Zone 2's ground: bites as wide as soil's, a touch shallower and slower, a little firmer | The zone itself: grey, smooth, thin level bedding | Iron, silver and pyrite |
-| Riverbed | Zone 3's ground: stony, smaller bites with the short bite motion, about two thirds of soil's speed | The zone itself: damp sand with grey pebbles | Gold and emerald |
+| Riverbed | Zone 3's ground: stony, smaller bites with the short bite motion, about two thirds of soil's speed | The zone itself: warm brown stone set with small water-worn pebbles, the cave rock's style but lighter (user, 2026-10-08: the cave rock "is the vibe I want") | Gold and emerald |
 
 The zone grounds' looks and dig feel are being chosen in play (`111`). Geode shells and lenses join
 this table as they are added. The ancient zone adds its
@@ -288,6 +288,10 @@ Geodes keep that moment without cave networks.
     them I want to extract them with the crane like uniques"; "ONE crystal to be extracted per cave"):
     a unique, dug free round its base and marked wherever the player likes, set upright at camp for
     good (05 §8).
+  - **Puddles** (user, 2026-10-08: "add water inside the caves like puddles", an A/B): standing water in
+    the low spots of a great cave's floor and of some mini caves, dark and glossy so lamps and crystals
+    glint in it. Digging into a puddle's bed drains it. It is old water that collected in a sealed
+    cave, never the lake coming in: nothing floods.
   - **Mini caves**, a few a zone from a few metres down (user: "small ones with just some pickables
     here and there"): one small chamber holding a handful of crystals of the depth's kind, pale blue
     quartz near the top through amber cubes and green hexagonal prisms to ruby at the bottom.

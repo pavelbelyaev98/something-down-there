@@ -148,7 +148,7 @@ namespace SomethingDownThere
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
             || adminHoverOnRelease || adminGroundXray || adminContactShading || TerrainVolume.HasLookOverrides || zoneFeel != 0
-            || TerrainGround.DeepGround != TerrainMaterialId.Soil);
+            || TerrainGround.DeepGround != TerrainMaterialId.Soil || !CavernScenery.PuddlesShown);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
@@ -843,6 +843,7 @@ namespace SomethingDownThere
             excavationTerrain?.RestoreLooks();
             if (zoneFeel != 0) UseZoneFeel(0);
             TerrainGround.DeepGround = TerrainMaterialId.Soil;
+            CavernScenery.PuddlesShown = true;
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
@@ -1060,6 +1061,15 @@ namespace SomethingDownThere
             for (int i = 0; i < ZoneGrounds.Length; i++)
                 if (ZoneFeels[feel] != null) EquipmentProgression.OverrideResponse(ZoneGrounds[i], ZoneFeels[feel][i]);
                 else EquipmentProgression.ClearResponseOverride(ZoneGrounds[i]);
+        }
+
+        // Cave puddles (A/B, user 2026-10-08: "we can see if they are good or not"): shown or hidden for the session.
+        public void ToggleAdminPuddles()
+        {
+            if (!focused || !AdminAvailable) return;
+            CavernScenery.PuddlesShown = !CavernScenery.PuddlesShown;
+            ShowFeedback(CavernScenery.PuddlesShown ? "Cave puddles shown" : "Cave puddles hidden");
+            MenuChanged?.Invoke();
         }
 
         public string AdminDeepGround => EquipmentProgression.GroundName(TerrainGround.DeepGround);

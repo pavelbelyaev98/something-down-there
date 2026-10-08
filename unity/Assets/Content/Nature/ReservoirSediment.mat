@@ -65,15 +65,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RiverbedAlbedo:
-        m_Texture: {fileID: 2800000, guid: 0741c2fedc7335b42b31ca4248eb0ed4, type: 3}
+        m_Texture: {fileID: 2800000, guid: cbb531b9fc2ad2d418de05c0a2ac1523, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RiverbedMask:
-        m_Texture: {fileID: 2800000, guid: f4a25b11bdc0a9a47adc0f549e22acb5, type: 3}
+        m_Texture: {fileID: 2800000, guid: 70eb67e90f82d4349a06ba08ed2322a2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RiverbedNormal:
-        m_Texture: {fileID: 2800000, guid: 48d86c9ed35c8ad4c8754dbd6b5f9cc1, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3809108116164f94ca3bb0efdc05813a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SedimentAlbedo:
@@ -167,9 +167,9 @@ Material:
     - _NormalStrength: 1.5
     - _RimMix: 0.12
     - _RiverbedBedMetres: 20
-    - _RiverbedBedding: 0
+    - _RiverbedBedding: 0.6
     - _RiverbedNormalStrength: 1
-    - _RiverbedTileMetres: 1.8
+    - _RiverbedTileMetres: 3
     - _SedimentBedMetres: 6
     - _SedimentBedding: 2.5
     - _SedimentNormalStrength: 1

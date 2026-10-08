@@ -172,3 +172,12 @@ items. AGENTS.md "Bought Before Made" now says so.
   compared and still reads as before (silver sky blue, gold olive, black under a lamp), so the ingots stay part metal.
 - The whole pack is committed now, its binaries in LFS (user: "commit as LFS or ignore, I don't care"); the nested
   installers stay ignored.
+
+## Iteration (playtest, 2026-10-08): the plain rock
+
+- User: the rock "doesn't really match the vibe of other minerals we have, it's a bit too greenish". The plain rock
+  was original Blender art (`art/photo-rock`, mean colour 74, 76, 67: green over red) and goes, its card and
+  `PhotoRockSetup` with it.
+- The plain rock is now the pack's rounded rocks in the pack's own warm grey-brown stone (96, 86, 75), matte
+  (`BuriedPropsSetup.RockFinds`, `Rock_Rounded_Large/Small`, maps by `make_maps.py`), two looks scaled to about half a
+  metre like before, from `art/mining-pack/rock.json` (`RockSetup`; counts, bands and the shallow layer unchanged).

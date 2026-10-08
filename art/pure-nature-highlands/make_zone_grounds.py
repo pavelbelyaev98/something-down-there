@@ -1,15 +1,11 @@
-"""Writes the zone grounds' texture sets (111) from the approved packs' own ground textures: zone 2's old lake sediment
-and zone 3's old riverbed, three looks each for the user to pick from in play (Developer admin > Zone grounds).
+"""Writes zone 2's ground texture sets (111) from the approved packs' own ground textures: the old lake sediment, three
+looks for the user to pick from in play (Developer admin > Zone grounds). The riverbed's are art/mining-pack/make_riverbed.py.
 
 Lake sediment (grey silt and clay):
   LakeSediment      A grey silt: Highlands Mud, graded to an olive grey-brown, its own relief and occlusion.
   LakeSedimentClay  B blue-grey clay: the same mud graded blue-grey (colour only; relief from Crystal Caverns
                     GroundDirt, occlusion from LakeSediment).
   LakeSedimentMud   C puddled mud: Mountains Mud02 with its moss turned to mud, its smooth relief and occlusion.
-Riverbed (sand and gravel):
-  Riverbed          A sand and gravel: Highlands Sand_rubble, the sand darkened to damp ochre, its grey stones kept.
-  RiverbedGravel    B gravel: Mountains Gravel warmed to a sandy grey-brown (never the geode shell's dark grey).
-  RiverbedMixed     C gravel in sand: Highlands Sand in the same damp ochre with Gravel's pebbles churned in.
 
 Each set is <name>_Albedo/_Normal/_Mask.png (occlusion in the mask's G) at 2048 px; colour carries no light direction:
 grading keeps each texture's own brightness detail around a new mean. The ground shader (GroundTriplanar) draws the
@@ -28,13 +24,10 @@ size = 2048
 luminance = np.array([.2126, .7152, .0722])
 
 # Mean colours (sRGB 0-255) each look is graded to. Silt sits apart from the warm clay-loam soil above it and from the
-# geode shells' purple-grey stone inside it; the riverbed's damp sand from the dark brown cave rock and grey shells.
+# geode shells' purple-grey stone inside it.
 silt_mean = (92, 86, 72)
 clay_mean = (80, 85, 87)
 mud_mean = (92, 82, 67)
-sand_mean = (106, 89, 64)
-stone_mean = (98, 94, 88)
-gravel_mean = (103, 92, 75)
 # How much of a texture's own colour variation survives the grade (0: brightness detail only).
 keep_hue = .35
 
@@ -127,30 +120,4 @@ mud_hue = (mud02 * (1 - moss[..., None])).reshape(-1, 3).sum(0) / ((1 - moss).su
 levelled = mud02 * (1 - moss[..., None]) + (lum * mud_ref / moss_ref)[..., None] * mud_hue * moss[..., None]
 save('LakeSedimentMud', grade(levelled, mud_mean, 1 - moss, .1), normals(mountains / 'Mud02_n.png'), occlusion(mountains / 'Mud02_m.png'))
 
-# Riverbed. Sand_rubble's sand is pale, its stones darker (bimodal brightness): the sand goes to damp ochre, the
-# stones to washed grey river pebbles.
-rubble = colour(highlands / 'Sand_rubble_a.png')
-sand_share = smoothstep(.6, .66, to_srgb(rubble) @ luminance)
-sand_share = np.asarray(wrapped(Image.fromarray(np.uint8(sand_share * 255)), ImageFilter.GaussianBlur(1)), dtype=np.float64) / 255
-sand = grade(rubble, sand_mean, sand_share)
-stones = grade(rubble, stone_mean, 1 - sand_share)
-save('Riverbed', sand * sand_share[..., None] + stones * (1 - sand_share[..., None]),
-     normals(highlands / 'Sand_rubble_n.png'), occlusion(highlands / 'Sand_rubble_mask.png'))
-
-gravel = colour(mountains / 'Gravel_a.png')
-gravel_n = normals(mountains / 'Gravel_n.png')
-gravel_ao = occlusion(mountains / 'Gravel_m.png')
-gravel_graded = grade(gravel, gravel_mean)
-save('RiverbedGravel', gravel_graded, gravel_n, gravel_ao)
-
-# Gravel's brightest pebble tops, filled and softened, churned into the sand.
-pale = Image.fromarray(np.uint8(np.clip(to_srgb(gravel) @ luminance, 0, 1) * 255))
-level = np.percentile(np.asarray(pale), 78)
-pebbles = wrapped(pale.point(lambda v: 255 if v > level else 0), ImageFilter.MaxFilter(3), ImageFilter.MinFilter(3),
-                  ImageFilter.GaussianBlur(1))
-pebbles = np.asarray(pebbles, dtype=np.float64)[..., None] / 255
-plain_sand = grade(colour(highlands / 'Sand_a.png'), sand_mean)
-sand_n = normals(highlands / 'Sand_n.png')
-save('RiverbedMixed', plain_sand * (1 - pebbles) + grade(gravel, stone_mean) * .75 * pebbles, sand_n * (1 - pebbles) + gravel_n * pebbles,
-     occlusion(highlands / 'Sand_m.png') * (1 - pebbles[..., 0]) + gravel_ao * pebbles[..., 0])
-print('Zone ground texture sets written to', target)
+print('Lake sediment texture sets written to', target)

@@ -6,10 +6,20 @@ using UnityEngine.SceneManagement;
 
 namespace SomethingDownThere.Editor
 {
-    // The caves' and geodes' crystal lights (115, 110): CavernScenery on MainGame's terrain, which gives each crystal in a
-    // hollow a small light of its own. Run with the saved MainGame scene open.
+    // The caves' and geodes' crystal lights (115, 110) and the caves' puddles: CavernScenery on MainGame's terrain, which
+    // gives each crystal in a hollow a small light of its own and lays water in the caves' low spots. Run with the saved
+    // MainGame scene open.
     public static class CavernSetup
     {
+        // The puddles' water: muddy and see-through (PuddleColour's alpha), so the floor shows darkened under it and the
+        // waterline reads as a wet edge, not a hole (an opaque dark first try read as a black cut-out); glossy, its
+        // highlights kept whole, so lamps and crystals glint in it; rippled by Crystal Caverns' own water normal map over
+        // PuddleRippleMetres.
+        public const string PuddlePath = "Assets/Content/Environment/CavePuddle.mat";
+        private const string PuddleRipples = "Assets/BK/PureNature_CrystalCaverns/Textures/Water/Water_n.png";
+        private static readonly Color PuddleColour = new Color(.1f, .085f, .065f, .5f);
+        private const float PuddleGloss = .93f, PuddleRipple = .2f, PuddleRippleMetres = 1.6f;
+
         [MenuItem("Tools/Something Down There/Configure Caverns")]
         public static void Configure()
         {
@@ -23,11 +33,47 @@ namespace SomethingDownThere.Editor
             {
                 data.FindProperty("terrain").objectReferenceValue = terrain;
                 data.FindProperty("field").objectReferenceValue = field;
+                data.FindProperty("puddleMaterial").objectReferenceValue = PuddleMaterial();
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            Debug.Log("Caverns configured: crystal lights.");
+            AssetDatabase.SaveAssets();
+            Debug.Log("Caverns configured: crystal lights and puddles.");
+        }
+
+        private static Material PuddleMaterial()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(PuddlePath);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "CavePuddle" };
+                AssetDatabase.CreateAsset(material, PuddlePath);
+            }
+            var ripples = AssetDatabase.LoadAssetAtPath<Texture2D>(PuddleRipples)
+                ?? throw new InvalidOperationException("Missing " + PuddleRipples + " (reimport Crystal Caverns).");
+            material.SetColor("_BaseColor", PuddleColour);
+            material.SetColor("_Color", PuddleColour);
+            material.SetTexture("_BaseMap", null);
+            material.SetTexture("_BumpMap", ripples); material.SetFloat("_BumpScale", PuddleRipple); material.EnableKeyword("_NORMALMAP");
+            material.mainTextureScale = Vector2.one / PuddleRippleMetres;
+            material.SetFloat("_WorkflowMode", 1); material.DisableKeyword("_SPECULAR_SETUP");
+            material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
+            material.SetFloat("_Metallic", 0); material.SetFloat("_Smoothness", PuddleGloss);
+            // URP Lit's transparent surface, premultiplied with its specular preserved.
+            material.SetFloat("_Surface", 1); material.SetFloat("_Blend", 0); material.SetFloat("_BlendModePreserveSpecular", 1);
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
+            material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+            material.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_ZWrite", 0);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            material.SetShaderPassEnabled("DepthOnly", false);
+            material.SetShaderPassEnabled("ShadowCaster", false);
+            EditorUtility.SetDirty(material);
+            return material;
         }
     }
 }

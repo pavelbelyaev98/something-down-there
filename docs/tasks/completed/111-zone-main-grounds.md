@@ -1,8 +1,9 @@
 # 111 — Zone Main Grounds
 
-**Status:** complete, awaiting the user's picks. Zone 2 is old lake sediment and zone 3 the old riverbed, each a
-pack-derived ground behind warped, patchy borders, checked against the levels players own on arrival; three looks
-per ground, a dig-feel preset and zone 4's ground switch live in the Developer admin until the user names winners.
+**Status:** complete, awaiting the user's picks. Zone 2 is old lake sediment and zone 3 the old riverbed, now a
+pebbled stone in the cave rock's style, each a pack-derived ground behind warped, patchy borders, checked against the
+levels players own on arrival; three looks per ground, a dig-feel preset and zone 4's ground switch live in the
+Developer admin until the user names winners.
 Plan and research: [107](107-asset-only-grounds.md).
 
 ## Objective
@@ -211,3 +212,16 @@ Bays get explicit slots instead of slot = index.
 3. Ground Lab shows both grounds and a border bay; the aim prompt names them.
 4. Compiles warning-free; the session's closing test run passes; a fresh Windows build and the playtest
    note are delivered. The user's pick of looks and the dig-feel verdict follow in chat.
+
+## Iteration 1 (playtest, 2026-10-08)
+
+- User: zone 2 "is fine I guess"; zone 3 "is ugly, it has weird colors and too many rocks inside"; the cave rock
+  "is the vibe I want". The sand-and-pebble looks (Highlands Sand_rubble, Mountains Gravel, sand with gravel churned in:
+  ochre sand against grey stones) are deleted.
+- The riverbed's three looks are now squares of the Mining pack's rounded rocks, made seamless like the cave rock
+  (`art/mining-pack/make_riverbed.py`, sharing `seamless.py` with `make_cave_rock.py`): A conglomerate (the large
+  rock's stone, small water-worn pebbles set in it, warm grey-brown), B brown conglomerate (the small rock's, browner)
+  and C grit (the small rock's gritty top). Each stays lighter and greyer than the cave rock, so a great cave's stone in
+  zone 3 still stands out; faint bedding.
+- The Mining pack's layered rock was tried as a cross-bedded sandstone: its atlas is broken by padding and moss
+  specks, with no clean square big enough.

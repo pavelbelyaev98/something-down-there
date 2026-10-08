@@ -65,7 +65,8 @@ Development X-ray makes excavation ground transparent and reveals nearby actual 
 with no dot markers. This session-only inspection aid never changes soil, exposure, collision
 or collection/extraction eligibility; turning it off restores normal concealment and lighting.
 
-The **top metre belongs to plain rocks** — the junk you meet while the starter machine is still weak —
+The **top metre belongs to plain rocks** (the Mining pack's rounded rocks in their own warm grey-brown, so they
+match the minerals beside them; user, 2026-10-08) — the junk you meet while the starter machine is still weak —
 and the ore ladder starts just beneath it: coal first, then the rest in order. Rocks stay full size
 and form a dense layer just beneath the surface, so the first shallow scrapes reveal several nearby
 pieces. Placement clearance follows the actual rock geometry; empty bounding-box corners must not
