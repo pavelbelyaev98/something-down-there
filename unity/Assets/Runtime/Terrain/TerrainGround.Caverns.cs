@@ -30,7 +30,7 @@ namespace SomethingDownThere
             public FixedList512Bytes<float4> Stalagmites;
             // Basins sunk into the floor (x, z, radius, depth), each holding a puddle (CavernScenery; user, 2026-10-08: "make
             // the puddles deeper"): a smooth bowl, deepest in its middle.
-            public FixedList128Bytes<float4> Basins;
+            public FixedList512Bytes<float4> Basins;
             public float3 Min, Max, Seed;
             public float Floor, Shell;
             public bool Great;
@@ -42,9 +42,10 @@ namespace SomethingDownThere
         // under the dig plot so digging down meets them.
         public static readonly int[] MiniCavesPerZone = { 3, 3, 3, 3 };
         // A great cave's basins, and the share of mini caves with one; their radii and depths.
-        public const int GreatBasins = 5;
-        public const float MiniBasinShare = .5f;
-        private const float BasinRadiusLeast = 1f, BasinRadiusMost = 1.6f, BasinDepthLeast = .35f, BasinDepthMost = .55f, BasinMargin = .4f;
+        // (User, 2026-10-08: "not deep enough and not enough count-wise in the cave".)
+        public const int GreatBasins = 12;
+        public const float MiniBasinShare = .75f;
+        private const float BasinRadiusLeast = 1f, BasinRadiusMost = 1.7f, BasinDepthLeast = .7f, BasinDepthMost = 1f, BasinMargin = .4f;
         public const float CaveTop = 7.5f;
         // How softly chambers join, the warp and lumps of the walls, the floor's roll, and slack on the reach: a mini cave's,
         // then a great cave's (broader, slower folds).
@@ -137,7 +138,7 @@ namespace SomethingDownThere
                         cavern.Centres.Add(centre); cavern.Radii.Add(radii);
                         if (draws.Next() < MiniBasinShare)
                             cavern.Basins.Add(new float4(centre.x + draws.Range(-.4f, .4f), centre.z + draws.Range(-.4f, .4f),
-                                draws.Range(.75f, .95f), draws.Range(.3f, .4f)));
+                                draws.Range(.8f, 1f), draws.Range(.55f, .7f)));
                         if (footprint != null && !Inside(footprint, centre, math.cmax(radii) + cavern.Shell + .5f)) continue;
                         Bound(ref cavern);
                         if (OutOfGrid(cavern, extent) || blocked(cavern.Min, cavern.Max)) continue;
@@ -223,6 +224,8 @@ namespace SomethingDownThere
             if (underPlot < 3) return false;
             Bound(ref cave);
             Furnish(ref cave, draws);
+            // Again, now that its basins sink the floor.
+            Bound(ref cave);
             return true;
         }
 
@@ -261,7 +264,7 @@ namespace SomethingDownThere
             // Basins in the floor's open stretches: the bowl's middle well inside the hall (a bowl may meet a wall) and the
             // bowl clear of the standing rock by BasinMargin (the standing rock's own wide spacing left no room for one in a
             // crowded hall).
-            for (int attempt = 0; attempt < 300 && cave.Basins.Length < GreatBasins; attempt++)
+            for (int attempt = 0; attempt < 600 && cave.Basins.Length < GreatBasins; attempt++)
             {
                 var at = Somewhere(cave, .8f); float radius = draws.Range(BasinRadiusLeast, BasinRadiusMost);
                 if (!Open(cave, at, .4f, radius * .5f + BasinMargin)) continue;

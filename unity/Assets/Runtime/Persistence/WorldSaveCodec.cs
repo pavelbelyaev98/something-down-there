@@ -13,7 +13,7 @@ namespace SomethingDownThere
     // Bounded, checksummed current-format checkpoints. Older formats are unsupported.
     public static class WorldSaveCodec
     {
-        public const int Version = 26;
+        public const int Version = 27;
         // Bound combined density + material storage, reserving room for the other
         // checkpoint records. Sized for the 150 m site with room for a 200 m one
         // (SiteLayoutTests); a deeper site must explicitly revisit this budget.

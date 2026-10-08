@@ -94,7 +94,7 @@ namespace SomethingDownThere
                 string text = $"SHOVEL {player.EffectiveShovelLevel} / {player.Shovel.LevelCount}    |    {player.EffectiveShovel.Radius * 2:F2} m cut"
                     + $"\nREACH {player.EffectiveDigReach:F1} m    |    DEPTH {player.DisplayDepth:F1} m";
                 if (player.WorksiteTools != null)
-                    text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {player.WorksiteTools.AvailableLamps}/{player.LampKit.Owned}"
+                    text += $"\n{player.InputSettings.Display(PlayerBinding.Lamp)}  LAMPS {(player.LampKit.Unlimited ? "UNLIMITED" : $"{player.WorksiteTools.AvailableLamps}/{player.LampKit.Owned}")}"
                         + $"    |    {player.InputSettings.Display(PlayerBinding.Mark)}  MARK";
                 shovelStatus.text = text;
             }

@@ -289,10 +289,13 @@ Geodes keep that moment without cave networks.
     a unique, dug free round its base and marked wherever the player likes, set upright at camp for
     good (05 §8).
   - **Puddles** (user, 2026-10-08: "add water inside the caves like puddles", an A/B; "make the puddles
-    deeper"): standing water in basins sunk into a great cave's floor and some mini caves' floors, a
-    hand or two deep, see-through and glossy so lamps and crystals glint in it. Digging into a puddle's
-    bed takes it away at once; nothing shrinks or drains away on screen. It is old water that collected
-    in a sealed cave, never the lake coming in: nothing floods.
+    deeper"; "not enough count-wise"): standing water in basins sunk into a great cave's floor (about a
+    dozen) and most mini caves' floors, knee deep in the middle, see-through and glossy so lamps and
+    crystals glint in it, darker where deeper. Water behaves like water: a hole dug in a puddle fills, and
+    so does a trench dug into it that leads nowhere lower; it goes only when a cut lets it run off, into
+    a hole deeper than the puddle or down to lower ground, and then it is gone at once; nothing shrinks
+    or drains away on screen. It is old water that collected in a sealed cave, never the lake coming in:
+    nothing floods.
   - **Mini caves**, a few a zone from a few metres down (user: "small ones with just some pickables
     here and there"): one small chamber holding a handful of crystals of the depth's kind, pale blue
     quartz near the top through amber cubes and green hexagonal prisms to ruby at the bottom.

@@ -43,7 +43,7 @@ namespace SomethingDownThere
         public TerrainVolume Terrain => terrain;
         public IReadOnlyList<WorkLamp> Lamps => lamps;
         public int MarkCount => marks.Count;
-        public int AvailableLamps => Mathf.Max(0, player.LampKit.Owned - lamps.Count);
+        public int AvailableLamps => Mathf.Max(0, (player.LampKit.Unlimited ? EquipmentProgression.MaximumLamps : player.LampKit.Owned) - lamps.Count);
         public long Revision { get; private set; }
         public bool IsPlacing => placement != 0;
         public bool PlacementValid => IsPlacing && valid;

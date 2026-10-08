@@ -326,3 +326,12 @@ then lifted out at jetpack speed, profiled.
   cave clear of its standing rock, one in half the mini caves, one in each lab mini cave; the trophy never stands in one),
   each filled three quarters deep. A dug bed now takes the puddle away at once (the shrink is gone), and no shrinking
   animation is allowed anywhere (concept `15`); the pickup flight no longer shrinks either. Save format 26 (New Game).
+- Then (user): "the puddles immediately disappear, not deep enough and not enough count-wise in the cave". Any cut
+  that reached the bed took the water, so the first scoop in a puddle ended it. Now the water behaves like water: on
+  every cut near it (and on load) `CavernScenery.Escaped` follows it through the dug ground just under its surface; a
+  hole in its bed keeps it, dug ground opened to it fills (`Retrace` redraws the surface over the dug floor, so no dry
+  notch stands beside a wall of water), and only a way to ground lower than its bed, or spreading well past its reach,
+  takes it away at once. Basins are deeper (0.7-1 m bowls, mini caves' 0.55-0.7 m), up to twelve per great cave (600
+  tries; their list now holds that many) and in three quarters of the mini caves; the cave's bounds include them.
+  Deeper water reads darker through five faint matte layers under the surface (two strong layers drew hard contour
+  rings). Save format 27. The Ground Lab's lamps are unlimited too (`LampKit.Unlimited`; the HUD reads UNLIMITED).

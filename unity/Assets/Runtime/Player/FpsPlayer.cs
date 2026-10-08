@@ -914,12 +914,13 @@ namespace SomethingDownThere
         }
 
         // Finds ground tells on purpose: transparent ground with coloured markers for every tell ground (backfill).
-        // Ground Lab sessions start with unlimited battery; everything else stays as in the game.
+        // Ground Lab sessions start with unlimited battery and lamps; everything else stays as in the game.
         public void BeginGroundLab()
         {
             if (!AdminAvailable) return;
             unlimitedBattery = true;
-            ShowFeedback("Ground Lab: unlimited battery on. Ctrl+Shift+1-9/0 picks a tool level; the holes around the bays hold computers for the crane. Nothing here is saved.");
+            LampKit.Unlimited = true;
+            ShowFeedback("Ground Lab: unlimited battery and lamps. Ctrl+Shift+1-9/0 picks a tool level; the holes around the bays hold computers for the crane. Nothing here is saved.");
             MenuChanged?.Invoke();
         }
 

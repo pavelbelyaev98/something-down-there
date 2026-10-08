@@ -5,6 +5,8 @@ namespace SomethingDownThere
     public sealed class LampKit
     {
         public int Owned { get; private set; }
+        // The Ground Lab's kit never runs out (user, 2026-10-08): as many placed as the largest kit holds; the lab never saves.
+        public bool Unlimited { get; internal set; }
         public bool Full => Owned >= EquipmentProgression.MaximumLamps;
 
         public LampKit(int owned = EquipmentProgression.StarterLamps)
