@@ -35,7 +35,7 @@ new generated ground patterns.
 - **Tells read by shape and grain, not only colour:** backfill is a chunky mixed patch with stones
   churned in, a geode's shell a curved face of dense stone. All of them also feel different to dig.
 - **Materials read by shape as well as color**, so colorblind players can still tell ground apart.
-- Every ground uses its own grain and relief from its owned pack texture, matching its saved deposit; texture scale stays consistent on floors, walls and ceilings.
+- Every ground uses its own grain and relief from its owned pack texture, matching its saved deposit; texture scale stays consistent on floors, walls and ceilings. Digging never shows the same stones in the same places again: the ground's texture changes every third of a metre or so as a floor goes down or a tunnel goes on (user, 2026-10-08: digging straight down "the texture just moves down and doesn't feel like digging").
 - **Objects read by silhouette**, because recognition is the core reward.
 - Pure Nature 2: Mountains supplies the dig-ground textures and lakebed plants; Pure Nature 2:
   Highlands supplies the canyon, lake and lakebed around the dig area, with its demo's sky, haze and

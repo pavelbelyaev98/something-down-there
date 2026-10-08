@@ -175,9 +175,9 @@ items. AGENTS.md "Bought Before Made" now says so.
 
 ## Iteration (playtest, 2026-10-08): the plain rock
 
-- User: the rock "doesn't really match the vibe of other minerals we have, it's a bit too greenish". The plain rock
-  was original Blender art (`art/photo-rock`, mean colour 74, 76, 67: green over red) and goes, its card and
-  `PhotoRockSetup` with it.
-- The plain rock is now the pack's rounded rocks in the pack's own warm grey-brown stone (96, 86, 75), matte
-  (`BuriedPropsSetup.RockFinds`, `Rock_Rounded_Large/Small`, maps by `make_maps.py`), two looks scaled to about half a
-  metre like before, from `art/mining-pack/rock.json` (`RockSetup`; counts, bands and the shallow layer unchanged).
+- User: the rock "doesn't really match the vibe of other minerals we have, it's a bit too greenish" (its colour map
+  averaged 137, 140, 123 on the rock: green over red).
+- **Rejected:** replacing it with the pack's rounded rocks in the pack's own stone (`RockSetup`, `rock.json`). User:
+  "please never use this rock shape ... I had fine shape before but just colors were weird". The original model stays.
+- Its three colour maps are graded to a warm grey-brown (110, 97, 82) with a little more spread in brightness, each
+  texel keeping its hue relative to the mean (`art/photo-rock/grade_colour.py`, idempotent).

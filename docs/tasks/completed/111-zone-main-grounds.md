@@ -225,3 +225,14 @@ Bays get explicit slots instead of slot = index.
   zone 3 still stands out; faint bedding.
 - The Mining pack's layered rock was tried as a cross-bedded sandstone: its atlas is broken by padding and moss
   specks, with no clean square big enough.
+
+## Iteration 2 (playtest, 2026-10-08): texture layers
+
+- User, with shots of a shaft floor at 1.5 m and 2.8 m showing the same stones in the same places: digging straight
+  down "the texture just moves down and doesn't feel like digging". The cause: a floor takes the top projection, which
+  maps by x and z only, so every depth showed the same part of the texture (a tunnel's end face likewise along its axis).
+- `GroundTriplanar`: every projection of the soil and of every deposit takes another part of its texture every
+  0.35 m along its own axis (`GroundLayer`: a hashed shift per layer; the layer's edge wanders by a third of a layer
+  with a value noise across the face; over the lowest 30 % of a layer the layer below gives way by brightness,
+  `LayerBlend`, so the next layer's stones come through instead of two patterns ghosting). Only texture coordinates
+  shift; derivatives come from the position, so mips stay steady. Cost: a second set of samples only inside the band.

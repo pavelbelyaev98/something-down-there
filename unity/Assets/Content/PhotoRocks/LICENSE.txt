@@ -1,0 +1,11 @@
+Original Photo Rock Asset License
+
+The original Blender geometry, procedural materials, baked textures, source recipe
+and exports in this folder were authored for Something Down There. User-supplied
+rock photographs were used as visual reference only; no photo pixels or third-party
+models/textures are embedded.
+
+Permission is granted, free of charge, to use, copy, modify, distribute, sublicense
+and sell these original assets, including in commercial games. Attribution is not
+required. The assets are provided as is, without warranty. This permission does
+not relicense the reference photographs or any other third-party artwork.

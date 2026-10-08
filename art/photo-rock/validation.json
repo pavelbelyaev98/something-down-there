@@ -1,0 +1,253 @@
+{
+  "blender": "5.2.1 LTS",
+  "asset": "common_rock",
+  "appearances": {
+    "a": {
+      "saved_visual": {
+        "triangles": 12500,
+        "vertices": 6252,
+        "dimensions_m": [
+          0.699999988079071,
+          0.550000011920929,
+          0.44999998807907104
+        ],
+        "closed": true,
+        "outward_normals": true,
+        "volume_m3": 0.07779252251534988,
+        "convex": false
+      },
+      "saved_collision": {
+        "triangles": 82,
+        "vertices": 43,
+        "dimensions_m": [
+          0.699999988079071,
+          0.550000011920929,
+          0.44999998807907104
+        ],
+        "closed": true,
+        "outward_normals": true,
+        "volume_m3": 0.08064219989694835,
+        "convex": true
+      },
+      "textures": {
+        "BaseColor": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "sRGB",
+          "packed": true
+        },
+        "Normal": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "Non-Color",
+          "packed": true
+        },
+        "Masks": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "Non-Color",
+          "packed": true
+        }
+      },
+      "fbx_roundtrip": {
+        "models": {
+          "triangles": 12500,
+          "vertices": 6252,
+          "dimensions_m": [
+            0.699999988079071,
+            0.550000011920929,
+            0.4499999334464846
+          ],
+          "closed": true,
+          "outward_normals": true,
+          "volume_m3": 0.07779252251534988,
+          "convex": false
+        },
+        "collisions": {
+          "triangles": 82,
+          "vertices": 43,
+          "dimensions_m": [
+            0.699999988079071,
+            0.550000011920929,
+            0.4499999334464846
+          ],
+          "closed": true,
+          "outward_normals": true,
+          "volume_m3": 0.08064219989694835,
+          "convex": true
+        }
+      }
+    },
+    "b": {
+      "saved_visual": {
+        "triangles": 12500,
+        "vertices": 6252,
+        "dimensions_m": [
+          0.7200000286102295,
+          0.5099999904632568,
+          0.38999998569488525
+        ],
+        "closed": true,
+        "outward_normals": true,
+        "volume_m3": 0.06913587125214479,
+        "convex": false
+      },
+      "saved_collision": {
+        "triangles": 82,
+        "vertices": 43,
+        "dimensions_m": [
+          0.7200000286102295,
+          0.5099999904632568,
+          0.38999998569488525
+        ],
+        "closed": true,
+        "outward_normals": true,
+        "volume_m3": 0.06820593214998896,
+        "convex": true
+      },
+      "textures": {
+        "BaseColor": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "sRGB",
+          "packed": true
+        },
+        "Normal": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "Non-Color",
+          "packed": true
+        },
+        "Masks": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "Non-Color",
+          "packed": true
+        }
+      },
+      "fbx_roundtrip": {
+        "models": {
+          "triangles": 12500,
+          "vertices": 6252,
+          "dimensions_m": [
+            0.7200000286102295,
+            0.5099999904632568,
+            0.3899999803399594
+          ],
+          "closed": true,
+          "outward_normals": true,
+          "volume_m3": 0.06913587125214479,
+          "convex": false
+        },
+        "collisions": {
+          "triangles": 82,
+          "vertices": 43,
+          "dimensions_m": [
+            0.7200000286102295,
+            0.5099999904632568,
+            0.3899999803399594
+          ],
+          "closed": true,
+          "outward_normals": true,
+          "volume_m3": 0.06820593214998896,
+          "convex": true
+        }
+      }
+    },
+    "c": {
+      "saved_visual": {
+        "triangles": 12500,
+        "vertices": 6252,
+        "dimensions_m": [
+          0.6100000143051147,
+          0.5400000214576721,
+          0.46000000834465027
+        ],
+        "closed": true,
+        "outward_normals": true,
+        "volume_m3": 0.07781718955678411,
+        "convex": false
+      },
+      "saved_collision": {
+        "triangles": 82,
+        "vertices": 43,
+        "dimensions_m": [
+          0.6100000143051147,
+          0.5400000214576721,
+          0.46000000834465027
+        ],
+        "closed": true,
+        "outward_normals": true,
+        "volume_m3": 0.07687969255304862,
+        "convex": true
+      },
+      "textures": {
+        "BaseColor": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "sRGB",
+          "packed": true
+        },
+        "Normal": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "Non-Color",
+          "packed": true
+        },
+        "Masks": {
+          "size": [
+            2048,
+            2048
+          ],
+          "color_space": "Non-Color",
+          "packed": true
+        }
+      },
+      "fbx_roundtrip": {
+        "models": {
+          "triangles": 12500,
+          "vertices": 6252,
+          "dimensions_m": [
+            0.6100000143051147,
+            0.5400000214576721,
+            0.45999999960345583
+          ],
+          "closed": true,
+          "outward_normals": true,
+          "volume_m3": 0.07781718955678411,
+          "convex": false
+        },
+        "collisions": {
+          "triangles": 82,
+          "vertices": 43,
+          "dimensions_m": [
+            0.6100000143051147,
+            0.5400000214576721,
+            0.45999999960345583
+          ],
+          "closed": true,
+          "outward_normals": true,
+          "volume_m3": 0.07687969255304862,
+          "convex": true
+        }
+      }
+    }
+  },
+  "result": "PASS"
+}

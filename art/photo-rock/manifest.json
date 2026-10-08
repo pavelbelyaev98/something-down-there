@@ -1,0 +1,83 @@
+{
+  "source_asset_id": "common_rock",
+  "task": "114",
+  "source": "PhotoRock.blend",
+  "source_tool": "Blender MCP, Blender 5.2.1 LTS",
+  "license": "LICENSE.txt",
+  "reference": "Original recreation from user photographs; no embedded photo pixels",
+  "state": "integrated trial art; subjective visual/feel acceptance pending",
+  "gameplay_source": "catalog.json",
+  "source_units": "metres",
+  "source_pivot": "base centre",
+  "unity_pivot": "geometry bounds centre",
+  "fbx_axes": {
+    "forward": "-Z",
+    "up": "Y"
+  },
+  "textures": {
+    "size": [
+      2048,
+      2048
+    ],
+    "bits_per_channel": 8,
+    "BaseColor": "sRGB",
+    "Normal": "non-color tangent",
+    "Masks": {
+      "color_space": "Non-Color",
+      "R": "metallic = 0",
+      "G": "AO = 1",
+      "B": "roughness"
+    }
+  },
+  "appearances": [
+    {
+      "id": "a",
+      "save_content_id": "common_rock_a",
+      "shape": "single central hollow",
+      "scene": "SDT_PhotoRock_A_Studio",
+      "folder": "variants/a",
+      "dimensions_m_blender_xyz": [
+        0.7,
+        0.55,
+        0.45
+      ],
+      "visual_triangles": 12500,
+      "collision_triangles": 82,
+      "visual_vertices": 6252,
+      "collision_vertices": 43
+    },
+    {
+      "id": "b",
+      "save_content_id": "common_rock_b",
+      "shape": "solid uneven top; no hollow",
+      "scene": "SDT_PhotoRock_B_Studio",
+      "folder": "variants/b",
+      "dimensions_m_blender_xyz": [
+        0.72,
+        0.51,
+        0.39
+      ],
+      "visual_triangles": 12500,
+      "collision_triangles": 82,
+      "visual_vertices": 6252,
+      "collision_vertices": 43
+    },
+    {
+      "id": "c",
+      "save_content_id": "common_rock_c",
+      "shape": "solid uneven top; no hollow",
+      "scene": "SDT_PhotoRock_C_Studio",
+      "folder": "variants/c",
+      "dimensions_m_blender_xyz": [
+        0.61,
+        0.54,
+        0.46
+      ],
+      "visual_triangles": 12500,
+      "collision_triangles": 82,
+      "visual_vertices": 6252,
+      "collision_vertices": 43
+    }
+  ],
+  "validation": "validation.json"
+}

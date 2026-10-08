@@ -13,6 +13,8 @@ sediment** bay (south row, east end), and north-east a **Riverbed** bay and a **
 - Dig a while in each ground. Sediment: a little firmer than soil, smooth, with thin level bands in
   the walls. Riverbed: stony, smaller bites with the short bite motion, the drill keeping up.
 - Iron, silver and pyrite favour the sediment, gold and emerald the riverbed.
+- Dig straight down a while, looking at the floor: every third of a metre or so the stones change, never the same
+  pattern sliding down with you (also when tunnelling sideways).
 
 **Good feels like:** "it's different down here", and the tool still keeps up.
 

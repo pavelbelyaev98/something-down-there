@@ -324,9 +324,6 @@ namespace SomethingDownThere.Editor
         }
         internal static readonly RockFindLook[] RockFinds =
         {
-            // The plain rock (art/mining-pack/rock.json): the rounded rocks in the pack's own warm grey-brown stone, matte.
-            new RockFindLook("Rounded_Large", "Rock_Rounded_Large", Color.white, 0, .2f),
-            new RockFindLook("Rounded_Small", "Rock_Rounded_Small", Color.white, 0, .2f),
             new RockFindLook("Layered_Large", "Coal_Layered_Large", new Color(.17f, .17f, .18f), 0, .5f),
             new RockFindLook("Layered_Small", "Coal_Layered_Small", new Color(.17f, .17f, .18f), 0, .5f),
             new RockFindLook("Jagged_Large", "Iron_Native_A", Color.white, 1, 1, maps: "Iron"),
