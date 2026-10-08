@@ -7,8 +7,8 @@ In a run, iron lies mostly in zone 2 (about 35–60 m), gold in zone 3 (about 75
 
 **Try:**
 - Look at gold, iron and silver side by side in the gallery in daylight, then dig some up underground by a lamp.
-- The plain rock (first in the gallery, and all over the first few metres) keeps its old shapes, now warm grey-brown
-  instead of greenish; the one with a dent on top is gone.
+- The plain rock (first in the gallery, and all over the first few metres): four new angular stone shapes from the
+  packs, in the same warm grey-brown as before.
 - Sell a pyrite: it now pays more than iron, less than silver.
 - The TVs: only the wood-cased and the CRT set are left, three of each in a run.
 - Open a chest and look at the ingots in the light of a lamp and in daylight.
@@ -19,4 +19,4 @@ of them goes black under a lamp.
 
 **Tell the agent:**
 - Whether gold, iron and silver now read apart, the ingots' colour and shine, and pyrite's worth.
-- Whether the plain rock now matches the minerals.
+- Whether the plain rock's new shapes fit beside the minerals.

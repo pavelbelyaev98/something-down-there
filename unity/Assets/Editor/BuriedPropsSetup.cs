@@ -20,6 +20,10 @@ namespace SomethingDownThere.Editor
         public const string Folder = "Assets/Content/BuriedProps";
         public const string MiningFolder = Folder + "/MiningPack", CrystalFolder = Folder + "/CrystalCaverns";
         public const string MiningVendor = "Assets/REAL_DEDICATED/MiningTools_Ore_Ingots";
+        // The plain rock's shapes (art/plain-rock): the Mountains pack's mossless stones, in the old rock's colour map.
+        public const string StonesFolder = Folder + "/Stones", StonesVendor = "Assets/BK/PureNature_Mountains/Prefabs/Rocks";
+        public static readonly string[] Stones = { "Stone1b", "Stone2b", "Stone3b", "Stone4b" };
+        private const float StoneGloss = .15f;
         private const string ChestVendor = "Assets/NOT_Lonely/OldChest", TvSetVendor = "Assets/_Television_set";
         private const string CrystalVendor = "Assets/BK/PureNature_CrystalCaverns";
         // The TV Set pack's wood-cased and CRT sets (user, 2026-10-07: not its portable or flat-screen ones, nor the big
@@ -121,6 +125,9 @@ namespace SomethingDownThere.Editor
                     vendor => FromHdrp(vendor, $"{MiningFolder}/{vendor.name}.mat", name.StartsWith("Ore_") ? PackStyle.Pack : PackStyle.Ingot));
             if (!AssetDatabase.IsValidFolder(MiningFolder + "/Rocks")) AssetDatabase.CreateFolder(MiningFolder, "Rocks");
             foreach (var find in RockFinds) RockFind(find);
+            if (!AssetDatabase.IsValidFolder(StonesFolder)) AssetDatabase.CreateFolder(Folder, "Stones");
+            var stone = StoneMaterial();
+            foreach (var name in Stones) StoneFind(name, stone);
             if (!AssetDatabase.IsValidFolder(CrystalFolder + "/Dirty")) AssetDatabase.CreateFolder(CrystalFolder, "Dirty");
             foreach (var name in GroundCrystalProps)
                 PackVariant($"{CrystalVendor}/Prefabs/Crystals/{name}.prefab", $"{CrystalFolder}/Dirty/{name}.prefab",
@@ -379,6 +386,46 @@ namespace SomethingDownThere.Editor
                 root.AddComponent<MeshFilter>().sharedMesh = mesh;
                 root.AddComponent<MeshRenderer>().sharedMaterial = material;
                 PrefabUtility.SaveAsPrefabAsset(root, $"{MiningFolder}/{output}.prefab");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        // The plain rock's material (art/plain-rock/make_stone_rock.py): the old rock's colour as a tile, the stones' own relief
+        // and occlusion, matte stone.
+        private static Material StoneMaterial()
+        {
+            const string script = "art/plain-rock/make_stone_rock.py";
+            var material = LitMaterial(StonesFolder + "/StoneRock.mat", Project(StonesFolder + "/StoneRock_Albedo.png", script),
+                Project(StonesFolder + "/StoneRock_Normal.png", script, PackMapSize, true));
+            material.SetTexture("_MetallicGlossMap", null); material.DisableKeyword("_METALLICSPECGLOSSMAP");
+            material.SetTexture("_OcclusionMap", Project(StonesFolder + "/StoneRock_Mask.png", script, PackMapSize, false, true));
+            material.SetFloat("_OcclusionStrength", 1); material.EnableKeyword("_OCCLUSIONMAP");
+            material.SetFloat("_Metallic", 0); material.SetFloat("_Smoothness", StoneGloss);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        // One stone's full-detail mesh (refilled in place, never copied over) as a prop prefab in the stone material.
+        private static void StoneFind(string name, Material material)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{StonesVendor}/{name}.prefab") ?? throw new InvalidOperationException("Missing " + name + " (reimport Pure Nature 2: Mountains).");
+            var lods = prefab.GetComponentInChildren<LODGroup>(true)?.GetLODs();
+            var detail = (lods != null ? lods[0].renderers[0].GetComponent<MeshFilter>() : prefab.GetComponentInChildren<MeshFilter>(true)).sharedMesh;
+            string meshPath = $"{StonesFolder}/{name}.asset";
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+            bool fresh = mesh == null;
+            if (fresh) mesh = new Mesh();
+            mesh.Clear(); mesh.indexFormat = detail.indexFormat;
+            mesh.SetVertices(detail.vertices); mesh.SetNormals(detail.normals); mesh.SetUVs(0, detail.uv); mesh.SetTriangles(detail.triangles, 0);
+            mesh.SetTangents(detail.tangents); mesh.RecalculateBounds();
+            mesh.name = name;
+            if (fresh) AssetDatabase.CreateAsset(mesh, meshPath); else EditorUtility.SetDirty(mesh);
+            var root = new GameObject("Rock_" + name);
+            try
+            {
+                root.AddComponent<MeshFilter>().sharedMesh = mesh;
+                root.AddComponent<MeshRenderer>().sharedMaterial = material;
+                PrefabUtility.SaveAsPrefabAsset(root, $"{StonesFolder}/Rock_{name}.prefab");
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
         }

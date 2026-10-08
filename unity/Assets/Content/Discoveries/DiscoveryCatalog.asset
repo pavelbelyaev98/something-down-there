@@ -17,9 +17,11 @@ MonoBehaviour:
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 98826337501060310, guid: 106b917856caab4489fc1324c86d9f45, type: 3}
+    Prefab: {fileID: 2917793544170118718, guid: 22b16cdd4c3501246927353828120aea, type: 3}
     AppearanceVariants:
-    - {fileID: 4056722544200649903, guid: d50d7996b62834241ad3c20a1fbea7c4, type: 3}
+    - {fileID: 4004229674818400406, guid: be32b87c9c8d56141824b03945a07197, type: 3}
+    - {fileID: 269719599445629592, guid: 14f18186d66bea644aa3a731d17b6c13, type: 3}
+    - {fileID: 8456720129100573077, guid: a8893247411a71d44a55aa92a4a1397e, type: 3}
     Count: 5390
     ShallowCount: 640
     ShallowMinCover: 0.02

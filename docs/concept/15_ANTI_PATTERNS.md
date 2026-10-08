@@ -85,6 +85,7 @@ See [Interface and Controls](08_INTERFACE_AND_CONTROLS.md) and [Accessibility an
 | A permanent tutorial or popup spam | No compulsory tutorial; world labels, contextual action prompts and optional controls reference |
 | Land an interaction anywhere but where the player aims | Results land at the aim point or at a clearly previewed valid surface |
 | Surface achievements as in-game checklists or task lists | Achievements live on Steam, never as HUD chores |
+| Shrink or scale things away as the player digs (a draining puddle, a collected find) | Things stay full size, then are simply gone or stay put; no shrinking animations at all (user, 2026-10-08: "those are horrible") |
 
 ## Saves and trust
 

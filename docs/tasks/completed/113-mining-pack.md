@@ -183,3 +183,8 @@ items. AGENTS.md "Bought Before Made" now says so.
   texel keeping its hue relative to the mean (`art/photo-rock/grade_colour.py`, idempotent).
 - Then (user, same day): "remove the rock variation that looks like it has a hole at the top": the recipe's variant `a`
   (its top dented, a dark patch in the dent) is gone from the catalog, the manifests and the content; `b` and `c` remain.
+- Then (user): four new shapes, "not the poop like form I have", from the packs and "closer to other minerals", keeping
+  the colour. The plain rock is now Pure Nature 2: Mountains' mossless stones `Stone1b`-`4b` (angular, chipped) at
+  about half a metre, wearing a seamless 3 x 3 tile cut from the old rock's own graded colour map with the stones' own
+  relief and occlusion (`art/plain-rock`, `BuriedPropsSetup.Stones`, `RockSetup`); the Blender rock and its folder are
+  gone.

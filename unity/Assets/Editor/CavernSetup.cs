@@ -20,7 +20,7 @@ namespace SomethingDownThere.Editor
         public const string PuddlePath = "Assets/Content/Environment/CavePuddle.mat";
         private const string PuddleShader = "Assets/Runtime/Terrain/ExcavationLit.shader";
         private const string PuddleRipples = "Assets/BK/PureNature_CrystalCaverns/Textures/Water/Water_n.png";
-        private static readonly Color PuddleColour = new Color(.09f, .08f, .065f, .62f);
+        private static readonly Color PuddleColour = new Color(.08f, .07f, .058f, .7f);
         private const float PuddleGloss = .88f, PuddleRipple = .3f, PuddleRippleMetres = 1.6f;
 
         [MenuItem("Tools/Something Down There/Configure Caverns")]

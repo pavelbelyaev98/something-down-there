@@ -320,3 +320,9 @@ then lifted out at jetpack speed, profiled.
   (marching squares over the floor's heights) after a grid of cells showed straight edges where the rendered floor sat a
   centimetre below the computed one; it is see-through (half) so the floor shows under it. The lab's prompts point to
   the puddles (bring a lamp: in the dark, water shows only by what it reflects).
+- Then (user): "make the puddles deeper and remove and don't place any shrinking animations while digging, those are
+  horrible". A cave floor only rolls gently, so deeper water just spilled wider and was capped shallow; puddles now sit
+  in basins sunk into the cave's shape (`Cavern.Basins`, `BasinDip`: smooth bowls 0.35-0.55 m deep, five in a great
+  cave clear of its standing rock, one in half the mini caves, one in each lab mini cave; the trophy never stands in one),
+  each filled three quarters deep. A dug bed now takes the puddle away at once (the shrink is gone), and no shrinking
+  animation is allowed anywhere (concept `15`); the pickup flight no longer shrinks either. Save format 26 (New Game).

@@ -85,7 +85,8 @@ namespace SomethingDownThere
             Vector3 pull = distance > .001f ? towardPlayer / distance * Mathf.Min(.95f, distance * .45f) : Vector3.zero;
             float travel = t * (.35f + .65f * t);
             Vector3 center = flight.Start + pull * travel;
-            Vector3 scale = flight.Scale * Mathf.Lerp(1, .85f, t);
+            // Full size all the way: nothing shrinks away as it is dug (user, 2026-10-08, concept 15).
+            Vector3 scale = flight.Scale;
             flight.Object.transform.SetPositionAndRotation(center - flight.Rotation * Vector3.Scale(flight.MeshCenter, scale), flight.Rotation);
             flight.Object.transform.localScale = scale;
         }

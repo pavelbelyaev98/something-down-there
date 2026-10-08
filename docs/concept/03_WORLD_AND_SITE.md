@@ -288,10 +288,11 @@ Geodes keep that moment without cave networks.
     them I want to extract them with the crane like uniques"; "ONE crystal to be extracted per cave"):
     a unique, dug free round its base and marked wherever the player likes, set upright at camp for
     good (05 §8).
-  - **Puddles** (user, 2026-10-08: "add water inside the caves like puddles", an A/B): standing water in
-    the low spots of a great cave's floor and of some mini caves, dark and glossy so lamps and crystals
-    glint in it. Digging into a puddle's bed drains it. It is old water that collected in a sealed
-    cave, never the lake coming in: nothing floods.
+  - **Puddles** (user, 2026-10-08: "add water inside the caves like puddles", an A/B; "make the puddles
+    deeper"): standing water in basins sunk into a great cave's floor and some mini caves' floors, a
+    hand or two deep, see-through and glossy so lamps and crystals glint in it. Digging into a puddle's
+    bed takes it away at once; nothing shrinks or drains away on screen. It is old water that collected
+    in a sealed cave, never the lake coming in: nothing floods.
   - **Mini caves**, a few a zone from a few metres down (user: "small ones with just some pickables
     here and there"): one small chamber holding a handful of crystals of the depth's kind, pale blue
     quartz near the top through amber cubes and green hexagonal prisms to ruby at the bottom.

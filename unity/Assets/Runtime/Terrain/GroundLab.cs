@@ -97,9 +97,12 @@ namespace SomethingDownThere
             var bottom = new Vector3(centre.x, roof + GreatShaftLeft, centre.z) + SiteLayout.Origin;
             shaft = (new Vector3(bottom.x, 0, bottom.z), bottom);
             for (int i = 0; i < MiniCaveSpots.Length; i++)
-                caves.Add(TerrainGround.MakeCavern(new[] { Local3(MiniCaveSpots[i].x, MiniCentreY, MiniCaveSpots[i].y) },
-                    new[] { new Unity.Mathematics.float3(1.75f, 1.45f, 1.6f) }, Local3(0, MiniFloorY, 0).y, .6f,
-                    new Unity.Mathematics.float3(41 + i * 17, 7 + i * 5, 113 - i * 11)));
+            {
+                // Each with a basin and its puddle beside the middle (111/116 iteration).
+                var middle = Local3(MiniCaveSpots[i].x, MiniCentreY, MiniCaveSpots[i].y);
+                caves.Add(TerrainGround.MakeCavern(new[] { middle }, new[] { new Unity.Mathematics.float3(1.75f, 1.45f, 1.6f) }, Local3(0, MiniFloorY, 0).y, .6f,
+                    new Unity.Mathematics.float3(41 + i * 17, 7 + i * 5, 113 - i * 11), new[] { new Unity.Mathematics.float4(middle.x + .4f, middle.z - .3f, .85f, .35f) }));
+            }
             return caves.ToArray();
         }
 

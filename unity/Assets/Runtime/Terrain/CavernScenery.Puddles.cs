@@ -6,22 +6,18 @@ using UnityEngine.Rendering;
 
 namespace SomethingDownThere
 {
-    // Standing water in the caves' low spots (user, 2026-10-08: "add water inside the caves like puddles ... when digging
-    // they could disappear"): a few puddles on a great cave's floor and one in some mini caves, found from the cave's own
-    // shape (TerrainGround.CavernHollow), so they are the same wherever the layout is generated and saves need nothing. Dark
-    // glossy water that the lamps and crystals glint in. Digging into a puddle's bed drains it: it shrinks away into the
-    // hole and is gone; a reload finds its bed dug and leaves it out. Planned on a worker thread (the shape's noise is pure
-    // maths), so a new layout never hitches. The Developer admin hides them all to compare (PuddlesShown).
+    // Standing water in the caves' basins (user, 2026-10-08: "add water inside the caves like puddles ... when digging they
+    // could disappear", then "make the puddles deeper"): each basin the generator sinks into a cave's floor
+    // (TerrainGround.Cavern.Basins) holds a puddle filled PuddleFill of its depth, found from the cave's own shape
+    // (TerrainGround.CavernHollow), so it is the same wherever the layout is generated and saves need nothing. See-through,
+    // glossy water that the lamps and crystals glint in. A cut into a puddle's bed takes it away at once: never an animation
+    // (user: shrinking "is horrible"); a reload finds its bed dug and leaves it out. Planned on a worker thread (the shape's
+    // noise is pure maths), so a new layout never hitches. The Developer admin hides them all to compare (PuddlesShown).
     public sealed partial class CavernScenery
     {
-        // Puddles a great cave holds at most, and the share of mini caves that hold one.
-        public const int GreatPuddles = 5;
-        public const float MiniPuddleShare = .5f;
-        // The search for low spots (metres between columns), the water's cells, how far a puddle reaches from its lowest
-        // point at most, how deep the water stands over it, the least water worth showing (m2), the room between puddles,
-        // how far below its bed a puddle checks for a cut, and how long it takes to drain.
-        private const float PuddleSearch = 1f, PuddleCell = .1f, PuddleReach = 2.2f, PuddleDepth = .09f, PuddleLeast = .3f,
-            PuddleSpacing = 3.5f, PuddleBed = .12f, PuddleDrain = 1.2f;
+        // The water's cells, how far a puddle reaches from its lowest point at most, how much of its basin's depth the water
+        // fills, the least water worth showing (m2), and how far below its bed a puddle checks for a cut.
+        private const float PuddleCell = .1f, PuddleReach = 2.4f, PuddleFill = .75f, PuddleLeast = .3f, PuddleBed = .12f;
         // How far up the floor the water's edge is drawn past the shoreline, under the stone, so the rendered floor (a
         // smoothed sampling of the same shape) always meets the water rather than leaving a gap.
         private const float PuddleShore = .015f;
@@ -56,7 +52,6 @@ namespace SomethingDownThere
             public Bounds Bounds;
             public float3[] Bed;
             public bool Drained;
-            public float Drain = 1;
         }
 
         private void OnEnable() { if (terrain != null) terrain.Changed += CheckPuddles; }
@@ -82,14 +77,6 @@ namespace SomethingDownThere
                 puddlesShown = PuddlesShown;
                 foreach (var puddle in puddles) if (!puddle.Drained) puddle.Body.enabled = puddlesShown;
             }
-            foreach (var puddle in puddles)
-            {
-                if (!puddle.Drained || puddle.Drain <= 0) continue;
-                puddle.Drain = Mathf.MoveTowards(puddle.Drain, 0, Time.deltaTime / PuddleDrain);
-                var t = puddle.Body.transform;
-                t.localScale = new Vector3(puddle.Drain, 1, puddle.Drain);
-                if (puddle.Drain <= 0) puddle.Body.enabled = false;
-            }
         }
 
         private void ClearPuddles()
@@ -99,12 +86,16 @@ namespace SomethingDownThere
             puddles.Clear();
         }
 
-        // A cut that reaches a puddle's bed drains it.
+        // A cut that reaches a puddle's bed takes it away at once.
         private void CheckPuddles(Bounds changed)
         {
             changed.Expand(.5f);
             foreach (var puddle in puddles)
-                if (!puddle.Drained && puddle.Bounds.Intersects(changed) && Dug(puddle)) puddle.Drained = true;
+                if (!puddle.Drained && puddle.Bounds.Intersects(changed) && Dug(puddle))
+                {
+                    puddle.Drained = true;
+                    puddle.Body.enabled = false;
+                }
         }
 
         private bool Dug(Puddle puddle)
@@ -136,7 +127,6 @@ namespace SomethingDownThere
                 puddle.Bounds.Expand(new Vector3(0, PuddleBed * 2 + .2f, 0));
                 puddle.Drained = Dug(puddle);
                 body.enabled = PuddlesShown && !puddle.Drained;
-                if (puddle.Drained) puddle.Drain = 0;
                 puddles.Add(puddle);
             }
             puddlesShown = PuddlesShown;
@@ -165,55 +155,25 @@ namespace SomethingDownThere
             return mesh;
         }
 
-        // Every cave's puddles (worker thread): a great cave's lowest spots first, apart from each other; a mini cave's one
-        // in its share of the caves (from its seed).
+        // Every cave's puddles (worker thread): one in each basin.
         private static List<PuddlePlan> Plan(TerrainGround.GroundLayout layout)
         {
             var plans = new List<PuddlePlan>();
             foreach (var cave in layout.Caverns)
-            {
-                int wanted = cave.Great ? GreatPuddles : math.frac(math.dot(cave.Seed, new float3(.137f, .291f, .713f))) < MiniPuddleShare ? 1 : 0;
-                if (wanted == 0) continue;
-                int columns = (int)((cave.Max.x - cave.Min.x) / PuddleSearch) + 1, rows = (int)((cave.Max.z - cave.Min.z) / PuddleSearch) + 1;
-                var floors = new float[columns, rows];
-                for (int i = 0; i < columns; i++)
-                for (int j = 0; j < rows; j++) floors[i, j] = Floor(cave, cave.Min.x + i * PuddleSearch, cave.Min.z + j * PuddleSearch);
-                var low = new List<float3>();
-                for (int i = 0; i < columns; i++)
-                for (int j = 0; j < rows; j++)
+                for (int i = 0; i < cave.Basins.Length; i++)
                 {
-                    float floor = floors[i, j];
+                    var basin = cave.Basins[i];
+                    float floor = Floor(cave, basin.x, basin.y);
                     if (float.IsNaN(floor)) continue;
-                    bool lowest = true;
-                    for (int di = -1; di <= 1 && lowest; di++)
-                    for (int dj = -1; dj <= 1 && lowest; dj++)
-                    {
-                        int ni = i + di, nj = j + dj;
-                        if ((di != 0 || dj != 0) && ni >= 0 && nj >= 0 && ni < columns && nj < rows && !float.IsNaN(floors[ni, nj]))
-                            lowest = floors[ni, nj] > floor;
-                    }
-                    if (lowest) low.Add(new float3(cave.Min.x + i * PuddleSearch, floor, cave.Min.z + j * PuddleSearch));
+                    var puddle = Flood(cave, new float3(basin.x, floor, basin.y), basin.w * PuddleFill);
+                    if (puddle != null) plans.Add(puddle);
                 }
-                low.Sort((a, b) => a.y.CompareTo(b.y));
-                int made = 0;
-                foreach (var spot in low)
-                {
-                    if (made >= wanted) break;
-                    bool apart = true;
-                    foreach (var plan in plans) apart &= math.distance(plan.Centre, spot.xz) > PuddleSpacing;
-                    if (!apart) continue;
-                    var puddle = Flood(cave, spot);
-                    if (puddle == null) continue;
-                    plans.Add(puddle);
-                    made++;
-                }
-            }
             return plans;
         }
 
         // The water round a low spot: the floor's lowest point near it, then the cells joined to it whose floor lies below
-        // the water, PuddleDepth over that point or less, so the water stays within PuddleReach of it.
-        private static PuddlePlan Flood(TerrainGround.Cavern cave, float3 spot)
+        // the water, `fill` over that point or less, so the water stays within PuddleReach of it.
+        private static PuddlePlan Flood(TerrainGround.Cavern cave, float3 spot, float fill)
         {
             var heights = new Dictionary<int2, float>();
             var origin = spot.xz;
@@ -243,7 +203,7 @@ namespace SomethingDownThere
             float floor = Height(bottom);
             if (float.IsNaN(floor)) return null;
             int reach = (int)math.ceil(PuddleReach / PuddleCell);
-            for (float depth = PuddleDepth; depth > .015f; depth *= .7f)
+            for (float depth = fill; depth > .015f; depth *= .85f)
             {
                 float level = floor + depth;
                 var region = new List<int2>();

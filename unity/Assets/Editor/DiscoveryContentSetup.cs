@@ -69,7 +69,7 @@ namespace SomethingDownThere.Editor
             var entries = new List<DiscoveryCatalog.Entry>();
             var catalog = AssetDatabase.LoadAssetAtPath<DiscoveryCatalog>(CatalogPath);
             if (catalog == null) { catalog = ScriptableObject.CreateInstance<DiscoveryCatalog>(); AssetDatabase.CreateAsset(catalog, CatalogPath); }
-            PhotoRockSetup.AppendToCatalog(entries);
+            RockSetup.AppendToCatalog(entries);
             MineralSetup.AppendToCatalog(entries);
             RetroComputerSetup.AppendToCatalog(entries);
             PropFindSetup.AppendToCatalog(entries);
