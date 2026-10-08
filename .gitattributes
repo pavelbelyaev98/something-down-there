@@ -44,6 +44,8 @@ unity/Assets/_Television_set/**/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/_Television_set/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Content/BuriedProps/**/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Content/GroundTextures/Backfill_*.png filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Content/GroundTextures/LakeSediment*_*.png filter=lfs diff=lfs merge=lfs -text
+unity/Assets/Content/GroundTextures/Riverbed*_*.png filter=lfs diff=lfs merge=lfs -text
 
 # Generated lakebed terrain data is binary even in Force Text mode.
 unity/Assets/Content/Lakebed/*Terrain*.asset filter=lfs diff=lfs merge=lfs -text

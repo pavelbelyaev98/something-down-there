@@ -105,8 +105,9 @@ MonoBehaviour:
     Geode: 0
     Cave: 0
     CaveTrophy: 0
-    HostGrounds: 
-    HostWeights: []
+    HostGrounds: 04y
+    HostWeights:
+    - 2
   - ItemId: mineral_silver
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -128,8 +129,9 @@ MonoBehaviour:
     Geode: 0
     Cave: 0
     CaveTrophy: 0
-    HostGrounds: 
-    HostWeights: []
+    HostGrounds: 04y
+    HostWeights:
+    - 2
   - ItemId: mineral_gold
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -151,8 +153,9 @@ MonoBehaviour:
     Geode: 0
     Cave: 0
     CaveTrophy: 0
-    HostGrounds: 
-    HostWeights: []
+    HostGrounds: 05y
+    HostWeights:
+    - 2
   - ItemId: mineral_emerald
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -174,8 +177,9 @@ MonoBehaviour:
     Geode: 0
     Cave: 0
     CaveTrophy: 0
-    HostGrounds: 
-    HostWeights: []
+    HostGrounds: 05y
+    HostWeights:
+    - 2
   - ItemId: mineral_ruby
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
@@ -424,8 +428,9 @@ MonoBehaviour:
     Geode: 0
     Cave: 0
     CaveTrophy: 0
-    HostGrounds: 
-    HostWeights: []
+    HostGrounds: 04y
+    HostWeights:
+    - 2
   - ItemId: geode_celestine
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}

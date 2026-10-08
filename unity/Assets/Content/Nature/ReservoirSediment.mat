@@ -64,6 +64,30 @@ Material:
         m_Texture: {fileID: 2800000, guid: 89124e4aabdde0d4c9d46fa01f8f2457, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _RiverbedAlbedo:
+        m_Texture: {fileID: 2800000, guid: 0741c2fedc7335b42b31ca4248eb0ed4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RiverbedMask:
+        m_Texture: {fileID: 2800000, guid: f4a25b11bdc0a9a47adc0f549e22acb5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RiverbedNormal:
+        m_Texture: {fileID: 2800000, guid: 48d86c9ed35c8ad4c8754dbd6b5f9cc1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SedimentAlbedo:
+        m_Texture: {fileID: 2800000, guid: bbee0bdc23ff1bc4aba32143c167b25e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SedimentMask:
+        m_Texture: {fileID: 2800000, guid: e517f7a971cdaac4a80afa2d47ad5a1b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SedimentNormal:
+        m_Texture: {fileID: 2800000, guid: 87d11c9b0b8df1747bf8eba26a087e5b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ShellAAlbedo:
         m_Texture: {fileID: 2800000, guid: 2d06938ac922a334cb609fc27c0fdaa8, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -142,6 +166,14 @@ Material:
     - _MaxSmoothness: 0.15
     - _NormalStrength: 1.5
     - _RimMix: 0.12
+    - _RiverbedBedMetres: 20
+    - _RiverbedBedding: 0
+    - _RiverbedNormalStrength: 1
+    - _RiverbedTileMetres: 1.8
+    - _SedimentBedMetres: 6
+    - _SedimentBedding: 2.5
+    - _SedimentNormalStrength: 1
+    - _SedimentTileMetres: 4
     - _ShellNormalStrength: 1
     - _ShellTileMetres: 2
     - _SoilOcclusion: 0.4
@@ -161,6 +193,8 @@ Material:
     - _BandTint: {r: 0.8962438, g: 0.8703449, b: 0.8488705, a: 1}
     - _CaveTint: {r: 1, g: 1, b: 1, a: 1}
     - _DigEdgeRect: {r: -20, g: -20, b: 0.025, a: 0.025}
+    - _RiverbedTint: {r: 1, g: 1, b: 1, a: 1}
+    - _SedimentTint: {r: 1, g: 1, b: 1, a: 1}
     - _ShellTint: {r: 1, g: 1, b: 1, a: 1}
     - _SoilTint: {r: 0.8094681, g: 0.9911565, b: 1.1067512, a: 1}
     - _TurfTint: {r: 0.8860039, g: 0.8596959, b: 0.83786047, a: 1}

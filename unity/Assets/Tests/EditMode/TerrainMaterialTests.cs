@@ -11,11 +11,13 @@ namespace SomethingDownThere.Tests
 {
     public sealed class TerrainMaterialTests
     {
-        // Mesh weights are (free, free, free, 1 - backfill); soil is the remainder.
+        // Mesh weights are (free, cave rock, geode shell, 1 - backfill) and the zones' (lake sediment, riverbed); soil is the
+        // remainder.
         private static readonly Vector4 SoilWeight = new Vector4(0, 0, 0, 1);
 
-        [TestCase(TerrainMaterialId.Soil, 0)] [TestCase(TerrainMaterialId.Backfill, 1)]
-        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float backfill)
+        [TestCase(TerrainMaterialId.Soil, 0, 0, 0)] [TestCase(TerrainMaterialId.Backfill, 1, 0, 0)]
+        [TestCase(TerrainMaterialId.LakeSediment, 0, 1, 0)] [TestCase(TerrainMaterialId.Riverbed, 0, 0, 1)]
+        public void UniformDepositPublishesOnlyItsOwnSurfaceWeight(TerrainMaterialId material, float backfill, float sediment, float riverbed)
         {
             var grid = new ExcavationGrid(new Vector3Int(16, 16, 16), .2f);
             var saved = grid.Capture(); saved.Materials = TerrainMaterialSnapshot.Uniform(saved.Materials.Length, material);
@@ -29,8 +31,9 @@ namespace SomethingDownThere.Tests
                 Assert.That(weights.Count, Is.EqualTo(mesh.vertexCount));
                 var expected = new Vector4(0, 0, 0, 1 - backfill);
                 foreach (var weight in weights) Assert.That((weight - expected).sqrMagnitude, Is.LessThan(1e-10f));
-                var second = new List<Vector4>(); mesh.GetUVs(3, second);
-                Assert.That(second, Is.Empty, "One weight stream.");
+                var zones = new List<Vector2>(); mesh.GetUVs(3, zones);
+                Assert.That(zones.Count, Is.EqualTo(mesh.vertexCount), "The zone grounds' stream.");
+                foreach (var zone in zones) Assert.That((zone - new Vector2(sediment, riverbed)).sqrMagnitude, Is.LessThan(1e-10f));
             }
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
@@ -182,6 +185,35 @@ namespace SomethingDownThere.Tests
                 float ratio = Output(TerrainMaterialId.GeodeShell, level).sustained / Output(TerrainMaterialId.Soil, level).sustained;
                 TestContext.WriteLine($"Level {level}: geode shell digs {ratio:P0} of soil's rate");
                 Assert.That(ratio, Is.InRange(.15f, .35f), $"Level {level}");
+            }
+        }
+
+        // The zones' main grounds (111): lake sediment a little firmer than soil, the riverbed stony, at every level.
+        [TestCase(TerrainMaterialId.LakeSediment, .78f, .95f)] [TestCase(TerrainMaterialId.Riverbed, .55f, .78f)]
+        public void ZoneGroundsDigTheirShareOfSoilsRateAtEveryLevel(TerrainMaterialId ground, float least, float most)
+        {
+            for (int level = 1; level <= EquipmentProgression.LevelCount; level++)
+            {
+                float ratio = Output(ground, level).sustained / Output(TerrainMaterialId.Soil, level).sustained;
+                TestContext.WriteLine($"Level {level}: {ground} digs {ratio:P0} of soil's rate");
+                Assert.That(ratio, Is.InRange(least, most), $"Level {level}");
+            }
+        }
+
+        // Concept 03 zone rules (111): no zone feels like a restart. At the level a player typically owns on arriving in a
+        // zone, its main ground digs no slower than the previous zone's ground did one purchase earlier, near its end.
+        [Test]
+        public void NoZoneGroundFeelsLikeARestartAtItsArrivalLevel()
+        {
+            var levels = EquipmentProgression.ZoneArrivalLevels;
+            Assert.That(levels.Length, Is.EqualTo(TerrainGround.ZoneBorders.Length + 1));
+            for (int zone = 1; zone < levels.Length; zone++)
+            {
+                Assert.That(levels[zone], Is.GreaterThan(levels[zone - 1]));
+                var ground = TerrainGround.ZoneGround(zone); var previous = TerrainGround.ZoneGround(zone - 1);
+                float arriving = Output(ground, levels[zone]).sustained, leaving = Output(previous, levels[zone] - 1).sustained;
+                TestContext.WriteLine($"Zone {zone + 1}: {ground} at level {levels[zone]} {arriving:F3} m3/s, {previous} at level {levels[zone] - 1} {leaving:F3}");
+                Assert.That(arriving, Is.GreaterThanOrEqualTo(leaving), $"Zone {zone + 1} feels like a restart.");
             }
         }
 

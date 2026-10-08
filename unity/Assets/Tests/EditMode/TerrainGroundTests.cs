@@ -43,19 +43,60 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        // The site admits grounds one at a time (106, 110, 116): soil with backfill pits, geodes and caves, nothing else.
+        // The site admits grounds one at a time (106, 110, 111, 116): the zones' main grounds with backfill pits, geodes and
+        // caves, nothing else.
         [Test]
-        public void TheSiteIsSoilWithBackfillPitsGeodesAndCaves()
+        public void TheSiteHoldsZoneGroundsBackfillPitsGeodesAndCaves()
         {
             Assert.That(SiteLayout.GroundFor(SiteLayout.Size, SiteLayout.CellSize), Is.EqualTo(SiteLayout.Ground));
             Assert.That(SiteLayout.GroundFor(new Vector3Int(64, 64, 64), SiteLayout.CellSize), Is.EqualTo(TerrainGround.Features.None), "Fixtures stay plain soil.");
             var ids = TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground).ToArray();
             Assert.That(ids.Distinct().OrderBy(v => v), Is.EqualTo(new[] { (byte)TerrainMaterialId.Soil, (byte)TerrainMaterialId.Backfill,
-                (byte)TerrainMaterialId.GeodeShell, (byte)TerrainMaterialId.CaveRock }));
+                (byte)TerrainMaterialId.GeodeShell, (byte)TerrainMaterialId.CaveRock, (byte)TerrainMaterialId.LakeSediment, (byte)TerrainMaterialId.Riverbed }));
             var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, 2718, null, SiteLayout.Ground);
             Assert.That(layout.Pits.Length, Is.EqualTo(3));
             Assert.That(layout.Pits.All(p => SiteLayout.Extent.y - p.Bottom.y < TerrainGround.ZoneBorders[0]), Is.True);
             Assert.That(layout.Geodes.Length, Is.EqualTo(TerrainGround.GeodesPerZone.Sum()));
+        }
+
+        // Concept 03 §3 zone grounds (111): each zone is mostly its own main ground (outside pits, geodes and caves); away from
+        // a border by more than its warp and band only that ground lies; across a border the two mix in patches, and the
+        // border's depth wanders from column to column, never a flat line.
+        [TestCase(2718)] [TestCase(991)]
+        public void EachZoneIsMostlyItsMainGroundWithPatchyWarpedBorders(int seed)
+        {
+            var ids = Site(seed);
+            var borders = TerrainGround.ZoneBorders;
+            int[] main = new int[4], total = new int[4];
+            var near = new HashSet<byte>[borders.Length];
+            for (int b = 0; b < near.Length; b++) near[b] = new HashSet<byte>();
+            float reach = TerrainGround.BorderWarp + TerrainGround.BorderBand;
+            for (int z = 0; z <= SiteLayout.Size.z; z += 6)
+            for (int x = 0; x <= SiteLayout.Size.x; x += 6)
+            for (int y = 0; y <= SiteLayout.Size.y; y += 2)
+            {
+                float depth = (SiteLayout.Size.y - y) * SiteLayout.CellSize;
+                var id = (TerrainMaterialId)ids[Index(x, y, z)];
+                if (depth < TerrainGround.SurfaceSoil || id == TerrainMaterialId.Backfill || id == TerrainMaterialId.GeodeShell
+                    || id == TerrainMaterialId.CaveRock) continue;
+                int zone = borders.Count(b => depth >= b);
+                total[zone]++;
+                if (id == TerrainGround.ZoneGround(zone)) main[zone]++;
+                float nearest = borders.Min(b => Mathf.Abs(depth - b));
+                if (nearest > reach) Assert.That(id, Is.EqualTo(TerrainGround.ZoneGround(zone)), $"Zone {zone + 1} at {depth:F1} m");
+                for (int b = 0; b < borders.Length; b++) if (Mathf.Abs(depth - borders[b]) < .5f) near[b].Add((byte)id);
+            }
+            for (int zone = 0; zone < total.Length; zone++)
+                Assert.That(main[zone] / (float)total[zone], Is.GreaterThan(.9f), $"Zone {zone + 1} is mostly {TerrainGround.ZoneGround(zone)}");
+            for (int b = 0; b < borders.Length; b++)
+                if (TerrainGround.ZoneGround(b) != TerrainGround.ZoneGround(b + 1))
+                    Assert.That(near[b], Is.EquivalentTo(new[] { (byte)TerrainGround.ZoneGround(b), (byte)TerrainGround.ZoneGround(b + 1) }), $"Border {b + 1} mixes.");
+            var offsets = TerrainGround.NoiseOffsets(seed);
+            var levels = new List<float>();
+            for (float x = 0; x < SiteLayout.Extent.x; x += 2)
+            for (float z = 0; z < SiteLayout.Extent.z; z += 2)
+                levels.Add(TerrainGround.WarpedBorders(new float2(x, z), new float3(borders[0], borders[1], borders[2]), offsets).x);
+            Assert.That(levels.Max() - levels.Min(), Is.InRange(1f, 2 * TerrainGround.BorderWarp), "The border wanders.");
         }
 
         // Concept 03 §5 geodes (110): two in the old lake sediment and three in the old riverbed, each wholly inside its
@@ -186,11 +227,18 @@ namespace SomethingDownThere.Tests
                 var centre = GroundLab.BayCentre(bay);
                 int x = Mathf.RoundToInt((centre.x - SiteLayout.Origin.x) / SiteLayout.CellSize);
                 int z = Mathf.RoundToInt((centre.y - SiteLayout.Origin.z) / SiteLayout.CellSize);
+                float u = SiteLayout.Origin.x + x * SiteLayout.CellSize - centre.x, v = SiteLayout.Origin.z + z * SiteLayout.CellSize - centre.y;
                 // The geode bay's middle at 2 m is its geode's stone.
-                var expected = GroundLab.Bays[bay].Name == "Geode" ? TerrainMaterialId.GeodeShell : GroundLab.Bays[bay].Ground(0, 2f, 0);
+                var expected = GroundLab.Bays[bay].Name == "Geode" ? TerrainMaterialId.GeodeShell : GroundLab.Bays[bay].Ground(u, 2f, v);
                 Assert.That((TerrainMaterialId)ids[Index(x, y, z)], Is.EqualTo(expected), GroundLab.Bays[bay].Name);
             }
-            var unused = GroundLab.BayCentre(GroundLab.Bays.Length);
+            Assert.That(GroundLab.Bays.Select(b => b.Slot).Distinct().Count(), Is.EqualTo(GroundLab.Bays.Length), "One bay a slot.");
+            // The zone borders bay runs from soil through lake sediment into the riverbed.
+            var borders = System.Array.Find(GroundLab.Bays, b => b.Name == "Zone borders");
+            Assert.That(borders.Ground(0, 1.5f, 0), Is.EqualTo(TerrainMaterialId.Soil));
+            Assert.That(borders.Ground(0, 5.75f, 0), Is.EqualTo(TerrainMaterialId.LakeSediment));
+            Assert.That(borders.Ground(0, 11.5f, 0), Is.EqualTo(TerrainMaterialId.Riverbed));
+            var unused = GroundLab.SlotCentre(12);
             Assert.That((TerrainMaterialId)ids[Index(Mathf.RoundToInt((unused.x - SiteLayout.Origin.x) / SiteLayout.CellSize), y,
                 Mathf.RoundToInt((unused.y - SiteLayout.Origin.z) / SiteLayout.CellSize))], Is.EqualTo(TerrainMaterialId.Soil));
         }

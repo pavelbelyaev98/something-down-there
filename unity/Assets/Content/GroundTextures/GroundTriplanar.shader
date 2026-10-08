@@ -24,6 +24,22 @@ Shader "Something Down There/Ground Triplanar"
         _CaveTint("Cave rock tint", Color) = (1,1,1,1)
         _CaveTileMetres("Cave rock tile metres", Float) = 3
         _CaveNormalStrength("Cave rock relief", Range(0, 2)) = 1
+        _SedimentAlbedo("Lake sediment colour", 2D) = "white" {}
+        [Normal] _SedimentNormal("Lake sediment normal", 2D) = "bump" {}
+        _SedimentMask("Lake sediment occlusion (G)", 2D) = "white" {}
+        _SedimentTint("Lake sediment tint", Color) = (1,1,1,1)
+        _SedimentTileMetres("Lake sediment tile metres", Float) = 3
+        _SedimentNormalStrength("Lake sediment relief", Range(0, 2)) = 1
+        _SedimentBedding("Lake sediment bedding", Range(0, 4)) = 1
+        _SedimentBedMetres("Lake sediment bedding metres per texture", Float) = 6
+        _RiverbedAlbedo("Riverbed colour", 2D) = "white" {}
+        [Normal] _RiverbedNormal("Riverbed normal", 2D) = "bump" {}
+        _RiverbedMask("Riverbed occlusion (G)", 2D) = "white" {}
+        _RiverbedTint("Riverbed tint", Color) = (1,1,1,1)
+        _RiverbedTileMetres("Riverbed tile metres", Float) = 3
+        _RiverbedNormalStrength("Riverbed relief", Range(0, 2)) = 1
+        _RiverbedBedding("Riverbed bedding", Range(0, 4)) = 0
+        _RiverbedBedMetres("Riverbed bedding metres per texture", Float) = 30
         _TurfAlbedo("Turf colour", 2D) = "white" {}
         [Normal] _TurfNormal("Turf normal", 2D) = "bump" {}
         _TurfRoughness("Turf mask (see mask layout)", 2D) = "white" {}
@@ -88,6 +104,9 @@ Shader "Something Down There/Ground Triplanar"
             float _ShellTileMetres, _ShellNormalStrength;
             float4 _CaveTint;
             float _CaveTileMetres, _CaveNormalStrength;
+            float4 _SedimentTint, _RiverbedTint;
+            float _SedimentTileMetres, _SedimentNormalStrength, _SedimentBedding, _SedimentBedMetres;
+            float _RiverbedTileMetres, _RiverbedNormalStrength, _RiverbedBedding, _RiverbedBedMetres;
         CBUFFER_END
         TEXTURE2D(_SoilAlbedo); SAMPLER(sampler_SoilAlbedo);
         TEXTURE2D(_SoilNormal); SAMPLER(sampler_SoilNormal);
@@ -103,6 +122,8 @@ Shader "Something Down There/Ground Triplanar"
         TEXTURE2D(_BackfillAlbedo); TEXTURE2D(_BackfillNormal); TEXTURE2D(_BackfillMask);
         TEXTURE2D(_ShellAlbedo); TEXTURE2D(_ShellNormal); TEXTURE2D(_ShellMask);
         TEXTURE2D(_CaveAlbedo); TEXTURE2D(_CaveNormal); TEXTURE2D(_CaveMask);
+        TEXTURE2D(_SedimentAlbedo); TEXTURE2D(_SedimentNormal); TEXTURE2D(_SedimentMask);
+        TEXTURE2D(_RiverbedAlbedo); TEXTURE2D(_RiverbedNormal); TEXTURE2D(_RiverbedMask);
         #include "../../Runtime/Terrain/ExcavationDaylight.hlsl"
 
         struct GroundAttributes
@@ -110,6 +131,7 @@ Shader "Something Down There/Ground Triplanar"
             float4 positionOS : POSITION;
             float3 normalOS : NORMAL;
             float4 materials : TEXCOORD2;
+            float2 zones : TEXCOORD3;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct GroundVaryings
@@ -119,6 +141,7 @@ Shader "Something Down There/Ground Triplanar"
             half3 normalWS : TEXCOORD1;
             half fogFactor : TEXCOORD2;
             half4 materials : TEXCOORD3;
+            half2 zones : TEXCOORD4;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -133,6 +156,7 @@ Shader "Something Down There/Ground Triplanar"
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             output.fogFactor = ComputeFogFactor(output.positionCS.z);
             output.materials = input.materials;
+            output.zones = input.zones;
             return output;
         }
 
@@ -354,15 +378,69 @@ Shader "Something Down There/Ground Triplanar"
             normal = ProjectGroundNormal(n, weights, signs, nx, ny, nz);
         }
 
-        // Mesh weights (free, cave rock, geode shell, 1 - backfill) over soil. A missing stream reads (0,0,0,1), so meshes
-        // without weights render as soil.
-        void GroundSurface(float3 position, half3 geometricNormal, half4 materials,
+        // Bedding (111): sediment laid down a film at a time shows thin level bands in a wall. The bands are the layer's
+        // own brightness read down its texture against height (irregular, like real varves; one texture height spans
+        // bedMetres), averaged across four columns at a coarse mip so specks and pebbles never draw lines, gently warped
+        // from place to place and coarser where the height changes fast on screen, so distant walls never shimmer. A
+        // brightness ratio around 1, scaled by amount (0: none) and kept within BeddingReach.
+        #define BEDDING_TEXELS 2048.0
+        #define BEDDING_REACH 0.22
+        half Bedding(TEXTURE2D_PARAM(albedoMap, albedoSampler), float3 position, float3 positionDx, float3 positionDy,
+            float bedMetres, half amount)
+        {
+            float scale = 1 / max(bedMetres, 0.05);
+            half3 luminance = half3(0.3, 0.59, 0.11);
+            half mean = max(dot(SAMPLE_TEXTURE2D_LOD(albedoMap, albedoSampler, float2(0.5, 0.5), 16).rgb, luminance), 0.01);
+            // The texture's broad brightness swells lift and drop the beds by a hand's breadth or so.
+            half swell = dot(SAMPLE_TEXTURE2D_LOD(albedoMap, albedoSampler, position.xz * 0.04, 5).rgb, luminance) / mean - 1;
+            float v = (position.y + swell * 3) * scale;
+            float footprint = max(abs(positionDx.y), abs(positionDy.y)) * scale * BEDDING_TEXELS;
+            float lod = max(log2(max(footprint, 1e-4)), 3);
+            half band = 0;
+            [unroll] for (int i = 0; i < 4; i++)
+                band += dot(SAMPLE_TEXTURE2D_LOD(albedoMap, albedoSampler, float2(0.11 + i * 0.25, v), lod).rgb, luminance);
+            return 1 + clamp((band * 0.25 / mean - 1) * amount, -BEDDING_REACH, BEDDING_REACH);
+        }
+
+        // A zone's main ground (111), blended over soil before the deposits that lie in it.
+        void ZoneSurface(TEXTURE2D_PARAM(albedoMap, albedoSampler), TEXTURE2D_PARAM(normalMap, normalSampler),
+            TEXTURE2D_PARAM(maskMap, maskSampler), float3 position, float3 dx, float3 dy, half3 n, half weight,
+            float tileMetres, half3 tint, half strength, half bedding, float bedMetres,
+            inout half3 colour, inout half3 normal, inout half roughness, inout half occlusion)
+        {
+            half3 layerColour, layerNormal; half layerOcclusion;
+            DepositSurface(TEXTURE2D_ARGS(albedoMap, albedoSampler), TEXTURE2D_ARGS(normalMap, normalSampler),
+                TEXTURE2D_ARGS(maskMap, maskSampler), position, dx, dy, n, tileMetres, tint, strength,
+                layerColour, layerNormal, layerOcclusion);
+            [branch] if (bedding > 0.001)
+                layerColour *= Bedding(TEXTURE2D_ARGS(albedoMap, albedoSampler), position, dx, dy, bedMetres, bedding);
+            colour = lerp(colour, layerColour, weight);
+            normal = normalize(lerp(normal, layerNormal, weight));
+            occlusion = lerp(occlusion, layerOcclusion, weight);
+            roughness = lerp(roughness, 1, weight);
+        }
+
+        // Mesh weights (free, cave rock, geode shell, 1 - backfill) and zones (lake sediment, riverbed) over soil. Missing
+        // streams read (0,0,0,1) and (0,0), so meshes without weights render as soil.
+        void GroundSurface(float3 position, half3 geometricNormal, half4 materials, half2 zones,
             out half3 colour, out half3 normal, out half roughness, out half occlusion)
         {
             half3 n = normalize(geometricNormal);
             // Calculate gradients before the layer branches so boundary pixels keep stable mip levels.
             float3 dx = ddx(position), dy = ddy(position);
             SoilSurface(position, geometricNormal, dx, dy, colour, normal, roughness, occlusion);
+            // Lake sediment (zone 2) and the riverbed (zone 3): texture sets derived from the packs by
+            // art/pure-nature-highlands/make_zone_grounds.py; the Developer admin swaps looks on a session copy.
+            half sediment = saturate(zones.x);
+            [branch] if (sediment > 0.001)
+                ZoneSurface(TEXTURE2D_ARGS(_SedimentAlbedo, sampler_SoilAlbedo), TEXTURE2D_ARGS(_SedimentNormal, sampler_SoilNormal),
+                    TEXTURE2D_ARGS(_SedimentMask, sampler_SoilRoughness), position, dx, dy, n, sediment, _SedimentTileMetres,
+                    _SedimentTint.rgb, _SedimentNormalStrength, _SedimentBedding, _SedimentBedMetres, colour, normal, roughness, occlusion);
+            half riverbed = saturate(zones.y);
+            [branch] if (riverbed > 0.001)
+                ZoneSurface(TEXTURE2D_ARGS(_RiverbedAlbedo, sampler_SoilAlbedo), TEXTURE2D_ARGS(_RiverbedNormal, sampler_SoilNormal),
+                    TEXTURE2D_ARGS(_RiverbedMask, sampler_SoilRoughness), position, dx, dy, n, riverbed, _RiverbedTileMetres,
+                    _RiverbedTint.rgb, _RiverbedNormalStrength, _RiverbedBedding, _RiverbedBedMetres, colour, normal, roughness, occlusion);
             // Backfill reads by grain: the soil turned over, with stones churned in. Its own texture set
             // (art/pure-nature-highlands/make_backfill.py), never other grounds' textures.
             half backfill = saturate(1 - materials.w);
@@ -434,7 +512,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, input.zones, albedo, normal, roughness, occlusion);
                 InputData lighting = (InputData)0;
                 lighting.positionWS = input.positionWS;
                 lighting.positionCS = input.positionCS;
@@ -508,7 +586,7 @@ Shader "Something Down There/Ground Triplanar"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 albedo, normal;
                 half roughness, occlusion;
-                GroundSurface(input.positionWS, input.normalWS, input.materials, albedo, normal, roughness, occlusion);
+                GroundSurface(input.positionWS, input.normalWS, input.materials, input.zones, albedo, normal, roughness, occlusion);
                 #if defined(_GBUFFER_NORMALS_OCT)
                     float2 oct = PackNormalOctQuadEncode(normal);
                     return half4(PackFloat2To888(saturate(oct * 0.5 + 0.5)), 0);

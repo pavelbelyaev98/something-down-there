@@ -617,6 +617,16 @@ namespace SomethingDownThere
             Button(groundTools, "Print ground tuning", player.PrintAdminGroundTuning);
             Button(groundTools, "Reset ground tuning", player.ResetAdminGroundTuning, player.HasAdminGroundTuning);
             groundTable = Text(scroll, "Ground tuning table", FpsPlayer.GroundTable(), "body");
+            // Zone grounds (111): looks and dig feel to compare live; zone 4's ground applies to the next New Game.
+            Text(scroll, "Zone grounds", "Zone grounds - compare looks and dig feel live. Zone 4's ground is laid when the game loads: pick it in the Ground Lab, Leave Ground Lab, then New Game. Session only.", "body");
+            var zoneActions = Element(scroll, "admin-actions");
+            foreach (var ground in FpsPlayer.ZoneGrounds)
+            {
+                var g = ground;
+                Button(zoneActions, EquipmentProgression.GroundName(g) + " look: " + player.AdminLookLabel(g), () => player.CycleAdminLook(g));
+            }
+            Button(zoneActions, "Zone grounds dig: " + player.AdminZoneFeel, player.CycleAdminZoneFeel);
+            Button(zoneActions, "Zone 4 (next New Game): " + player.AdminDeepGround, player.ToggleAdminDeepGround);
             var lightRows = new ToolkitSettingsRows(scroll, scroll);
             int shadingSteps = Mathf.RoundToInt(ContactShading.Maximum / ContactShading.Step);
             navigation.Add(lightRows.Slider("adminContactShading", "Contact shading", 0, shadingSteps,

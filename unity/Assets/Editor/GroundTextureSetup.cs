@@ -48,12 +48,13 @@ namespace SomethingDownThere.Editor
             sediment.shader = shader;
             ConfigureSurfaceCap(sediment, terrain.SurfaceHeight);
             LakebedSiteSetup.ConfigureTopsoil(sediment);
-            ConfigureDeposits(sediment);
+            var looks = ConfigureDeposits(sediment);
             EditorUtility.SetDirty(sediment);
 
             var settings = new SerializedObject(terrain);
             settings.FindProperty("soilMaterial").objectReferenceValue = sediment;
             ConfigureXrayMarker(settings);
+            ConfigureZoneLooks(settings, looks);
             var preview = settings.FindProperty("untouchedPreview").objectReferenceValue as GameObject;
             if (preview == null) throw new InvalidOperationException("Keep the existing edit-mode preview.");
             settings.ApplyModifiedProperties();
@@ -106,11 +107,66 @@ namespace SomethingDownThere.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(SedimentPath);
             if (material == null || ShaderUtil.ShaderHasError(material.shader))
                 throw new InvalidOperationException("The active ground material must compile first.");
-            ConfigureDeposits(material);
+            var looks = ConfigureDeposits(material);
+            // The zone grounds' looks live on the excavation for the Developer admin's comparison.
+            var scene = SceneManager.GetActiveScene();
+            var terrain = scene.path == MainGameSceneBuilder.ScenePath && !EditorApplication.isPlaying
+                ? scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").GetComponentInChildren<TerrainVolume>() : null;
+            if (terrain != null)
+            {
+                var settings = new SerializedObject(terrain);
+                ConfigureZoneLooks(settings, looks);
+                settings.ApplyModifiedProperties();
+                EditorSceneManager.MarkSceneDirty(scene);
+            }
             AssetDatabase.SaveAssets();
         }
 
-        private static void ConfigureDeposits(Material material)
+        // The zone grounds' looks (111), each ground's first the authored one: texture sets written by
+        // art/pure-nature-highlands/make_zone_grounds.py (a look may share another set's maps). Tile metres keep the
+        // packs' grains at a real size: silt specks of a few centimetres, pebbles of 2-10 cm.
+        private const string ZoneScript = "art/pure-nature-highlands/make_zone_grounds.py";
+        private static GroundLook[] ZoneLooks() => new[]
+        {
+            Look(TerrainMaterialId.LakeSediment, "A grey silt", "LakeSediment", "LakeSediment", "LakeSediment", 4, 1, 2.5f, 6),
+            Look(TerrainMaterialId.LakeSediment, "B blue-grey clay", "LakeSedimentClay", "LakeSedimentClay", "LakeSediment", 4, .8f, 3.5f, 4),
+            Look(TerrainMaterialId.LakeSediment, "C puddled mud", "LakeSedimentMud", "LakeSedimentMud", "LakeSedimentMud", 4, 1, 1.5f, 6),
+            Look(TerrainMaterialId.Riverbed, "A sand and gravel", "Riverbed", "Riverbed", "Riverbed", 1.8f, 1, 0, 20),
+            Look(TerrainMaterialId.Riverbed, "B gravel", "RiverbedGravel", "RiverbedGravel", "RiverbedGravel", 2.5f, 1, 1, 20),
+            Look(TerrainMaterialId.Riverbed, "C gravel in sand", "RiverbedMixed", "RiverbedMixed", "RiverbedMixed", 3, 1, 1, 20),
+        };
+
+        private static GroundLook Look(TerrainMaterialId ground, string name, string albedo, string normal, string mask,
+            float tileMetres, float relief, float bedding, float bedMetres) => new GroundLook
+        {
+            Ground = ground, Name = name, Albedo = Set(albedo, "Albedo", ZoneScript), Normal = Set(normal, "Normal", ZoneScript),
+            Mask = Set(mask, "Roughness", ZoneScript), Tint = Color.white, TileMetres = tileMetres, Relief = relief,
+            Bedding = bedding, BedMetres = bedMetres
+        };
+
+        private static void ConfigureZoneLooks(SerializedObject terrain, GroundLook[] looks)
+        {
+            var array = terrain.FindProperty("groundLooks");
+            array.arraySize = looks.Length;
+            for (int i = 0; i < looks.Length; i++)
+            {
+                var element = array.GetArrayElementAtIndex(i);
+                var look = looks[i];
+                element.FindPropertyRelative(nameof(GroundLook.Ground)).intValue = (int)look.Ground;
+                element.FindPropertyRelative(nameof(GroundLook.Name)).stringValue = look.Name;
+                element.FindPropertyRelative(nameof(GroundLook.Albedo)).objectReferenceValue = look.Albedo;
+                element.FindPropertyRelative(nameof(GroundLook.Normal)).objectReferenceValue = look.Normal;
+                element.FindPropertyRelative(nameof(GroundLook.Mask)).objectReferenceValue = look.Mask;
+                element.FindPropertyRelative(nameof(GroundLook.Tint)).colorValue = look.Tint;
+                element.FindPropertyRelative(nameof(GroundLook.TileMetres)).floatValue = look.TileMetres;
+                element.FindPropertyRelative(nameof(GroundLook.Relief)).floatValue = look.Relief;
+                element.FindPropertyRelative(nameof(GroundLook.Bedding)).floatValue = look.Bedding;
+                element.FindPropertyRelative(nameof(GroundLook.BedMetres)).floatValue = look.BedMetres;
+            }
+        }
+
+        // Returns the zone grounds' looks it imported, for the excavation's look list.
+        private static GroundLook[] ConfigureDeposits(Material material)
         {
             // Backfill (106): the soil turned over with stones churned in, one texture set built from the packs' own
             // ground textures by art/pure-nature-highlands/make_backfill.py. Its soil repeats about as the dig ground's
@@ -135,7 +191,12 @@ namespace SomethingDownThere.Editor
             material.SetColor("_CaveTint", Color.white);
             material.SetFloat("_CaveTileMetres", 2.5f);
             material.SetFloat("_CaveNormalStrength", 1f);
+            // The zones' main grounds (111): each one's first look; the Developer admin tries the others.
+            var looks = ZoneLooks();
+            foreach (var ground in new[] { TerrainMaterialId.LakeSediment, TerrainMaterialId.Riverbed })
+                TerrainVolume.Wear(material, Array.Find(looks, look => look.Ground == ground));
             EditorUtility.SetDirty(material);
+            return looks;
         }
 
         // The geode shell's texture set, written by art/pure-nature-crystal-caverns/make_shell.py.

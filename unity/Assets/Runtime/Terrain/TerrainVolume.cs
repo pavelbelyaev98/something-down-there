@@ -43,7 +43,7 @@ namespace SomethingDownThere
         private Material xrayMaterial;
         public bool XrayEnabled { get; private set; }
 
-        private Material CurrentSoilMaterial => XrayEnabled && xrayMaterial != null ? xrayMaterial : soilMaterial;
+        private Material CurrentSoilMaterial => XrayEnabled && xrayMaterial != null ? xrayMaterial : lookMaterial != null ? lookMaterial : soilMaterial;
         public Vector3Int Dimensions => dimensions;
         public float CellSize => cellSize;
         public float RemovedVolume => grid?.RemovedVolume ?? 0;
@@ -123,6 +123,7 @@ namespace SomethingDownThere
             for (int x = 0; x < dimensions.x; x += chunkSize)
                 Refresh(new Vector3Int(x / chunkSize, surfaceLayer, z / chunkSize));
             MaterializeSeededAir();
+            ApplyLooks();
         }
 
         public bool IsSolid(Vector3 worldPoint) => grid != null && grid.IsSolid(transform.InverseTransformPoint(worldPoint));
@@ -477,6 +478,7 @@ namespace SomethingDownThere
                 if (Application.isPlaying) Destroy(chunk.Mesh); else DestroyImmediate(chunk.Mesh);
             chunks.Clear();
             if (xrayMaterial != null) Destroy(xrayMaterial);
+            if (lookMaterial != null) Destroy(lookMaterial);
         }
     }
 }

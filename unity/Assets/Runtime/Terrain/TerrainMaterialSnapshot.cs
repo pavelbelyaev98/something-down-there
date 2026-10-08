@@ -6,14 +6,14 @@ namespace SomethingDownThere
 {
     // Saved as bytes: append new grounds, never renumber. Hardness order is
     // EquipmentProgression.HardnessOrder, not the declaration order.
-    // Backfill is the mixed ground of an old dug-and-refilled pit.
-    public enum TerrainMaterialId : byte { Soil, Backfill, GeodeShell, CaveRock }
+    // Backfill is the mixed ground of an old dug-and-refilled pit; lake sediment and riverbed are zones 2 and 3's main grounds.
+    public enum TerrainMaterialId : byte { Soil, Backfill, GeodeShell, CaveRock, LakeSediment, Riverbed }
 
     // Immutable identities share the density lattice, including samples excavated into air.
     // Captures can share this object with the save worker without copying the world.
     public sealed class TerrainMaterialSnapshot
     {
-        public const TerrainMaterialId Last = TerrainMaterialId.CaveRock;
+        public const TerrainMaterialId Last = TerrainMaterialId.Riverbed;
         private readonly byte[] samples;
         public int Length => samples.Length;
         public TerrainMaterialId this[int index] => (TerrainMaterialId)samples[index];
@@ -55,7 +55,7 @@ namespace SomethingDownThere
                 WorldSnapshot.Require(value <= (byte)Last, "Unknown ground material.");
         }
 
-        // Soil and backfill pits: see TerrainGround.
+        // The zones' main grounds, backfill pits, geodes and caverns: see TerrainGround.
         // Odd spots: grid-local unique centres (xyz) and envelope radii (w) that pits keep clear of.
         public static TerrainMaterialSnapshot Generate(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null,
             TerrainGround.Features features = TerrainGround.Features.All, Bounds stashPocket = default)

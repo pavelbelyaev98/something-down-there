@@ -14,7 +14,7 @@ free slots for later grounds. This spec also holds the plan and research for `10
 | `109` The chest by hand | Hold E to force the lock; an emptied chest goes away | [109](109-chest-by-hand.md) |
 | `110` Geodes | Hard rock balls with crystal-lined hollows to break into | [110](110-geodes.md) |
 | `026` Sticky C4 | C4, whose natural target is a geode shell | queue |
-| `111` Zone main grounds | A new main ground per zone, one per playtest | [111](../111-zone-main-grounds.md) |
+| `111` Zone main grounds | A new main ground per zone, one per playtest | [111](111-zone-main-grounds.md) |
 | `112` Secret areas | A distinct ground around each unique | [112](../112-secret-areas-around-uniques.md) |
 
 Specs `108`–`112` were written ahead at the user's request (2026-10-05). Each is re-checked against

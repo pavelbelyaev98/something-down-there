@@ -8,9 +8,10 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // The seeded ground: soil, with backfill pits someone dug and refilled in the recent fill, a few geodes deeper down
-    // and a cavern in each zone (TerrainGround.Caverns). Written once per session into the one-byte material field;
-    // saves store the bytes, so nothing here is saved separately.
+    // The seeded ground: each zone's main ground (soil, old lake sediment, the old riverbed), with backfill pits someone
+    // dug and refilled in the recent fill, a few geodes deeper down and a cavern in each zone (TerrainGround.Caverns).
+    // Written once per session into the one-byte material field; saves store the bytes, so nothing here is saved
+    // separately.
     public static partial class TerrainGround
     {
         // Metres below the surface: even quarters of the 150 m site. Absolute depths, so a
@@ -21,8 +22,61 @@ namespace SomethingDownThere
         public const float SurfaceSoil = 1.1f, PitTop = 3f, PitMargin = 3f;
 
         // What the generator lays down. The site admits grounds one at a time (SiteLayout.Ground).
-        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, Caverns = 4, All = Pits | Geodes | Caverns }
+        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, Caverns = 4, Zones = 8, All = Pits | Geodes | Caverns | Zones }
         private static bool Has(Features features, Features feature) => (features & feature) != 0;
+
+        // Each zone's main ground (111), the real order under a drained lake: recent fill (soil), the older lake's grey
+        // silt and clay, then the sands and gravels of the river that ran there before. Zone 4 stays soil until its
+        // ancient material (039); the Developer admin can carry the riverbed down to the bottom instead for the next
+        // New Game (DeepGround, session-only).
+        public static TerrainMaterialId DeepGround = TerrainMaterialId.Soil;
+        public static TerrainMaterialId ZoneGround(int zone) => zone switch
+        {
+            1 => TerrainMaterialId.LakeSediment,
+            2 => TerrainMaterialId.Riverbed,
+            3 => DeepGround,
+            _ => TerrainMaterialId.Soil
+        };
+
+        // Zone borders (111) are never a flat line: each is lifted and dropped by up to BorderWarp over broad swells
+        // (BorderWarpScale), and within BorderBand of it the two grounds mix in noisy patches about a metre across
+        // (BorderPatchScale), the deeper ground's patches thickening downward (Minecraft's deepslate band).
+        public const float BorderWarp = 1.5f, BorderWarpScale = .05f, BorderBand = 1.5f, BorderPatchScale = .9f;
+
+        // Which zone (0-3) a sample at grid-local p and depth (metres below the surface) lies in, with the three border
+        // depths. offsets: the seed's noise offsets.
+        public static int ZoneAt(float3 p, float depth, float3 borders, float4 offsets)
+            => ZoneIn(p, depth, WarpedBorders(p.xz, borders, offsets), offsets);
+
+        // The three border depths under a grid-local x/z, lifted and dropped by the broad warp (one column shares them).
+        public static float3 WarpedBorders(float2 xz, float3 borders, float4 offsets)
+        {
+            var at = xz * BorderWarpScale + offsets.xy * .1f;
+            return borders + BorderWarp * new float3(noise.snoise(at), noise.snoise(at + 17.3f), noise.snoise(at + 34.6f));
+        }
+
+        // The zone of a sample given its column's warped borders: past a border's band, the deeper zone; inside it, the
+        // deeper ground's patches where the patch noise falls below the sample's place across the band.
+        public static int ZoneIn(float3 p, float depth, float3 warped, float4 offsets)
+        {
+            int zone = 0;
+            for (int b = 0; b < 3; b++)
+            {
+                float across = (depth - warped[b]) / BorderBand;
+                if (across <= -1) break;
+                if (across >= 1) { zone = b + 1; continue; }
+                if (noise.snoise(p * BorderPatchScale + offsets.zwx + b * 5.1f) < across) zone = b + 1;
+                break;
+            }
+            return zone;
+        }
+
+        // The seed's noise offsets, shared by the ground job, the stash shells and the zone borders.
+        public static float4 NoiseOffsets(int seed)
+        {
+            uint hash = unchecked((uint)seed * 747796405u + 2891336453u);
+            return new float4(hash & 1023, (hash >> 10) & 1023, (hash >> 20) & 1023, (hash >> 5) & 1023) * .37f;
+        }
 
         // Disturbed ground (099, 106): a column of backfill someone dug and refilled, from Top down to the old chest
         // they buried at Bottom. Mostly steep, some leaning sideways. Backfill holds only chests (user, 2026-10-06):
@@ -381,11 +435,12 @@ namespace SomethingDownThere
             int stride = size.x + 1, plane = stride * (size.y + 1);
             var spots = OddSpots(oddSpots);
             var pits = Pits(size, cellSize, seed, spots, features);
-            uint hash = unchecked((uint)seed * 747796405u + 2891336453u);
-            var offsets = new float4(hash & 1023, (hash >> 10) & 1023, (hash >> 20) & 1023, (hash >> 5) & 1023) * .37f;
+            var offsets = NoiseOffsets(seed);
             using var output = new NativeArray<byte>(plane * (size.z + 1), Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             using var nativePits = new NativeArray<Pit>(pits, Allocator.TempJob);
-            new GroundJob { Size = new int3(size.x, size.y, size.z), CellSize = cellSize, Offsets = offsets, Pits = nativePits, Output = output }
+            new GroundJob { Size = new int3(size.x, size.y, size.z), CellSize = cellSize, Offsets = offsets, Pits = nativePits, Output = output,
+                    Zoned = Has(features, Features.Zones), Borders = new float3(ZoneBorders[0], ZoneBorders[1], ZoneBorders[2]),
+                    Grounds = new int4((int)ZoneGround(0), (int)ZoneGround(1), (int)ZoneGround(2), (int)ZoneGround(3)) }
                 .Schedule(size.z + 1, 1).Complete();
             var ids = output.ToArray();
             foreach (var stash in Stashes(pits, seed, stashPocket)) if (stash.HasPocket) FillShell(ids, size, cellSize, stash, offsets);
@@ -438,6 +493,10 @@ namespace SomethingDownThere
             public int3 Size;
             public float CellSize;
             public float4 Offsets;
+            // Zone main grounds: whether to lay them, the border depths and each zone's ground id.
+            public bool Zoned;
+            public float3 Borders;
+            public int4 Grounds;
             [ReadOnly] public NativeArray<Pit> Pits;
             [NativeDisableParallelForRestriction, WriteOnly] public NativeArray<byte> Output;
 
@@ -451,21 +510,22 @@ namespace SomethingDownThere
                 for (int x = 0; x <= Size.x; x++)
                 {
                     float px = x * CellSize;
+                    var warped = Zoned ? WarpedBorders(new float2(px, pz), Borders, Offsets) : default;
                     for (int y = 0; y <= Size.y; y++)
                     {
                         float depth = (Size.y - y) * CellSize;
                         var p = new float3(px, y * CellSize, pz);
-                        Output[x + y * stride + z * plane] = (byte)Material(p, depth, dug);
+                        Output[x + y * stride + z * plane] = (byte)Material(p, depth, dug, warped);
                     }
                 }
             }
 
-            private TerrainMaterialId Material(float3 p, float depth, FixedList128Bytes<int> dug)
+            private TerrainMaterialId Material(float3 p, float depth, FixedList128Bytes<int> dug, float3 warped)
             {
                 if (depth < SurfaceSoil) return TerrainMaterialId.Soil;
                 for (int i = 0; i < dug.Length; i++)
                     if (InPit(Pits[dug[i]], p)) return TerrainMaterialId.Backfill;
-                return TerrainMaterialId.Soil;
+                return Zoned ? (TerrainMaterialId)Grounds[ZoneIn(p, depth, warped, Offsets)] : TerrainMaterialId.Soil;
             }
 
             // Inside a refilled pit: a capsule from top to bottom with a ragged, lumpy edge.

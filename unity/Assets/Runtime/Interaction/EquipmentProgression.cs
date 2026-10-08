@@ -51,11 +51,22 @@ namespace SomethingDownThere
         private static readonly MaterialToolResponse GeodeShell = new MaterialToolResponse(.68f, .68f, .62f, 1.15f);
         // A cave's rock (116): the same hard stone as a geode's shell, so the same tell says "a hollow is in there".
         private static readonly MaterialToolResponse CaveRock = GeodeShell;
+        // Zone 2's main ground (111), old grey lake silt and clay: a little firmer than soil, bites as wide but a touch
+        // shallower at a slightly slower stroke, about 0.86 of soil's rate.
+        private static readonly MaterialToolResponse LakeSediment = new MaterialToolResponse(.98f, .98f, .92f, 1.03f);
+        // Zone 3's main ground (111), the old riverbed's sand and gravel: stony, smaller bites with the short bite motion,
+        // about two thirds of soil's rate. The drill arrives around here (ZoneArrivalLevels), so it never feels a restart.
+        private static readonly MaterialToolResponse Riverbed = new MaterialToolResponse(.9f, .9f, .86f, 1.06f);
+        // The tool level a player typically owns on arriving in each zone (concept 02 section 3: a few shovel upgrades by
+        // the lake sediment, the drill at the riverbed). No zone feels like a restart: at its arrival level a zone's main
+        // ground digs no slower than the previous zone's did one purchase earlier, near its end (TerrainMaterialTests).
+        public static readonly int[] ZoneArrivalLevels = { 1, 4, 7, 9 };
         // Developer ground tuning: session-only replacements for the authored responses.
         private static readonly MaterialToolResponse?[] ResponseOverrides = new MaterialToolResponse?[(int)TerrainMaterialSnapshot.Last + 1];
         public static bool HasResponseOverrides => System.Array.Exists(ResponseOverrides, value => value.HasValue);
         public static void OverrideResponse(TerrainMaterialId material, MaterialToolResponse response) => ResponseOverrides[(int)material] = response;
         public static void ClearResponseOverrides() => System.Array.Clear(ResponseOverrides, 0, ResponseOverrides.Length);
+        public static void ClearResponseOverride(TerrainMaterialId material) => ResponseOverrides[(int)material] = null;
         public static MaterialToolResponse MaterialResponse(TerrainMaterialId material)
             => ResponseOverrides[(int)material] ?? AuthoredResponse(material);
         // What each ground does beyond its bite (concept 03 section 4), for the developer ground table.
@@ -65,7 +76,16 @@ namespace SomethingDownThere
             TerrainMaterialId.Backfill => "Rubble fill: stony and hard; never collapses",
             TerrainMaterialId.GeodeShell => "Geode shell: hard stone around a sealed hollow",
             TerrainMaterialId.CaveRock => "Cave rock: hard stone around a great cave",
+            TerrainMaterialId.LakeSediment => "Lake sediment: zone 2's grey silt and clay, a little firmer than soil",
+            TerrainMaterialId.Riverbed => "Riverbed: zone 3's sand and gravel, stony",
             _ => ""
+        };
+        public static string GroundName(TerrainMaterialId material) => material switch
+        {
+            TerrainMaterialId.GeodeShell => "Geode shell",
+            TerrainMaterialId.CaveRock => "Cave rock",
+            TerrainMaterialId.LakeSediment => "Lake sediment",
+            _ => material.ToString()
         };
         public static MaterialToolResponse AuthoredResponse(TerrainMaterialId material) => material switch
         {
@@ -73,10 +93,13 @@ namespace SomethingDownThere
             TerrainMaterialId.Backfill => Backfill,
             TerrainMaterialId.GeodeShell => GeodeShell,
             TerrainMaterialId.CaveRock => CaveRock,
+            TerrainMaterialId.LakeSediment => LakeSediment,
+            TerrainMaterialId.Riverbed => Riverbed,
             _ => throw new System.ArgumentOutOfRangeException(nameof(material))
         };
         // Softest to hardest; each ground keeps its resistance at every tier.
-        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill, TerrainMaterialId.GeodeShell, TerrainMaterialId.CaveRock };
+        public static readonly TerrainMaterialId[] HardnessOrder = { TerrainMaterialId.Soil, TerrainMaterialId.LakeSediment, TerrainMaterialId.Backfill,
+            TerrainMaterialId.Riverbed, TerrainMaterialId.GeodeShell, TerrainMaterialId.CaveRock };
         // Every track pays the same for the same next level. No scene-owned copies.
         private static readonly int[] TierPrices = { 10, 25, 55, 100, 180, 300, 480, 750, 1100, 1600, 2300 };
         private static readonly int[] Slots = { 5, 5, 10, 10, 15, 20, 25, 30, 40, 40, 40 };
@@ -85,8 +108,8 @@ namespace SomethingDownThere
         // last level (12) bites 0.708 m at 2.63x with 1.42 m extra reach. Shovel levels grow evenly
         // (~1.12x), the drill (level 7) is a clear step up (~1.27x) so it out-digs the last shovel
         // even on fresh rock, then grows evenly (~1.07x, every purchase still >1.2x volume) to the
-        // last level; cadence and reach grow linearly. A zone's main ground is matched two
-        // purchases later.
+        // last level; cadence and reach grow linearly. Zone grounds are checked against the levels
+        // players own on arrival (ZoneArrivalLevels).
         private static readonly float[] BiteRadii = { .229f, .2565f, .2873f, .3217f, .3603f, .4036f, .5114f, .5458f, .5824f, .6216f, .6633f, .708f };
         public static ShovelProfile[] ToolProfiles()
         {

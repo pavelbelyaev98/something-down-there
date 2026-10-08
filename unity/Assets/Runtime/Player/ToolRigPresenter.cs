@@ -60,10 +60,10 @@ namespace SomethingDownThere
             return from >= 1 && from <= to && to <= EquipmentProgression.LevelCount;
         }
 
-        // Soil scoops; rubble backfill takes the shorter, harder bite.
+        // Soil and lake sediment scoop; rubble backfill and the riverbed's gravel take the shorter, harder bite.
         public static MotionFamily Family(TerrainMaterialId material) => material switch
         {
-            TerrainMaterialId.Backfill => MotionFamily.Bite,
+            TerrainMaterialId.Backfill or TerrainMaterialId.Riverbed => MotionFamily.Bite,
             TerrainMaterialId.GeodeShell or TerrainMaterialId.CaveRock => MotionFamily.Hard,
             _ => MotionFamily.Scoop
         };

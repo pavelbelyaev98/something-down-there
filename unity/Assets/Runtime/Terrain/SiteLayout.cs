@@ -9,10 +9,10 @@ namespace SomethingDownThere
     public static class SiteLayout
     {
         public const float CellSize = 0.125f;
-        // Grounds return to the site one at a time as the user redesigns them in the Ground Lab: soil
-        // everywhere, plus backfill pits in the recent fill (106), geodes in the middle zones (110) and a cavern
+        // Grounds return to the site one at a time as the user redesigns them in the Ground Lab: each zone's main
+        // ground (111), plus backfill pits in the recent fill (106), geodes in the middle zones (110) and a cavern
         // in each zone (115).
-        public const TerrainGround.Features Ground = TerrainGround.Features.Pits | TerrainGround.Features.Geodes | TerrainGround.Features.Caverns;
+        public const TerrainGround.Features Ground = TerrainGround.Features.All;
         // Other grids (fixtures, benchmarks, test scenes) stay plain soil.
         public static TerrainGround.Features GroundFor(Vector3Int size, float cellSize)
             => size == Size && Mathf.Approximately(cellSize, CellSize) ? Ground : TerrainGround.Features.None;

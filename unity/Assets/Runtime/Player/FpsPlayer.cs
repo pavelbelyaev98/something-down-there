@@ -147,7 +147,8 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminHoverOnRelease || adminGroundXray || adminContactShading);
+            || adminHoverOnRelease || adminGroundXray || adminContactShading || TerrainVolume.HasLookOverrides || zoneFeel != 0
+            || TerrainGround.DeepGround != TerrainMaterialId.Soil);
         // Hover A/B (022): hold height while digging (default) or whenever Space is released.
         public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
         public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
@@ -839,6 +840,9 @@ namespace SomethingDownThere
             adminHoverOnRelease = false;
             adminGroundXray = false;
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
+            excavationTerrain?.RestoreLooks();
+            if (zoneFeel != 0) UseZoneFeel(0);
+            TerrainGround.DeepGround = TerrainMaterialId.Soil;
             pendingScoop = -1f;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
@@ -1015,7 +1019,58 @@ namespace SomethingDownThere
         // Developer ground tuning: dials one ground's bite for the session (EquipmentProgression overrides).
         public TerrainMaterialId AdminGround { get; private set; } = TerrainMaterialId.Soil;
         public bool HasAdminGroundTuning => AdminAvailable && EquipmentProgression.HasResponseOverrides;
-        public static readonly TerrainMaterialId[] TunableGrounds = { TerrainMaterialId.Soil, TerrainMaterialId.Backfill, TerrainMaterialId.GeodeShell, TerrainMaterialId.CaveRock };
+        public static readonly TerrainMaterialId[] TunableGrounds = { TerrainMaterialId.Soil, TerrainMaterialId.LakeSediment, TerrainMaterialId.Riverbed,
+            TerrainMaterialId.Backfill, TerrainMaterialId.GeodeShell, TerrainMaterialId.CaveRock };
+
+        // Zone grounds (111), compared in play: each one's looks (TerrainVolume.CycleLook), how both dig, and what zone 4
+        // holds on the next New Game. Session-only, like ground tuning.
+        public static readonly TerrainMaterialId[] ZoneGrounds = { TerrainMaterialId.LakeSediment, TerrainMaterialId.Riverbed };
+        // How the zone grounds dig: the authored responses, both like soil, or firmer (lake sediment like backfill, the
+        // riverbed at under half of soil's rate). Applied as ground-tuning overrides, so the sliders and table show them.
+        public static readonly string[] ZoneFeelNames = { "authored", "like soil", "firmer" };
+        private static readonly MaterialToolResponse[][] ZoneFeels =
+        {
+            null,
+            new[] { new MaterialToolResponse(1, 1, 1, 1), new MaterialToolResponse(1, 1, 1, 1) },
+            new[] { new MaterialToolResponse(.92f, .92f, .9f, 1.05f), new MaterialToolResponse(.8f, .8f, .78f, 1.1f) }
+        };
+        private static int zoneFeel;
+        public string AdminZoneFeel => ZoneFeelNames[zoneFeel];
+
+        public string AdminLookLabel(TerrainMaterialId ground) => excavationTerrain != null ? excavationTerrain.LookName(ground) : "-";
+
+        public void CycleAdminLook(TerrainMaterialId ground)
+        {
+            if (!focused || !AdminAvailable) return;
+            ShowFeedback(EquipmentProgression.GroundName(ground) + " look: " + excavationTerrain.CycleLook(ground));
+            MenuChanged?.Invoke();
+        }
+
+        public void CycleAdminZoneFeel()
+        {
+            if (!focused || !AdminAvailable) return;
+            UseZoneFeel((zoneFeel + 1) % ZoneFeelNames.Length);
+            ShowFeedback("Zone grounds dig " + AdminZoneFeel);
+            MenuChanged?.Invoke();
+        }
+
+        private static void UseZoneFeel(int feel)
+        {
+            zoneFeel = feel;
+            for (int i = 0; i < ZoneGrounds.Length; i++)
+                if (ZoneFeels[feel] != null) EquipmentProgression.OverrideResponse(ZoneGrounds[i], ZoneFeels[feel][i]);
+                else EquipmentProgression.ClearResponseOverride(ZoneGrounds[i]);
+        }
+
+        public string AdminDeepGround => EquipmentProgression.GroundName(TerrainGround.DeepGround);
+
+        public void ToggleAdminDeepGround()
+        {
+            if (!focused || !AdminAvailable) return;
+            TerrainGround.DeepGround = TerrainGround.DeepGround == TerrainMaterialId.Soil ? TerrainMaterialId.Riverbed : TerrainMaterialId.Soil;
+            ShowFeedback("Zone 4: " + AdminDeepGround.ToLowerInvariant() + " in a New Game started after the game reloads (Leave Ground Lab)");
+            MenuChanged?.Invoke();
+        }
 
         public void CycleAdminGround()
         {
@@ -1045,6 +1100,7 @@ namespace SomethingDownThere
         {
             if (!focused || !AdminAvailable) return;
             EquipmentProgression.ClearResponseOverrides();
+            zoneFeel = 0;
             ShowFeedback("Ground tuning back to the authored values");
             MenuChanged?.Invoke();
         }

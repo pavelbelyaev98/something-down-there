@@ -24,11 +24,12 @@ namespace SomethingDownThere
             public NativeList<Vector3> Vertices,Normals;
             public NativeList<Vector2> UVs;
             public NativeList<Vector4> MaterialWeights;
+            public NativeList<Vector2> ZoneWeights;
             public NativeList<int> Triangles;
 
             public void Execute()
             {
-                Vertices.Clear();Normals.Clear();UVs.Clear();Triangles.Clear();MaterialWeights.Clear();
+                Vertices.Clear();Normals.Clear();UVs.Clear();Triangles.Clear();MaterialWeights.Clear();ZoneWeights.Clear();
                 int cells=Span.x*Span.y*Span.z;
                 for(int i=0;i<cells;i++)Indices[i]=-1;
                 for(int z=Low.z;z<=End.z;z++)
@@ -55,7 +56,8 @@ namespace SomethingDownThere
                     float3 vertex=math.clamp((new float3(x,y,z)+sum/crossings)*CellSize,0,(float3)Size*CellSize);
                     Indices[Index(new int3(x,y,z))]=Vertices.Length;
                     Vertices.Add(vertex);Normals.Add(SurfaceNormal(vertex));UVs.Add(new Vector2(vertex.x,vertex.z));
-                    MaterialWeights.Add(SurfaceMaterials(vertex));
+                    MaterialWeights.Add(SurfaceMaterials(vertex,out var zones));
+                    ZoneWeights.Add(zones);
                 }
                 for(int z=Start.z;z<=End.z;z++)
                 for(int y=Start.y;y<=End.y;y++)
@@ -102,15 +104,16 @@ namespace SomethingDownThere
                 return math.lengthsq(gradient)>1e-12f?-math.normalize(gradient):new float3(0,1,0);
             }
 
-            // One stream of ground weights over soil: (free, cave rock, geode shell, 1 - backfill); soil is the remainder.
-            // A mesh without it reads (0,0,0,1): plain soil.
-            private Vector4 SurfaceMaterials(float3 point)
+            // Two streams of ground weights over soil: (free, cave rock, geode shell, 1 - backfill) and the zones' main
+            // grounds (lake sediment, riverbed); soil is the remainder. A mesh without them reads (0,0,0,1) and (0,0): plain
+            // soil.
+            private Vector4 SurfaceMaterials(float3 point, out Vector2 zones)
             {
                 float3 p = point / CellSize;
                 int3 cell = (int3)math.floor(p);
                 float3 t = p - cell;
                 int index = SampleIndex(cell);
-                float backfill = 0, shell = 0, cave = 0;
+                float backfill = 0, shell = 0, cave = 0, sediment = 0, riverbed = 0;
                 for (int c = 0; c < 8; c++)
                 {
                     int x = c & 1, y = (c >> 1) & 1, z = (c >> 2) & 1;
@@ -119,7 +122,10 @@ namespace SomethingDownThere
                     if (material == (byte)TerrainMaterialId.Backfill) backfill += weight;
                     else if (material == (byte)TerrainMaterialId.GeodeShell) shell += weight;
                     else if (material == (byte)TerrainMaterialId.CaveRock) cave += weight;
+                    else if (material == (byte)TerrainMaterialId.LakeSediment) sediment += weight;
+                    else if (material == (byte)TerrainMaterialId.Riverbed) riverbed += weight;
                 }
+                zones = new Vector2(math.saturate(sediment), math.saturate(riverbed));
                 return new Vector4(0, math.saturate(cave), math.saturate(shell), 1 - math.saturate(backfill));
             }
 

@@ -23,6 +23,12 @@
             "content_id": "mineral_pyrite_b",
             "prefab": "Assets/Content/BuriedProps/CrystalCaverns/Dirty/Crystal_Pyrite_2.prefab"
           }
+        ],
+        "host_grounds": [
+          "lake_sediment"
+        ],
+        "host_weights": [
+          2
         ]
       }
     }

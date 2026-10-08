@@ -14,26 +14,42 @@ namespace SomethingDownThere
         private static readonly float[] Columns = { -8.75f, -5.25f, -1.75f, 1.75f, 5.25f, 8.75f };
         private static readonly float[] Rows = { -4.5f, -1f, 2.5f };
 
+        // A bay: its ground at a bay-local position (u, depth, v) and its slot in the grid (row * columns + column).
         public readonly struct Bay
         {
             public readonly string Name, Hint;
             public readonly Func<float, float, float, TerrainMaterialId> Ground;
-            public Bay(string name, string hint, Func<float, float, float, TerrainMaterialId> ground)
-            { Name = name; Hint = hint; Ground = ground; }
+            public readonly int Slot;
+            public Bay(string name, string hint, Func<float, float, float, TerrainMaterialId> ground, int slot)
+            { Name = name; Hint = hint; Ground = ground; Slot = slot; }
         }
 
         private static Func<float, float, float, TerrainMaterialId> Only(TerrainMaterialId ground) => (u, d, v) => ground;
 
-        // From the spawn (south) inward: single grounds, then mixes.
+        // The zone borders bay (111): soil, then lake sediment from about LabBorders.x down and the riverbed from about
+        // LabBorders.y, each border mixed in patches as the site's are (TerrainGround.ZoneIn); the site's broad warp would
+        // only shift a 3 m bay's borders, so the bay shows the band alone.
+        private static readonly Unity.Mathematics.float3 LabBorders = new Unity.Mathematics.float3(3.5f, 8f, 1000f);
+        private static readonly Unity.Mathematics.float4 LabNoise = new Unity.Mathematics.float4(17, 31, 47, 59);
+        private static TerrainMaterialId ZoneBorders(float u, float d, float v)
+            => TerrainGround.ZoneGround(TerrainGround.ZoneIn(new Unity.Mathematics.float3(u, -d, v), d, LabBorders, LabNoise));
+
+        // From the spawn (south) inward: single grounds, then mixes. The middle row and the north row's west half lie
+        // under the find gallery, so the zone grounds take the free east slots.
         public static readonly Bay[] Bays =
         {
-            new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil)),
-            new Bay("Backfill", "rubble fill, three quarters of soil's speed, an old chest 3 m down", Only(TerrainMaterialId.Backfill)),
+            new Bay("Soil", "plain ground, broad cuts", Only(TerrainMaterialId.Soil), 0),
+            new Bay("Backfill", "rubble fill, three quarters of soil's speed, an old chest 3 m down", Only(TerrainMaterialId.Backfill), 1),
             new Bay("Geode shell", "geode stone to 3 m: about a quarter of soil's speed", (u, d, v) =>
-                d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil),
-            new Bay("Geode", "a big geode 2 m down: dig in and break through", Only(TerrainMaterialId.Soil)),
+                d < 3f ? TerrainMaterialId.GeodeShell : TerrainMaterialId.Soil, 2),
+            new Bay("Geode", "a big geode 2 m down: dig in and break through", Only(TerrainMaterialId.Soil), 3),
             new Bay("Cave rock", "a great cave's stone to 3 m: as hard as geode shell", (u, d, v) =>
-                d < 3f ? TerrainMaterialId.CaveRock : TerrainMaterialId.Soil),
+                d < 3f ? TerrainMaterialId.CaveRock : TerrainMaterialId.Soil, 4),
+            new Bay("Lake sediment", "zone 2's main ground, old grey lake silt: a little firmer than soil", Only(TerrainMaterialId.LakeSediment), 5),
+            new Bay("Riverbed", "zone 3's main ground, old river sand and gravel: stony, about two thirds of soil's speed",
+                Only(TerrainMaterialId.Riverbed), 16),
+            new Bay("Zone borders", "soil, lake sediment from about 3.5 m, riverbed from about 8 m: each border mixes over a few metres",
+                ZoneBorders, 17),
         };
 
         // The geode bay's geode (110) with its crystals (DiscoveryField), as large as the site's, under the bay's centre: a
@@ -58,7 +74,7 @@ namespace SomethingDownThere
         // (MarkCave). (User, 2026-10-07: "easy to find, either pointers or anything", "big walkable caverns".)
         private const float GreatFloorDepth = 22f, GreatShaftLeft = 1f, GreatShaftRadius = .85f;
         private static readonly Vector2 GreatShaftNear = new Vector2(-12f, 0f);
-        private static readonly Vector2[] MiniCaveSpots = { new Vector2(-12.6f, -4.6f), new Vector2(-9.6f, 6.8f), new Vector2(-4.2f, 7.6f), new Vector2(9.2f, -6.4f) };
+        private static readonly Vector2[] MiniCaveSpots = { new Vector2(-12.6f, -4.6f), new Vector2(-9.6f, 6.8f), new Vector2(-4.2f, 7.6f), new Vector2(5.6f, -8.4f) };
         private const float MiniCentreY = -3.9f, MiniFloorY = -4.8f, CaveMarkDepth = .375f;
         public static readonly TerrainGround.Cavern[] Caves = MakeCaves(out GreatShaft);
         // The shaft down to the great cave: its axis's surface point and bottom (world).
@@ -118,24 +134,19 @@ namespace SomethingDownThere
         public static TerrainGround.GroundLayout Layout(Bounds stashPocket = default) => new TerrainGround.GroundLayout(
             Array.Empty<TerrainGround.Pit>(), Stashes(stashPocket), new[] { Geode }, Caves);
 
-        public static Vector2 BayCentre(int bay) => new Vector2(Columns[bay % Columns.Length], Rows[bay / Columns.Length]);
+        public static Vector2 BayCentre(int bay) => SlotCentre(Bays[bay].Slot);
+        public static Vector2 SlotCentre(int slot) => new Vector2(Columns[slot % Columns.Length], Rows[slot / Columns.Length]);
 
         // Which bay holds a world x/z (-1 between bays and on unused slots), with the position inside it.
         private static int BayAt(float x, float z, out float u, out float v)
         {
-            u = v = 0;
-            for (int row = 0; row < Rows.Length; row++)
+            for (int bay = 0; bay < Bays.Length; bay++)
             {
-                if (Mathf.Abs(z - Rows[row]) > BayHalf) continue;
-                for (int column = 0; column < Columns.Length; column++)
-                {
-                    if (Mathf.Abs(x - Columns[column]) > BayHalf) continue;
-                    int bay = row * Columns.Length + column;
-                    if (bay >= Bays.Length) return -1;
-                    u = x - Columns[column]; v = z - Rows[row];
-                    return bay;
-                }
+                var centre = BayCentre(bay);
+                u = x - centre.x; v = z - centre.y;
+                if (Mathf.Abs(u) <= BayHalf && Mathf.Abs(v) <= BayHalf) return bay;
             }
+            u = v = 0;
             return -1;
         }
 
@@ -196,7 +207,7 @@ namespace SomethingDownThere
             var crane = DescribeCrane(world);
             if (crane != null) return crane;
             int bay = BayAt(world.x, world.z, out _, out _);
-            string ground = "hitting " + hit;
+            string ground = "hitting " + EquipmentProgression.GroundName(hit).ToLowerInvariant();
             var local = Local(world);
             if (Vector2.Distance(new Vector2(world.x, world.z), new Vector2(GreatShaft.top.x, GreatShaft.top.z)) < GreatShaftRadius + 1.2f)
                 return $"Great cave: drop down the shaft ({-GreatShaft.bottom.y:0} m), dig through the last metre of rock  |  " + ground;

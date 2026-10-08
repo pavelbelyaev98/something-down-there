@@ -146,7 +146,8 @@ Extensions of the cluster system where discoveries physically connect through th
 - **Trails pay along the way:** small finds sit along a cable, pipe or vein, so following it rewards
   each step instead of asking for blind trust.
 - **Each zone has its own trail type**, decided with its main ground: chains and cables in recent
-  fill, matching grooves and fittings in ancient ground.
+  fill, mooring chains and drowned fence wire in the lake sediment, pipes and narrow-gauge rails of
+  old gravel workings in the riverbed, matching grooves and fittings in ancient ground.
 - This gives lateral exploration an immediate visual reason rather than asking players to trust random sideways digging blindly.
 - **Keep it simple:** No wiring puzzles, cable inventory, or repair chores. Following the connection means doing more of what is fun: digging.
 - Built from authored, fully buried arrangements with preserved relationships, seeded and oriented as units.

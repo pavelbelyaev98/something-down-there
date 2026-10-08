@@ -86,7 +86,9 @@ The lakebed excavation is a single contained worksite.
   - _The core rule:_ The ground hints that something is near (§4 tells); the exposed world suggests what to do next.
   - Trails pay along the way: small finds sit along a cable or pipe, so following it is never a blind gamble.
   - Each zone has its own kind of trail, decided with its main ground: chains and cables in recent
-    fill, matching grooves and fittings in ancient ground.
+    fill, mooring chains and drowned fence wire from the old shore in the lake sediment, pipes and
+    narrow-gauge rails of old gravel workings in the riverbed, matching grooves and fittings in
+    ancient ground.
   - No wiring puzzles, inventories, or repair chores; following a connection means digging.
   - Authored buried arrangements preserve internal relationships and randomize as coherent units.
 - **Major connected parts:** Connected finds suggest a buried history. In the current direction,
@@ -115,13 +117,14 @@ Depth splits the site into four zones, roughly even quarters (the ancient zone m
 in generation code. Transitions are gradual; there are no loading screens or separate levels. Zone
 names are placeholders; final naming is content work. Each zone gets **one main ground**, built from
 an owned pack texture and added only after it has earned its place in a playtest (user, 2026-10-05).
-Until a zone's ground is in, the zone is soil.
+Until a zone's ground is in, the zone is soil: zones 2 and 3 have theirs, zone 4 waits for its
+ancient material.
 
 | #   | Zone                    | Main ground (direction)                              | Typical finds                                        | Mood                             |
 | --- | ----------------------- | ---------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
 | 1   | **Recent fill**         | Soil, with backfill pits                             | Bottles, scrap, household junk, coins, coal, copper, old TVs; stashes in the pits | Bright, familiar, hopeful |
-| 2   | **Old sediment**        | Old grey lake silt and clay                          | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
-| 3   | **Deep sediment**       | An old riverbed of sand and gravel                   | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
+| 2   | **Old sediment**        | Old grey lake silt and clay, finely bedded           | Old tools, machine parts, bones and fossils, better ore | Nostalgic, slightly odd       |
+| 3   | **Deep sediment**       | An old riverbed of sand with pebbles                 | Larger machines, rare ore, deliberate objects        | Heavy, dim, purposeful           |
 | 4   | **Ancient constructed** | Its own ancient material (defined with the zone-4 work) | Impossibilities, final components, the final object | Cold, quiet, wrong in a good way |
 
 That is the real order under a drained lake: recent mud, then the older lake's grey silt and clay,
@@ -147,8 +150,9 @@ reviewers single out layers that "each have their own surprises"; this is the sa
 - **Variety inside a zone.** One main ground must not become one repeated wall: pits, geodes,
   lenses and finds act as landmarks. No glaring pale surfaces: a white rock layer strained Keep
   Digging players' eyes, and Meltopia's identical tunnels got players lost.
-- **Blended borders.** Where two zones meet, the grounds mix in noisy patches over a few metres
-  (Minecraft's deepslate band), never a flat line.
+- **Blended borders.** Where two zones meet, the grounds mix in noisy patches over about three
+  metres (Minecraft's deepslate band), the deeper ground's patches thickening downward, and the
+  border itself rises and falls a metre or so across the site: never a flat line.
 - **Mixed spots only with a job.** Mixing exists where it does something: a backfill pit, a geode, a
   lens around a unique, a zone border. Random mixing elsewhere is noise and is not generated.
 
@@ -165,8 +169,11 @@ cut's shape carry it. Nothing in the ground collapses: no pours, slumps or break
 | -------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------- |
 | Soil     | Fast, broad rounded cuts; plain ground         | —                                      | Rubbish, junk, plain rocks                          |
 | Backfill | Rubble fill: small, hard bites, about three quarters of soil's speed | It *is* the tell              | Whatever someone buried                             |
+| Lake sediment | Zone 2's ground: bites as wide as soil's, a touch shallower and slower, a little firmer | The zone itself: grey, smooth, thin level bedding | Iron, silver and pyrite |
+| Riverbed | Zone 3's ground: stony, smaller bites with the short bite motion, about two thirds of soil's speed | The zone itself: damp sand with grey pebbles | Gold and emerald |
 
-Zone grounds, geode shells and lenses join this table as they are added. The ancient zone adds its
+The zone grounds' looks and dig feel are being chosen in play (`111`). Geode shells and lenses join
+this table as they are added. The ancient zone adds its
 own material with its contact signature ([Ending and Mystery](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)).
 
 Resistance belongs to the ground inside the cut, including mixed boundaries; aiming at a soft patch

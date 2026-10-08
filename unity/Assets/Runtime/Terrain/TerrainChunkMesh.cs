@@ -47,6 +47,7 @@ namespace SomethingDownThere
             internal NativeList<Vector3> Vertices, Normals;
             internal NativeList<Vector2> UVs;
             internal NativeList<Vector4> MaterialWeights;
+            internal NativeList<Vector2> ZoneWeights;
             internal NativeList<int> Triangles;
             internal NativeArray<float> Corners, NativeSamples;
             internal NativeArray<byte> NativeMaterials;
@@ -62,6 +63,7 @@ namespace SomethingDownThere
                     Normals=new NativeList<Vector3>(cells,Allocator.Persistent);
                     UVs=new NativeList<Vector2>(cells,Allocator.Persistent);
                     MaterialWeights=new NativeList<Vector4>(cells,Allocator.Persistent);
+                    ZoneWeights=new NativeList<Vector2>(cells,Allocator.Persistent);
                     Triangles=new NativeList<int>(cells*18,Allocator.Persistent);
                     Corners=new NativeArray<float>(8,Allocator.Persistent);
                 }
@@ -73,6 +75,7 @@ namespace SomethingDownThere
                     Normals.Capacity=Math.Max(Normals.Capacity,cells);
                     UVs.Capacity=Math.Max(UVs.Capacity,cells);
                     MaterialWeights.Capacity=Math.Max(MaterialWeights.Capacity,cells);
+                    ZoneWeights.Capacity=Math.Max(ZoneWeights.Capacity,cells);
                     Triangles.Capacity=Math.Max(Triangles.Capacity,cells*18);
                 }
                 if(Samples.Length<samples)
@@ -92,6 +95,7 @@ namespace SomethingDownThere
                 if(Normals.IsCreated)Normals.Dispose();
                 if(UVs.IsCreated)UVs.Dispose();
                 if(MaterialWeights.IsCreated)MaterialWeights.Dispose();
+                if(ZoneWeights.IsCreated)ZoneWeights.Dispose();
                 if(Triangles.IsCreated)Triangles.Dispose();
                 if(Corners.IsCreated)Corners.Dispose();
                 if(Indices.IsCreated)Indices.Dispose();
@@ -127,7 +131,7 @@ namespace SomethingDownThere
                 SampleStrideY = sampleSpan.x, SampleStrideZ = sampleSpan.x * sampleSpan.y,
                 Samples = w.NativeSamples, Indices = w.Indices, Corners = w.Corners,
                 Vertices = w.Vertices, Normals = w.Normals, UVs = w.UVs, Triangles = w.Triangles,
-                Materials = w.NativeMaterials, MaterialWeights = w.MaterialWeights
+                Materials = w.NativeMaterials, MaterialWeights = w.MaterialWeights, ZoneWeights = w.ZoneWeights
             }.Run();
             beforeWrite?.Invoke();
             mesh.Clear();
@@ -135,8 +139,10 @@ namespace SomethingDownThere
             mesh.SetVertices(w.Vertices.AsArray());
             mesh.SetNormals(w.Normals.AsArray());
             mesh.SetUVs(0, w.UVs.AsArray());
-            // The third UV channel stays separate from authored/lightmap UVs on static ground.
+            // The third UV channel stays separate from authored/lightmap UVs on static ground; the fourth carries the zones'
+            // main grounds.
             mesh.SetUVs(2, w.MaterialWeights.AsArray());
+            mesh.SetUVs(3, w.ZoneWeights.AsArray());
             mesh.SetIndices(w.Triangles.AsArray(), MeshTopology.Triangles, 0, false);
             mesh.RecalculateBounds();
             return true;

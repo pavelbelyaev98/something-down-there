@@ -30,6 +30,8 @@ namespace SomethingDownThere
             TerrainMaterialId.Backfill => (new Color(.25f, .19f, .13f), new Color(.45f, .36f, .27f)),
             TerrainMaterialId.GeodeShell => (new Color(.24f, .21f, .22f), new Color(.5f, .46f, .47f)),
             TerrainMaterialId.CaveRock => (new Color(.3f, .26f, .27f), new Color(.52f, .46f, .45f)),
+            TerrainMaterialId.LakeSediment => (new Color(.2f, .19f, .16f), new Color(.38f, .36f, .3f)),
+            TerrainMaterialId.Riverbed => (new Color(.25f, .21f, .15f), new Color(.45f, .38f, .27f)),
             _ => (new Color(.3f, .21f, .14f), new Color(.55f, .4f, .27f))
         };
 
