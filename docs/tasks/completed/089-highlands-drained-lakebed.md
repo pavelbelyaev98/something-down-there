@@ -1,6 +1,6 @@
 # 089 — Highlands Drained Lakebed Site
 
-**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), two creeks rising in spring pools at the cliff foot and meandering down the shelf to two-mouthed deltas in murky grey-green water, sandy banks, olive islands, muted grass and reed colonies that follow the water, and water-sorted stones lying flat, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
+**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), two creeks rising in seeps at the cliff foot and meandering down the shelf to two-mouthed deltas in murky grey-green water, sandy banks, olive islands, muted grass and reed colonies that follow the water, and water-sorted stones lying flat, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
 
 ## Objective
 Replace the plain round gravel yard with the river section of the approved **Pure Nature 2: Highlands** demo, kept as close to the demo's terrain composition and asset placement as practical, and adapted to the game:
@@ -395,3 +395,26 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
   bank ground, no floating debris, creeks 15 m clear of the plot. Same views before and after: the user's
   viewpoint, each spring, each creek at eye level, both deltas, from the plot and the camp, from the flight
   ceiling and top-down. Occlusion rebaked.
+
+## Iteration: seeps, not spring pools (2026-10-09)
+- Playtest (two close-up screenshots): the spring pools were bad design. Each was a round bowl cut below the
+  lowest ground around it, which left a raw wall dug into the slope; reeds stood in a ring round the rim, and
+  grew sideways out of the wall and through the boulder beside the south pool.
+- Causes: the pool's bed took the lowest ground in a ring round it, and the 8 % grade cap cut the head into
+  the slope toe as a trench. Every lakebed plant layer had `alignToGround` 1, and terrain details are placed
+  without regard to scenery. The water then spread 3-4.5 m wide at the heads: the pool and riffle dip already
+  applied there, and banks starting flat (smoothstep) let shallow water slide over them on level ground.
+- Now: a creek rises in a seep (`HeadLength`, `HeadWidth`, `HeadDepth`): it starts at ground level, 0.9 m
+  wide and 8 cm deep, from under a few bedded stones (`ScatterDebris`), widening and cutting in over 12 m,
+  its bed allowed to follow the steeper slope toe (`HeadGrade`). Its water is 45 % of the channel depth, pools
+  begin below the head, and banks rise at once from the water (ease-out profile), so the water measures
+  0.5-0.75 m at the head and widens to about 2.5 m downstream. A lobed patch of wet green ground follows
+  the head (`Seep`). Upright plants grow vertically (`alignToGround` 0) and thin out on steep ground (`Slope`).
+  Reeds stand only at gentle waterlines, never at a seep, and at a lower density. Every lakebed detail cell a
+  rock covers is cleared (`ClearUnderRocks`: rays from above, temporary colliders for collider-less stones).
+  Stones never overlap. Pebbles wear a warm copy of their material (`LakebedPebble.mat`) and stay out of the
+  lake.
+- Rejected: pebbles tinted .78/.66/.55 (read as chocolate chips); the pack's pale pebbles (read as ice).
+- Checks: one water body per creek, no water edge above the ground and no cut-off edge, no floating stones;
+  the user's two viewpoints, each head from four sides, both creeks walked every 12 m at close range,
+  deltas, flight ceiling and top-down. Occlusion rebaked.

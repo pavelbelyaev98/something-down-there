@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace SomethingDownThere.Editor
 {
-    // The exposed lakebed floor: two spring-fed creeks running down the shelf into the lake, packed
+    // The exposed lakebed floor: two seep-fed creeks running down the shelf into the lake, packed
     // sediment on the flats, damp silt, pebble strands and sandy banks toward the water, dry grass,
     // rushes and reeds where it is damp, and stranded stones.
     public static partial class LakebedSiteSetup
@@ -28,9 +28,15 @@ namespace SomethingDownThere.Editor
         private const float WavelengthWidths = 11, Sinuosity = 1.25f, BendSkew = .08f, BendFlat = .03f, AxisPull = .1f;
         // Metres a creek keeps between its bank and a boulder.
         private const float RockClearance = 1.5f;
-        // The pool a creek rises in at its spring: radius, how far down the creek it narrows into the
-        // channel and how much deeper than the channel it lies.
-        private const float SpringRadius = 1.7f, SpringLength = 3.2f, SpringDip = .25f;
+        // A creek rises in a seep, not a pool: water wells up from under stones at the slope's toe and
+        // gathers into a trickle that widens and cuts in over its first HeadLength metres, from HeadWidth
+        // and HeadDepth. A round pond with a ring of reeds and a dug wall behind it read as an ornamental
+        // pond (user, 2026-10-09). Near the head the bed may follow the steeper toe of the slope (HeadGrade
+        // per metre) instead of being cut into it as a trench.
+        private const float HeadLength = 12, HeadWidth = .9f, HeadDepth = .08f, HeadGrade = .3f;
+        // The wet ground round a seep: half-width at its head, how far it reaches back up the slope and
+        // how far down the creek it narrows to the creek's own margin.
+        private const float SeepWidth = 3.2f, SeepBack = 2.5f, SeepLength = 14;
         // How much deeper the pool in a bend's apex lies than the riffle at the bend's crossing.
         private const float PoolDip = .12f;
         // How far under the lake's surface a creek's mouth bar lies, and the near-level grade of the
@@ -47,16 +53,16 @@ namespace SomethingDownThere.Editor
         {
             public Vector2[] Valley;
             public float Seed;
-            // Channel width at the spring and lower down (metres).
+            // Channel width near the seep and lower down (metres).
             public float Width0, Width1;
             // Largest angle (radians) a bend turns away from the valley's axis.
             public float Swing;
-            // A mouth leaves the course at this index ForkBack metres before that course's end; -1 for a spring.
+            // A mouth leaves the course at this index ForkBack metres before that course's end; -1 for a creek's own seep.
             public int Fork = -1;
             public float ForkBack;
         }
 
-        // Two creeks rise in spring pools at the cliff foot and run down the shelf to the nearest shore, where
+        // Two creeks rise in seeps at the cliff foot and run down the shelf to the nearest shore, where
         // each splits into two mouths (user, 2026-10-09: streams that began in open ground, ran beside the
         // shore or round the plot, and kept one width read as artificial). The north creek rises under the
         // boulder pile where the north-east plateau's drainage reaches the shelf (the terrain's flow lines
@@ -90,7 +96,7 @@ namespace SomethingDownThere.Editor
             public float[] Turn;      // signed bend (+ left), 1 at BendRadius or tighter
             public float[] Pool;      // 1 in the pool at a bend's apex, 0 on the riffle at its crossing
             public float[] Soft;      // how gently the banks rise, a multiple of BankWidth
-            public bool Spring;       // rises in a spring pool rather than branching from another creek
+            public bool Spring;       // rises in a seep rather than branching from another creek
         }
 
         // Grass around the plot (user, 2026-10-02): none on the worked ground just past the tape, patches
@@ -146,14 +152,36 @@ namespace SomethingDownThere.Editor
         private static float Band(float value, float low, float high, float soft = .15f) =>
             Smooth((value - low) / soft) * Smooth((high - value) / soft);
 
-        // How close a point lies to a creek's spring pool: 1 at its rim, fading out a few metres away. The
-        // ground round a spring stays wet and grown over.
-        private static float SpringNear(Section s, Vector2 local)
+        // How wet the ground round a creek's seep is, 0-1: a patch widest at the head, reaching a little
+        // back up the slope behind it and narrowing down the creek's first metres, its edge lobed so it is
+        // never a circle. The ground there stays wet and grown over.
+        private static float Seep(Section s, Vector2 local)
         {
-            float near = 0;
+            float wet = 0;
             foreach (var stream in s.Streams)
-                if (stream.Spring) near = Mathf.Max(near, 1 - Smooth((Vector2.Distance(local, stream.Points[0]) - SpringRadius) / 4.5f));
-            return near;
+            {
+                if (!stream.Spring) continue;
+                var head = stream.Points[0];
+                var offset = local - head;
+                if (offset.sqrMagnitude > (SeepLength + 6) * (SeepLength + 6)) continue;
+                // The creek's first metres barely bend, so its start sets the patch's axis.
+                var down = (stream.Points[Mathf.Min(stream.Points.Length - 1, Mathf.RoundToInt(HeadLength / .25f))] - head).normalized;
+                float u = Vector2.Dot(offset, down), v = Mathf.Abs(down.x * offset.y - down.y * offset.x);
+                float reach = u >= 0 ? Mathf.Lerp(SeepWidth, .8f, Smooth(u / SeepLength))
+                    : SeepWidth * Mathf.Sqrt(Mathf.Max(0, 1 - u * u / (SeepBack * SeepBack)));
+                reach *= .7f + .6f * Noise(local, 2.5f, 31.7f);
+                wet = Mathf.Max(wet, (1 - Smooth((v - reach) / 1.5f)) * (1 - Smooth((u - SeepLength) / 3)) * Smooth((u + SeepBack + 1.5f) / 1.5f));
+            }
+            return wet;
+        }
+
+        // Slope of the ground at a terrain sample, rise over run.
+        private static float Slope(Section s, int x, int z)
+        {
+            int n = s.Samples - 1;
+            float dx = s.After[z, Mathf.Min(x + 1, n)] - s.After[z, Mathf.Max(x - 1, 0)];
+            float dz = s.After[Mathf.Min(z + 1, n), x] - s.After[Mathf.Max(z - 1, 0), x];
+            return Mathf.Sqrt(dx * dx + dz * dz) / (2 * s.Cell);
         }
 
         private static Vector3 DemoPoint(Vector2 local) => new Vector3(local.x + SiteInDemo.x, 0, local.y + SiteInDemo.z);
@@ -193,29 +221,35 @@ namespace SomethingDownThere.Editor
                 int fork = parent == null ? -1 : Nearest(parent.Points, points[0]);
                 float lowest = parent == null ? float.MaxValue : parent.Bed[fork];
                 bool reachedLake = false;
+                var water = new float[count];
                 for (int i = 0; i < count; i++)
                 {
                     float along = stream.Along[i], t = along / total;
                     float width = Mathf.Lerp(course.Width0, course.Width1, Smooth(t / .6f));
-                    // Pools in the bends run a little narrower and deeper, riffles at the crossings wider and shallower.
-                    float pool = Mathf.Pow(Mathf.Sin(phase[i]), 2) * Smooth(along / 6) * Smooth((total - along) / 6);
+                    // Pools in the bends run a little narrower and deeper, riffles at the crossings wider and
+                    // shallower, once the creek has gathered below its seep.
+                    float pool = Mathf.Pow(Mathf.Sin(phase[i]), 2) * Smooth(along / (stream.Spring ? HeadLength : 6)) * Smooth((total - along) / 6);
                     float half = width * .5f * Mathf.Lerp(1.12f, .9f, pool);
-                    if (stream.Spring) half = Mathf.Max(half, SpringRadius * (1 - Smooth(along / SpringLength)));
                     // How deep the creek has cut in and how steep its banks are wander along it: here a low
                     // swale with banks sloping gently into the water, there a short steep bank. One even
                     // bank height read as a dug ditch (user, 2026-10-09).
                     float depth = Mathf.Lerp(.25f, .4f, Smooth(t / .4f)) * Mathf.Lerp(.6f, 1.3f, Mathf.PerlinNoise(along / 11, course.Seed * 1.9f));
-                    stream.Soft[i] = Mathf.Lerp(.8f, MaxSoft, Mathf.Pow(Mathf.PerlinNoise(along / 9, course.Seed * 2.7f + 5), 1.4f));
+                    float soft = Mathf.Lerp(.8f, MaxSoft, Mathf.Pow(Mathf.PerlinNoise(along / 9, course.Seed * 2.7f + 5), 1.4f));
+                    if (stream.Spring)
+                    {
+                        // From the seep the trickle widens and cuts in, its banks gentle at first.
+                        float grow = Smooth(along / HeadLength);
+                        half = Mathf.Lerp(HeadWidth * .5f, half, grow);
+                        depth = Mathf.Lerp(HeadDepth, depth, grow);
+                        soft = Mathf.Lerp(MaxSoft, soft, grow);
+                    }
+                    stream.Soft[i] = soft;
+                    // Shallow water: a trickle a few centimetres deep at the seep, well inside its channel, the
+                    // creek's own depth lower down.
+                    water[i] = Mathf.Min(TrickleDepth, .45f * depth);
                     // The bed is cut below the lowest ground across the whole section, banks included, so
-                    // on a side slope both banks still rise above the water instead of it spilling downhill;
-                    // round the spring pool, the lowest ground all round it.
+                    // on a side slope both banks still rise above the water instead of it spilling downhill.
                     float ground = SectionFloor(s, s.Uncarved, points, i, half + BankWidth * stream.Soft[i]);
-                    if (stream.Spring && along < SpringLength)
-                        for (int k = 0; k < 12; k++)
-                        {
-                            float angle = k * Mathf.PI / 6, reach = SpringRadius + BankWidth * stream.Soft[i] * 1.5f;
-                            ground = Mathf.Min(ground, s.Sample(s.Uncarved, DemoPoint(points[i] + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * reach)));
-                        }
                     // Beds stay just above the lake plane until the course reaches open lake water, so no
                     // inland stretch dips into a pool the lake would show through; in the lake the bed is a
                     // shallow mouth bar just under the water.
@@ -239,9 +273,10 @@ namespace SomethingDownThere.Editor
                 {
                     float fromMouth = mouth < 0 ? float.MaxValue : stream.Along[mouth] - stream.Along[i];
                     float grade = Mathf.Lerp(BackwaterGrade, MaxBedGrade, Smooth(fromMouth / Backwater));
+                    if (stream.Spring) grade = Mathf.Max(grade, Mathf.Lerp(HeadGrade, MaxBedGrade, Smooth(stream.Along[i] / HeadLength)));
                     stream.Bed[i] = Mathf.Min(stream.Bed[i], stream.Bed[i + 1] + grade * Vector2.Distance(points[i], points[i + 1]));
                 }
-                for (int i = 0; i < count; i++) stream.Surface[i] = Mathf.Max(stream.Bed[i] + TrickleDepth, WaterLevel + MouthLift);
+                for (int i = 0; i < count; i++) stream.Surface[i] = Mathf.Max(stream.Bed[i] + water[i], WaterLevel + MouthLift);
                 if (parent != null) stream.Surface[0] = parent.Surface[fork];
                 Carve(s, stream);
                 s.Streams.Add(stream);
@@ -292,7 +327,7 @@ namespace SomethingDownThere.Editor
         // fatten its apex, rather than a sine wave laid sideways. The wavelength (eleven channel widths)
         // and the swing wander along the course, so straighter runs and tighter bends take turns, and a
         // pull back toward the axis keeps the meander belt in its valley. Bends fade out at both ends, so
-        // the spring, the fork and the mouth stay where they were laid out. A boulder ahead turns the creek
+        // the seep, the fork and the mouth stay where they were laid out. A boulder ahead turns the creek
         // aside, as real ones bend round rocks. Returns the path's points and each point's bend phase (sin of
         // it is 1 at a bend's apex).
         private static (Vector2[] points, float[] phase) Meander(Vector2[] valley, Course course, List<(Vector2 centre, float radius)> rocks)
@@ -415,7 +450,7 @@ namespace SomethingDownThere.Editor
         // Bends are lopsided, as in a real channel: the deepest line swings to the outside, where the bank
         // is short and steep (the cut bank), while the inside shelves gently out of the water as a point
         // bar of gravel and sand (Section.Bar); a pool lies deepest in each bend's apex, a riffle shallow at
-        // each crossing. The spring pool is a deeper round bowl at the creek's head.
+        // each crossing.
         private static void Carve(Section s, Stream stream)
         {
             float reach = stream.HalfWidth.Max() + BankWidth * MaxSoft * 2.8f;
@@ -451,15 +486,16 @@ namespace SomethingDownThere.Editor
                     float side = ab.x * ap.y - ab.y * ap.x >= 0 ? 1 : -1, inside = side * turn;
                     float bank = BankWidth * Mathf.Lerp(stream.Soft[i], stream.Soft[i + 1], u) * (inside > 0 ? 1 + 1.8f * inside : 1 + .5f * inside);
                     if (distance > half + bank) continue;
-                    float along = Mathf.Lerp(stream.Along[i], stream.Along[i + 1], u);
-                    float spring = stream.Spring ? 1 - Smooth(along / SpringLength) : 0;
-                    float bed = Mathf.Lerp(stream.Bed[i], stream.Bed[i + 1], u) - PoolDip * Mathf.Lerp(stream.Pool[i], stream.Pool[i + 1], u) - SpringDip * spring;
+                    float bed = Mathf.Lerp(stream.Bed[i], stream.Bed[i + 1], u) - PoolDip * Mathf.Lerp(stream.Pool[i], stream.Pool[i + 1], u);
                     float across = side * distance / half + .45f * turn, rim = side * Mathf.Min(distance / half, 1) + .45f * turn;
+                    // A bank rises at once from the water's edge and rounds over onto the ground above; a bank
+                    // that starts flat let shallow water spread out over it on level ground.
+                    float up = Mathf.Clamp01((distance - half) / bank);
                     cut = Mathf.Min(cut, distance < half ? bed + .06f * across * across
-                        : Mathf.Lerp(bed + .06f * rim * rim, ground, Smooth((distance - half) / bank)));
+                        : Mathf.Lerp(bed + .06f * rim * rim, ground, up * (2 - up)));
                     edge = Mathf.Min(edge, distance - half);
                     if (inside > 0)
-                        bar = Mathf.Max(bar, Smooth(inside * 1.6f) * (1 - spring) * Smooth((distance - .25f * half) / (.35f * half))
+                        bar = Mathf.Max(bar, Smooth(inside * 1.6f) * Smooth((distance - .25f * half) / (.35f * half))
                             * (1 - Smooth((distance - half - .3f * bank) / (.6f * bank))));
                 }
                 if (edge == float.MaxValue) continue;
@@ -630,8 +666,8 @@ namespace SomethingDownThere.Editor
             var reedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MountainPrefabs + "Plants/Reeds.prefab");
             if (reedPrefab == null) throw new InvalidOperationException("Missing approved Mountains reeds.");
             var reeds = From("GrassMountain2", DryVariant(reedPrefab, ReedMaterialPath, new Color(.72f, .74f, .6f), new Color(.62f, .66f, .52f)));
-            // Colonies are dense stands, and their stems vary in height.
-            reeds.minWidth = .8f; reeds.maxWidth = 1.3f; reeds.minHeight = .7f; reeds.maxHeight = 1.7f; reeds.noiseSpread = 2; reeds.density = 2.2f;
+            // Stems vary in height.
+            reeds.minWidth = .8f; reeds.maxWidth = 1.3f; reeds.minHeight = .7f; reeds.maxHeight = 1.7f; reeds.noiseSpread = 2; reeds.density = 1.3f;
             // The vendor reeds barely move (wind 0.1); they sway with the grass, a little less as they are taller.
             var reedMaterial = AssetDatabase.LoadAssetAtPath<Material>(ReedMaterialPath);
             reedMaterial.SetFloat("_WindMultiplier", .5f);
@@ -646,8 +682,13 @@ namespace SomethingDownThere.Editor
             // The canyon's grass in its meadow colours, for the patches around the plot.
             var green = From("Grass_3", MeadowVariant(Plant(canyon, "Grass_3")), canyon);
             green.minHeight = .45f; green.maxHeight = .9f; green.density = 3;
+            var feather = From("GrassMountain4", MeadowVariant(Plant(mountain, "GrassMountain4")));
+            // Plants grow upright on a slope; the packs lean them square to the ground, so reeds and grass on a
+            // steep bank stuck out sideways (user, 2026-10-09). Pebbles and twigs still lie on it.
+            foreach (var plant in new[] { reeds, rushes, feather, dryGrass, dryTall, green }) plant.alignToGround = 0;
             // Order is the detail layer order after the demo's prototypes; see LakebedDetail.
-            return new[] { reeds, rushes, From("GrassMountain4", MeadowVariant(Plant(mountain, "GrassMountain4"))), From("Pebble1"), From("Pebble2"), From("Pebble3"), From("Branchs"), dryGrass, dryTall, green };
+            return new[] { reeds, rushes, feather, From("Pebble1", PebbleVariant(Plant(mountain, "Pebble1"))), From("Pebble2", PebbleVariant(Plant(mountain, "Pebble2"))),
+                From("Pebble3", PebbleVariant(Plant(mountain, "Pebble3"))), From("Branchs"), dryGrass, dryTall, green };
         }
 
         private enum LakebedDetail { Reeds, Rushes, Feather, Pebble1, Pebble2, Pebble3, Twigs, DryGrass, DryTall, GreenGrass }
@@ -663,53 +704,57 @@ namespace SomethingDownThere.Editor
             {
                 int x = u * scale, z = v * scale;
                 var local = s.Local(x, z);
-                float a = s.After[z, x] - WaterLevel, c = s.Channel[z, x], bar = s.Bar[z, x], valley = s.Valley[z, x], spring = SpringNear(s, local);
+                float a = s.After[z, x] - WaterLevel, c = s.Channel[z, x], bar = s.Bar[z, x], valley = s.Valley[z, x], seep = Seep(s, local);
                 bool island = s.Drained[z, x] <= 0 && IslandHeight(local) > WaterLevel + .05f;
-                bool region = s.Drained[z, x] > .3f || island || spring > 0 || (s.Lake[z, x] && a > -.3f && a < 1.2f && local.magnitude < 120);
+                bool region = s.Drained[z, x] > .3f || island || seep > 0 || (s.Lake[z, x] && a > -.3f && a < 1.2f && local.magnitude < 120);
                 if (!region || SiteLayout.BeyondOpening(local) < DressingClearance || stations.Any(r => r.Contains(local))) continue;
                 float tuft = Noise(local, 3.2f, 21.7f);
                 // Grasses keep their roots dry: nothing but reeds and pebbles stands in the water. Reeds stand
-                // at a creek's waterline, never up its banks.
+                // at a creek's waterline, never up its banks, and tall plants keep off steep ground.
                 float creek = s.CreekLevel[z, x];
                 float dry = Smooth((a - .05f) / .1f) * (float.IsNaN(creek) ? 1 : Smooth((s.After[z, x] - creek - .03f) / .08f));
                 float waterline = float.IsNaN(creek) ? 0 : Smooth((creek + .2f - s.After[z, x]) / .1f);
+                // Upright cards on a steep bank stack into stripes, so even grass thins out there.
+                float slope = Slope(s, x, z), flat = 1 - Smooth((slope - .2f) / .15f), upright = 1 - Smooth((slope - .45f) / .25f);
+                float sward = 1 - Smooth((slope - .55f) / .3f);
                 // Plants follow water and time rather than an even sprinkle of look-alike clumps (user,
                 // 2026-10-09): ground exposed longest (higher, toward the cliff) has grown over most, the
                 // band the water left last is nearly bare, the creeks' banks set back from the water, their
-                // valley floors and the wet ground round a spring are greenest, and gravel bars stay bare.
+                // valley floors and the wet ground round a seep are greenest, and gravel bars stay bare.
                 // Cover comes as broad patches of clumps with sparse sprigs between them, soft-edged, so no
                 // two patches share a size.
                 float age = Smooth((a - .7f) / .8f) * Mathf.Lerp(.45f, 1, Smooth((local.x + 20) / 45));
-                float moist = Mathf.Max(Mathf.Max(Band(c, .6f, 3.6f, .7f) * (1 - .9f * bar), .5f * valley), spring * Smooth((c - .4f) / .6f));
+                float moist = Mathf.Max(Mathf.Max(Band(c, .6f, 3.6f, .7f) * (1 - .9f * bar), .5f * valley), seep * Smooth((c - .4f) / .6f));
                 float habitat = dry * Mathf.Max(Mathf.Max(moist, .6f * age), Mathf.Max(island ? 1 : 0, .35f * Band(a, .2f, .9f)));
                 float patch = Smooth((Noise(local, 9, 17.3f) - .36f) / .3f), clumps = Smooth((Noise(local, 2.6f, 23.1f) - .4f) / .22f);
                 float sprigs = .3f * Smooth((Noise(local, 1.2f, 5.3f) - .5f) / .3f) * Smooth((Noise(local, 13, 2.9f) - .45f) / .3f);
-                maps[(int)LakebedDetail.DryTall][v, u] = Mathf.RoundToInt(160 * Frayed(habitat * patch * clumps, local, 23.9f) * clumps);
+                maps[(int)LakebedDetail.DryTall][v, u] = Mathf.RoundToInt(160 * Frayed(habitat * patch * clumps, local, 23.9f) * clumps * upright);
                 // Shorter dry grass rings the clumps and scatters thinly in sprigs between them.
-                maps[(int)LakebedDetail.DryGrass][v, u] = Mathf.RoundToInt(130 * Mathf.Max(Frayed(habitat * patch * clumps, local, 31.3f), habitat * sprigs));
-                // The canyon's green grass grows round the plot and lush round a spring.
+                maps[(int)LakebedDetail.DryGrass][v, u] = Mathf.RoundToInt(130 * Mathf.Max(Frayed(habitat * patch * clumps, local, 31.3f), habitat * sprigs) * sward);
+                // The canyon's green grass grows round the plot and lush over a seep's wet ground.
                 float green = Mathf.Max(GreenDensity(local) * Frayed(GreenShape(local, a, c, .24f) * Smooth((tuft - .25f) / .12f), local, 7.7f),
-                    .85f * Frayed(spring * Smooth((c - .7f) / .6f) * Smooth((tuft - .15f) / .3f), local, 19.1f));
-                maps[(int)LakebedDetail.GreenGrass][v, u] = Mathf.RoundToInt(255 * green * dry);
+                    .9f * Frayed(seep * Smooth((c - .3f) / .5f) * Smooth((tuft - .15f) / .3f), local, 19.1f));
+                maps[(int)LakebedDetail.GreenGrass][v, u] = Mathf.RoundToInt(255 * green * dry * sward);
                 float clump2 = Noise(local, 6, 4.4f), scatter = Noise(local, 2.3f, 9.7f);
                 float shore = Band(a, -.2f, .25f), bank = Band(c, -.25f, .8f, .25f) * (1 - bar), damp = Band(c, .3f, 3.2f, .4f);
-                // Reeds stand in a few dense colonies along the water's edge with open water between them,
-                // never on the bare bars, and crowd round part of each spring pool's rim; single clumps dotted
-                // evenly along a bank read as planted (user, 2026-10-09). Rushes grow as tussock colonies on damp ground only (the creeks' banks,
-                // a spring's wet ground, the lowest shore), and the weeds in loose groups on the drier flats:
-                // single plants spaced evenly across open ground read as planted (user, 2026-10-09).
+                // Reeds stand in a few colonies at the water's edge with open water between them, on gentle
+                // ground only, never on the bare bars and never at a seep, where the water is only a trickle;
+                // a ring of reeds round a pool and single clumps dotted evenly along a bank read as planted
+                // (user, 2026-10-09). Rushes grow as tussock colonies on damp, gentle ground only (the creeks'
+                // banks, a seep's margins, the lowest shore), and the weeds in loose groups on the drier flats.
                 float colony = Smooth((Noise(local, 7, 11.3f) - .6f) / .05f) * Smooth((Noise(local, 2.2f, 3.1f) - .15f) / .2f);
-                float springReeds = spring * Band(c, -.5f, 1.4f, .3f) * Smooth((Noise(local, 3, 6.1f) - .42f) / .08f);
-                maps[(int)LakebedDetail.Reeds][v, u] = Mathf.RoundToInt(230 * Mathf.Max(Mathf.Max(shore, bank * waterline) * colony, springReeds * waterline));
-                float wetGround = Mathf.Max(Mathf.Max(damp * (1 - bar), Band(a, .15f, .5f)), spring * Smooth((c - .3f) / .5f));
-                maps[(int)LakebedDetail.Rushes][v, u] = Mathf.RoundToInt(150 * Frayed(dry * wetGround * Smooth((Noise(local, 5, 4.4f) - .5f) / .15f), local, 13.9f));
+                maps[(int)LakebedDetail.Reeds][v, u] = Mathf.RoundToInt(220 * Mathf.Max(shore, bank * waterline) * colony * flat * (1 - seep));
+                float wetGround = Mathf.Max(Mathf.Max(damp * (1 - bar), Band(a, .15f, .5f)), seep * Band(c, .4f, 3, .5f));
+                maps[(int)LakebedDetail.Rushes][v, u] = Mathf.RoundToInt(150 * Frayed(dry * wetGround * Smooth((Noise(local, 5, 4.4f) - .5f) / .15f), local, 13.9f)
+                    * (1 - Smooth((slope - .3f) / .2f)));
                 maps[(int)LakebedDetail.Feather][v, u] = Mathf.RoundToInt(70 * dry * Band(a, .45f, 1.3f) * Smooth((c - 2) / 1)
-                    * Smooth((Noise(local, 8, 6.6f) - .55f) / .12f) * Smooth((clump2 - .5f) / .2f));
+                    * Smooth((Noise(local, 8, 6.6f) - .55f) / .12f) * Smooth((clump2 - .5f) / .2f) * upright);
                 // Pebbles lie where water sorted them: channel beds, the bars and broken strand lines along old
-                // waterlines, and only a stray few on the flats.
+                // waterlines, and only a stray few on the flats; none out in the lake, where a creek's bed ran
+                // on as a line of dark dots under the water.
                 float strand = Smooth((Noise(local, 6, 8.8f) - .4f) / .2f);
                 float pebbles = Mathf.Max(Mathf.Max(Smooth((-.1f - c) / .4f) * (.5f + .5f * scatter), bar * (.4f + .6f * scatter)),
-                    Mathf.Max(Band(a, -.15f, .55f) * strand * (.3f + .7f * scatter), .3f * Smooth((scatter - .8f) / .06f)));
+                    Mathf.Max(Band(a, -.15f, .55f) * strand * (.3f + .7f * scatter), .3f * Smooth((scatter - .8f) / .06f))) * Smooth((a + .15f) / .1f);
                 int kind = (int)LakebedDetail.Pebble1 + Mathf.FloorToInt(Noise(local, 1.7f, 5.5f) * 2.999f);
                 maps[kind][v, u] = Mathf.RoundToInt(130 * pebbles);
                 // Drift twigs collect on the bars and along the old waterlines, above the water.
@@ -720,7 +765,7 @@ namespace SomethingDownThere.Editor
         }
 
         // Stranded stones where the water left them: a few in the creeks' riffles and against the cut banks
-        // of bends, a ring round each spring pool, a few on the bars and along broken old waterlines, and
+        // of bends, a cluster at each seep, a few on the bars and along broken old waterlines, and
         // only a rare lone stone out on the flats; the odd slumped heap of rubble at a cut bank or the old shore. Stones
         // lie on their broad side well bedded in the mud, mostly small with the odd larger one, and wear
         // the silt-coated bare rock. Pale stones standing on end in evenly spaced clusters read as
@@ -730,6 +775,8 @@ namespace SomethingDownThere.Editor
             var parent = new GameObject("Lakebed debris").transform;
             parent.SetParent(environment, false);
             var random = new System.Random(1789);
+            // Footprints of the stones placed so far: stones never grow through each other.
+            var placed = new List<(Vector2 centre, float radius)>();
             float Range(float min, float max) => min + (float)random.NextDouble() * (max - min);
             bool Allowed(Vector2 p) => SiteLayout.BeyondOpening(p) > DressingClearance + 1 && s.Sample(s.Drained, DemoPoint(p)) > .5f
                 && !stations.Any(r => r.Contains(p));
@@ -751,6 +798,14 @@ namespace SomethingDownThere.Editor
                     UnityEngine.Object.DestroyImmediate(item);
                     return;
                 }
+                var centre = new Vector2(bounds.center.x, bounds.center.z);
+                float radius = Mathf.Max(bounds.extents.x, bounds.extents.z) * .8f;
+                if (placed.Any(o => Vector2.Distance(o.centre, centre) < o.radius + radius))
+                {
+                    UnityEngine.Object.DestroyImmediate(item);
+                    return;
+                }
+                placed.Add((centre, radius));
                 item.transform.position += Vector3.up * (low - bounds.min.y - embed * bounds.size.y);
                 // The player walks over small stones instead of snagging on them.
                 if (bounds.size.magnitude < 1.6f) foreach (var collider in item.GetComponentsInChildren<Collider>()) UnityEngine.Object.DestroyImmediate(collider);
@@ -778,7 +833,7 @@ namespace SomethingDownThere.Editor
                 // bend sheds its stones at its foot, with a few pebbles on the bar across.
                 for (int i = random.Next(6, 12); i < points.Length - 1; i += random.Next(10, 20))
                 {
-                    if (random.NextDouble() < .25 || stream.Spring && stream.Along[i] < SpringLength + 1.5f) continue;
+                    if (random.NextDouble() < .25 || stream.Spring && stream.Along[i] < 3) continue;
                     var tangent = (points[Mathf.Min(i + 1, points.Length - 1)] - points[Mathf.Max(i - 1, 0)]).normalized;
                     var left = new Vector2(-tangent.y, tangent.x);
                     float half = stream.HalfWidth[i], turn = stream.Turn[i];
@@ -796,15 +851,20 @@ namespace SomethingDownThere.Editor
                     }
                 }
                 if (!stream.Spring) continue;
-                // Larger stones ring the back of a spring pool, where the water wells up out of the rocks.
-                var back = (points[0] - points[Mathf.Min(12, points.Length - 1)]).normalized;
-                for (int k = 0; k < 5; k++)
+                // The seep's water wells up from under a few stones bedded in the slope's toe: one or two lie
+                // across the trickle's first metre, the rest beside and behind it.
+                var head = points[0];
+                var down = (points[Mathf.Min(8, points.Length - 1)] - head).normalized;
+                var across = new Vector2(-down.y, down.x);
+                void Head(Vector2 p, float min, float max)
                 {
-                    float angle = Range(-85, 85) * Mathf.Deg2Rad, cos = Mathf.Cos(angle), sin = Mathf.Sin(angle);
-                    var p = points[0] + new Vector2(back.x * cos - back.y * sin, back.x * sin + back.y * cos) * (SpringRadius + Range(.1f, .9f));
-                    if (SiteLayout.BeyondOpening(p) > DressingClearance + 1)
-                        Put("Rocks/Rock_" + random.Next(4), p, Size(.25f, .55f), Settled(), Range(.35f, .5f), true, Range(.75f, .95f));
+                    if (SiteLayout.BeyondOpening(p) > DressingClearance + 1 && !stations.Any(r => r.Contains(p)))
+                        Put("Rocks/Rock_" + random.Next(4), p, Size(min, max), Settled(), Range(.38f, .5f), true, Range(.75f, .95f));
                 }
+                Head(head + down * Range(.1f, .5f) + across * Range(-.2f, .2f), .45f, .7f);
+                if (random.NextDouble() < .6) Head(head + down * Range(.9f, 1.4f) + across * Range(-.4f, .4f), .3f, .5f);
+                for (int k = random.Next(3, 5); k > 0; k--)
+                    Head(head + down * Range(-2, 1.2f) + across * (random.NextDouble() < .5 ? -1 : 1) * Range(.7f, 2.4f), .2f, .6f);
             }
             // The retreating lake left stones along broken strand lines at its old waterlines; a rare
             // larger stone lies alone out on the flats.
@@ -830,6 +890,77 @@ namespace SomethingDownThere.Editor
             foreach (var (centre, radius) in Islands.Where(i => i.radius >= 6))
                 Put("Rocks/Rock_" + random.Next(4), centre + new Vector2(Range(-1.5f, 1.5f), Range(-1.5f, 1.5f)), Range(1.1f, 1.5f),
                     Quaternion.Euler(Range(78, 96), Range(0, 360), Range(-10, 10)), .35f, false);
+        }
+
+        // The terrain scatters plants and pebbles without knowing about the rocks standing on it, so reeds
+        // poked out of a boulder beside the water (user, 2026-10-09). Every lakebed detail cell a rock covers
+        // is cleared: at a few points across the cell a ray from above meets the rock before the ground.
+        // Stones without colliders get a temporary one for the test.
+        private static void ClearUnderRocks(Transform environment, int first)
+        {
+            var terrain = environment.GetComponentInChildren<Terrain>();
+            var data = terrain.terrainData;
+            int cells = data.detailWidth, count = Enum.GetValues(typeof(LakebedDetail)).Length;
+            float cell = data.size.x / cells;
+            var corner = terrain.transform.position;
+            var temporary = new List<Collider>();
+            var rocks = new List<Bounds>();
+            foreach (string group in new[] { "Boulders", "BigBoulders", "Rubble_dense", "Rubble_sparse", "Cliffs", "Ruins", "Lakebed debris" })
+            {
+                var parent = environment.Find(group);
+                if (parent == null) continue;
+                foreach (var renderer in parent.GetComponentsInChildren<MeshRenderer>())
+                {
+                    var bounds = renderer.bounds;
+                    if (Mathf.Abs(bounds.center.x) > 150 || Mathf.Abs(bounds.center.z) > 170) continue;
+                    rocks.Add(bounds);
+                    var filter = renderer.GetComponent<MeshFilter>();
+                    if (renderer.GetComponentInParent<Collider>() == null && filter != null && filter.sharedMesh != null)
+                    {
+                        var collider = renderer.gameObject.AddComponent<MeshCollider>();
+                        collider.sharedMesh = filter.sharedMesh;
+                        temporary.Add(collider);
+                    }
+                }
+            }
+            Physics.SyncTransforms();
+            var cleared = new HashSet<int>();
+            try
+            {
+                foreach (var bounds in rocks)
+                {
+                    int u0 = Mathf.Max(0, Mathf.FloorToInt((bounds.min.x - .4f - corner.x) / cell)), u1 = Mathf.Min(cells - 1, Mathf.FloorToInt((bounds.max.x + .4f - corner.x) / cell));
+                    int v0 = Mathf.Max(0, Mathf.FloorToInt((bounds.min.z - .4f - corner.z) / cell)), v1 = Mathf.Min(cells - 1, Mathf.FloorToInt((bounds.max.z + .4f - corner.z) / cell));
+                    for (int v = v0; v <= v1; v++)
+                    for (int u = u0; u <= u1; u++)
+                    {
+                        int key = v * cells + u;
+                        if (cleared.Contains(key)) continue;
+                        for (int k = 0; k < 5; k++)
+                        {
+                            float sx = k == 1 ? .15f : k == 2 ? .85f : .5f, sz = k == 3 ? .15f : k == 4 ? .85f : .5f;
+                            var top = new Vector3(corner.x + (u + sx) * cell, bounds.max.y + 1, corner.z + (v + sz) * cell);
+                            float ground = terrain.SampleHeight(top) + corner.y;
+                            if (!Physics.Raycast(top, Vector3.down, out var hit, top.y - ground + 1, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
+                            if (hit.collider is TerrainCollider || hit.point.y < ground + .05f) continue;
+                            cleared.Add(key);
+                            break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                foreach (var collider in temporary) UnityEngine.Object.DestroyImmediate(collider);
+            }
+            for (int l = 0; l < count; l++)
+            {
+                var map = data.GetDetailLayer(0, 0, cells, cells, first + l);
+                foreach (int key in cleared) map[key / cells, key % cells] = 0;
+                data.SetDetailLayer(0, 0, first + l, map);
+            }
+            EditorUtility.SetDirty(data);
+            Debug.Log($"Lakebed plants: cleared {cleared.Count} detail cells under rocks.");
         }
 
         public const string DryGrassMaterialPath = Folder + "/DryGrass.mat";
@@ -884,6 +1015,30 @@ namespace SomethingDownThere.Editor
                 material.SetFloat("_Smoothness", .1f);
                 AssetDatabase.CreateAsset(material, materialPath);
             }
+            return Variant(source, material, suffix);
+        }
+
+        // The Mountains pack's pebbles are pale blue-grey granite that read as ice cubes on the warm mud
+        // (user, 2026-10-09); project copies are tinted warm to sit among the lakebed's stones (a darker
+        // .78/.66/.55 read as chocolate chips). An existing material keeps its Inspector tuning.
+        public const string PebbleMaterialPath = Folder + "/LakebedPebble.mat";
+        public static readonly Color PebbleTint = new Color(1, .9f, .8f, 1);
+
+        private static GameObject PebbleVariant(GameObject source)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(PebbleMaterialPath);
+            if (material == null)
+            {
+                material = new Material(source.GetComponentInChildren<Renderer>().sharedMaterial) { name = "LakebedPebble" };
+                material.SetColor("_Color", PebbleTint);
+                AssetDatabase.CreateAsset(material, PebbleMaterialPath);
+            }
+            return Variant(source, material, "Lakebed");
+        }
+
+        // Project prefab variant of a pack plant or pebble drawn with a project material.
+        private static GameObject Variant(GameObject source, Material material, string suffix)
+        {
             string path = TreesFolder + "/" + source.name + " " + suffix + ".prefab";
             if (!AssetDatabase.IsValidFolder(TreesFolder)) AssetDatabase.CreateFolder(Folder, "Trees");
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(source);

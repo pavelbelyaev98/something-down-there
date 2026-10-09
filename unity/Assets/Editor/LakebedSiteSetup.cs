@@ -84,6 +84,7 @@ namespace SomethingDownThere.Editor
                 BuildTrickles(section, environment.Find("Water"));
                 CopyReflections(demo, environment);
                 ScatterDebris(section, environment, stations);
+                ClearUnderRocks(environment, source.terrainData.detailPrototypes.Length);
                 BuildDigBoundary(environment);
             }
             finally
@@ -457,27 +458,27 @@ namespace SomethingDownThere.Editor
                     alpha[z, x, vivid] = 0;
                 }
                 float camp = 1 - Smooth((SiteLayout.BeyondOpening(local) - CampFlat) / (CampBlend - CampFlat));
-                // A spring at the cliff foot lies partly outside the old lake: its wet ground is painted too.
-                float spring = SpringNear(s, local);
-                float weight = Mathf.Max(Mathf.Max(s.Lake[z, x] ? Smooth(s.Shore[z, x] / 3) : 0, camp), Smooth(spring * 1.5f));
+                // A seep at the cliff foot lies partly outside the old lake: its wet ground is painted too.
+                float seep = Seep(s, local);
+                float weight = Mathf.Max(Mathf.Max(s.Lake[z, x] ? Smooth(s.Shore[z, x] / 3) : 0, camp), Smooth(seep * 1.5f));
                 if (weight <= 0) continue;
                 float h = s.After[z, x], a = h - WaterLevel;
                 float patches = Noise(local, 9, 3.1f), growth = Noise(local, 14, 5.3f), grain = Noise(local, 4, 1.7f);
                 Array.Clear(target, 0, layers);
                 if (a < -.15f) { target[sand] = .75f; target[silt] = .25f; }
-                else if (s.Drained[z, x] <= .35f && spring > 0)
+                else if (s.Drained[z, x] <= .35f && seep > 0)
                 {
-                    // Round a spring: wet dark mud and stones at the pool, grass on the wet ground beyond.
-                    float pool = s.Channel[z, x];
+                    // Round a seep: wet dark mud and stones by the trickle, grass on the wet ground beyond.
+                    float bed = s.Channel[z, x];
                     target[silt] = 1 + grain;
-                    target[rubble] = 1.4f * Smooth((.6f - pool) / .8f);
-                    target[grassy] = 2.2f * Smooth((pool - .8f) / .8f) * Smooth((patches - .25f) / .3f);
+                    target[rubble] = 1.4f * Smooth((.4f - bed) / .8f);
+                    target[grassy] = 2.2f * seep * Smooth((bed - .6f) / .8f) * Smooth((patches - .25f) / .3f);
                 }
                 else if (s.Drained[z, x] > .35f)
                 {
                     // Packed sediment on the flats; damp dark silt toward the water, along the creeks, in their
-                    // valleys and round their springs; stony beds, stony point bars inside bends with a little
-                    // gravel, a spring's wet ground grown over, and broken pebble strand lines and sandy
+                    // valleys and round their seeps; stony beds, stony point bars inside bends with a little
+                    // gravel, a seep's wet ground grown over, and broken pebble strand lines and sandy
                     // shallows at the waterline. No pale band runs along both banks of a channel: that
                     // outlined every channel like a kerb (user, 2026-10-09). The pack's sand and sandy gravel
                     // are too pale for the bars: they read as a bright path.
@@ -485,7 +486,7 @@ namespace SomethingDownThere.Editor
                     // The wet margin beside a creek is wider in places and narrower in others.
                     float margin = Mathf.Lerp(.9f, 3.2f, Noise(local, 6.5f, 12.9f));
                     float damp = Mathf.Max(Mathf.Max(Smooth((.95f - a) / .6f), Smooth((margin - c) / margin) * (.75f + .25f * grain)),
-                        Mathf.Max(.45f * s.Valley[z, x], spring));
+                        Mathf.Max(.45f * s.Valley[z, x], seep));
                     // Broad darker mud patches break up the pale sediment, as on a real drying bed.
                     float mudPatch = Smooth((Noise(local, 16, 2.6f) - .45f) / .2f);
                     target[sediment] = (1 - damp) * (1.1f + .3f * grain) * (1 - .65f * mudPatch);
@@ -497,7 +498,7 @@ namespace SomethingDownThere.Editor
                     target[rubble] = Smooth((patches - .58f) / .1f) * (1 - damp) + 2.2f * Smooth((-.15f - c) / .5f) + 1.6f * bar;
                     target[gravel] = 1.3f * Band(a, .1f, .6f) * (.5f + grain) * beach * strand + .35f * bar * Smooth((grain - .45f) / .3f);
                     // Green only returns on the higher ground toward the cliffs.
-                    target[grassy] = .9f * Smooth((growth - .72f) / .08f) * Smooth((a - 1.3f) / .5f) * (1 - damp) + 1.3f * spring * Smooth((c - .6f) / .8f);
+                    target[grassy] = .9f * Smooth((growth - .72f) / .08f) * Smooth((a - 1.3f) / .5f) * (1 - damp) + 1.3f * seep * Smooth((c - .6f) / .8f);
                     target[sand] = 1.6f * Smooth((.4f - a) / .3f) * beach;
                 }
                 else if (IslandHeight(local) > WaterLevel - .3f)
