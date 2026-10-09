@@ -1,6 +1,6 @@
 # 089 — Highlands Drained Lakebed Site
 
-**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels running from cliff-foot seeps down the shelf past it into murky grey-green water, rills on the shore slopes, sandy banks, olive islands, muted grass and reed colonies that follow the water, and water-sorted stones lying flat, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
+**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), two creeks rising in spring pools at the cliff foot and meandering down the shelf to two-mouthed deltas in murky grey-green water, sandy banks, olive islands, muted grass and reed colonies that follow the water, and water-sorted stones lying flat, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
 
 ## Objective
 Replace the plain round gravel yard with the river section of the approved **Pure Nature 2: Highlands** demo, kept as close to the demo's terrain composition and asset placement as practical, and adapted to the game:
@@ -364,3 +364,34 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
 - Verified: same views before and after (the user's viewpoint, both streams at eye level, the delta, the
   plot's west side, the camp, flight ceiling and top-down); no stream water edge above dry ground, no floating
   debris, streams 14.7 m clear of the plot; occlusion rebaked.
+
+## Iteration: spring-fed creeks (2026-10-09)
+- Playtest of the pass above (screenshot): worse than before. A rectangular puddle with a straight edge lay
+  east of the plot, and the two streams were still artificial in where they started, where they went and
+  their shape. Rejected with it: the hand-laid west-running courses, the gullies and rills (`Flow`), and a
+  water level taken from every stretch within a fixed reach.
+- Causes: the puddle was a dry gully's bed inside the stream's water reach: it lay below the stream's level
+  but was cut off from it, and the water stopped where the reach ended. The streams began in open ground
+  with no source, ran across the shelf's fall line rather than following where water collects, and kept a
+  near-constant width and bank height.
+- Research and analysis: a flow-accumulation map of the terrain (priority-flood plus D8) shows the north-east
+  plateau draining to the cliff foot where the north creek now rises. Drained reservoirs keep their creeks in
+  incised channels cut down to the new shore. Natural meanders follow the Kinoshita curve, with wavelengths
+  of about 11 channel widths (Leopold and Wolman, via Hagerman and Williams, "Meander shape and the design of
+  stable meanders", USDA-ARS); bends are skewed and rounded at the apex, with pools in the bends and riffles
+  at the crossings.
+- Now (`LakebedSiteSetup.Lakebed.cs`): two creeks, each with a second mouth (`Course`, `Fork`), laid along
+  valley axes from spring pools at the cliff foot to the nearest shore. The path is a Kinoshita meander with
+  wandering wavelength and swing, pulled back toward its axis and steered round boulders (`Meander`). Each
+  creek runs in a gentle valley (`CarveValley`, `Section.Valley`); it widens downstream, with pools and
+  riffles, and its banks change from gentle to short and steep along it (`Soft`). The bed is cut below the
+  lowest ground across the banks and round the spring, never rises downstream, and backs up nearly level
+  over its last metres, so the creek reaches the lake at its level (`MouthBar`, `Backwater`). The water is
+  flood-filled from the centreline, only through the carved channel (`StreamLevels`), so no puddle stands
+  apart and no film spreads over the shore; its level comes from the nearest stretches only. Springs get
+  reeds, stones and lush grass (`SpringNear`); reeds grow in dense colonies at the waterline only
+  (`CreekLevel`); stones lie in the riffles and against the outer banks; twigs stay out of the water.
+- Checks: one connected water body per creek, no water edge above the ground, one 5 cm cut-off edge on flat
+  bank ground, no floating debris, creeks 15 m clear of the plot. Same views before and after: the user's
+  viewpoint, each spring, each creek at eye level, both deltas, from the plot and the camp, from the flight
+  ceiling and top-down. Occlusion rebaked.

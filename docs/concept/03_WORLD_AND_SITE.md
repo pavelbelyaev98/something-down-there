@@ -10,19 +10,23 @@ The lakebed excavation is a single contained worksite.
 - **Drained section:** one large exposed section of the lakebed against the east cliff, sloping
   gently into the remaining water. It reads as a recently drained bed, not a flat yard: packed
   sediment on the flats broken by darker mud patches, damp silt toward the water, broken pebble
-  strands along old waterlines and sandy banks. Shallow, walkable channels still trickle from seeps
-  at the cliff foot and run the way water would on the shelf: down its slope by the most direct way
-  into the lake, passing the dig plot rather than wrapping it, never along the shore. They meander
-  irregularly (straighter runs, then deeper bends) and vary in width; a bend has a short, steep cut
-  bank outside and a gently shelving stony bar inside, and one splits into two mouths at the lake.
-  Their beds are stony and their banks damp, with no pale band outlining them. Dry gullies join them
-  and shallow rills drain the shore slopes. Plants follow water and time: reeds in a few colonies
-  at the water's edge, rushes in tussocks on damp ground, and tufts of muted, sun-dried grass (never
-  bright lime) in patches of every size that fray into stray tufts, densest on the banks set back
-  from the water and on the ground exposed longest, nearly none on the band the water left last.
-  Stranded stones lie where water sorted them (in the beds, against cut banks, on bars and old
-  waterlines, rarely alone on the flats), mostly small, on their broad side and well bedded in the
-  mud; boulders on the old bed are bare, water-darkened rock. Low sand islands with grassy tops and the odd boulder stand in
+  strands along old waterlines and sandy banks. Two shallow, walkable creeks still run across it.
+  Each rises in a small spring pool at the cliff foot, where the cliff's drainage reaches the shelf,
+  ringed with reeds, stones and lush grass, and runs down the shelf to the nearest shore in a gentle
+  valley of its own, never round the dig plot and never along the shore. The creeks meander the way
+  real ones do (bends about eleven channel widths apart, skewed downstream, straighter runs between
+  tighter bends) and bend round boulders; they widen downstream, their banks are here gentle and
+  there short and steep, pools lie in the bends and riffles at the crossings, a bend has a steeper
+  bank outside and a stony bar inside, and the beds are stony with no pale band outlining them. Near
+  the lake each creek has cut down to its level and splits into two mouths round a low sand bar.
+  The water only fills a creek's own channel: no separate puddles, and no water sheet over the shore.
+  Plants follow water and time: reeds in a few dense colonies at the water's edge, rushes in tussocks
+  on damp ground, and tufts of muted, sun-dried grass (never bright lime) in patches of every size
+  that fray into stray tufts, densest on the banks set back from the water, in the creeks' valleys
+  and on the ground exposed longest, nearly none on the band the water left last. Stranded stones lie
+  where water sorted them (in riffles, against outer banks, on bars and old waterlines, rarely alone
+  on the flats), mostly small, on their broad side and well bedded in the mud; boulders on the old
+  bed are bare, water-darkened rock. Low sand islands with grassy tops and the odd boulder stand in
   the remaining lake. All lakebed dressing stays clear of the camp and the dig plot. A few metres
   beyond the plot's tape, patches of the canyon's green grass ring it (fewer on the camp's side),
   so the worked ground sits in a little green.
