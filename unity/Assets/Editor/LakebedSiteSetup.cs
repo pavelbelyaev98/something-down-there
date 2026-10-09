@@ -117,8 +117,10 @@ namespace SomethingDownThere.Editor
             public float[,] Before, After, Shore, Drained;
             // Heights before channel carving: the lake follows these, the trickles own the channels.
             public float[,] Uncarved;
-            // Metres from the nearest channel bed edge, negative inside a bed.
-            public float[,] Channel;
+            // Metres from the nearest channel bed edge, negative inside a bed; Rill likewise for the rills.
+            public float[,] Channel, Rill;
+            // Share of a point bar's gravel and sand on the inside of a channel bend, 0-1.
+            public float[,] Bar;
             // Water surface over the wet beds (demo-space heights), NaN where dry.
             public float[,] StreamLevel;
             // Site-local footprints of the demo's boulders on the drained bed; channels bend around them.
@@ -460,21 +462,26 @@ namespace SomethingDownThere.Editor
                 if (a < -.15f) { target[sand] = .75f; target[silt] = .25f; }
                 else if (s.Drained[z, x] > .35f)
                 {
-                    // Packed sediment on the flats; damp dark silt toward the water and channels;
-                    // stony beds, pebble strand lines and sandy banks at the waterline.
-                    float c = s.Channel[z, x];
-                    float damp = Mathf.Max(Smooth((.95f - a) / .6f), Smooth((2.4f - c) / 2.2f));
+                    // Packed sediment on the flats; damp dark silt toward the water, along channels and
+                    // down the rills; stony beds, stony point bars inside bends with a little gravel, and
+                    // broken pebble strand lines and sandy shallows at the waterline. No pale band runs
+                    // along both banks of a channel: that outlined every channel like a kerb (user, 2026-10-09).
+                    // The pack's sand and sandy gravel are too pale for the bars: they read as a bright path.
+                    float c = s.Channel[z, x], rill = s.Rill[z, x], bar = s.Bar[z, x];
+                    float damp = Mathf.Max(Mathf.Max(Smooth((.95f - a) / .6f), Smooth((2.4f - c) / 2.2f) * (.75f + .25f * grain)), .8f * Smooth((.6f - rill) / .9f));
                     // Broad darker mud patches break up the pale sediment, as on a real drying bed.
                     float mudPatch = Smooth((Noise(local, 16, 2.6f) - .45f) / .2f);
                     target[sediment] = (1 - damp) * (1.1f + .3f * grain) * (1 - .65f * mudPatch);
                     target[silt] = damp + (1 - damp) * (.25f * (1 - grain) + .9f * mudPatch);
                     // Channel beds are dark stony mud under the water, never pale beach sand.
                     float beach = Smooth((c - .3f) / .8f);
-                    target[rubble] = Smooth((patches - .58f) / .1f) * (1 - damp) + 2.2f * Smooth((.3f - c) / .6f);
-                    target[gravel] = 1.3f * Band(a, .1f, .6f) * (.5f + grain) * beach + .6f * Band(c, .3f, 1.6f, .3f);
+                    float strand = Smooth((Noise(local, 6, 8.8f) - .4f) / .2f);
+                    target[rubble] = Smooth((patches - .58f) / .1f) * (1 - damp) + 2.2f * Smooth((.3f - c) / .6f) + 1.6f * bar
+                        + .5f * Smooth((-.1f - rill) / .4f) * Smooth((grain - .4f) / .3f);
+                    target[gravel] = 1.3f * Band(a, .1f, .6f) * (.5f + grain) * beach * strand + .35f * bar * Smooth((grain - .45f) / .3f);
                     // Green only returns on the higher ground toward the cliffs.
                     target[grassy] = .9f * Smooth((growth - .72f) / .08f) * Smooth((a - 1.3f) / .5f) * (1 - damp);
-                    target[sand] = 1.6f * Smooth((.4f - a) / .3f) * beach + .7f * Band(c, .2f, 1.2f, .3f) * Smooth((patches - .45f) / .2f);
+                    target[sand] = 1.6f * Smooth((.4f - a) / .3f) * beach;
                 }
                 else if (IslandHeight(local) > WaterLevel - .3f)
                 {
@@ -499,8 +506,10 @@ namespace SomethingDownThere.Editor
                     target[silt] += camp * .35f * Smooth((patches - .45f) / .2f);
                     target[rubble] += camp * .45f * Smooth((growth - .55f) / .15f);
                 }
-                // Green patches around the plot: the canyon's turf, with its blades from DressDetails.
-                target[grassy] += 1.6f * GreenPatch(local, a, s.Channel[z, x]);
+                // Green patches around the plot: the canyon's turf, with its blades from DressDetails. Where the
+                // blades are sparse (the camp's side) the turf thins faster, so it never shows as a bare olive stain.
+                float density = GreenDensity(local);
+                target[grassy] += 1.6f * GreenShape(local, a, s.Channel[z, x], .1f) * density * density;
                 float total = target.Sum(), mixed = 0;
                 for (int l = 0; l < layers; l++) { alpha[z, x, l] = Mathf.Lerp(alpha[z, x, l], target[l] / total, weight); mixed += alpha[z, x, l]; }
                 for (int l = 0; l < layers; l++) alpha[z, x, l] /= mixed;

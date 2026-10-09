@@ -1,6 +1,6 @@
 # 089 — Highlands Drained Lakebed Site
 
-**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels winding around it into murky grey-green water, sandy banks, olive islands, muted grass and reeds, and stranded debris, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
+**Status:** complete. MainGame retains the Highlands canyon around a contained drained lakebed modelled on the user's references: a wide, irregular plot of slightly darkened mud outlined by one barrier tape on timber posts cast into square concrete footings on its collar (collider-free), blending into a damp band that fades into the lakebed, with fine-grained subsoil in cuts (candidates compared in Developer admin), channels running from cliff-foot seeps down the shelf past it into murky grey-green water, rills on the shore slopes, sandy banks, olive islands, muted grass and reed colonies that follow the water, and water-sorted stones lying flat, with a soft-glow sun disc, distance-only detail switches, speckle-free foliage and smooth nearby shadows. Presentation/performance refreshes preserve terrain and placement; baked visibility excludes mutable excavation, and depth priming stays off so every MSAA setting renders the same surfaces.
 
 ## Objective
 Replace the plain round gravel yard with the river section of the approved **Pure Nature 2: Highlands** demo, kept as close to the demo's terrain composition and asset placement as practical, and adapted to the game:
@@ -336,3 +336,31 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
 
 - Verdict: square cast footings without the steel post base. The round and steel-shoe styles, the
   `DigBoundaryStyles` switcher and the admin **Boundary** button were removed; the boundary is one static mesh.
+
+## Iteration: natural drained bed (2026-10-09)
+- Playtest (screenshot from a boulder by the crane): the plot and its damp band are right; beyond them the
+  streams, rocks and grass read as artificial. Diagnosis from a top-down height map and same-view captures:
+  both streams wrapped the plot like a moat (the north one turned south along the shore for 30 m, the south
+  one climbed back north to meet it) on ground that slopes west; the boulder push bent them into arcs of
+  constant radius; meanders were one regular wave and the width barely changed; every channel was outlined on
+  both banks by a pale sand and gravel band like a kerb; small stones were the pack's standing boulder meshes
+  shrunk, upright, pale and in evenly spaced clusters; grass came in look-alike thresholded blobs, mats with
+  crisp edges and single rushes spaced evenly across open ground; the pack's grass layer left lime blotches on
+  flat faces of the "bare" boulders.
+- Now (`LakebedSiteSetup.Lakebed.cs`): courses run west from the seeps straight into the lake, the north one
+  with a two-mouth delta; two dry gullies and seven rills (with side branches) drain the shelf and its shore
+  slopes (`Flow`: stream, gully, rill). Meander wavelength and swing wander along each course and the width
+  wanders between riffles and narrower runs. Bends are lopsided (`Turns`, `Carve`): the deepest line swings
+  out to a short cut bank and the inside shelves gently as a point bar (`Section.Bar`), painted stony with a
+  little gravel. The kerb band is gone; banks are damp silt and rills darker silt. Plants follow moisture and
+  ground age, patches fray into stray tufts (`Frayed`), rushes grow as tussock colonies on damp ground only,
+  and reeds as elongated colonies at the water. Stones lie on their broad side (the pack rocks are modelled
+  standing, narrowest axis local x), are mostly small, bedded 40-55 % and sit in beds, against cut banks, on
+  bars and broken old waterlines; rubble heaps only at sharp cut banks and the old shore. `LakebedRock` is a
+  neutral 0.7 tint with the grass layer's opacity at zero.
+- Rejected: point bars painted with the pack's `Sand`/`Sand_rubble` (a bright yellow path along every
+  channel); a top-down coat of the canyon mud on rocks as dried silt (rust-red or burnt patches at every tint);
+  a warm rock tint (salmon under the grade); fraying the green ring by its camp-side density (bare olive stains).
+- Verified: same views before and after (the user's viewpoint, both streams at eye level, the delta, the
+  plot's west side, the camp, flight ceiling and top-down); no stream water edge above dry ground, no floating
+  debris, streams 14.7 m clear of the plot; occlusion rebaked.

@@ -9,11 +9,20 @@ The lakebed excavation is a single contained worksite.
   water along the canyon, with a waterfall at its southern end; a bathtub band marks the old shoreline.
 - **Drained section:** one large exposed section of the lakebed against the east cliff, sloping
   gently into the remaining water. It reads as a recently drained bed, not a flat yard: packed
-  sediment on the flats broken by darker mud patches, damp silt toward the water, pebble strands
-  along old waterlines and sandy banks. Shallow, walkable channels still trickle from seeps at the
-  cliff foot, wind around the dig plot and run into the lake, with stony beds, damp banks, reeds,
-  rushes and tufts of muted, sun-dried grass (never bright lime); one dry gully joins them. Stranded stones, rubble and twigs lie
-  along channels and waterlines; boulders on the old bed are bare, water-worn rock. Low sand islands with grassy tops and the odd boulder stand in
+  sediment on the flats broken by darker mud patches, damp silt toward the water, broken pebble
+  strands along old waterlines and sandy banks. Shallow, walkable channels still trickle from seeps
+  at the cliff foot and run the way water would on the shelf: down its slope by the most direct way
+  into the lake, passing the dig plot rather than wrapping it, never along the shore. They meander
+  irregularly (straighter runs, then deeper bends) and vary in width; a bend has a short, steep cut
+  bank outside and a gently shelving stony bar inside, and one splits into two mouths at the lake.
+  Their beds are stony and their banks damp, with no pale band outlining them. Dry gullies join them
+  and shallow rills drain the shore slopes. Plants follow water and time: reeds in a few colonies
+  at the water's edge, rushes in tussocks on damp ground, and tufts of muted, sun-dried grass (never
+  bright lime) in patches of every size that fray into stray tufts, densest on the banks set back
+  from the water and on the ground exposed longest, nearly none on the band the water left last.
+  Stranded stones lie where water sorted them (in the beds, against cut banks, on bars and old
+  waterlines, rarely alone on the flats), mostly small, on their broad side and well bedded in the
+  mud; boulders on the old bed are bare, water-darkened rock. Low sand islands with grassy tops and the odd boulder stand in
   the remaining lake. All lakebed dressing stays clear of the camp and the dig plot. A few metres
   beyond the plot's tape, patches of the canyon's green grass ring it (fewer on the camp's side),
   so the worked ground sits in a little green.
