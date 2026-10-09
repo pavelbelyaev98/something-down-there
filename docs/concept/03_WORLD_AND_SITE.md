@@ -172,8 +172,8 @@ cut's shape carry it. Nothing in the ground collapses: no pours, slumps or break
 | Lake sediment | Zone 2's ground: bites as wide as soil's, a touch shallower and slower, a little firmer | The zone itself: grey, smooth, thin level bedding | Iron, silver and pyrite |
 | Riverbed | Zone 3's ground: stony, smaller bites with the short bite motion, about two thirds of soil's speed | The zone itself: warm brown stone set with small water-worn pebbles, the cave rock's style but lighter (user, 2026-10-08: the cave rock "is the vibe I want") | Gold and emerald |
 
-The zone grounds' looks and dig feel are being chosen in play (`111`). Geode shells and lenses join
-this table as they are added. The ancient zone adds its
+The zone grounds' looks and dig feel are being chosen in play (`111`). Geode shells join this table
+as they are added; lenses reuse the zone grounds ([below](#lenses-around-uniques)). The ancient zone adds its
 own material with its contact signature ([Ending and Mystery](11_ENDING_AND_MYSTERY.md#1-the-mystery-trail)).
 
 Resistance belongs to the ground inside the cut, including mixed boundaries; aiming at a soft patch
@@ -233,7 +233,18 @@ Shared rules for all tells:
 Each unique lies in a lens of ground that does not match its zone: a patch of another zone's ground
 around it. **The odd one out is the clue**, seen with the player's own eyes instead of on a HUD. Real
 lake mud holds such lenses, pockets of sand or gravel left by an old shoreline or a flood. The
-generator shapes the lens around the space it already reserves for each unique.
+generator shapes the lens around the space it already reserves for each unique (`112`).
+
+- **Ground:** river gravel (the riverbed's ground) in the recent fill and the lake sediment, lake silt
+  in the riverbed. Lake silt in the recent fill was rejected: it digs nearly like soil, so the lens
+  would not be felt in the dark.
+- **Shape:** flat and wide like a real lens, about 10 m across and 3 m thick at the unique, pinching
+  out to nothing at its rim. A wall that cuts its edge shows a thin band; following the band where it
+  thickens leads to the unique. Its width is what makes it a tell: a lens barely larger than the
+  unique would add almost no reach.
+- Backfill pits and geodes keep clear of lenses, so each tell leads to one thing. A cave may clip a
+  lens's rim, never the unique's own space.
+- *Feel:* "that's not the same ground... something's in there."
 
 ### Host ground: each ground holds its own kind of find
 

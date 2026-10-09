@@ -1,91 +1,147 @@
 # 112 — Secret Areas Around Uniques
 
-**Status:** planned after `111`. Spec written ahead (2026-10-05); re-check against the code when it
-starts. Plan and research: [107](completed/107-asset-only-grounds.md). `099`'s detector-off test follows it.
-Two steps: **112.1** the lens, **112.2** an optional trail, decided after 112.1's playtest.
+**Status:** 112.1 (the lens) built; awaiting its playtest, which decides whether **112.2** (a trail) is
+needed. Plan and research: [107](completed/107-asset-only-grounds.md). `099`'s detector-off test follows.
 
 ## Objective
 
-Every unique lies inside a **lens of ground that does not belong there**: a patch of another owned
+Every unique lies inside a **lens of ground that does not belong there**: a patch of another zone's
 ground around it, the odd one out. The player sees and feels the change in a wall, follows it, and
 finds the unique with their own eyes instead of the HUD. Real lake mud holds exactly such lenses:
-pockets of sand or gravel left by an old shoreline or a flood.
+pockets of sand or gravel left by an old shoreline, channel or flood.
 
 ## Concept reference
 
-- **`03` §4 odd spots:** each unique sits in ground that does not match its zone, and the odd one out
-  is the clue. The generator shapes this ground around the space it already reserves for each unique.
-- **Tell rule (after `107`):**
-  - different ground means you are on to something (felt as well as seen, never colour alone);
-  - presence, never value;
-  - straight digging always works;
-  - tells run sideways as often as down.
-- **`05` §1:** uniques exist once per save, are unsellable and are recovered whole by the crane.
-- **`05` §2:** the detector is frozen. The detector-off test (`099`) asks whether testers find every
-  unique without help and follow at least one tell unprompted. The user decides the detector's fate
-  from the result.
-- **`03` §8:** validation checks that every unique sits in its lens.
+- **`03` §4 lenses around uniques:** each unique lies in a lens of another zone's ground; the odd one
+  out is the clue. The generator shapes it around the space it already reserves for each unique.
+- **`03` §4 tell rules:** the ground changes and following the change leads somewhere; felt as well as
+  seen (dig speed, grain and stones, never colour alone); presence, never value; straight digging
+  always works; tells run sideways as often as down; generated from the seed and stored only as
+  material IDs.
+- **`03` §3:** mixed spots only with a job (a lens around a unique is one); never a wall.
+- **`03` §6, §8:** lenses are per-save shape and position, the same material/density data, no
+  separate save record; validation checks every unique sits in its lens.
+- **`05` §1–2:** uniques exist once per save, are unsellable and recovered by the crane. The HUD
+  detector is frozen; nothing here may depend on it. `099` asks whether testers find every unique
+  without help and follow at least one tell unprompted.
 
-## Live codebase analysis (after `111`)
+## Live codebase analysis
 
-- **Unique spaces:**
-  - `TerrainGround.OddSpot` keeps each unique's space (Centre, Half, Min, Max), from
-    `DiscoveryCatalog.OddSpots()`: the authored position, `PlacementRadius` and soil clearance.
-  - `TerrainVolume.oddSpots` is synced by Sync Discovery Models.
-  - Pits avoid them.
-- **Current uniques:** three retro computers at about 8, 13.5 and 21 m, all in zone 1 (soil).
-- **Grounds:** the zone grounds from `111` (zone 2 silt, zone 3 sand or gravel) exist with textures,
-  responses and weight slots.
-- **What was removed:** `107` deleted the old odd-spot lens generation (`TerrainGround` odd-spot
-  ground and the `Ground` field). It is recoverable from commit `566009e` as a reference.
+- **Unique spaces:** `TerrainGround.OddSpot` (Centre, Half, Min, Max) from `DiscoveryCatalog.OddSpots()`
+  (authored position, `PlacementRadius` + `SoilClearance`), copied to `TerrainVolume.oddSpots` by Sync
+  Discovery Models. The three computers have a 0.9 m envelope at 8, 13.5 and 21 m, all in zone 1
+  (soil); a space reaches 1.8 m sideways and 1.5 m up and down, its box 1.2 times that.
+- **Who keeps clear of a space:** pits (+1 m), geodes (+1 m), great and mini caves (+1.5 m, a great
+  cave dropping only the chambers it blocks), ordinary finds (`OddSpotReach` past the envelope).
+- **Ground generation:** `TerrainGround.Generate` runs the Burst `GroundJob` (surface soil, then pits,
+  then the zone ground per sample), then main-thread passes for the chest shells, caves and geodes.
+  `GroundLayout` hands pits, stashes, geodes and caves to placement and the Ground Lab replaces it.
+- **Grounds:** soil, backfill (≈¾ of soil's speed), lake sediment (a little firmer than soil),
+  riverbed (≈⅔ of soil's speed, the bite motion, warm brown with water-worn pebbles).
+- **Host ground:** find weights read the actual material at a find's centre (`MaterialAtLocal`).
+- **Ground X-ray** marks backfill, geode shell and cave rock cells; it cannot tell a lens from its zone
+  ground by material alone.
+- **Removed earlier:** `107` deleted the old lens (commit `566009e`): an ellipsoid only 0.9 m past the
+  envelope, about 3.5 m across, barely bigger than the computer's own reveal.
 
-## Design
+## Design (112.1, the lens)
 
-### 112.1 The lens
+### Shape: wide, flat, thickest at the unique
 
-- **Lens ground:** each unique's space is wrapped in a lens of a ground that does not match its zone:
-  - zone 1 (soil) holds a **sand or gravel lens** using `111.2`'s ground;
-  - zone 2 holds a sand lens;
-  - zone 3 holds a silt lens.
-  - The rule is "a ground from another zone"; no new ground is invented.
-- **Shape:** a flattened ellipsoid about 2.5–4 m across around the reserved space, with a noisy edge
-  (the same warp as the zone blend), so its curve reads in a wall from either side.
-- **Feel:** the lens keeps its ground's own response, so its dig speed differs from the surroundings.
-  If the lens ground digs about the same as its host, its response is nudged so the difference is
-  felt (sand easier, for example).
-- **Generation:**
-  - `GroundJob.Material` writes the lens inside each `OddSpot` volume;
-  - pits and geodes already avoid unique spaces;
-  - validation checks that every unique is enclosed by its lens.
-- **X-ray** marks lenses for development.
+The planned 2.5–4 m lens would be barely larger than the unique itself, so it would add almost no
+reach. A real lens is lenticular, much wider than thick, and pinches out at its rim. That shape is
+also the direction cue:
 
-### 112.2 A trail (only if 112.1's playtest finds lenses too hard to meet)
+- **Outline:** an ellipse 9–11 m long and 7–8.4 m wide (`LensLong`, `LensShort`) at a seeded heading,
+  its rim wobbling ±15 % (`LensWobble`), centred on the unique.
+- **Thickness:** 2 × (envelope + `LensCover`), 3 m at the unique for the computers, thinning as
+  `1 − q` (q the squared ellipse radius) to nothing at the rim: about 0.5 m thick at 80 % of the way
+  out. A wall that cuts its edge shows a thin band; **following it where it thickens leads to the
+  unique**. Its faces are roughened ±0.12 m (`LensRough`) so the band edge is ragged like a zone border.
+- **Mid-plane:** tilted up to 4° along its long axis (`LensDip`) and gently warped (`LensWarp`), the
+  warp fading to zero at the unique so it stays mid-lens.
+- **Reach estimate:** a random shaft meets one of the three lenses about 9 % of the time each, about
+  27 % for one of them; wide pits and tunnels meet them more. If testers still miss them, 112.2 adds
+  the trail.
 
-A thin, winding stringer of the same ground leads several metres from the lens toward the plot's
-middle, so a shaft or tunnel is more likely to meet it and follow it in. It is the ground version of
-Dome Keeper's wires.
+### Ground
+
+`TerrainGround.LensGround(host)`: the riverbed, unless the host is the riverbed, then lake sediment.
+The host is the zone ground at the unique's centre (a unique near a border takes its centre's zone).
+
+- Zone 1 (soil): a **riverbed lens**, a gravel lens from a flood or old channel. Felt (⅔ of soil's
+  speed with the bite motion) and seen (warm brown, pebbled). Lake sediment was rejected for the
+  recent fill: it digs nearly like soil, so the felt tell would be lost in the dark.
+- Zone 2 (lake sediment): riverbed (slower). Zone 3 (riverbed): lake sediment (faster).
+- No ground needs its response nudged; no new material.
+- **Risk:** riverbed and backfill are both stony and slower. They differ in shape (a flat band versus
+  a steep column), colour (warm brown versus darker, greyer turned soil) and stones (rounded pebbles
+  versus dirty rubble). The playtest note asks whether a lens ever passed for a pit.
+
+### Generation and clearances
+
+- `TerrainGround.Lens` (Burst-friendly struct: centre, bounds, radii, heading, half-thickness, dip,
+  noise seed, ground) and `TerrainGround.Lenses(...)`, one per unique space, from seeded draws per
+  unique. `InLens(lens, p)` is the one predicate for the job, the X-ray and tests.
+- New feature flag `Features.Lenses` (in `All`, so the site admits it through `SiteLayout.Ground`).
+- `GroundJob` precedence: surface soil (top 1.1 m), pits, lenses, zone ground; chest shells, caves and
+  geodes still overwrite afterwards.
+- **Pits and geodes** keep clear of the lens box (each lens's tight box grown into the space box they
+  already avoid), so each tell leads to one thing.
+- **Caves** still avoid only the unique's space: a lens-sized block would drop up to four chambers of
+  the zone-1 hall, which lies just below the deepest unique, and it halved zone 1's mini caves (55 of
+  120 over 40 seeds), which share the lenses' depths. Where a cave's shell meets a lens rim, its
+  stone wins; on the seeds measured no cave touched a lens.
+- **Order (`TerrainGround.Plan`):** lenses, great caves, pits (clear of the lenses and of the halls'
+  chambers, `NearHall`), geodes, mini caves. Found while building: pits were placed before the great
+  caves and blocked the zone-1 hall's chambers, so 28 of 40 seeds had **no zone-1 great cave** (40 of
+  40 with pits off). The lenses pushed pits deeper and made it 37 of 40. Laying the halls first gives
+  every zone its hall on all 40 seeds, with every pit still placed.
+- Ordinary finds still lie in the lens (outside the unique's own space). Host weights follow the actual
+  ground; the three lenses hold about 290 m³ in all, too little to shift the find mix noticeably.
+- `GroundLayout.Lenses`; the Ground Lab's layout has none.
+
+### Developer X-ray
+
+`XrayGround.Lens` (green) marks cells that are inside a lens by `InLens` and hold its ground.
 
 ## Edge cases
 
-- **A unique near a zone border** takes the lens of the zone its centre lies in.
-- **A lens must never isolate the unique** from the crane's route; it is ordinary diggable ground.
-- **The lens never reaches the surface soil bank** or the plot edge.
-- **Saves:** material ids only (the lens is generated). New Game is required.
+- **Near a zone border:** the centre's zone decides; a lens crossing into a zone of its own ground
+  merges with it (no current unique is within 15 m of a border).
+- **Never isolates the unique:** ordinary diggable ground; the crane's rope tears it like any ground.
+- **Surface:** the top 1.1 m stays soil; the shallowest lens top is about 6 m down.
+- **Plot edge and grid walls:** the lens may run a little under the permanent ground below the bank;
+  samples outside the grid are simply absent.
+- **Fixtures, test grids, Ground Lab:** no lenses (features `None` or the lab's own layout).
+- **Saves:** material IDs only. Existing saves keep their old ground; New Game shows the lenses.
 
 ## Tests
 
-- Every unique's reserved space is fully inside its lens.
-- The lens ground differs from the host zone's main ground.
-- Generation is deterministic per seed.
+- Every unique's envelope plus a margin lies wholly in lens ground, for several seeds.
+- The lens ground differs from the host zone's ground; the lens reaches several metres sideways and
+  is thicker at the unique than towards its rim.
+- Pits and geodes keep clear of the lens boxes; the same seed gives the same lenses.
+- Every zone gets a great cave over a dozen seeds, the pits clear of its chambers.
+
+## Verification (2026-10-09)
+
+- Seed 2718 with the catalog computers: three riverbed lenses of about 95 m³; thickness along the
+  long axis 3.1, 2.9, 2.6, 2.1, 1.4, 0.5 and 0 m at 0–6 m out; every sample within the envelope plus
+  0.25 m is lens ground (seeds 2718, 12, 991). Ground generation 0.7 s, as before.
+- A cutaway beside the 8 m lens reads as a lenticular patch of stony ground in the brown soil wall;
+  Ground X-ray marks it green (`Logs/qa/112/`).
 
 ## Acceptance criteria
 
-1. Every unique in a new site sits in a lens that reads in a lamp-lit wall and digs differently.
-2. Compiles warning-free, tests pass, and the build and its playtest note are delivered.
-3. Then `099`'s detector-off playtest runs, and the user decides the detector's fate.
+1. Every unique in a new site sits in a riverbed lens about 10 m across that reads in a lamp-lit wall,
+   digs slower than the soil, and thickens toward the unique.
+2. Ground X-ray marks lenses in green.
+3. Compiles warning-free; the session's closing test run passes; build and playtest note delivered.
+4. The playtest decides 112.2; then `099` runs and the user decides the detector's fate.
 
-## Playtest notes (`docs/playtests/112-secret-areas-around-uniques.md`)
+## 112.2 A trail (only if the playtest finds lenses too hard to meet)
 
-- **Try:** without Ground X-ray, dig the first 25 m sideways as well as down. Notice a lens in a wall
-  and follow it to the unique.
-- **Good feels like:** "that's not the same ground... something's in there."
+A thin, winding stringer of the same ground leads several metres from the lens toward the plot's
+middle, so a shaft or tunnel is more likely to meet it and follow it in: the ground version of Dome
+Keeper's wires.

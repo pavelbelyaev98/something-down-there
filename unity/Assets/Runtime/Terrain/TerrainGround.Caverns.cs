@@ -61,7 +61,7 @@ namespace SomethingDownThere
             public int Below(int count) => Mathf.Min(count - 1, (int)(Next() * count));
         }
 
-        // Pits and uniques' spaces block a cave (with CavernClearance), and so do the geodes for a mini cave.
+        // Uniques' spaces block a cave (with CavernClearance), and so do the pits and geodes for a mini cave.
         private static Func<float3, float3, bool> Blocker(Pit[] pits, OddSpot[] spots, Geode[] geodes = null) => (min, max) =>
         {
             foreach (var pit in pits) if (!(math.any(min > pit.Max + CavernClearance) || math.any(pit.Min > max + CavernClearance))) return true;
@@ -70,8 +70,9 @@ namespace SomethingDownThere
             return false;
         };
 
-        // A great cave in each zone (generated first: they need the room).
-        public static Cavern[] GreatCaves(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots = null, Features features = Features.All)
+        // A great cave in each zone, generated before the pits, geodes and mini caves: they need the room. (Placed after the
+        // pits, the first zone's hall lost so many chambers to them that most seeds had none.)
+        public static Cavern[] GreatCaves(Vector3Int size, float cellSize, int seed, OddSpot[] spots = null, Features features = Features.All)
         {
             if (!Has(features, Features.Caverns)) return Array.Empty<Cavern>();
             var extent = (Vector3)size * cellSize;
@@ -79,7 +80,7 @@ namespace SomethingDownThere
             var footprint = SiteLayout.FindFootprint(extent);
             var draws = new Draws(unchecked((uint)seed * 1597334677u ^ 0x3c6ef372u));
             var caverns = new List<Cavern>();
-            var blocked = Blocker(pits, spots);
+            var blocked = Blocker(Array.Empty<Pit>(), spots);
             for (int zone = 0; zone <= ZoneBorders.Length; zone++)
             {
                 float zoneTop = zone == 0 ? 0 : ZoneBorders[zone - 1], zoneBottom = zone < ZoneBorders.Length ? ZoneBorders[zone] : extent.y;
@@ -151,6 +152,20 @@ namespace SomethingDownThere
         // the blocker refuses (pits, uniques' spaces) and GreatDrops at random left out, then only the largest joined group
         // kept; then its pillars, arches and stalagmites where its hall has room. Fails with fewer than GreatMinChambers, or
         // fewer than three under the dig plot (footprint) to dig down into.
+        // Whether a box comes within clearance of one of a great cave's chambers, each its own box as TryGreatCave sizes it:
+        // a pit may stand in a bay between them or beside the hall.
+        public static bool NearHall(Cavern cave, float3 min, float3 max, float clearance)
+        {
+            float pad = cave.Shell + GreatWarp + GeodeOuterLumps + GreatBlend * .25f + CavernSlack + clearance;
+            for (int i = 0; i < cave.Centres.Length; i++)
+            {
+                var low = cave.Centres[i] - cave.Radii[i] - pad; var high = cave.Centres[i] + cave.Radii[i] + pad;
+                low.y = math.max(low.y, cave.Floor - GreatFloorRoll - pad);
+                if (!(math.any(min > high) || math.any(low > max))) return true;
+            }
+            return false;
+        }
+
         public static bool TryGreatCave(Vector3 extent, float floor, int seed, Func<float3, float3, bool> blocked, Func<Vector2, bool> footprint,
             out Cavern cave)
             => TryGreatCave(extent, floor, new Draws(unchecked((uint)seed * 2246822519u ^ 0x27d4eb2fu)), blocked, footprint, out cave);

@@ -36,6 +36,8 @@ from about 8 m down. Developer admin → **Ground X-ray** marks cave rock yellow
 - Pick up a geode crystal: it keeps its colour as it flies to you (it used to turn pink).
 
 - The caves' puddles are gone (their floors are as before them). New Game needed.
+- The first zone's great cave (about 30 m down) is there in every New Game now; before, most new
+  games had none, because the backfill pits took its room.
 - Ground Lab: lamps never run out (the HUD reads LAMPS UNLIMITED).
 
 **Tell the agent:**

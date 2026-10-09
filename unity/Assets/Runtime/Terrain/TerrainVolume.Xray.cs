@@ -4,14 +4,14 @@ using UnityEngine.Rendering;
 
 namespace SomethingDownThere
 {
-    // Developer ground X-ray: the ground turns transparent and every few cells of tell ground (backfill, geode stone, cave rock) get a
-    // coloured marker within reach of the camera, so tells can be found and dug on purpose. Session-only; it never
-    // changes the grid.
+    // Developer ground X-ray: the ground turns transparent and every few cells of tell ground (backfill, geode stone, cave rock, a
+    // unique's lens) get a coloured marker within reach of the camera, so tells can be found and dug on purpose.
+    // Session-only; it never changes the grid.
     public sealed partial class TerrainVolume
     {
-        public enum XrayGround { Backfill, GeodeShell, CaveRock }
-        public static readonly Color[] XrayColours = { new Color(.95f, .25f, 1f), new Color(.2f, .95f, 1f), new Color(1f, .8f, .15f) };
-        public const string XrayLegend = "magenta backfill, cyan geode stone, yellow cave rock";
+        public enum XrayGround { Backfill, GeodeShell, CaveRock, Lens }
+        public static readonly Color[] XrayColours = { new Color(.95f, .25f, 1f), new Color(.2f, .95f, 1f), new Color(1f, .8f, .15f), new Color(.35f, 1f, .3f) };
+        public const string XrayLegend = "magenta backfill, cyan geode stone, yellow cave rock, green lens";
         private const float XrayRadius = 20f, XrayMarkerSize = .1f, XrayResampleDistance = 4f, XrayResampleSeconds = .5f;
         private const int XrayStep = 3;
 
@@ -51,6 +51,14 @@ namespace SomethingDownThere
             _ => null
         };
 
+        // A lens is a zone ground out of place, so its material alone cannot tell it from its zone: ask its shape.
+        private static XrayGround? LensClass(TerrainGround.Lens[] lenses, TerrainMaterialId material, Vector3 local)
+        {
+            foreach (var lens in lenses)
+                if (lens.Ground == material && TerrainGround.InLens(lens, local)) return XrayGround.Lens;
+            return null;
+        }
+
         // Rebuilds the marker lists around the eye; plain C#, a few tens of milliseconds.
         public void SampleGroundXray()
         {
@@ -65,6 +73,7 @@ namespace SomethingDownThere
             float reachSquared = reach * (float)reach;
             var toWorld = transform.localToWorldMatrix;
             var scale = Vector3.one * XrayMarkerSize;
+            var lenses = grid.Layout.Lenses;
             int count = 0;
             for (int y = min.y; y <= max.y; y += XrayStep)
             {
@@ -73,7 +82,8 @@ namespace SomethingDownThere
                 {
                     float dx = x - centre.x, dy = y - centre.y, dz = z - centre.z;
                     if (dx * dx + dy * dy + dz * dz > reachSquared || grid.Sample(x, y, z) <= 0f) continue;
-                    var ground = XrayClass(grid.MaterialAt(x, y, z));
+                    var material = grid.MaterialAt(x, y, z);
+                    var ground = XrayClass(material) ?? (lenses.Length > 0 ? LensClass(lenses, material, new Vector3(x, y, z) * cellSize) : null);
                     if (ground == null) continue;
                     xrayMarkers[(int)ground.Value].Add(toWorld * Matrix4x4.TRS(new Vector3(x, y, z) * cellSize, Quaternion.identity, scale));
                     count++;

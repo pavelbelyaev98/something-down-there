@@ -133,6 +133,82 @@ namespace SomethingDownThere.Tests
             Assert.That(again.Select(g => g.Centre), Is.EqualTo(geodes.Select(g => g.Centre)), "From the seed.");
         }
 
+        // The catalog's three computers (envelope 0.9 m) in the recent fill, plus one in the lake sediment and one in the
+        // riverbed so every lens ground is laid.
+        private static readonly Vector4[] Uniques =
+        {
+            new Vector4(26.5f, 142, 4.7f, .9f), new Vector4(20, 136.5f, 11, .9f), new Vector4(31, 129, 18, .9f),
+            new Vector4(25, 100, 13, .9f), new Vector4(18, 62, 9, .9f)
+        };
+
+        // Concept 03 §4 lenses (112): every unique lies in a lens of another zone's ground, the odd one out: its envelope and a
+        // margin wholly in it, the lens several metres across and thickest at the unique; pits and geodes keep clear of it;
+        // the same from the same seed.
+        [TestCase(2718)] [TestCase(12)] [TestCase(991)]
+        public void EachUniqueLiesInALensOfAnotherZonesGround(int seed)
+        {
+            var ids = TerrainMaterialSnapshot.Generate(SiteLayout.Size, SiteLayout.CellSize, seed, Uniques, SiteLayout.Ground).ToArray();
+            var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, seed, Uniques, SiteLayout.Ground);
+            Assert.That(layout.Lenses.Length, Is.EqualTo(Uniques.Length), "A lens round every unique.");
+            var offsets = TerrainGround.NoiseOffsets(seed);
+            var borders = new float3(TerrainGround.ZoneBorders[0], TerrainGround.ZoneBorders[1], TerrainGround.ZoneBorders[2]);
+            const float cell = SiteLayout.CellSize;
+            var grounds = new HashSet<TerrainMaterialId>();
+            for (int i = 0; i < Uniques.Length; i++)
+            {
+                var lens = layout.Lenses[i];
+                var centre = (float3)(Vector3)Uniques[i];
+                var host = TerrainGround.ZoneGround(TerrainGround.ZoneAt(centre, SiteLayout.Extent.y - centre.y, borders, offsets));
+                Assert.That(lens.Ground, Is.Not.EqualTo(host), $"Unique {i}: another zone's ground.");
+                grounds.Add(lens.Ground);
+                float reach = Uniques[i].w + .25f;
+                var middle = Vector3Int.RoundToInt((Vector3)centre / cell);
+                int n = Mathf.CeilToInt(reach / cell), outside = 0;
+                for (int z = -n; z <= n; z++)
+                for (int y = -n; y <= n; y++)
+                for (int x = -n; x <= n; x++)
+                    if (new Vector3(x, y, z).magnitude * cell <= reach && ids[Index(middle.x + x, middle.y + y, middle.z + z)] != (byte)lens.Ground) outside++;
+                Assert.That(outside, Is.Zero, $"Unique {i}: its envelope lies wholly in its lens.");
+                // Its thickness along the long axis, out to the side that stays inside the grid.
+                float side = centre.x + lens.Axis.x * lens.Radii.x > 1 && centre.x + lens.Axis.x * lens.Radii.x < SiteLayout.Extent.x - 1
+                    && centre.z + lens.Axis.y * lens.Radii.x > 1 && centre.z + lens.Axis.y * lens.Radii.x < SiteLayout.Extent.z - 1 ? 1 : -1;
+                float Thickness(float share)
+                {
+                    var at = Vector3Int.RoundToInt(new Vector3(centre.x + side * lens.Axis.x * lens.Radii.x * share, 0, centre.z + side * lens.Axis.y * lens.Radii.x * share) / cell);
+                    int count = 0;
+                    for (int y = Mathf.FloorToInt(lens.Min.y / cell); y <= Mathf.CeilToInt(lens.Max.y / cell); y++)
+                        if (ids[Index(at.x, y, at.z)] == (byte)lens.Ground) count++;
+                    return count * cell;
+                }
+                float thickest = Thickness(0);
+                Assert.That(thickest, Is.GreaterThan(2 * Uniques[i].w + .5f), $"Unique {i}: ground left above and below it.");
+                Assert.That(Thickness(.6f), Is.GreaterThan(0), $"Unique {i}: the lens reaches metres sideways.");
+                Assert.That(Thickness(.8f), Is.LessThan(thickest * .7f), $"Unique {i}: thinner toward the rim.");
+                foreach (var pit in layout.Pits) Assert.That(math.any(lens.Min > pit.Max) || math.any(pit.Min > lens.Max), Is.True, "Pits keep clear.");
+                foreach (var geode in layout.Geodes) Assert.That(math.any(lens.Min > geode.Max) || math.any(geode.Min > lens.Max), Is.True, "Geodes keep clear.");
+            }
+            Assert.That(grounds, Is.EquivalentTo(new[] { TerrainMaterialId.Riverbed, TerrainMaterialId.LakeSediment }), "River gravel, and lake silt in the riverbed.");
+            var again = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, seed, Uniques, SiteLayout.Ground).Lenses;
+            Assert.That(again.Select(l => (l.Centre, l.Radii, l.Axis, l.Dip)), Is.EqualTo(layout.Lenses.Select(l => (l.Centre, l.Radii, l.Axis, l.Dip))), "From the seed.");
+        }
+
+        // Concept 03 §5 (116): a great cave in every zone, the pits standing clear of its chambers. The halls are laid before
+        // the pits; laid after them, the first zone's hall was missing in most seeds.
+        [Test]
+        public void EveryZoneGetsAGreatCaveWithThePitsClearOfIt()
+        {
+            var spots = new[] { Uniques[0], Uniques[1], Uniques[2] };
+            for (int seed = 100; seed < 112; seed++)
+            {
+                var layout = TerrainGround.Layout(SiteLayout.Size, SiteLayout.CellSize, seed, spots, SiteLayout.Ground);
+                var halls = layout.Caverns.Where(c => c.Great).ToArray();
+                Assert.That(halls.Length, Is.EqualTo(TerrainGround.ZoneBorders.Length + 1), $"Seed {seed}: a great cave in every zone.");
+                Assert.That(layout.Pits.Length, Is.EqualTo(TerrainGround.PitCount), $"Seed {seed}: every pit placed.");
+                foreach (var pit in layout.Pits)
+                    Assert.That(halls.Any(h => TerrainGround.NearHall(h, pit.Min, pit.Max, 0)), Is.False, $"Seed {seed}: pits clear of the halls.");
+            }
+        }
+
         // A geode's hollow is sealed in its shell: everything inside its outer face is shell stone (its hollow's samples
         // too, so the hollow's walls read as shell), and every point a little outside the hollow lies in that stone.
         [Test]

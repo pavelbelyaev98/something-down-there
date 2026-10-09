@@ -9,9 +9,9 @@ using UnityEngine;
 namespace SomethingDownThere
 {
     // The seeded ground: each zone's main ground (soil, old lake sediment, the old riverbed), with backfill pits someone
-    // dug and refilled in the recent fill, a few geodes deeper down and a cavern in each zone (TerrainGround.Caverns).
-    // Written once per session into the one-byte material field; saves store the bytes, so nothing here is saved
-    // separately.
+    // dug and refilled in the recent fill, a lens of another zone's ground round each unique, a few geodes deeper down and
+    // a cavern in each zone (TerrainGround.Caverns). Written once per session into the one-byte material field; saves
+    // store the bytes, so nothing here is saved separately.
     public static partial class TerrainGround
     {
         // Metres below the surface: even quarters of the 150 m site. Absolute depths, so a
@@ -22,7 +22,7 @@ namespace SomethingDownThere
         public const float SurfaceSoil = 1.1f, PitTop = 3f, PitMargin = 3f;
 
         // What the generator lays down. The site admits grounds one at a time (SiteLayout.Ground).
-        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, Caverns = 4, Zones = 8, All = Pits | Geodes | Caverns | Zones }
+        [Flags] public enum Features { None = 0, Pits = 1, Geodes = 2, Caverns = 4, Zones = 8, Lenses = 16, All = Pits | Geodes | Caverns | Zones | Lenses }
         private static bool Has(Features features, Features feature) => (features & feature) != 0;
 
         // Each zone's main ground (111), the real order under a drained lake: recent fill (soil), the older lake's grey
@@ -128,12 +128,13 @@ namespace SomethingDownThere
         // Clearance from pits and stashes, from uniques' spaces, and between geodes (beyond their shells).
         private const float GeodePitClearance = 1.5f, GeodeSpotClearance = 1f, GeodeSpacing = 6f;
 
-        // A unique's space: its reserved envelope plus OddSpotReach sideways and OddSpotRise up and down,
-        // which pits keep clear of.
+        // A unique's space: its reserved envelope (Radius) plus OddSpotReach sideways and OddSpotRise up and down,
+        // which pits, geodes and caves keep clear of; its lens is built round it.
         public const float OddSpotReach = .9f, OddSpotRise = .6f;
         public struct OddSpot
         {
             public float3 Centre, Half, Min, Max;
+            public float Radius;
         }
 
         public static OddSpot[] OddSpots(Vector4[] spots)
@@ -144,12 +145,97 @@ namespace SomethingDownThere
             {
                 var centre = new float3(spots[i].x, spots[i].y, spots[i].z);
                 var half = new float3(spots[i].w + OddSpotReach, spots[i].w + OddSpotRise, spots[i].w + OddSpotReach);
-                result[i] = new OddSpot { Centre = centre, Half = half, Min = centre - half * 1.2f, Max = centre + half * 1.2f };
+                result[i] = new OddSpot { Centre = centre, Half = half, Min = centre - half * 1.2f, Max = centre + half * 1.2f, Radius = spots[i].w };
             }
             return result;
         }
 
-        public static Pit[] Pits(Vector3Int size, float cellSize, int seed, OddSpot[] spots = null, Features features = Features.All)
+        // A unique's lens (112): a patch of another zone's ground round it, the odd one out (real lake mud holds lenses of
+        // sand and gravel from an old channel or flood). Lenticular: an ellipse Radii (long, short half-widths) across, its
+        // long axis along Axis (x/z), Thickness each side of its mid-plane at the unique and thinning to nothing at the rim,
+        // so a wall cutting its edge shows a thin band that thickens toward the unique. The mid-plane dips along the long
+        // axis (Dip, metres per metre) and warps a little away from the unique; the rim wobbles and the faces are rough.
+        // Seed: its noise offsets.
+        public struct Lens
+        {
+            public float3 Centre, Min, Max, Seed;
+            public float2 Radii, Axis;
+            public float Thickness, Dip;
+            public TerrainMaterialId Ground;
+        }
+        // Half-widths (9-11 m long, 7-8.4 m wide), ground left over the unique's envelope at its middle, and the rim's
+        // wobble, faces' roughness, mid-plane warp and steepest dip.
+        public const float LensLongMin = 4.5f, LensLongMax = 5.5f, LensShortMin = 3.5f, LensShortMax = 4.2f;
+        public const float LensCover = .6f, LensWobble = .15f, LensRough = .12f, LensWarp = .25f, LensDipMax = .07f;
+
+        // A lens is another zone's ground: river gravel in the recent fill and in the lake sediment, lake silt in the riverbed.
+        // Lake sediment digs nearly like soil, so it would not be felt in the recent fill.
+        public static TerrainMaterialId LensGround(TerrainMaterialId host)
+            => host == TerrainMaterialId.Riverbed ? TerrainMaterialId.LakeSediment : TerrainMaterialId.Riverbed;
+
+        // One lens per unique space, centred on it, in the ground its centre's zone lacks.
+        public static Lens[] Lenses(Vector3Int size, float cellSize, int seed, OddSpot[] spots, Features features = Features.All)
+        {
+            if (!Has(features, Features.Lenses) || spots == null || spots.Length == 0) return Array.Empty<Lens>();
+            float top = size.y * cellSize;
+            var offsets = NoiseOffsets(seed);
+            var borders = new float3(ZoneBorders[0], ZoneBorders[1], ZoneBorders[2]);
+            var lenses = new Lens[spots.Length];
+            for (int i = 0; i < spots.Length; i++)
+            {
+                uint state = unchecked((uint)seed * 2246822519u ^ (uint)(i + 1) * 3266489917u ^ 0x165667b1u);
+                float Next() => TerrainMaterialSnapshot.NextUnit(ref state);
+                float Range(float a, float b) => a + (b - a) * Next();
+                var spot = spots[i];
+                var host = Has(features, Features.Zones) ? ZoneGround(ZoneAt(spot.Centre, top - spot.Centre.y, borders, offsets)) : TerrainMaterialId.Soil;
+                float heading = Range(0, 2 * math.PI);
+                var lens = new Lens { Centre = spot.Centre, Radii = new float2(Range(LensLongMin, LensLongMax), Range(LensShortMin, LensShortMax)),
+                    Axis = new float2(math.cos(heading), math.sin(heading)), Thickness = spot.Radius + LensCover,
+                    Dip = Range(-LensDipMax, LensDipMax), Seed = new float3(Range(0, 500), Range(0, 500), Range(0, 500)), Ground = LensGround(host) };
+                // The box of the widest wobbling ellipse at its heading, with the dip, warp and rough faces.
+                float a = lens.Radii.x * (1 + LensWobble), b = lens.Radii.y * (1 + LensWobble);
+                float c = lens.Axis.x * lens.Axis.x, s = lens.Axis.y * lens.Axis.y;
+                var half = new float3(math.sqrt(a * a * c + b * b * s), lens.Thickness + math.abs(lens.Dip) * a + LensWarp + LensRough,
+                    math.sqrt(a * a * s + b * b * c)) + .1f;
+                lens.Min = spot.Centre - half; lens.Max = spot.Centre + half;
+                lenses[i] = lens;
+            }
+            return lenses;
+        }
+
+        // Inside a lens (grid-local metres): the one test for the ground job, the X-ray and tests.
+        public static bool InLens(Lens lens, float3 p)
+        {
+            if (math.any(p < lens.Min) || math.any(p > lens.Max)) return false;
+            var d = p - lens.Centre;
+            float u = d.x * lens.Axis.x + d.z * lens.Axis.y, v = d.z * lens.Axis.x - d.x * lens.Axis.y;
+            var across = new float2(u / lens.Radii.x, v / lens.Radii.y);
+            float wobble = 1 + LensWobble * noise.snoise(math.normalizesafe(across, new float2(1, 0)) * 1.3f + lens.Seed.xy);
+            float q = math.lengthsq(across) / (wobble * wobble);
+            if (q >= 1) return false;
+            float mid = u * lens.Dip + LensWarp * q * noise.snoise(p.xz * .18f + lens.Seed.yz);
+            float half = lens.Thickness * (1 - q) + LensRough * noise.snoise(p * 1.1f + lens.Seed);
+            return math.abs(d.y - mid) < half;
+        }
+
+        // The spaces grown to their lenses' boxes: what pits and geodes keep clear of, so each tell leads to one thing. Caves
+        // keep clear of the space alone (their shell wins where they cut a lens's edge): a lens-sized block would drop most
+        // of the hall under the deepest unique, and half the first zone's mini caves, which share the lenses' depths.
+        private static OddSpot[] Cleared(OddSpot[] spots, Lens[] lenses)
+        {
+            if (lenses.Length == 0) return spots;
+            var grown = (OddSpot[])spots.Clone();
+            for (int i = 0; i < grown.Length; i++)
+            {
+                grown[i].Min = math.min(grown[i].Min, lenses[i].Min);
+                grown[i].Max = math.max(grown[i].Max, lenses[i].Max);
+            }
+            return grown;
+        }
+
+        // Clear of the uniques' spaces (spots) and of the great caves' chambers (halls).
+        public static Pit[] Pits(Vector3Int size, float cellSize, int seed, OddSpot[] spots = null, Features features = Features.All,
+            Cavern[] halls = null)
         {
             if (!Has(features, Features.Pits)) return Array.Empty<Pit>();
             var extent = (Vector3)size * cellSize;
@@ -181,6 +267,7 @@ namespace SomethingDownThere
                     bool clear = true;
                     foreach (var other in pits) clear &= math.any(pit.Min > other.Max + 1) || math.any(other.Min > pit.Max + 1);
                     if (spots != null) foreach (var spot in spots) clear &= math.any(pit.Min > spot.Max + 1) || math.any(spot.Min > pit.Max + 1);
+                    if (halls != null) foreach (var hall in halls) clear &= !NearHall(hall, pit.Min, pit.Max, CavernClearance);
                     if (!clear) continue;
                     pits.Add(pit);
                     break;
@@ -388,35 +475,40 @@ namespace SomethingDownThere
             }
         }
 
-        // What find placement needs from the seeded ground: the pits and their chests, the geodes and the caverns.
+        // What find placement needs from the seeded ground: the pits and their chests, the geodes, the caverns and the
+        // uniques' lenses.
         public sealed class GroundLayout
         {
             public static readonly GroundLayout Empty = new GroundLayout(Array.Empty<Pit>(), Array.Empty<Stash>(), Array.Empty<Geode>(), Array.Empty<Cavern>());
             public readonly Pit[] Pits; public readonly Stash[] Stashes; public readonly Geode[] Geodes; public readonly Cavern[] Caverns;
-            public GroundLayout(Pit[] pits, Stash[] stashes, Geode[] geodes, Cavern[] caverns)
-            { Pits = pits; Stashes = stashes; Geodes = geodes; Caverns = caverns; }
+            public readonly Lens[] Lenses;
+            public GroundLayout(Pit[] pits, Stash[] stashes, Geode[] geodes, Cavern[] caverns, Lens[] lenses = null)
+            { Pits = pits; Stashes = stashes; Geodes = geodes; Caverns = caverns; Lenses = lenses ?? Array.Empty<Lens>(); }
         }
 
-        // Pits, caverns and geodes keep clear of every unique's space, and geodes of the caverns.
         public static GroundLayout Layout(Vector3Int size, float cellSize, int seed, Vector4[] oddSpots = null, Features features = Features.All,
             Bounds stashPocket = default)
         {
-            var spots = OddSpots(oddSpots);
-            var pits = Pits(size, cellSize, seed, spots, features);
-            var (caverns, geodes) = Hollows(size, cellSize, seed, pits, spots, features);
-            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), geodes, caverns);
+            var (lenses, pits, caverns, geodes) = Plan(size, cellSize, seed, oddSpots, features);
+            return new GroundLayout(pits, Stashes(pits, seed, stashPocket), geodes, caverns, lenses);
         }
 
-        // The ground's hollows in turn: the great caves, which need the room, then the geodes clear of them, then the mini caves
-        // clear of both.
-        private static (Cavern[] caverns, Geode[] geodes) Hollows(Vector3Int size, float cellSize, int seed, Pit[] pits, OddSpot[] spots, Features features)
+        // The seeded features in turn: a lens round each unique; the great caves, which need the room, clear of the uniques'
+        // spaces; the pits clear of the lenses and the halls' chambers; the geodes clear of all of them; then the mini caves,
+        // which fit almost anywhere, clear of the spaces, pits, halls and geodes.
+        private static (Lens[] lenses, Pit[] pits, Cavern[] caverns, Geode[] geodes) Plan(Vector3Int size, float cellSize, int seed,
+            Vector4[] oddSpots, Features features)
         {
-            var great = GreatCaves(size, cellSize, seed, pits, spots, features);
-            var geodes = Geodes(size, cellSize, seed, pits, spots, features, great);
+            var spots = OddSpots(oddSpots);
+            var lenses = Lenses(size, cellSize, seed, spots, features);
+            var cleared = Cleared(spots, lenses);
+            var great = GreatCaves(size, cellSize, seed, spots, features);
+            var pits = Pits(size, cellSize, seed, cleared, features, great);
+            var geodes = Geodes(size, cellSize, seed, pits, cleared, features, great);
             var mini = MiniCaves(size, cellSize, seed, pits, spots, features, great, geodes);
             var caverns = new Cavern[great.Length + mini.Length];
             great.CopyTo(caverns, 0); mini.CopyTo(caverns, great.Length);
-            return (caverns, geodes);
+            return (lenses, pits, caverns, geodes);
         }
 
         private static bool Inside(Func<Vector2, bool> footprint, float3 centre, float reach)
@@ -433,18 +525,17 @@ namespace SomethingDownThere
             Bounds stashPocket = default)
         {
             int stride = size.x + 1, plane = stride * (size.y + 1);
-            var spots = OddSpots(oddSpots);
-            var pits = Pits(size, cellSize, seed, spots, features);
+            var (lenses, pits, caverns, geodes) = Plan(size, cellSize, seed, oddSpots, features);
             var offsets = NoiseOffsets(seed);
             using var output = new NativeArray<byte>(plane * (size.z + 1), Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             using var nativePits = new NativeArray<Pit>(pits, Allocator.TempJob);
-            new GroundJob { Size = new int3(size.x, size.y, size.z), CellSize = cellSize, Offsets = offsets, Pits = nativePits, Output = output,
-                    Zoned = Has(features, Features.Zones), Borders = new float3(ZoneBorders[0], ZoneBorders[1], ZoneBorders[2]),
+            using var nativeLenses = new NativeArray<Lens>(lenses, Allocator.TempJob);
+            new GroundJob { Size = new int3(size.x, size.y, size.z), CellSize = cellSize, Offsets = offsets, Pits = nativePits, Lenses = nativeLenses,
+                    Output = output, Zoned = Has(features, Features.Zones), Borders = new float3(ZoneBorders[0], ZoneBorders[1], ZoneBorders[2]),
                     Grounds = new int4((int)ZoneGround(0), (int)ZoneGround(1), (int)ZoneGround(2), (int)ZoneGround(3)) }
                 .Schedule(size.z + 1, 1).Complete();
             var ids = output.ToArray();
             foreach (var stash in Stashes(pits, seed, stashPocket)) if (stash.HasPocket) FillShell(ids, size, cellSize, stash, offsets);
-            var (caverns, geodes) = Hollows(size, cellSize, seed, pits, spots, features);
             foreach (var cavern in caverns) FillCavern(ids, size, cellSize, cavern);
             foreach (var geode in geodes) FillGeode(ids, size, cellSize, geode);
             return ids;
@@ -498,6 +589,7 @@ namespace SomethingDownThere
             public float3 Borders;
             public int4 Grounds;
             [ReadOnly] public NativeArray<Pit> Pits;
+            [ReadOnly] public NativeArray<Lens> Lenses;
             [NativeDisableParallelForRestriction, WriteOnly] public NativeArray<byte> Output;
 
             public void Execute(int z)
@@ -507,6 +599,9 @@ namespace SomethingDownThere
                 var dug = new FixedList128Bytes<int>();
                 for (int i = 0; i < Pits.Length && dug.Length < dug.Capacity; i++)
                     if (pz >= Pits[i].Min.z && pz <= Pits[i].Max.z) dug.Add(i);
+                var lensed = new FixedList128Bytes<int>();
+                for (int i = 0; i < Lenses.Length && lensed.Length < lensed.Capacity; i++)
+                    if (pz >= Lenses[i].Min.z && pz <= Lenses[i].Max.z) lensed.Add(i);
                 for (int x = 0; x <= Size.x; x++)
                 {
                     float px = x * CellSize;
@@ -515,16 +610,19 @@ namespace SomethingDownThere
                     {
                         float depth = (Size.y - y) * CellSize;
                         var p = new float3(px, y * CellSize, pz);
-                        Output[x + y * stride + z * plane] = (byte)Material(p, depth, dug, warped);
+                        Output[x + y * stride + z * plane] = (byte)Material(p, depth, in dug, in lensed, warped);
                     }
                 }
             }
 
-            private TerrainMaterialId Material(float3 p, float depth, FixedList128Bytes<int> dug, float3 warped)
+            // The first metre's soil, then a pit's backfill, then a unique's lens, then the zone's ground.
+            private TerrainMaterialId Material(float3 p, float depth, in FixedList128Bytes<int> dug, in FixedList128Bytes<int> lensed, float3 warped)
             {
                 if (depth < SurfaceSoil) return TerrainMaterialId.Soil;
                 for (int i = 0; i < dug.Length; i++)
                     if (InPit(Pits[dug[i]], p)) return TerrainMaterialId.Backfill;
+                for (int i = 0; i < lensed.Length; i++)
+                    if (InLens(Lenses[lensed[i]], p)) return Lenses[lensed[i]].Ground;
                 return Zoned ? (TerrainMaterialId)Grounds[ZoneIn(p, depth, warped, Offsets)] : TerrainMaterialId.Soil;
             }
 
