@@ -791,19 +791,24 @@ namespace SomethingDownThere.Tests
 
         private bool BesideSeededAir(BuriedFind find) => BesideChest(find) || InGeode(find) || InCavern(find);
 
-        // In a chest or within a metre of the pocket it stands in (109): seeded air is modified ground, and buried finds
-        // beside it wake conservatively (TerrainVolume.MayExpose checks modified samples in coarse blocks).
-        private bool BesideChest(BuriedFind find) => field.Chests.Any(chest =>
+        // In a chest or within a metre of the pocket it stands in (109), measured from the find's side, not its middle:
+        // seeded air is modified ground, and buried finds whose bounds reach near it wake conservatively
+        // (TerrainVolume.MayExpose checks modified samples in coarse blocks).
+        private bool BesideChest(BuriedFind find)
         {
-            var local = chest.transform.InverseTransformPoint(find.transform.position) - chest.Pocket.center;
-            var d = new Vector3(Mathf.Abs(local.x), Mathf.Abs(local.y), Mathf.Abs(local.z)) - chest.Pocket.extents;
-            return Vector3.Max(d, Vector3.zero).magnitude < 1f;
-        }) || terrain.GroundLayout.Stashes.Any(stash =>
-        {
-            // The pocket's uneven dome above the chest (113).
-            var dome = TerrainGround.PocketDomeReserve(stash);
-            return Vector3.Distance(terrain.transform.TransformPoint((Vector3)dome.centre), find.transform.position) < dome.radius + 1f;
-        });
+            float margin = 1f + find.WorldBounds.extents.magnitude;
+            return field.Chests.Any(chest =>
+            {
+                var local = chest.transform.InverseTransformPoint(find.transform.position) - chest.Pocket.center;
+                var d = new Vector3(Mathf.Abs(local.x), Mathf.Abs(local.y), Mathf.Abs(local.z)) - chest.Pocket.extents;
+                return Vector3.Max(d, Vector3.zero).magnitude < margin;
+            }) || terrain.GroundLayout.Stashes.Any(stash =>
+            {
+                // The pocket's uneven dome above the chest (113).
+                var dome = TerrainGround.PocketDomeReserve(stash);
+                return Vector3.Distance(terrain.transform.TransformPoint((Vector3)dome.centre), find.transform.position) < dome.radius + margin;
+            });
+        }
 
         // Loose in a stash chest's seeded hollow (106).
         private bool InChest(BuriedFind find)

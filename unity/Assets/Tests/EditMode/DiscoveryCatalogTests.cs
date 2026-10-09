@@ -605,14 +605,14 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void RockOwnsTheShallowLayerWithThreeSavedAppearancesAndFullTiltOrientations()
+        public void RockOwnsTheShallowLayerWithFourSavedAppearancesAndFullTiltOrientations()
         {
             var catalog = Catalog;
             var rock = catalog.Entries.Single(e => e.ItemId == "common_rock");
             // Rocks are the shallow layer: every saved appearance must resolve and restore.
             Assert.That(rock.Count, Is.EqualTo(5390));
             Assert.That(rock.ShallowCount, Is.EqualTo(640));
-            Assert.That(rock.AppearanceCount, Is.EqualTo(3));
+            Assert.That(rock.AppearanceCount, Is.EqualTo(4));
             var seen = new System.Collections.Generic.HashSet<string>();
             for (int i = 0; i < rock.AppearanceCount; i++)
             {
@@ -625,7 +625,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(catalog.Resolve(prefab.SaveContentId), Is.SameAs(prefab));
 
             }
-            Assert.That(seen.Count, Is.EqualTo(3));
+            Assert.That(seen.Count, Is.EqualTo(4));
             // Shipped types seed full tilt, not just yaw, across the rock population.
             bool tipped = false, inverted = false;
             foreach (int seed in new[] { 90127, 12, 991 })

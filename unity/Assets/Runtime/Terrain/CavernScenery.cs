@@ -20,7 +20,7 @@ namespace SomethingDownThere
     // fades out where daylight reaches it (ExcavationDaylight.SampleAmbient), from DarkAmbient to LitAmbient, and its own
     // glow down to DayGlow, so in daylight it still reads as a bright crystal ("too dark when there is light"), a trophy
     // standing at camp too. Its light lights the ground only, never a crystal, so none shows a hot spot inside.
-    public sealed partial class CavernScenery : MonoBehaviour
+    public sealed class CavernScenery : MonoBehaviour
     {
         // A crystal's light: how far in front of its middle (towards its hollow's heart), its reach and brightness; how
         // much each neighbour within its reach dims it, so a geode's crowd of crystals lights its hollow about as a few
@@ -73,21 +73,13 @@ namespace SomethingDownThere
             public float Dark = 1;
         }
 
-        private void OnDestroy()
-        {
-            if (root != null) Destroy(root.gameObject);
-            ClearPuddles();
-            if (puddleRoot != null) Destroy(puddleRoot.gameObject);
-            if (puddleWater != null) Destroy(puddleWater);
-            if (puddleDepths != null) Destroy(puddleDepths);
-        }
+        private void OnDestroy() { if (root != null) Destroy(root.gameObject); }
 
         private void LateUpdate()
         {
             if (terrain == null || field == null) return;
             var layout = terrain.GroundLayout;
             if (!ReferenceEquals(layout, dressed) || field.PopulationRevision != dressedRevision) Dress(layout);
-            UpdatePuddles(layout);
             if (viewer == null) viewer = FindAnyObjectByType<FpsPlayer>();
             Shine(viewer != null && viewer.ViewCamera != null ? viewer.ViewCamera.transform.position : transform.position);
             ShadeGlows();

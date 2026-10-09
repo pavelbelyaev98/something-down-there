@@ -28,9 +28,6 @@ namespace SomethingDownThere
             // foot radius, height). (Arches went: a half ring on the floor read as a croissant, user 2026-10-07.)
             public FixedList128Bytes<float3> Pillars;
             public FixedList512Bytes<float4> Stalagmites;
-            // Basins sunk into the floor (x, z, radius, depth), each holding a puddle (CavernScenery; user, 2026-10-08: "make
-            // the puddles deeper"): a smooth bowl, deepest in its middle.
-            public FixedList512Bytes<float4> Basins;
             public float3 Min, Max, Seed;
             public float Floor, Shell;
             public bool Great;
@@ -41,11 +38,6 @@ namespace SomethingDownThere
         // MiniCavesPerZone mini caves in each zone, spread down it in turn, the first CaveTop or more below the surface, all
         // under the dig plot so digging down meets them.
         public static readonly int[] MiniCavesPerZone = { 3, 3, 3, 3 };
-        // A great cave's basins, and the share of mini caves with one; their radii and depths.
-        // (User, 2026-10-08: "not deep enough and not enough count-wise in the cave".)
-        public const int GreatBasins = 12;
-        public const float MiniBasinShare = .75f;
-        private const float BasinRadiusLeast = 1f, BasinRadiusMost = 1.7f, BasinDepthLeast = .7f, BasinDepthMost = 1f, BasinMargin = .4f;
         public const float CaveTop = 7.5f;
         // How softly chambers join, the warp and lumps of the walls, the floor's roll, and slack on the reach: a mini cave's,
         // then a great cave's (broader, slower folds).
@@ -136,9 +128,6 @@ namespace SomethingDownThere
                         var centre = new float3(draws.Range(4, extent.x - 4), floor + radii.y * .45f + draws.Range(0, .3f), draws.Range(4, extent.z - 4));
                         var cavern = new Cavern { Shell = draws.Range(.5f, .7f), Seed = new float3(draws.Range(0, 500), draws.Range(0, 500), draws.Range(0, 500)), Floor = floor };
                         cavern.Centres.Add(centre); cavern.Radii.Add(radii);
-                        if (draws.Next() < MiniBasinShare)
-                            cavern.Basins.Add(new float4(centre.x + draws.Range(-.4f, .4f), centre.z + draws.Range(-.4f, .4f),
-                                draws.Range(.8f, 1f), draws.Range(.55f, .7f)));
                         if (footprint != null && !Inside(footprint, centre, math.cmax(radii) + cavern.Shell + .5f)) continue;
                         Bound(ref cavern);
                         if (OutOfGrid(cavern, extent) || blocked(cavern.Min, cavern.Max)) continue;
@@ -224,8 +213,6 @@ namespace SomethingDownThere
             if (underPlot < 3) return false;
             Bound(ref cave);
             Furnish(ref cave, draws);
-            // Again, now that its basins sink the floor.
-            Bound(ref cave);
             return true;
         }
 
@@ -261,26 +248,13 @@ namespace SomethingDownThere
                 if (!Open(cave, at, height + 1f, .3f) || !Open(cave, at, .4f, foot + .3f) || !Clear(at, foot)) continue;
                 cave.Stalagmites.Add(new float4(at, foot, height)); standing.Add((at, foot));
             }
-            // Basins in the floor's open stretches: the bowl's middle well inside the hall (a bowl may meet a wall) and the
-            // bowl clear of the standing rock by BasinMargin (the standing rock's own wide spacing left no room for one in a
-            // crowded hall).
-            for (int attempt = 0; attempt < 600 && cave.Basins.Length < GreatBasins; attempt++)
-            {
-                var at = Somewhere(cave, .8f); float radius = draws.Range(BasinRadiusLeast, BasinRadiusMost);
-                if (!Open(cave, at, .4f, radius * .5f + BasinMargin)) continue;
-                bool clear = true;
-                foreach (var (other, otherReach) in standing) clear &= math.distance(at, other) > radius + otherReach + BasinMargin;
-                if (!clear) continue;
-                cave.Basins.Add(new float4(at, radius, draws.Range(BasinDepthLeast, BasinDepthMost))); standing.Add((at, radius));
-            }
         }
 
-        // A cave at hand (the Ground Lab's mini caves): chambers, its floor and shell, and its basins.
-        public static Cavern MakeCavern(float3[] centres, float3[] radii, float floor, float shell, float3 seed, float4[] basins = null)
+        // A cave at hand (the Ground Lab's mini caves): chambers, its floor and shell.
+        public static Cavern MakeCavern(float3[] centres, float3[] radii, float floor, float shell, float3 seed)
         {
             var cavern = new Cavern { Floor = floor, Shell = shell, Seed = seed };
             for (int i = 0; i < centres.Length; i++) { cavern.Centres.Add(centres[i]); cavern.Radii.Add(radii[i]); }
-            if (basins != null) foreach (var basin in basins) cavern.Basins.Add(basin);
             Bound(ref cavern);
             return cavern;
         }
@@ -290,9 +264,7 @@ namespace SomethingDownThere
             float pad = cavern.Shell + (cavern.Great ? GreatWarp + GreatBlend * .25f : CavernWarp + CavernBlend * .25f) + GeodeOuterLumps + CavernSlack;
             var min = new float3(float.MaxValue); var max = new float3(float.MinValue);
             for (int i = 0; i < cavern.Centres.Length; i++) { min = math.min(min, cavern.Centres[i] - cavern.Radii[i]); max = math.max(max, cavern.Centres[i] + cavern.Radii[i]); }
-            float deepest = 0;
-            for (int i = 0; i < cavern.Basins.Length; i++) deepest = math.max(deepest, cavern.Basins[i].w);
-            min.y = math.max(min.y, cavern.Floor - (cavern.Great ? GreatFloorRoll : CavernFloorRoll) - deepest);
+            min.y = math.max(min.y, cavern.Floor - (cavern.Great ? GreatFloorRoll : CavernFloorRoll));
             cavern.Min = min - pad; cavern.Max = max + pad;
         }
 
@@ -303,20 +275,7 @@ namespace SomethingDownThere
             float d = CavernWalls(cavern, p);
             float floor = cavern.Floor + (cavern.Great ? GreatFloorRoll * noise.snoise(new float3(p.x, 0, p.z) * .15f + cavern.Seed.zxy)
                 : CavernFloorRoll * noise.snoise(new float3(p.x, 0, p.z) * .4f + cavern.Seed.zxy));
-            return math.max(d, floor - BasinDip(cavern, p.xz) - p.y);
-        }
-
-        // How far the floor sinks into a basin at a grid-local x/z: a smooth bowl, its full depth in its middle.
-        public static float BasinDip(in Cavern cavern, float2 xz)
-        {
-            float dip = 0;
-            for (int i = 0; i < cavern.Basins.Length; i++)
-            {
-                var basin = cavern.Basins[i];
-                float t = math.lengthsq(xz - basin.xy) / (basin.z * basin.z);
-                if (t < 1) dip = math.max(dip, basin.w * (1 - t) * (1 - t));
-            }
-            return dip;
+            return math.max(d, floor - p.y);
         }
 
         // The chambers joined and warped, without the floor: their walls and roof.
@@ -384,7 +343,7 @@ namespace SomethingDownThere
         public static (float floor, float roof) CavernSpan(in Cavern cavern, float x, float z)
         {
             float floor = float.NaN;
-            for (float y = cavern.Floor - .6f - BasinDip(cavern, new float2(x, z)); y < cavern.Max.y;)
+            for (float y = cavern.Floor - .6f; y < cavern.Max.y;)
             {
                 float d = CavernHollow(cavern, new float3(x, y, z));
                 bool air = d < 0;

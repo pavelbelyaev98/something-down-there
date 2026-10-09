@@ -55916,7 +55916,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ee42e014b2f56d4183d1f8012cdc26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.CavernScenery
-  puddleMaterial: {fileID: 2100000, guid: 25304e5f442b6ef41b9dd9a8b8cca50d, type: 2}
   terrain: {fileID: 486403993}
   field: {fileID: 203558592}
 --- !u!1001 &487584416

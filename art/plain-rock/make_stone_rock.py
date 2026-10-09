@@ -4,7 +4,7 @@ seamless tile, with the stones' own relief and occlusion.
 - StoneRock_Albedo.png: the largest square fully inside one island of rock_colour.png (the retired Blender rock's colour
   map, already graded warm grey-brown by its grade_colour.py), blended with its half-offset copy where its edges meet so
   it tiles (art/mining-pack/seamless.py), repeated `repeats` times each way: the stones map their whole surface once onto
-  the texture, and this keeps the old rock's speckles at their own size on a stone of about half a metre.
+  the texture, and this keeps the old rock's speckles at their own size on a stone of about 40 cm.
 - StoneRock_Normal.png, StoneRock_Mask.png: the stones' own normal map and occlusion (the pack mask's G), at find size.
 1024 px each (a find a metre away needs no more), into Content/BuriedProps/Stones. Run from the repository root (needs
 Pillow and numpy) after reimporting the Mountains pack."""

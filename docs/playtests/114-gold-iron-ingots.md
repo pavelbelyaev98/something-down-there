@@ -8,7 +8,8 @@ In a run, iron lies mostly in zone 2 (about 35–60 m), gold in zone 3 (about 75
 **Try:**
 - Look at gold, iron and silver side by side in the gallery in daylight, then dig some up underground by a lamp.
 - The plain rock (first in the gallery, and all over the first few metres): four new angular stone shapes from the
-  packs, in the same warm grey-brown as before.
+  packs, in the same warm grey-brown as before; a tenth smaller than in the last build (about 40 cm), so a new
+  world has room for all of them.
 - Sell a pyrite: it now pays more than iron, less than silver.
 - The TVs: only the wood-cased and the CRT set are left, three of each in a run.
 - Open a chest and look at the ingots in the light of a lamp and in daylight.

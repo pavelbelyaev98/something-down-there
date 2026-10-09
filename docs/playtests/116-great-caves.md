@@ -35,17 +35,11 @@ from about 8 m down. Developer admin → **Ground X-ray** marks cave rock yellow
 - The great cave's stone is a dark brown cave rock now (the cave-rock bay in the lab shows it in daylight).
 - Pick up a geode crystal: it keeps its colour as it flies to you (it used to turn pink).
 
-- **Puddles (A/B):** water stands in basins sunk into each great cave's floor (about a dozen) and most mini caves'
-  floors (every one in the lab), knee deep in the middle and darker there, see-through and glossy; bring a lamp (the
-  lab now has unlimited lamps; in the dark, water shows only by what it reflects). Dig into a puddle: the water stays
-  and fills your hole. Dig a trench out of it: the water fills the trench too. Lead the trench to a hole deeper than
-  the puddle: the water is gone at once, no shrinking. Developer admin → **Cave puddles** turns them all off and on.
-  New Game needed (the caves' floors changed).
+- The caves' puddles are gone (their floors are as before them). New Game needed.
+- Ground Lab: lamps never run out (the HUD reads LAMPS UNLIMITED).
 
 **Tell the agent:**
 - The cave's darkness and the pool of light under the hole; crystals in light and in the dark.
 - The digging assist on extractable items: too much, too little.
 - The break-in: is the opening big enough, too big?
 - The great caves' size and the trophy trip to camp.
-- Puddles: keep them or not; too many, too few, too dark or too shiny; whether the water staying while you dig
-  feels right.

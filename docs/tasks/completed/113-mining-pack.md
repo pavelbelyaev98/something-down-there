@@ -185,6 +185,12 @@ items. AGENTS.md "Bought Before Made" now says so.
   (its top dented, a dark patch in the dent) is gone from the catalog, the manifests and the content; `b` and `c` remain.
 - Then (user): four new shapes, "not the poop like form I have", from the packs and "closer to other minerals", keeping
   the colour. The plain rock is now Pure Nature 2: Mountains' mossless stones `Stone1b`-`4b` (angular, chipped) at
-  about half a metre, wearing a seamless 3 x 3 tile cut from the old rock's own graded colour map with the stones' own
+  about 40 cm, wearing a seamless 3 x 3 tile cut from the old rock's own graded colour map with the stones' own
   relief and occlusion (`art/plain-rock`, `BuriedPropsSetup.Stones`, `RockSetup`); the Blender rock and its folder are
   gone.
+- Then (session's test run): the four stones reached further than the old rock (0.34 m from their middle against about
+  0.29), and the site's 5390 rocks no longer packed into the ground: a new world stopped placing finds about 2 m down.
+  Three are scaled ten percent down (`rock.json`, 0.26 m reach, roughly 43 cm long), the largest that placed every find
+  across the 20-seed sweep; the flat one (`Stone3b`) grew to the same reach instead, which keeps fresh dig faces at the
+  accepted encounter density down to 4 m (ten percent smaller everywhere fell just short there). Shapes and colour are
+  unchanged.

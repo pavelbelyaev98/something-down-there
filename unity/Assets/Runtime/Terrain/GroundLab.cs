@@ -97,12 +97,9 @@ namespace SomethingDownThere
             var bottom = new Vector3(centre.x, roof + GreatShaftLeft, centre.z) + SiteLayout.Origin;
             shaft = (new Vector3(bottom.x, 0, bottom.z), bottom);
             for (int i = 0; i < MiniCaveSpots.Length; i++)
-            {
-                // Each with a basin and its puddle beside the middle (111/116 iteration).
-                var middle = Local3(MiniCaveSpots[i].x, MiniCentreY, MiniCaveSpots[i].y);
-                caves.Add(TerrainGround.MakeCavern(new[] { middle }, new[] { new Unity.Mathematics.float3(1.75f, 1.45f, 1.6f) }, Local3(0, MiniFloorY, 0).y, .6f,
-                    new Unity.Mathematics.float3(41 + i * 17, 7 + i * 5, 113 - i * 11), new[] { new Unity.Mathematics.float4(middle.x + .4f, middle.z - .3f, .95f, .6f) }));
-            }
+                caves.Add(TerrainGround.MakeCavern(new[] { Local3(MiniCaveSpots[i].x, MiniCentreY, MiniCaveSpots[i].y) },
+                    new[] { new Unity.Mathematics.float3(1.75f, 1.45f, 1.6f) }, Local3(0, MiniFloorY, 0).y, .6f,
+                    new Unity.Mathematics.float3(41 + i * 17, 7 + i * 5, 113 - i * 11)));
             return caves.ToArray();
         }
 
@@ -213,10 +210,10 @@ namespace SomethingDownThere
             string ground = "hitting " + EquipmentProgression.GroundName(hit).ToLowerInvariant();
             var local = Local(world);
             if (Vector2.Distance(new Vector2(world.x, world.z), new Vector2(GreatShaft.top.x, GreatShaft.top.z)) < GreatShaftRadius + 1.2f)
-                return $"Great cave: drop down the shaft ({-GreatShaft.bottom.y:0} m), dig through the last metre of rock; puddles stand in its low spots (bring a lamp)  |  " + ground;
+                return $"Great cave: drop down the shaft ({-GreatShaft.bottom.y:0} m), dig through the last metre of rock  |  " + ground;
             foreach (var cave in Caves)
                 if (!cave.Great && Over(cave, local.x, local.z))
-                    return "Mini cave: a few crystals of one kind, maybe a puddle; dig down through the stone patch, about 1.5 m  |  " + ground;
+                    return "Mini cave: a few crystals of one kind; dig down through the stone patch, about 1.5 m  |  " + ground;
             return bay < 0 ? "Ground Lab  |  " + ground : $"{Bays[bay].Name}: {Bays[bay].Hint}  |  {ground}";
         }
     }

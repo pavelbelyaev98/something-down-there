@@ -550,10 +550,6 @@ namespace SomethingDownThere
                 var centre = cave.Centres[chamber]; var radius = cave.Radii[chamber];
                 float x = centre.x + ((float)random.NextDouble() - .5f) * radius.x, z = centre.z + ((float)random.NextDouble() - .5f) * radius.z;
                 if (footprint != null && attempt < 50 && !footprint(new Vector2(x, z))) continue;
-                // Never in a basin's puddle.
-                if (TerrainGround.BasinDip(cave, new Unity.Mathematics.float2(x, z)) > 0
-                    || TerrainGround.BasinDip(cave, new Unity.Mathematics.float2(x + reach, z)) > 0 || TerrainGround.BasinDip(cave, new Unity.Mathematics.float2(x - reach, z)) > 0
-                    || TerrainGround.BasinDip(cave, new Unity.Mathematics.float2(x, z + reach)) > 0 || TerrainGround.BasinDip(cave, new Unity.Mathematics.float2(x, z - reach)) > 0) continue;
                 var (floor, roof) = TerrainGround.CavernSpan(cave, x, z);
                 if (float.IsNaN(floor) || roof - floor < half * 2 * (1 - TrophySink) + 1f) continue;
                 bool room = true;

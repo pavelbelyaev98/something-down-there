@@ -20,7 +20,7 @@
     "core_minimum_depth_m": 0.72,
     "core_maximum_depth_m": 4.5,
     "core_share": 0.92,
-    "model_scale": 0.35,
+    "model_scale": 0.27,
     "host_grounds": [
       "soil"
     ],
@@ -31,17 +31,17 @@
       {
         "content_id": "common_rock_b",
         "prefab": "Assets/Content/BuriedProps/Stones/Rock_Stone2b.prefab",
-        "model_scale": 0.23
+        "model_scale": 0.207
       },
       {
         "content_id": "common_rock_c",
         "prefab": "Assets/Content/BuriedProps/Stones/Rock_Stone3b.prefab",
-        "model_scale": 0.19
+        "model_scale": 0.195
       },
       {
         "content_id": "common_rock_d",
         "prefab": "Assets/Content/BuriedProps/Stones/Rock_Stone4b.prefab",
-        "model_scale": 0.16
+        "model_scale": 0.136
       }
     ]
   }

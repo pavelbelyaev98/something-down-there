@@ -335,3 +335,6 @@ then lifted out at jetpack speed, profiled.
   tries; their list now holds that many) and in three quarters of the mini caves; the cave's bounds include them.
   Deeper water reads darker through five faint matte layers under the surface (two strong layers drew hard contour
   rings). Save format 27. The Ground Lab's lamps are unlimited too (`LampKit.Unlimited`; the HUD reads UNLIMITED).
+- Then (user): "remove the puddles, they are awful". Puddles, the basins sunk to hold them, their material and the
+  admin toggle are gone; the caves' floors are as before them (save format 28). Concept `03` records that caves hold no
+  standing water. The Ground Lab's unlimited lamps stay.
