@@ -418,3 +418,4 @@ User direction (playtest iteration): the site is a drained **lakebed**, no longe
 - Checks: one water body per creek, no water edge above the ground and no cut-off edge, no floating stones;
   the user's two viewpoints, each head from four sides, both creeks walked every 12 m at close range,
   deltas, flight ceiling and top-down. Occlusion rebaked.
+- Verdict (user, 2026-10-09): better; accepted as done.
