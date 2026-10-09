@@ -9,7 +9,7 @@
     "display_name": "Rock",
     "tier": "common",
     "recovery": "bag",
-    "instances": 5390,
+    "instances": 3020,
     "shallow_instances": 640,
     "sale_value": 2,
     "slots": 1,
@@ -19,7 +19,7 @@
     "maximum_depth_m": 14,
     "core_minimum_depth_m": 0.72,
     "core_maximum_depth_m": 4.5,
-    "core_share": 0.92,
+    "core_share": 0.8404,
     "model_scale": 0.27,
     "host_grounds": [
       "soil"

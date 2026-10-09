@@ -22,7 +22,7 @@ MonoBehaviour:
     - {fileID: 4004229674818400406, guid: be32b87c9c8d56141824b03945a07197, type: 3}
     - {fileID: 269719599445629592, guid: 14f18186d66bea644aa3a731d17b6c13, type: 3}
     - {fileID: 8456720129100573077, guid: a8893247411a71d44a55aa92a4a1397e, type: 3}
-    Count: 5390
+    Count: 3020
     ShallowCount: 640
     ShallowMinCover: 0.02
     ShallowMaxCover: 0.06
@@ -30,7 +30,7 @@ MonoBehaviour:
     MaxDepth: 14
     CoreMinDepth: 0.72
     CoreMaxDepth: 4.5
-    CoreShare: 0.92
+    CoreShare: 0.8404
     LayOnSide: 0
     RandomOrientation: 1
     Geode: 0

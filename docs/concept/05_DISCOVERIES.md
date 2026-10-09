@@ -51,9 +51,10 @@ narrow core depth band where most of it lives, plus a thin scatter band that spr
 outliers outside it: the odd lump of junk survives deep, the odd valuable turns up shallow. Junk
 belongs to the recent fill, the mid ladder to the sediment, and the deep ground is mostly worth
 carrying home. Price stays fixed per type; the mix is what rewards descending.
-The shallow rock layer stays dense but not crowded. **The first few metres should feel almost as
-full of fresh finds as the first scrape**, with rocks continuing and coal entering as the
-player digs beneath the surface. Measure new objects emerging from intact soil at each dig face;
+The shallow rock layer stays dense but not crowded. **The first few metres keep meeting fresh
+finds**, with rocks continuing more thinly than at the first scrape and coal entering as the
+player digs beneath the surface (user, 2026-10-09: "too many [rocks] in the main layer"; it went
+from about two rocks a cubic metre to one). Measure new objects emerging from intact soil at each dig face;
 loose rocks falling down from earlier layers do not count. Farther down, the mix shifts toward
 richer types while the encounter rate stays roughly constant.
 

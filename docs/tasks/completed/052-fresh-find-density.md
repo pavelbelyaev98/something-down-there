@@ -50,3 +50,9 @@ Fallen objects from earlier digging must never count as evidence of new buried e
 - Eight representative cuts averaged 3.47 ms total and 2.35 ms for find refresh in the Editor.
 - Windows player rebuilt successfully with no compiler warnings/errors; the existing optional
   Pipeline runtime-config warning remains.
+
+## Iteration (playtest, 2026-10-09): fewer rocks in the main layer
+- User: "too many in the main layer. reduce em ... like to 2000". The rock layer from 0.72 to 4.5 m went
+  from 4,370 rocks (about two per cubic metre under the plot) to 2,000 (about one); the surface layer
+  (640 just under the turf) and the scatter down to 14 m (380) are unchanged (`rock.json`: 3,020
+  instances, core share 0.8404).
