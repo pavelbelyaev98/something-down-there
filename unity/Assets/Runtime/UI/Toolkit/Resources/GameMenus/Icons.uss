@@ -1,0 +1,12 @@
+/* The game's icon set (art/ui-icons: SVG sources, rendered to Content/UI/Icons). An element
+   gets `icon` plus one `icon-<name>` class; its size comes from where it is used. */
+
+.icon { flex-shrink: 0; -unity-background-scale-mode: scale-to-fit; }
+.icon-coin { background-image: url("/Assets/Content/UI/Icons/coin.png"); }
+.icon-backpack { background-image: url("/Assets/Content/UI/Icons/backpack.png"); }
+.icon-lamp { background-image: url("/Assets/Content/UI/Icons/lamp.png"); }
+.icon-fuel-pump { background-image: url("/Assets/Content/UI/Icons/fuel-pump.png"); }
+.icon-jerrycan { background-image: url("/Assets/Content/UI/Icons/jerrycan.png"); }
+.icon-shovel { background-image: url("/Assets/Content/UI/Icons/shovel.png"); }
+.icon-drill { background-image: url("/Assets/Content/UI/Icons/drill.png"); }
+.icon-jetpack { background-image: url("/Assets/Content/UI/Icons/jetpack.png"); }

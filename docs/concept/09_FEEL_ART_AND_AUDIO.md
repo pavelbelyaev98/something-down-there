@@ -160,8 +160,9 @@ never move or grow on hover; only their colour changes. Borders go all the way r
 full-screen slate sheet: category tabs along the top, rounded rows whose values step in place (◀ value
 ▶ with a pip per choice), the focused option's description and choices on the right. Dialogs and the
 computer's shop are slate cards with orange actions; the shop is one list of roomy tiles (name, progress
-bar, the one number a purchase changes, price), never a level counter. Icons come from a bought or
-licensed icon set, never drawn in-house; until one is chosen, words stand in. Type: a chunky rounded display face for logo,
+bar, the one number a purchase changes, price), never a level counter. Icons are the game's own set, each
+drawn the way real icon sets draw the object (flat colours, one dark outline), on bone tiles where
+the background is slate. Type: a chunky rounded display face for logo,
 menu, tabs, headings and prices; a condensed sans for rows and running text.
 
 ## 9. Photo-ready moments (by design, not by marketing)

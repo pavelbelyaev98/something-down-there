@@ -1,22 +1,26 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Style src="Theme.uss" />
     <ui:Style src="Hud.uss" />
+    <ui:Style src="Icons.uss" />
     <ui:VisualElement name="hudRoot" class="hud-root" picking-mode="Ignore">
-        <ui:Label name="Wallet" class="hud-number hud-wallet" />
+        <ui:VisualElement name="WalletGroup" class="hud-wallet">
+            <ui:VisualElement class="icon icon-coin hud-wallet-icon" />
+            <ui:Label name="Wallet" class="hud-number hud-wallet-amount" />
+        </ui:VisualElement>
         <ui:VisualElement class="hud-kit">
             <ui:VisualElement class="hud-battery-column">
                 <ui:VisualElement name="batteryGroup" class="hud-battery">
                     <ui:VisualElement name="Charge" class="hud-charge" />
                 </ui:VisualElement>
-                <ui:Label text="FUEL" class="hud-caption hud-battery-caption" />
+                <ui:VisualElement class="icon icon-fuel-pump hud-battery-icon" />
             </ui:VisualElement>
             <ui:VisualElement class="hud-counters">
                 <ui:VisualElement name="BagGroup" class="hud-counter">
-                    <ui:Label text="BAG" class="hud-caption hud-counter-caption" />
+                    <ui:VisualElement class="icon icon-backpack hud-counter-icon" />
                     <ui:Label name="Status" class="hud-number" />
                 </ui:VisualElement>
                 <ui:VisualElement name="LampGroup" class="hud-counter">
-                    <ui:Label text="LAMPS" class="hud-caption hud-counter-caption" />
+                    <ui:VisualElement class="icon icon-lamp hud-counter-icon" />
                     <ui:Label name="Lamps" class="hud-number" />
                 </ui:VisualElement>
             </ui:VisualElement>

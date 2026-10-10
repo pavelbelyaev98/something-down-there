@@ -4,7 +4,7 @@
 (blurred cliffs) with a large stacked logo and the menu centred under it; pause is only its menu, with New Game;
 settings is a full-screen slate sheet with tabs, in-place ◀ value ▶ selectors and a description panel; dialogs
 and the shop are slate cards with orange actions. The HUD shows only money, bag, lamps and an upright battery bar
-coloured by the return estimate. Pause has Main Menu. No icons until the user picks an icon pack. Lilita One and Barlow Condensed (OFL) set the
+coloured by the return estimate. Pause has Main Menu. The HUD and shop use the game's own icon set (`art/ui-icons`). Lilita One and Barlow Condensed (OFL) set the
 type. Awaiting the user's playtest.
 
 ## Objective
@@ -138,6 +138,22 @@ the *Chopping Trees* shop (icon tiles, name, bar, one stat change, big price, no
   caption under the bar, which lost its outline.
 - Pause Main Menu: `WorldSaveController.RequestMainMenu` saves as quitting does (the same unsaved-exit prompt
   after a write failure), then reloads the scene to the title; in the Ground Lab it leaves the lab.
+
+## Iteration 5 (2026-10-10): our own icon set
+
+Icon packs offered: LAYERLAB 2D Minimal (closest to the reference, but no drill, jetpack or work lamp),
+game-icons.net (complete, flat silhouettes), REXARD and A-ravlik mining packs (painted, clash), Kenney Input
+Prompts (later, for key glyphs). The user liked none: "make your own icons but be inspired by real icons so
+they are more accurate".
+
+- Eight SVGs in `art/ui-icons` (coin, backpack, work lamp, fuel pump, jerrycan, shovel, jackhammer drill,
+  jetpack), each drawn as real icon sets draw the object: flat colours, one darker side tone, one dark rounded
+  outline. The lamp follows our caged work light (yellow housing, glowing dome, two guard wires); a first draft
+  with four wires read as a birdcage. `render_icons.py` (resvg-py) writes 256 px PNGs; Unity imports them
+  mipmapped and uncompressed. `Icons.uss` maps `icon-<name>` classes to them.
+- HUD: coin and balance (no "$"), backpack and bag count, lamp and lamp count, fuel pump under the bar.
+- Shop: each row's icon on a bone tile at the left (the outlines vanish on slate); the tool row shows the shovel,
+  then the drill from level 7. The workshop card grew to fit the six tiles without scrolling.
 
 ## Acceptance Criteria
 

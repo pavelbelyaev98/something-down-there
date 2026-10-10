@@ -10,7 +10,8 @@ Game for the pause menu.
   right-hand panel follow the row you are on. Rebind a key. Change Window mode (Keep/Revert should still appear).
 - Esc out of settings, then press Esc in game for the pause menu: just the menu, laid out like the title.
   Main Menu saves and brings you back to the title; Continue picks up where you left.
-- HUD while digging: money top-left; bag, lamps and the battery bar bottom-left. Dig the battery down and watch
+- HUD while digging: coin and money top-left; backpack, lamp and the fuel bar (pump under it) bottom-left.
+  Do the icons read as what they are? Dig the battery down and watch
   the bar turn orange, then red, with the banner in the middle. Fill the bag: its count turns orange.
 - Shop at the computer: buy an upgrade, refill, sell a find.
 - Pause → New Game: it asks first; Cancel (or Esc) goes back to pause. Confirm on a game you don't mind losing

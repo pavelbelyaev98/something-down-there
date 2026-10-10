@@ -10,7 +10,7 @@
 .hud-root .unity-text-element { padding: 0; }
 
 /* Resources: money top-left; the upright fuel bar bottom-left with bag and lamps beside it.
-   Words for now, until an icon set is chosen; numbers in the menus' display face. */
+   Each is an icon from the game's set (Icons.uss) and a number in the menus' display face. */
 .hud-number {
     -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf");
     -unity-font-definition: initial;
@@ -19,19 +19,16 @@
     text-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
 }
 .hud-number.unlimited { -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf"); font-size: 24px; }
-.hud-root .hud-wallet { position: absolute; left: 24px; top: 20px; font-size: 28px; }
-.hud-caption {
-    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf");
-    -unity-font-definition: initial;
-    font-size: 14px; letter-spacing: 2px; color: #c3ccd0; margin: 0;
-}
+.hud-wallet { position: absolute; left: 22px; top: 18px; flex-direction: row; align-items: center; }
+.hud-wallet-icon { width: 32px; height: 32px; margin-right: 8px; }
+.hud-root .hud-wallet-amount { font-size: 28px; }
 
-.hud-kit { position: absolute; left: 24px; bottom: 18px; flex-direction: row; align-items: flex-end; }
+.hud-kit { position: absolute; left: 22px; bottom: 18px; flex-direction: row; align-items: flex-end; }
 .hud-battery-column { align-items: center; }
-.hud-battery-caption { margin-top: 4px; font-size: 12px; letter-spacing: 1px; }
-.hud-counters { align-items: flex-start; margin-left: 14px; margin-bottom: 18px; }
+.hud-battery-icon { width: 26px; height: 26px; margin-top: 4px; }
+.hud-counters { align-items: flex-start; margin-left: 12px; margin-bottom: 28px; }
 .hud-counter { flex-direction: row; align-items: center; margin-top: 4px; }
-.hud-counter-caption { width: 54px; }
+.hud-counter-icon { width: 28px; height: 28px; margin-right: 8px; }
 .hud-counter.full .hud-number { color: #ff8a3d; }
 
 /* Fuel: an upright rounded case filled flat from the bottom (the case's corners clip it),

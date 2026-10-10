@@ -3,6 +3,7 @@
     <ui:Style src="Controls.uss" />
     <ui:Style src="Station.uss" />
     <ui:Style src="Screens.uss" />
+    <ui:Style src="Icons.uss" />
     <ui:VisualElement name="menuRoot" class="menu-root hidden">
         <ui:VisualElement name="menuScrim" class="menu-scrim" picking-mode="Ignore" />
         <ui:VisualElement name="menuCard" class="menu-card">

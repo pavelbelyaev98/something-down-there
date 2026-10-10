@@ -393,6 +393,8 @@ namespace SomethingDownThere
             // The row is decoration; only the price button is interactive. The bar shows how far
             // the track has come, so the name carries no level.
             var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", serviceRow ? "station-row service" : "station-row");
+            var tile = ToolkitStationRows.Block(row, track + " icon tile", "station-icon-tile");
+            ToolkitStationRows.Block(tile, track + " icon", "icon " + StationIcon(index, offer));
             var main = ToolkitStationRows.Block(row, track + " main", "station-row-main");
             ToolkitStationRows.Text(main, track + " name", track.ToUpperInvariant(), "station-cell-name");
             if (!serviceRow) ToolkitStationRows.Progress(main, track + " progress", offer.OwnedLevel, offer.LevelCount);
@@ -434,6 +436,13 @@ namespace SomethingDownThere
                 buy.schedule.Execute(() => buy.RemoveFromClassList("just-bought")).StartingIn(900);
             }
         }
+
+        // The row's icon: the tool in hand (shovel, then the drill), the backpack, the fuel can,
+        // the jetpack, the pump for a refill and the work lamp.
+        private static string StationIcon(int index, StationTrade.UpgradeOffer offer) =>
+            index == ComputerStation.RefillCommand ? "icon-fuel-pump" : index == ComputerStation.LampCommand ? "icon-lamp"
+            : offer.Kind == EquipmentKind.Shovel ? (EquipmentProgression.UsesDrill(offer.OwnedLevel) ? "icon-drill" : "icon-shovel")
+            : offer.Kind == EquipmentKind.Inventory ? "icon-backpack" : offer.Kind == EquipmentKind.Jetpack ? "icon-jetpack" : "icon-jerrycan";
 
         // The headline is the one number the purchase changes, named in a word; every other
         // stat stays one hover away on the price button.

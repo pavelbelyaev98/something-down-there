@@ -71,7 +71,7 @@ namespace SomethingDownThere
             {
                 shownStatus = statusKey;
                 status.text = statusKey.Item1 + "/" + statusKey.Item2;
-                walletStatus.text = "$" + statusKey.Item3;
+                walletStatus.text = statusKey.Item3.ToString();
                 bagGroup.EnableInClassList("full", player.Inventory.IsFull);
             }
             if (player.GameplayActive || displayedBattery != player.Battery)
