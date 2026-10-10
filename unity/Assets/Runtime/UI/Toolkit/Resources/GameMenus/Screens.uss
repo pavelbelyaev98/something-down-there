@@ -35,8 +35,6 @@
 #menuRoot.title-screen.keyboard-navigation .startup-actions > .menu-button:focus,
 #menuRoot.pause-menu .pause-actions > .menu-button:hover,
 #menuRoot.pause-menu.keyboard-navigation .pause-actions > .menu-button:focus { color: var(--orange); background-color: transparent; }
-#menuRoot.title-screen .startup-actions > .menu-button:active,
-#menuRoot.pause-menu .pause-actions > .menu-button:active { color: var(--orange-hover); background-color: transparent; }
 #menuRoot.title-screen .startup-actions > .menu-button:disabled,
 #menuRoot.pause-menu .pause-actions > .menu-button:disabled { color: rgba(243, 238, 228, 0.36); background-color: transparent; opacity: 1; }
 

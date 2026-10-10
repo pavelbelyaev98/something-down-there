@@ -12,7 +12,6 @@
     --orange-hover: #ff8f45;
     --primary: #d95c1c;
     --primary-hover: #e66a29;
-    --primary-press: #c14f15;
     --on-primary: #ffffff;
     --ink: #1b262c;
     --bone: #f3eee4;

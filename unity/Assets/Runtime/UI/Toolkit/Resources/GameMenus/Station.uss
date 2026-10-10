@@ -3,8 +3,8 @@
    has two columns of roomy tiles: UPGRADES, the four equipment tracks (name, a progress bar,
    the one number the purchase changes), and SUPPLIES, the recharge and the work lamp.
 
-   Tiles are decoration, never interactive: only the price button inside one has hover, press
-   and focus states, and only it can be clicked.
+   Tiles are decoration, never interactive: only the price button inside one has hover and
+   focus states, and only it can be clicked.
 
    Tile:
      [icon] NAME ...................... price button
@@ -53,9 +53,7 @@
 /* ---------- the price button: a primary action ---------- */
 #menuRoot .station-price { width: 92px; min-width: 92px; height: 42px; min-height: 0; flex-shrink: 0; margin: 0 0 0 20px; padding: 0; font-size: 20px; -unity-text-align: middle-center; border-width: 2px; border-color: transparent; border-radius: 8px; background-color: var(--primary); background-image: none; color: var(--on-primary); -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf"); -unity-font-definition: initial; }
 #menuRoot .station-price:hover { background-color: var(--primary-hover); color: var(--on-primary); }
-#menuRoot .station-price:active { background-color: var(--primary-press); }
 #menuRoot.keyboard-navigation .station-price:focus { border-color: var(--bone); }
-#menuRoot .station-price.just-bought { background-color: var(--bone); color: var(--ink); }
 
 /* cannot buy (out of reach, finished track, full battery): reads as disabled and has
    no hover or pressed reaction at all */

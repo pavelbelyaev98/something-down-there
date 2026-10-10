@@ -180,6 +180,8 @@ every leftover of the old UI.
 - Primary actions (dialog confirms, Close, Resume digging, settings Back, the selected tab, Sell all, prices):
   a deeper orange `#d95c1c` with white type. Other buttons are slate tiles. A darker lower edge on primaries
   was tried and removed ("don't make UI complex"); the pause backdrop was darkened to 62 %.
+  Pressed (`:active`) colours and the shop price's bone flash after a purchase are removed too ("it becomes
+  white for a second"): buttons react to hover and keyboard focus only.
 - Selling: one row per kind of find (name, ×count, total) and one Sell all. `ComputerStation` keeps only the
   Sell all command and `StationTrade.OfferSale` lost its single-item form; the inventory (Tab) groups the same
   way. Concept `07` §3 updated.

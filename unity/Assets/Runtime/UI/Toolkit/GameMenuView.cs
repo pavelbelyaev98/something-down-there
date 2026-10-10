@@ -434,11 +434,6 @@ namespace SomethingDownThere
             // Everything else the purchase changes stays one hover away instead of
             // adding another column or sentence to the table.
             buy.tooltip = refill ? RefillDetail(station) : lamp ? "Yours for good: pick a lamp up to place it again" : UpgradeDetail(offer);
-            if (buy.name == purchasedCard)
-            {
-                buy.schedule.Execute(() => buy.AddToClassList("just-bought"));
-                buy.schedule.Execute(() => buy.RemoveFromClassList("just-bought")).StartingIn(900);
-            }
         }
 
         // The row's icon: the tool in hand (shovel, then the drill), the backpack, the battery for
@@ -507,23 +502,11 @@ namespace SomethingDownThere
 
         private void ActivateUpgradeRow(ComputerStation station, int index, long revision, Button row)
         {
-            if (row == null || player.Station != station) return;
-            if (!station.CanExecute(index, player))
-            {
-                RefuseUpgradeRow(row);
-                return;
-            }
+            if (row == null || player.Station != station || !station.CanExecute(index, player)) return;
             purchasedCard = row.name;
             if (!player.ExecuteStationCommand(index, revision)) purchasedCard = null;
         }
 
-        // An activation that cannot spend never reaches the trade path; the button
-        // pulses so the refusal is visible without adding any text.
-        private static void RefuseUpgradeRow(Button button)
-        {
-            button.AddToClassList("denied");
-            button.schedule.Execute(() => button.RemoveFromClassList("denied")).StartingIn(320);
-        }
 
         private static string Compared(string current, string next, bool complete) =>
             complete || current == next ? current : $"{current} \u2192 {next}";
