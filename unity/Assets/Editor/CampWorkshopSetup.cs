@@ -11,17 +11,19 @@ using UnityEngine.SceneManagement;
 
 namespace SomethingDownThere.Editor
 {
-    // The camp's stash shelter, as A/B until the user picks one: a corrugated-iron workshop (art/camp-workshop) and a
-    // canvas frame tent (art/camp-tent), both original Blender art, standing beside the camp with their open fronts
-    // toward it. Solid to the player (floors, walls, roofs, fittings), lit inside by their own lamps; terrain grass
-    // under them is cleared here and again whenever the lakebed site is rebuilt (its station footprints).
-    // Blender X stays X and Blender Y (front at -Y) becomes Z after the FBX axis conversion.
-    public static class CampShelterSetup
+    // The camp workshop (art/camp-workshop, original Blender art): a corrugated-iron shed beside the camp with its
+    // roller door toward it, the surface computer standing inside. Solid to the player (slab, walls, roof, fittings),
+    // lit inside by its own battens; terrain grass under it is cleared here and again whenever the lakebed site is
+    // rebuilt (its station footprints). Blender X stays X and Blender Y (front at -Y) becomes Z after the FBX axis
+    // conversion.
+    public static class CampWorkshopSetup
     {
-        public const string WorkshopFolder = "Assets/Content/Camp/Workshop", TentFolder = "Assets/Content/Camp/Tent";
-        // Rim-layout positions (LakebedSiteSetup.Camp lifts them onto the lakebed ground), facing the camp centre.
-        public static readonly Vector3 WorkshopSpot = new Vector3(-6.5f, 0, -24.5f), TentSpot = new Vector3(-16.5f, 0, -16.5f);
+        public const string WorkshopFolder = "Assets/Content/Camp/Workshop";
+        // Rim-layout position (LakebedSiteSetup.Camp lifts it onto the lakebed ground); the door faces the camp centre.
+        public static readonly Vector3 WorkshopSpot = new Vector3(-6.5f, 0, -24.5f);
         public static readonly Vector3 CampCentre = new Vector3(0, 0, -13);
+        // The surface computer on the slab at the back right, clear of the racking, its screen toward the door.
+        private static readonly Vector2 ComputerOnSlab = new Vector2(2.6f, 2.3f);
         private const string ConcreteDetail = "Assets/TowerCrane/Textures/concrete_Normal.png";
 
         [Serializable]
@@ -33,29 +35,36 @@ namespace SomethingDownThere.Editor
         }
 
         [Serializable]
-        private class TentLayout
-        {
-            public float canvas_atlas_m, canvas_in_atlas_m, weave_tile_m, half_depth_m, eave_m, ridge_m, overhang_m, pallet_top_m,
-                table_top_m, lamp_z_m;
-            public float[] legs_x, table, lamps_x;
-        }
+        private class AtlasScale { public float Timber, Concrete, Metal; }
 
-        [Serializable]
-        private class AtlasScale { public float Timber, Concrete, Metal, Wood; }
-
-        [MenuItem("Tools/Something Down There/Configure Camp Shelters")]
+        [MenuItem("Tools/Something Down There/Configure Camp Workshop")]
         public static void Configure()
         {
             var scene = SceneManager.GetActiveScene();
             if (EditorApplication.isPlaying || scene.path != MainGameSceneBuilder.ScenePath)
-                throw new InvalidOperationException("Open MainGame outside Play Mode to configure the camp shelters.");
+                throw new InvalidOperationException("Open MainGame outside Play Mode to configure the camp workshop.");
             var surface = scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").transform.Find("Surface");
             var workshop = BuildWorkshop(surface);
-            var tent = BuildTent(surface);
             ClearGrass(scene, workshop);
-            ClearGrass(scene, tent);
+            SurfaceStationSetup.Configure();  // the computer moves in with the workshop
             EditorSceneManager.MarkSceneDirty(scene);
-            Debug.Log("Camp shelters configured: workshop at " + workshop.position + ", tent at " + tent.position);
+            Debug.Log("Camp workshop configured at " + workshop.position + ", computer at " + surface.Find("ComputerStation").position);
+        }
+
+        // Where the surface computer stands: inside the workshop, on its slab, facing the door.
+        public static Pose ComputerPose()
+        {
+            var layout = JsonUtility.FromJson<WorkshopLayout>(File.ReadAllText(WorkshopFolder + "/Workshop.json"));
+            var workshop = WorkshopPose();
+            var facing = workshop.rotation * Quaternion.Euler(0, 180, 0);
+            return new Pose(workshop.position + workshop.rotation * new Vector3(ComputerOnSlab.x, layout.slab_m, ComputerOnSlab.y), facing);
+        }
+
+        private static Pose WorkshopPose()
+        {
+            var spot = LakebedSiteSetup.Camp(WorkshopSpot);
+            var away = spot - LakebedSiteSetup.Camp(CampCentre); away.y = 0;
+            return new Pose(spot, Quaternion.LookRotation(away.normalized));
         }
 
         private static Transform BuildWorkshop(Transform surface)
@@ -75,7 +84,7 @@ namespace SomethingDownThere.Editor
                 ["Workshop_TubeLamp"] = Glow(WorkshopFolder, "Workshop_TubeLamp", new Color(.96f, .98f, 1f) * 2.4f),
             };
             // Clear sheets and glass let the sun in; the lamp tubes are the light itself.
-            var root = Place(surface, "CampWorkshop", WorkshopSpot, WorkshopFolder + "/Models/Workshop.fbx", materials,
+            var root = Place(surface, "CampWorkshop", WorkshopPose(), WorkshopFolder + "/Models/Workshop.fbx", materials,
                 new[] { "Workshop_Skylight", "Workshop_Glass", "Workshop_TubeLamp" });
 
             var c = Group(root, "Colliders");
@@ -105,49 +114,8 @@ namespace SomethingDownThere.Editor
             return root;
         }
 
-        private static Transform BuildTent(Transform surface)
-        {
-            var l = JsonUtility.FromJson<TentLayout>(File.ReadAllText(TentFolder + "/Tent.json"));
-            var weave = Texture(TentFolder + "/Textures/Tent_Weave_Normal.png", TextureImporterType.NormalMap, false, 256);
-            var inner = Baked(TentFolder, "Tent_CanvasIn", weave, l.canvas_in_atlas_m / l.weave_tile_m, .45f);
-            // Daylight through olive canvas: the inside glows faintly, its seams and patches darker where cloth is doubled.
-            inner.SetTexture("_EmissionMap", inner.GetTexture("_BaseMap"));
-            inner.SetColor("_EmissionColor", new Color(.62f, .64f, .45f));
-            inner.EnableKeyword("_EMISSION");
-            var materials = new Dictionary<string, Material>
-            {
-                ["Tent_CanvasOut"] = Baked(TentFolder, "Tent_CanvasOut", weave, l.canvas_atlas_m / l.weave_tile_m, .45f),
-                ["Tent_CanvasIn"] = inner,
-                ["Tent_Wood"] = Baked(TentFolder, "Tent_Wood", null, 0, 0),
-                ["Tent_Metal"] = Baked(TentFolder, "Tent_Metal", null, 0, 0, 1024),
-                ["Tent_Bulb"] = Glow(TentFolder, "Tent_Bulb", new Color(1f, .86f, .64f) * 3f),
-            };
-            var root = Place(surface, "CampTent", TentSpot, TentFolder + "/Models/Tent.fbx", materials, new[] { "Tent_Bulb" });
-
-            var c = Group(root, "Colliders");
-            float halfX = l.legs_x[l.legs_x.Length - 1], hd = l.half_depth_m, rise = l.ridge_m - l.eave_m;
-            Box(c, "Pallet floor", new Vector3(0, l.pallet_top_m / 2, 0), new Vector3(8.6f, l.pallet_top_m, 4.92f));
-            foreach (float x in l.legs_x)
-                foreach (float z in new[] { -hd, hd })
-                    Box(c, "Leg", new Vector3(x, l.eave_m / 2, z), new Vector3(.05f, l.eave_m, .05f));
-            foreach (float s in new[] { -1f, 1f })
-                Box(c, "Gable pole", new Vector3(s * halfX, l.ridge_m / 2, 0), new Vector3(.05f, l.ridge_m, .05f));
-            float pitch = Mathf.Atan2(rise, hd) * Mathf.Rad2Deg, slope = Mathf.Sqrt(rise * rise + hd * hd);
-            foreach (float s in new[] { -1f, 1f })
-                Box(c, "Roof", new Vector3(0, l.ridge_m - rise / 2 + .03f, s * hd / 2), new Vector3(2 * (halfX + l.overhang_m), .06f, slope), s * pitch);
-            Box(c, "Back wall", new Vector3(0, l.eave_m / 2, hd + .05f), new Vector3(2 * halfX, l.eave_m, .06f));
-            float tableX = (l.table[0] + l.table[1]) / 2, tableW = l.table[1] - l.table[0];
-            Box(c, "Table", new Vector3(tableX, (l.pallet_top_m + l.table_top_m) / 2, l.table[2]), new Vector3(tableW, l.table_top_m - l.pallet_top_m, .8f));
-
-            // Two enamel pendants: their shades throw the light down, warm like tungsten.
-            var lamps = Group(root, "Lamps");
-            foreach (float x in l.lamps_x)
-                DownLight(lamps, "Pendant light", new Vector3(x, l.lamp_z_m - .03f, 0), 140, 7f, 4.2f, new Color(1f, .86f, .66f));
-            return root;
-        }
-
-        // Imports the model, replaces any previous copy under Surface, faces the camp and assigns materials by part name.
-        private static Transform Place(Transform surface, string name, Vector3 rimSpot, string model, Dictionary<string, Material> materials, string[] noShadow)
+        // Imports the model, replaces any previous copy under Surface, poses it and assigns materials by part name.
+        private static Transform Place(Transform surface, string name, Pose pose, string model, Dictionary<string, Material> materials, string[] noShadow)
         {
             if (!(AssetImporter.GetAtPath(model) is ModelImporter importer)) throw new InvalidOperationException("Missing the shelter model " + model);
             importer.globalScale = 1; importer.useFileScale = true; importer.bakeAxisConversion = true;
@@ -163,9 +131,7 @@ namespace SomethingDownThere.Editor
             if (previous != null) UnityEngine.Object.DestroyImmediate(previous.gameObject);
             var root = new GameObject(name).transform;
             root.SetParent(surface, false);
-            var spot = LakebedSiteSetup.Camp(rimSpot);
-            var away = spot - LakebedSiteSetup.Camp(CampCentre); away.y = 0;
-            root.SetPositionAndRotation(spot, Quaternion.LookRotation(away.normalized));
+            root.SetPositionAndRotation(pose.position, pose.rotation);
             var visual = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(model), root);
             visual.name = name + " model";
             foreach (var renderer in visual.GetComponentsInChildren<MeshRenderer>())
@@ -304,7 +270,7 @@ namespace SomethingDownThere.Editor
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        // Terrain grass under the shelter goes now; LakebedSiteSetup's station footprints keep it clear on rebuilds.
+        // Terrain grass under the workshop goes now; LakebedSiteSetup's station footprints keep it clear on rebuilds.
         private static void ClearGrass(Scene scene, Transform shelter)
         {
             var terrain = scene.GetRootGameObjects().SelectMany(o => o.GetComponentsInChildren<Terrain>()).FirstOrDefault();

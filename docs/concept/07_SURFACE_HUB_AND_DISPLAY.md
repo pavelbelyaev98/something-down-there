@@ -9,7 +9,8 @@ no doors, no menu mazes, no NPCs.
 | Station | Function | Detail |
 |---|---|---|
 | **The shaft** | The hole itself, physically changing as the player digs | The player sees their own excavation from the rim; the landmark that never repeats |
-| **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
+| **Workshop** | The camp's building and, later, the stash for the run's uniques | A corrugated-iron workshop beside the camp, its wide roller door open toward it; the surface computer stands inside (user, 2026-10-10: the workshop won over a canvas tent). How uniques get into it is still open ([Open Questions](13_OPEN_QUESTIONS.md#content-and-systems)) |
+| **Surface computer** | Sell ordinary hauls, then buy sequential upgrades | One standing retro terminal inside the workshop, screen toward the door: selling first when carrying finds, immediate upgrades after the final sale, direct upgrades with an empty bag |
 | **Salvage crane** | Recover whole objects marked underground | A small tower crane beside the camp swings over the hole and its cable turns smart: the hook rides its end straight down the hole and along the excavated route into the lifting eye the player bolted on; the crane reels the find in through dirt bottlenecks and carries it to camp. Uniques arrive muddy for optional cleaning, oversized salvage awaits cash-in. Being tested: the same rope hauls the player home at zero battery |
 | **Charging point** | Battery refill | Free and automatic: the battery refills by itself while the player is back at camp; a visible cable and charge light, no button, no price ([why](06_PROGRESSION_AND_ECONOMY.md#5-fuel-shared-battery-and-recovery)) |
 | **Recovered uniques** | Special unsellable exhibits | Each stands where the crane set it down beside the camp, readable (name, depth, story) |

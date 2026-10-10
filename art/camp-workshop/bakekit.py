@@ -1,4 +1,4 @@
-"""Shared Blender helpers for the camp shelters (workshop and tent): selection, UV packing, procedural shader
+"""Blender helpers for the camp workshop bake: selection, UV packing, procedural shader
 graphs and atlas bakes (albedo, normal and a Unity mask: metallic R, occlusion G, detail B, smoothness A).
 Call configure() before bake_atlas()."""
 import math

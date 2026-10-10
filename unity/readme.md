@@ -129,7 +129,7 @@ Unity reference: [reflection probe projection](https://docs.unity.com/en-us/engi
 ## Surface computer
 
 - The user-selected `Assets/Cosmic_Retro_Computer_1_FREE` import supplies computer 3 for the combined sell/upgrade/refill station. Keep the vendor prefab/material/GUIDs; author standing scale and interaction bounds through `SurfaceStationSetup`. See [asset card](../art/retro-computer/README.md).
-- `Tools > Something Down There > Configure Surface Computer` refreshes its visual/collider in MainGame. Save deliberate scene changes after running it.
+- `Tools > Something Down There > Configure Surface Computer` refreshes its visual/collider in MainGame and stands it inside the camp workshop (`CampWorkshopSetup.ComputerPose`). Save deliberate scene changes after running it.
 
 ## Unique recovery and the salvage crane
 
@@ -144,6 +144,6 @@ Runtime folder ownership is documented in [docs/architecture.md](../docs/archite
 
 - **L** previews a reusable work lamp; **M** previews/cycles a route symbol; **R** rotates. Primary places, secondary cancels, and Interact retrieves a lamp or erases an aimed mark. All actions appear in Controls.
 - `Tools > Something Down There > Configure Work Lamps and Markings` refreshes the MainGame kit references and original Blender-derived assets under `Assets/Content/WorksiteTools`; the source recipe and license card live in `art/work-lamps`.
-- `Tools > Something Down There > Configure Camp Shelters` (MainGame open, outside Play Mode) imports the workshop and tent from `Assets/Content/Camp`, rebuilds their materials, colliders and lamps under `Surface`, faces them to the camp and clears terrain grass under them. Regenerate the art first through Blender MCP: `art/camp-workshop/create_assets.py`, then `art/camp-tent/create_assets.py` (Cycles bakes, a few minutes each), then `art/camp-workshop/png8.py` (Blender writes 16-bit PNGs); `make_ribs.py` and `make_weave.py` run with plain Python. Save the scene afterwards.
+- `Tools > Something Down There > Configure Camp Workshop` (MainGame open, outside Play Mode) imports the workshop from `Assets/Content/Camp/Workshop`, rebuilds its materials, colliders and lamps under `Surface`, faces it to the camp, clears terrain grass under it and runs Configure Surface Computer. Regenerate the art first through Blender MCP with `art/camp-workshop/create_assets.py` (Cycles bakes, a few minutes), then `art/camp-workshop/png8.py` (Blender writes 16-bit PNGs); `make_ribs.py` runs with plain Python. Save the scene afterwards.
 - The save format includes equipment ownership, physics and route marks with terrain. Older development checkpoints require New Game; tools never convert or silently replace them.
 - Lanterns emit soft local light in every direction, retaining ground occlusion with sun shadows Off. Setup sizes the existing URP additional-light atlas for the kit and merges geometry by material; no extra render package is required.

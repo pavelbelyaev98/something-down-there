@@ -1,4 +1,4 @@
-"""Rewrites the shelters' baked PNGs as 8 bits a channel (Blender saves its float bakes at 16), cutting their size several times;
+"""Rewrites the workshop's baked PNGs as 8 bits a channel (Blender saves its float bakes at 16), cutting their size several times;
 Unity block-compresses them either way. Run with plain Python (Pillow) after create_assets.py."""
 from pathlib import Path
 

@@ -25,9 +25,12 @@ namespace SomethingDownThere.Editor
             {
                 anchor = new GameObject("ComputerStation").transform;
                 anchor.SetParent(surface, false);
-                anchor.localPosition = LakebedSiteSetup.Camp(new Vector3(-3, 0, -14));
                 Undo.RegisterCreatedObjectUndo(anchor.gameObject, "Install surface computer");
             }
+            // It stands inside the camp workshop, screen toward the door.
+            var pose = CampWorkshopSetup.ComputerPose();
+            Undo.RecordObject(anchor, "Place surface computer");
+            anchor.SetPositionAndRotation(pose.position, pose.rotation);
             var previous = anchor.Find("Station visual");
             if (previous != null) Undo.DestroyObjectImmediate(previous.gameObject);
             var visual = (GameObject)PrefabUtility.InstantiatePrefab(prefab, anchor);

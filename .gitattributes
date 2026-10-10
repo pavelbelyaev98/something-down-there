@@ -62,6 +62,6 @@ unity/Assets/Plugins/Sirenix/**/*.bytes filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Plugins/Sirenix/**/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Plugins/Sirenix/**/*.data filter=lfs diff=lfs merge=lfs -text
 
-# Original camp shelters (art/camp-workshop, art/camp-tent): baked maps and models in LFS.
+# Original camp workshop (art/camp-workshop): baked maps and model in LFS.
 unity/Assets/Content/Camp/**/*.png filter=lfs diff=lfs merge=lfs -text
 unity/Assets/Content/Camp/**/*.fbx filter=lfs diff=lfs merge=lfs -text

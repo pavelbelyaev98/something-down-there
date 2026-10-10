@@ -97,8 +97,9 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Battery.Charge, Is.EqualTo(charge));
             player.Wallet.TryCredit(2);
             var station = scene.GetRootGameObjects()[0].GetComponentInChildren<ComputerStation>();
-            Place(station.transform.position + new Vector3(0, .1f, 2.4f));
-            player.transform.rotation = Quaternion.Euler(0, 180, 0);
+            var front = Vector3.ProjectOnPlane(station.transform.forward, Vector3.up).normalized;
+            Place(station.transform.position + front * 2.4f + new Vector3(0, .1f, 0));
+            player.transform.rotation = Quaternion.LookRotation(-front);
             player.Tick(new FpsInputFrame { Look = new Vector2(0, (player.Pitch - 12) / player.Tuning.LookSensitivity) }, .016f);
             Physics.SyncTransforms();
             Assert.That(player.TryInteract(), Is.True);

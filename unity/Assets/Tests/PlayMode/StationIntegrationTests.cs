@@ -298,8 +298,10 @@ namespace SomethingDownThere.Tests
 
         private void Face(StationTarget station)
         {
-            Place(station.transform.position + new Vector3(0, 0.1f, 2.4f));
-            player.transform.rotation = Quaternion.Euler(0, 180, 0);
+            // Stand 2.4 m in front of its screen (the computer faces the workshop door).
+            var front = Vector3.ProjectOnPlane(station.transform.forward, Vector3.up).normalized;
+            Place(station.transform.position + front * 2.4f + new Vector3(0, 0.1f, 0));
+            player.transform.rotation = Quaternion.LookRotation(-front);
             player.Tick(new FpsInputFrame { Look = new Vector2(0, (player.Pitch - 12) / player.Tuning.LookSensitivity) }, 0.016f);
             Physics.SyncTransforms();
         }

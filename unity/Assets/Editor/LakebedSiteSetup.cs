@@ -908,7 +908,7 @@ namespace SomethingDownThere.Editor
             rim.AddComponent<PermanentTerrainBoundary>();
         }
 
-        // Stations keep their tested south-rim layout, lifted onto the lakebed ground.
+        // Stations keep their tested south-rim layout, lifted onto the lakebed ground; the computer stands in the workshop.
         private static void ArrangeCamp(Transform root)
         {
             var surface = root.Find("Surface");
@@ -918,7 +918,13 @@ namespace SomethingDownThere.Editor
                 item.SetPositionAndRotation(Camp(rimLayout), Quaternion.identity);
                 EditorUtility.SetDirty(item);
             }
-            Put(surface.Find("ComputerStation"), new Vector3(-3, 0, -14));
+            var computer = surface.Find("ComputerStation");
+            if (computer != null)
+            {
+                var pose = CampWorkshopSetup.ComputerPose();  // inside the camp workshop
+                computer.SetPositionAndRotation(pose.position, pose.rotation);
+                EditorUtility.SetDirty(computer);
+            }
             Put(surface.Find("RechargeZone"), new Vector3(0, 0, -14.5f));
             Put(surface.Find("ReturnAnchor"), new Vector3(0, .1f, -13.5f));
             Put(root.Find("Player"), new Vector3(0, .1f, -13));

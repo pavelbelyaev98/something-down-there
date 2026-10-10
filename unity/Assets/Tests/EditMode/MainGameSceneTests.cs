@@ -191,7 +191,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(layerNames.Count(n => n == "DryTurf"), Is.EqualTo(1));
                 Assert.That(lakebed.terrainData.terrainLayers.Take(4).All(l => AssetDatabase.GetAssetPath(l).StartsWith("Assets/BK/PureNature_Highlands/")), Is.True,
                     "The canyon keeps the demo's other ground layers.");
-                foreach (string name in new[] { "ComputerStation", "RechargeZone", "ReturnAnchor" })
+                foreach (string name in new[] { "RechargeZone", "ReturnAnchor" })
                 {
                     Transform anchor = root.Find("Surface/" + name);
                     Assert.That(anchor, Is.Not.Null, name);
@@ -199,6 +199,16 @@ namespace SomethingDownThere.Tests
                     Assert.That(SiteLayout.BeyondOpening(new Vector2(anchor.position.x, anchor.position.z)),
                         Is.InRange(.5f, 6), name + " stands beside the opening.");
                 }
+                // The computer stands inside the camp workshop, on its slab, its screen toward the door (-Z).
+                Transform workshop = root.Find("Surface/CampWorkshop"), computer = root.Find("Surface/ComputerStation");
+                Assert.That(workshop, Is.Not.Null);
+                Vector3 inside = workshop.InverseTransformPoint(computer.position);
+                Assert.That(Mathf.Abs(inside.x), Is.LessThan(3.5f));
+                Assert.That(Mathf.Abs(inside.z), Is.LessThan(2.5f));
+                Assert.That(inside.y, Is.EqualTo(.15f).Within(.01f), "The computer stands on the slab.");
+                Assert.That(Vector3.Dot(workshop.InverseTransformDirection(computer.forward), Vector3.back), Is.GreaterThan(.99f));
+                Assert.That(SiteLayout.BeyondOpening(new Vector2(workshop.position.x, workshop.position.z)), Is.InRange(6, 20),
+                    "The workshop stands beside the camp, within a few seconds of the shaft.");
                 Assert.That(root.Find("Bedrock").GetComponentsInChildren<PermanentTerrainBoundary>().Length, Is.EqualTo(5));
                 Assert.That(root.Find("Perimeter"), Is.Null,
                     "The valley wall replaced the invisible arena box.");

@@ -150,27 +150,6 @@ class Group:
             f[self.axis_layer] = Vector((abs(axis.x), abs(axis.y), abs(axis.z)))
         return self.solid(self.tag(faces, value)) if caps else self.tag(faces, value)
 
-    def surface(self, fn, nu, nv, width, length, value=None, flip=False, local=None):
-        """A quad-grid island from fn(s, t) -> point, s and t in [0, 1]; UVs in metres (s * width, t * length),
-        packed later. Faces point along d/ds x d/dt (reversed with flip). local(s, t) -> (u, v) fills 'Local'."""
-        grid = [[self.bm.verts.new(fn(i / nu, j / nv)) for j in range(nv + 1)] for i in range(nu + 1)]
-        self.islands += 1
-        island = self.islands
-        faces = []
-        for i in range(nu):
-            for j in range(nv):
-                quad = [grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]]
-                st = [(i / nu, j / nv), ((i + 1) / nu, j / nv), ((i + 1) / nu, (j + 1) / nv), (i / nu, (j + 1) / nv)]
-                if flip:
-                    quad, st = list(reversed(quad)), list(reversed(st))
-                face = self.bm.faces.new(quad)
-                for loop, (a, b) in zip(face.loops, st):
-                    loop[self.uv].uv = (a * width, b * length)
-                    loop[self.local].uv = local(a, b) if local else (a, b)
-                face[self.island_layer] = island
-                faces.append(face)
-        return self.tag(faces, value)
-
     def finish(self, collection):
         live = [f for f in self.closed if f.is_valid]
         if live:
