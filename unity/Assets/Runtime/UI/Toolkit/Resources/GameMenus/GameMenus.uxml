@@ -2,18 +2,24 @@
     <ui:Style src="Theme.uss" />
     <ui:Style src="Controls.uss" />
     <ui:Style src="Station.uss" />
+    <ui:Style src="Screens.uss" />
     <ui:VisualElement name="menuRoot" class="menu-root hidden">
+        <ui:VisualElement name="menuScrim" class="menu-scrim" picking-mode="Ignore" />
         <ui:VisualElement name="menuCard" class="menu-card">
             <ui:VisualElement class="menu-header">
                 <ui:Label name="menuTitle" text="Paused" class="title" />
             </ui:VisualElement>
+            <ui:VisualElement name="titleLogo" class="title-logo hidden" picking-mode="Ignore">
+                <ui:Label text="SOMETHING" class="logo-line logo-small" picking-mode="Ignore" />
+                <ui:Label text="DOWN THERE" class="logo-line logo-large" picking-mode="Ignore" />
+            </ui:VisualElement>
             <ui:Label name="menuSubtitle" class="subtitle" />
             <ui:VisualElement name="settingsNavigation" class="settings-tabs hidden">
-                <ui:Button name="settingsDisplay" text="Display" class="menu-button settings-tab" />
-                <ui:Button name="settingsGraphics" text="Graphics" class="menu-button settings-tab" />
-                <ui:Button name="settingsAudio" text="Audio" class="menu-button settings-tab" />
-                <ui:Button name="settingsControls" text="Controls" class="menu-button settings-tab" />
-                <ui:Button name="settingsAccessibility" text="Accessibility" class="menu-button settings-tab" />
+                <ui:Button name="settingsDisplay" text="DISPLAY" class="menu-button settings-tab" />
+                <ui:Button name="settingsGraphics" text="GRAPHICS" class="menu-button settings-tab" />
+                <ui:Button name="settingsAudio" text="AUDIO" class="menu-button settings-tab" />
+                <ui:Button name="settingsControls" text="CONTROLS" class="menu-button settings-tab" />
+                <ui:Button name="settingsAccessibility" text="ACCESSIBILITY" class="menu-button settings-tab" />
             </ui:VisualElement>
             <ui:VisualElement name="startupPage" class="hidden">
                 <ui:VisualElement name="startupActions" class="startup-actions" />
@@ -23,7 +29,7 @@
                 <ui:VisualElement class="pause-columns">
                     <ui:VisualElement name="pauseActions" class="pause-actions" />
                     <ui:VisualElement class="controls-card">
-                        <ui:Label text="Controls" class="section-title" />
+                        <ui:Label text="CONTROLS" class="section-title" />
                         <ui:VisualElement class="control-line"><ui:Label name="controlMove" class="key" /><ui:Label text="Move" class="control-description" /></ui:VisualElement>
                         <ui:VisualElement class="control-line"><ui:Label name="controlSprint" class="key" /><ui:Label text="Sprint (hold)" class="control-description" /></ui:VisualElement>
                         <ui:VisualElement class="control-line"><ui:Label name="controlCrouch" class="key" /><ui:Label text="Crouch (hold)" class="control-description" /></ui:VisualElement>
@@ -40,23 +46,28 @@
             </ui:VisualElement>
             <ui:VisualElement name="cameraPage" class="settings-page hidden">
                 <ui:ScrollView name="cameraScroll" mode="Vertical" class="content-scroll settings-scroll" horizontal-scroller-visibility="Hidden" />
-                <ui:VisualElement name="settingsError" class="settings-error hidden"><ui:Label text="Not saved. Active for this session." class="caption" /><ui:Button name="settingsRetry" text="Retry" class="menu-button" /></ui:VisualElement>
+                <ui:VisualElement name="settingsError" class="settings-error hidden"><ui:Label text="Not saved. Active for this session." class="caption" /><ui:Button name="settingsRetry" text="RETRY" class="menu-button" /></ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="inputPage" class="settings-page input-page hidden">
                 <ui:ScrollView name="bindingScroll" mode="Vertical" class="content-scroll settings-scroll binding-scroll" horizontal-scroller-visibility="Hidden" />
                 <ui:Label name="bindingNotice" class="notice binding-notice" />
-                <ui:VisualElement name="bindingConflict" class="binding-conflict hidden"><ui:Button name="bindingCancel" text="Cancel" class="menu-button" /><ui:Button name="bindingReplace" text="Swap bindings" class="menu-button primary" /></ui:VisualElement>
-                <ui:VisualElement name="inputSettingsError" class="settings-error hidden"><ui:Label text="Not saved. Active for this session." class="caption" /><ui:Button name="inputRetry" text="Retry" class="menu-button" /></ui:VisualElement>
+                <ui:VisualElement name="bindingConflict" class="binding-conflict hidden"><ui:Button name="bindingCancel" text="CANCEL" class="menu-button" /><ui:Button name="bindingReplace" text="SWAP BINDINGS" class="menu-button primary" /></ui:VisualElement>
+                <ui:VisualElement name="inputSettingsError" class="settings-error hidden"><ui:Label text="Not saved. Active for this session." class="caption" /><ui:Button name="inputRetry" text="RETRY" class="menu-button" /></ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="devicePage" class="settings-page hidden">
                 <ui:ScrollView name="deviceScroll" mode="Vertical" class="content-scroll settings-scroll" horizontal-scroller-visibility="Hidden" />
-                <ui:VisualElement name="deviceError" class="settings-error hidden"><ui:Label text="Not saved. Active for this session." class="caption" /><ui:Button name="deviceRetry" text="Retry" class="menu-button" /></ui:VisualElement>
+                <ui:VisualElement name="deviceError" class="settings-error hidden"><ui:Label text="Not saved. Active for this session." class="caption" /><ui:Button name="deviceRetry" text="RETRY" class="menu-button" /></ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="settingsHelp" class="settings-help hidden" picking-mode="Ignore">
+                <ui:Label name="settingsHelpTitle" class="help-title" picking-mode="Ignore" />
+                <ui:Label name="settingsHelpText" class="help-text" picking-mode="Ignore" />
+                <ui:VisualElement name="settingsHelpOptions" class="help-options" picking-mode="Ignore" />
             </ui:VisualElement>
             <ui:VisualElement name="settingsFooter" class="settings-footer hidden">
-                <ui:Button name="settingsBack" text="Back" class="menu-button" />
-                <ui:Button name="cameraReset" text="Reset category" class="menu-button" />
-                <ui:Button name="inputReset" text="Reset category" class="menu-button" />
-                <ui:Button name="deviceReset" text="Reset category" class="menu-button" />
+                <ui:Button name="cameraReset" text="RESET CATEGORY" class="menu-button" />
+                <ui:Button name="inputReset" text="RESET CATEGORY" class="menu-button" />
+                <ui:Button name="deviceReset" text="RESET CATEGORY" class="menu-button" />
+                <ui:Button name="settingsBack" text="BACK" class="menu-button" />
             </ui:VisualElement>
             <ui:VisualElement name="contentPage" class="content-page hidden">
                 <ui:VisualElement name="tradeSummary" class="trade-summary hidden" />
@@ -64,6 +75,7 @@
                 <ui:VisualElement name="menuActions" class="footer" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:Label name="menuVersion" class="menu-version" picking-mode="Ignore" />
     </ui:VisualElement>
     <ui:Label name="FpsReadout" class="fps-readout hidden" picking-mode="Ignore" />
 </ui:UXML>

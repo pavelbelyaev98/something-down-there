@@ -23,8 +23,9 @@ namespace SomethingDownThere
         private readonly ToolkitDialog dialog;
         private Label displayCountdown;
         private bool displayingPreview;
-        private VisualElement openDropdown;
         private readonly ToolkitTabs settingsTabs;
+        private readonly VisualElement titleLogo, settingsHelp;
+        private readonly Texture2D scrim;
         private readonly Label controlMove, controlCrouch, controlSprint, controlDig, controlDigDescription, controlJump, controlInteract, controlPause;
         private PlayerMenu displayed;
         private bool pending = true;
@@ -56,11 +57,17 @@ namespace SomethingDownThere
             dialog = new ToolkitDialog(title, subtitle, scroll);
             settingsBack = Root.Q<Button>("settingsBack");
             settingsBack.clicked += player.BackFromSettings;
-            camera = new ToolkitCameraSettings(cameraPage, player);
+            titleLogo = Root.Q("titleLogo");
+            settingsHelp = Root.Q("settingsHelp");
+            var help = new ToolkitSettingsHelp(settingsHelp);
+            camera = new ToolkitCameraSettings(cameraPage, player, help);
             inputPage = Root.Q("inputPage");
-            input = new ToolkitInputSettings(inputPage, player);
+            input = new ToolkitInputSettings(inputPage, player, help);
             devicePage = Root.Q("devicePage");
-            device = new ToolkitDeviceSettings(devicePage, player);
+            device = new ToolkitDeviceSettings(devicePage, player, help);
+            Root.Q<Label>("menuVersion").text = "v" + Application.version;
+            scrim = Scrim();
+            Root.Q("menuScrim").style.backgroundImage = new StyleBackground(scrim);
             settingsNavigation = Root.Q("settingsNavigation");
             settingsTabs = new ToolkitTabs(settingsNavigation, index => player.ShowSettingsCategory((SettingsCategory)index));
             controlMove = Root.Q<Label>("controlMove"); controlCrouch = Root.Q<Label>("controlCrouch");
@@ -95,6 +102,18 @@ namespace SomethingDownThere
 
         private bool CapturingInput => player.BindingCapture.BlocksInput;
 
+        // Title and pause menus stand straight on the world; a dark wash fading out to the
+        // right keeps the text readable over bright sky without boxing it in.
+        private static Texture2D Scrim()
+        {
+            const int width = 128;
+            var texture = new Texture2D(width, 1, TextureFormat.RGBA32, false) { name = "Menu scrim", wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            for (int x = 0; x < width; x++)
+                texture.SetPixel(x, 0, new Color(0.06f, 0.04f, 0.02f, 0.6f * (1f - Mathf.SmoothStep(0f, 1f, x / (width - 1f)))));
+            texture.Apply(false, true);
+            return texture;
+        }
+
         private void ControlsChanged()
         {
             var settings = player.InputSettings;
@@ -112,8 +131,6 @@ namespace SomethingDownThere
 
         public void Tick()
         {
-            openDropdown = FindDropdown();
-            if (openDropdown != null) openDropdown.name = "menuDropdown";
             player.GameSettings.Tick(Time.realtimeSinceStartupAsDouble);
             settingsNavigation.SetEnabled(player.BindingCapture.State == BindingCaptureState.Idle && !player.GameSettings.PreviewingDisplay);
             settingsBack.SetEnabled(player.BindingCapture.State == BindingCaptureState.Idle);
@@ -141,22 +158,6 @@ namespace SomethingDownThere
         }
 
         private void QueueRefresh() => pending = true;
-        private VisualElement FindDropdown() => Root.panel?.visualTree.Q(className: GenericDropdownMenu.ussClassName);
-        public bool DismissDropdown()
-        {
-            // Retain this frame's open state even if Toolkit already consumed the
-            // raw Escape event; the same key must not also leave Settings.
-            var popup = FindDropdown() ?? openDropdown;
-            openDropdown = null;
-            if (popup == null) return false;
-            if (popup.panel != null)
-            {
-                var content = popup.Q<ScrollView>()?.contentContainer;
-                content?.Focus();
-                using (var cancel = NavigationCancelEvent.GetPooled()) content?.SendEvent(cancel);
-            }
-            return true;
-        }
         // Native players also send raw key events to sliders. Arrows are handled by
         // Input System navigation once; Escape/Space belong to the player barrier.
         private static bool IsOwnedKey(KeyCode key) => key == KeyCode.Escape || key == KeyCode.Space
@@ -190,10 +191,13 @@ namespace SomethingDownThere
             Show(inputPage, displayed == PlayerMenu.InputSettings && !displayingPreview);
             Show(devicePage, displayed == PlayerMenu.DeviceSettings && !displayingPreview);
             Show(settingsNavigation, settingsVisible);
+            Show(settingsHelp, settingsVisible);
             settingsTabs.Select((int)player.SettingsCategory);
             Show(startupPage, displayed == PlayerMenu.MainMenu);
+            Show(titleLogo, displayed == PlayerMenu.MainMenu);
             Show(contentPage, displayingPreview || (displayed != PlayerMenu.None && displayed != PlayerMenu.Pause && displayed != PlayerMenu.MainMenu && !player.IsSettingsOpen));
             Root.EnableInClassList("title-screen", displayed == PlayerMenu.MainMenu);
+            Root.EnableInClassList("pause-menu", displayed == PlayerMenu.Pause);
             bool stationShop = displayed == PlayerMenu.Station && player.Station is ComputerStation;
             Root.EnableInClassList("shop-menu", stationShop);
             Root.EnableInClassList("workshop-menu", displayed == PlayerMenu.Station && player.Station is ComputerStation { Selling: false });
@@ -214,17 +218,17 @@ namespace SomethingDownThere
             if (displayed == PlayerMenu.MainMenu)
             {
                 CurrentScreen = startupPage;
-                title.text = "SOMETHING\nDOWN THERE";
+                title.text = "";
                 subtitle.text = "";
                 startupActions.Clear();
                 var save = player.Persistence;
                 // The first-launch graphics test measures the world behind this screen for a few seconds.
                 bool tuning = player.GraphicsTuner.Running;
-                Button(startupActions, "Continue", save.LoadGame, save.HasSavedGame && !tuning);
-                Button(startupActions, "New Game", save.RequestNewGame, !tuning);
-                var settings = Button(startupActions, "Settings", player.ShowSettings, !tuning);
-                if (FpsPlayer.AdminBuild) Button(startupActions, "Ground Lab", save.StartGroundLab, !tuning);
-                Button(startupActions, "Quit", save.RequestExit, true, "quiet");
+                MenuItem(startupActions, "Continue", save.LoadGame, save.HasSavedGame && !tuning);
+                MenuItem(startupActions, "New Game", save.RequestNewGame, !tuning);
+                var settings = MenuItem(startupActions, "Settings", player.ShowSettings, !tuning);
+                if (FpsPlayer.AdminBuild) MenuItem(startupActions, "Ground Lab", save.StartGroundLab, !tuning);
+                MenuItem(startupActions, "Quit", save.RequestExit);
                 startupNote.text = tuning ? "Tuning graphics for this PC…" : save.HasSavedGame ? "" : "No saved game";
                 Show(startupNote, tuning || !save.HasSavedGame);
                 FocusAfterLayout(cameraBack || inputBack || deviceBack ? settings : navigation[0]);
@@ -233,7 +237,7 @@ namespace SomethingDownThere
             if (displayed == PlayerMenu.DeviceSettings)
             {
                 CurrentScreen = devicePage;
-                title.text = "Settings"; subtitle.text = "";
+                title.text = ""; subtitle.text = "";
                 device.Show(player.SettingsCategory, returningFromPreview);
                 AddSettingsNavigation(); device.AddNavigation(navigation); navigation.Add(settingsBack);
                 FocusAfterLayout(device.First);
@@ -242,7 +246,7 @@ namespace SomethingDownThere
             if (displayed == PlayerMenu.CameraComfort)
             {
                 CurrentScreen = cameraPage;
-                title.text = "Settings";
+                title.text = "";
                 subtitle.text = "";
                 AddSettingsNavigation();
                 camera.AddNavigation(navigation);
@@ -253,7 +257,7 @@ namespace SomethingDownThere
             if (displayed == PlayerMenu.InputSettings)
             {
                 CurrentScreen = inputPage;
-                title.text = "Settings";
+                title.text = "";
                 subtitle.text = "";
                 AddSettingsNavigation();
                 input.AddNavigation(navigation);
@@ -264,19 +268,19 @@ namespace SomethingDownThere
             if (displayed == PlayerMenu.Pause)
             {
                 CurrentScreen = pausePage;
-                title.text = "Paused";
+                title.text = "PAUSED";
                 subtitle.text = "";
                 pauseActions.Clear();
-                Button(pauseActions, "Resume", player.CloseMenu);
-                var comfort = Button(pauseActions, "Settings", player.ShowSettings);
+                MenuItem(pauseActions, "Resume", player.CloseMenu);
+                var comfort = MenuItem(pauseActions, "Settings", player.ShowSettings);
                 if (player.Persistence != null && player.Persistence.State == WorldSaveState.Lab)
                 {
-                    Button(pauseActions, "Restart Ground Lab", player.Persistence.RestartGroundLab);
-                    Button(pauseActions, "Leave Ground Lab", player.Persistence.LeaveGroundLab);
-                    Button(pauseActions, "Quit", player.Persistence.RequestExit, true, "quiet");
+                    MenuItem(pauseActions, "Restart Ground Lab", player.Persistence.RestartGroundLab);
+                    MenuItem(pauseActions, "Leave Ground Lab", player.Persistence.LeaveGroundLab);
+                    MenuItem(pauseActions, "Quit", player.Persistence.RequestExit);
                 }
-                else if (player.Persistence != null) Button(pauseActions, "Save and quit", player.Persistence.RequestExit, true, "quiet");
-                if (player.AdminAvailable) Button(pauseActions, "Developer admin", player.ShowAdminMenu);
+                else if (player.Persistence != null) MenuItem(pauseActions, "Save and quit", player.Persistence.RequestExit);
+                if (player.AdminAvailable) MenuItem(pauseActions, "Developer admin", player.ShowAdminMenu);
                 CameraChanged();
                 DeviceChanged();
                 FocusAfterLayout(inputBack || cameraBack || deviceBack ? comfort : navigation[0]);
@@ -745,6 +749,10 @@ namespace SomethingDownThere
             return button;
         }
 
+        // Title and pause entries: named as before, shown in capitals like the logo.
+        private Button MenuItem(VisualElement parent, string name, Action action, bool enabled = true) =>
+            Button(parent, name, action, enabled, "", name.ToUpperInvariant());
+
         private static void Stat(VisualElement parent, string name, string current, string next, bool complete)
         {
             var row = Element(parent, "stat-row");
@@ -833,6 +841,7 @@ namespace SomethingDownThere
             input.Dispose();
             player.GameSettings.Changed -= DeviceChanged;
             device.Dispose();
+            UnityEngine.Object.Destroy(scrim);
         }
 
         private void AddSettingsNavigation()

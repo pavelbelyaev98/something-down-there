@@ -488,7 +488,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.BindingCapture.State, Is.EqualTo(BindingCaptureState.Idle));
             Assert.That(player.Menu, Is.EqualTo(PlayerMenu.InputSettings));
             float charge = player.Battery.Charge; var position = player.transform.position;
-            page.Q<DropdownField>("digMode").value = "Toggle";
+            page.Q<SettingSelector>("digMode").value = 1;
             Assert.That(player.InputSettings.ToggleDig, Is.True);
             player.InputSettings.Bind(PlayerBinding.Dig, "<Mouse>/rightButton", true);
             devices.Press(keyboard.wKey, queueEventOnly: true); devices.Press(mouse.rightButton, queueEventOnly: true);
@@ -625,11 +625,11 @@ namespace SomethingDownThere.Tests
             yield return null; yield return null;
             var view = MenuTestUI.View(player);
             Assert.That(view.Root.Q("settingsNavigation").Query<UnityEngine.UIElements.Button>().ToList().Select(b => b.text),
-                Is.EqualTo(new[] { "Display", "Graphics", "Audio", "Controls", "Accessibility" }));
+                Is.EqualTo(new[] { "DISPLAY", "GRAPHICS", "AUDIO", "CONTROLS", "ACCESSIBILITY" }));
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("windowMode"));
             Assert.That(view.Root.Q<Label>("menuSubtitle").text, Is.Empty);
             Assert.That(view.Root.Q("fpsLimit").enabledInHierarchy, Is.True);
-            view.Root.Q<Toggle>("vSync").value = true;
+            view.Root.Q<SettingSelector>("vSync").value = 1;
             Assert.That(view.Root.Q("fpsLimit").enabledInHierarchy, Is.False);
             view.Root.Q("vSync").Focus(); yield return Key(keyboard.leftArrowKey);
             Assert.That(player.GameSettings.Values.VSync, Is.False);
@@ -701,25 +701,23 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator DropdownEscapeClosesOnlyTheListAndSelectionAppliesImmediately()
+        public IEnumerator SelectorsStepInPlaceAndDescribeTheFocusedRow()
         {
             player.OpenMenu(PlayerMenu.Pause); player.ShowSettings();
+            player.ShowSettingsCategory(SettingsCategory.Graphics);
             yield return null; yield return null;
             var view = MenuTestUI.View(player);
-            var dropdown = view.Root.Q<DropdownField>("windowMode");
-            dropdown.Focus(); yield return Key(keyboard.enterKey);
-            Assert.That(view.Root.panel.visualTree.Q(className: GenericDropdownMenu.ussClassName), Is.Not.Null);
+            var filtering = view.Root.Q<SettingSelector>("textureFiltering");
+            player.GameSettings.Edit(v => v.Filtering = 2);
+            filtering.Focus(); yield return Key(keyboard.enterKey);
+            Assert.That(player.GameSettings.Values.Filtering, Is.Zero, "Enter steps the choice in place and wraps.");
+            yield return Key(keyboard.leftArrowKey);
+            Assert.That(player.GameSettings.Values.Filtering, Is.EqualTo(2));
+            Assert.That(filtering.Caption, Is.EqualTo("High"));
+            Assert.That(MenuTestUI.Text(player, "settingsHelpTitle"), Is.EqualTo("TEXTURE FILTERING"));
+            Assert.That(view.Root.Q("settingsHelpOptions").Query(className: "help-option-current").ToList().Count, Is.EqualTo(1));
             yield return Key(keyboard.escapeKey);
-            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.DeviceSettings));
-            Assert.That(view.Root.panel.visualTree.Q(className: GenericDropdownMenu.ussClassName), Is.Null);
-            Assert.That(player.GameSettings.PreviewingDisplay, Is.False);
-            dropdown.Focus(); yield return Key(keyboard.enterKey);
-            yield return Key(keyboard.downArrowKey); yield return Key(keyboard.downArrowKey); yield return Key(keyboard.enterKey);
-            Assert.That(player.GameSettings.PreviewingDisplay, Is.True);
-            yield return Key(keyboard.escapeKey);
-            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.DeviceSettings));
-            yield return Key(keyboard.escapeKey);
-            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Pause));
+            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Pause), "No popup list holds Escape back.");
         }
 
         [UnityTest]

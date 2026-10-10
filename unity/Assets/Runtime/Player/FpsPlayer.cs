@@ -1382,7 +1382,6 @@ namespace SomethingDownThere
         public void BackFromSettings()
         {
             if (!focused || !IsSettingsOpen || BindingCapture.BlocksInput) return;
-            if (GetComponent<FpsHud>()?.Menus?.DismissDropdown() == true) return;
             if (GameSettings.PreviewingDisplay) { GameSettings.RevertDisplay(); return; }
             if (BindingCapture.State != BindingCaptureState.Idle) { BindingCapture.Cancel(); return; }
             CameraSettings.Flush(); InputSettings.Flush(); GameSettings.Flush();

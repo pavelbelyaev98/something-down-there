@@ -111,7 +111,7 @@ namespace SomethingDownThere.Tests
             // Development builds (and the Editor) add the Ground Lab after Settings.
             var expected = FpsPlayer.AdminBuild ? new[] { "Continue", "New Game", "Settings", "Ground Lab", "Quit" }
                 : new[] { "Continue", "New Game", "Settings", "Quit" };
-            Assert.That(MenuTestUI.View(player).CurrentScreen.Query<Button>().ToList().Select(b => b.text), Is.EqualTo(expected));
+            Assert.That(MenuTestUI.View(player).CurrentScreen.Query<Button>().ToList().Select(b => b.name), Is.EqualTo(expected));
             Assert.That(player.GetComponent<FpsHud>().View.Root.ClassListContains("hidden"), Is.True);
             Assert.That(UnityEngine.Cursor.lockState, Is.EqualTo(CursorLockMode.None));
             var position = player.transform.position;
@@ -129,7 +129,7 @@ namespace SomethingDownThere.Tests
             yield return null; yield return null;
             Assert.That(player.Menu, Is.EqualTo(PlayerMenu.InputSettings));
             Assert.That(MenuTestUI.View(player).CurrentScreen.Query<Button>().ToList().Count(b => b.name.StartsWith("bind") && b.name != "bindingCancel" && b.name != "bindingReplace"), Is.EqualTo(InputPreferences.BindingCount));
-            MenuTestUI.View(player).Root.Q<DropdownField>("digMode").value = "Toggle";
+            MenuTestUI.View(player).Root.Q<SettingSelector>("digMode").value = 1;
             player.InputSettings.Bind(PlayerBinding.Dig, "<Mouse>/rightButton", true);
             MenuTestUI.Click(MenuTestUI.Button(player, "settingsBack"));
             yield return null; yield return null;
@@ -145,7 +145,7 @@ namespace SomethingDownThere.Tests
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("fovSlider"));
             Assert.That(new InputPreferences(inputPreferences).ToggleDig, Is.True);
             MenuTestUI.View(player).Root.Q<SliderInt>("fovSlider").value = 81;
-            MenuTestUI.View(player).Root.Q<Toggle>("steadyCrosshair").value = false;
+            MenuTestUI.View(player).Root.Q<SettingSelector>("steadyCrosshair").value = 0;
             yield return null;
             player.Tick(new FpsInputFrame { BackPressed = true }, 0);
             yield return null; yield return null;

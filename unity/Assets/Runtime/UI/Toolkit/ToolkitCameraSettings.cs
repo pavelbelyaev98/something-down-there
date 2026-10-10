@@ -11,13 +11,16 @@ namespace SomethingDownThere
         private readonly Button reset, retry;
         private readonly ToolkitSettingsRows rows;
         public SliderInt Slider { get; }
-        public ToolkitCameraSettings(VisualElement root, FpsPlayer player)
+        public ToolkitCameraSettings(VisualElement root, FpsPlayer player, ToolkitSettingsHelp help)
         {
             this.root = root; settings = player.CameraSettings;
             reset = root.parent.Q<Button>("cameraReset"); retry = root.Q<Button>("settingsRetry"); error = root.Q("settingsError");
-            var scroll = root.Q<ScrollView>("cameraScroll"); rows = new ToolkitSettingsRows(scroll, scroll);
-            Slider = rows.Slider("fovSlider", "Field of view", 55, 90, () => settings.VerticalFov, value => settings.SetVerticalFov(value), value => value + "°", valueName: "fovValue");
-            rows.Toggle("steadyCrosshair", "Steady crosshair", () => settings.SteadyCrosshair, settings.SetSteadyCrosshair);
+            var scroll = root.Q<ScrollView>("cameraScroll"); rows = new ToolkitSettingsRows(scroll, scroll, help);
+            rows.Heading("COMFORT");
+            Slider = rows.Slider("fovSlider", "Field of view", 55, 90, () => settings.VerticalFov, value => settings.SetVerticalFov(value), value => value + "°",
+                valueName: "fovValue", description: "How much of the world fits on screen, measured top to bottom. A wider view can ease motion sickness.");
+            rows.Toggle("steadyCrosshair", "Steady crosshair", () => settings.SteadyCrosshair, settings.SetSteadyCrosshair,
+                "Keeps the crosshair still while the tool digs. Off, it pulses with every stroke.");
             reset.clicked += settings.Reset; retry.clicked += () => settings.Flush();
             settings.Changed += Refresh; Refresh();
         }

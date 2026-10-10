@@ -24,7 +24,7 @@ namespace SomethingDownThere
         private BindingCaptureState displayedState;
         public VisualElement First => mouseRows.First;
 
-        public ToolkitInputSettings(VisualElement root, FpsPlayer player)
+        public ToolkitInputSettings(VisualElement root, FpsPlayer player, ToolkitSettingsHelp help)
         {
             this.root = root; this.player = player;
             settings = player.InputSettings; capture = player.BindingCapture;
@@ -38,19 +38,23 @@ namespace SomethingDownThere
             reset.clicked += () => { settings.Reset(); player.GameSettings.Reset(SettingsCategory.Controls); };
             retry.clicked += () => { settings.Flush(); player.GameSettings.Flush(); };
             replace.clicked += capture.Replace; cancel.clicked += capture.Cancel;
-            mouseRows = new ToolkitSettingsRows(scroll, scroll);
+            mouseRows = new ToolkitSettingsRows(scroll, scroll, help);
+            mouseRows.Heading("MOUSE");
             mouseRows.Slider("mouseSensitivity", "Mouse sensitivity", 10, 300, () => player.GameSettings.Values.Sensitivity,
-                value => player.GameSettings.Edit(v => v.Sensitivity = value), value => (value / 100f).ToString("0.00") + "×");
+                value => player.GameSettings.Edit(v => v.Sensitivity = value), value => (value / 100f).ToString("0.00") + "×",
+                description: "How far the view turns for each movement of the mouse.");
             mouseRows.Toggle("invertX", "Invert horizontal look", () => player.GameSettings.Values.InvertX,
-                value => player.GameSettings.Edit(v => v.InvertX = value));
+                value => player.GameSettings.Edit(v => v.InvertX = value), "Moving the mouse right turns the view left.");
             mouseRows.Toggle("invertY", "Invert vertical look", () => player.GameSettings.Values.InvertY,
-                value => player.GameSettings.Edit(v => v.InvertY = value));
-            mouseRows.Choice("digMode", "Digging mode", new[] { "Hold", "Toggle" }, () => settings.ToggleDig ? 1 : 0, index => settings.SetToggleDig(index == 1));
+                value => player.GameSettings.Edit(v => v.InvertY = value), "Moving the mouse up looks down.");
+            mouseRows.Choice("digMode", "Digging mode", new[] { "Hold", "Toggle" }, () => settings.ToggleDig ? 1 : 0, index => settings.SetToggleDig(index == 1),
+                description: "Hold digs for as long as the button is held. Toggle starts digging with one press and stops with the next.");
             for (int i = 0; i < displayOrder.Length; i++)
             {
                 var binding = displayOrder[i];
-                if (i == 0 || i == 7) mouseRows.Heading(i == 0 ? "Movement" : "Actions");
-                bindings[(int)binding] = mouseRows.Binding("bind" + binding, InputPreferences.Label(binding), () => settings.Display(binding), () => capture.Begin(binding));
+                if (i == 0 || i == 7) mouseRows.Heading(i == 0 ? "MOVEMENT" : "ACTIONS");
+                bindings[(int)binding] = mouseRows.Binding("bind" + binding, InputPreferences.Label(binding), () => settings.Display(binding), () => capture.Begin(binding),
+                    "Select it, then press the new key or mouse button. Esc cancels. Taking a control another action uses offers to swap them.");
             }
             settings.Changed += Refresh;
             player.GameSettings.Changed += Refresh;

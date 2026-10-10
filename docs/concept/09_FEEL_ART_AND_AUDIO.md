@@ -149,9 +149,15 @@ Comfort-safe effects:
 
 ## 8. UI art
 
-Clear, readable, industrial-worksite in flavor (final visual treatment later): stenciled
-labels, simple type, high contrast, scale-friendly. UI never competes with the world; it stays out of
+Clear, readable, high contrast, scale-friendly. UI never competes with the world; it stays out of
 the way.
+
+Menu screens (on trial, `117`): the title and pause stand on the world itself, with a chunky
+sign-painted yellow logo and a large plain-word menu, no box. Settings is a full-screen warm paper
+sheet: category tabs along the top, rounded rows whose values step in place (◀ value ▶ with a pip per
+choice), the focused option's description and choices on the right. Dialogs are the same paper as a
+card. Type: a chunky rounded display face for logo, menu, tabs and headings; a condensed sans for rows
+and running text. The HUD stays minimal and separate from this treatment.
 
 ## 9. Photo-ready moments (by design, not by marketing)
 
