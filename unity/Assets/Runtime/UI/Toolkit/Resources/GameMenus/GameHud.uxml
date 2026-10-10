@@ -23,8 +23,9 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="PickupNotes" class="hud-pickups" />
         <ui:Label name="Developer controls" class="hud-admin" />
-        <ui:Label name="Reticle" text="+" class="hud-reticle" />
+        <ui:VisualElement name="Reticle" class="hud-reticle" />
         <ui:VisualElement name="DetectorPanel" class="hud-detector hidden" picking-mode="Ignore">
             <ui:Label text="DETECTOR" class="hud-detector-title" />
             <ui:VisualElement class="hud-detector-strength">

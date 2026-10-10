@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -6,8 +7,8 @@ namespace SomethingDownThere
     public sealed class GameHudView
     {
         private readonly FpsPlayer player;
-        private readonly Label reticle, status, walletStatus, lampStatus, prompt, feedback, adminHint, fuelWarning, inventoryWarning;
-        private readonly VisualElement batteryGroup, batteryFill, bagGroup, lampGroup;
+        private readonly Label status, walletStatus, lampStatus, prompt, feedback, adminHint, fuelWarning, inventoryWarning;
+        private readonly VisualElement reticle, batteryGroup, batteryFill, bagGroup, lampGroup, pickupNotes;
         private readonly VisualElement detectorPanel;
         private readonly VisualElement[] detectorBars;
         private Battery displayedBattery;
@@ -21,7 +22,9 @@ namespace SomethingDownThere
             this.player = player;
             fps = document.Q<Label>("FpsReadout");
             Root = document.Q("hudRoot");
-            reticle = Root.Q<Label>("Reticle");
+            reticle = Root.Q("Reticle");
+            pickupNotes = Root.Q("PickupNotes");
+            player.Collected += AddPickupNote;
             detectorPanel = Root.Q("DetectorPanel");
             detectorBars = new[] { Root.Q("DetectorBar1"), Root.Q("DetectorBar2"), Root.Q("DetectorBar3") };
             status = Root.Q<Label>("Status");
@@ -103,7 +106,43 @@ namespace SomethingDownThere
             }
             float pulse = player.CameraSettings.SteadyCrosshair ? 0 : player.DigPulse;
             reticle.style.scale = new Scale(Vector3.one * (1 + pulse * 0.3f));
-            reticle.style.color = Color.Lerp(Color.white, new Color(1, 0.82f, 0.35f), pulse);
+            reticle.style.backgroundColor = Color.Lerp(Color.white, new Color(1, 0.82f, 0.35f), pulse);
+            TickPickupNotes();
+        }
+
+        // "+Coal" for each find taken into the bag. The same find again while its note shows counts it up ("+Coal ×2")
+        // and moves it to the bottom.
+        private const float NoteSeconds = 2.5f, NoteFadeSeconds = .5f;
+        private const int MaxNotes = 4;
+        private sealed class PickupNote { public Label Label; public string Name; public int Count; public float Shown; }
+        private readonly List<PickupNote> notes = new List<PickupNote>();
+
+        private void AddPickupNote(InventoryItem item)
+        {
+            var note = notes.Find(n => n.Name == item.DisplayName);
+            if (note != null) notes.Remove(note);
+            else
+            {
+                if (notes.Count == MaxNotes) { notes[0].Label.RemoveFromHierarchy(); notes.RemoveAt(0); }
+                note = new PickupNote { Label = new Label { pickingMode = PickingMode.Ignore }, Name = item.DisplayName };
+                note.Label.AddToClassList("hud-number");
+                note.Label.AddToClassList("hud-pickup");
+            }
+            notes.Add(note);
+            pickupNotes.Add(note.Label);
+            note.Count++;
+            note.Shown = Time.unscaledTime;
+            note.Label.text = "+" + note.Name + (note.Count > 1 ? " ×" + note.Count : "");
+        }
+
+        private void TickPickupNotes()
+        {
+            for (int i = notes.Count - 1; i >= 0; i--)
+            {
+                float left = notes[i].Shown + NoteSeconds - Time.unscaledTime;
+                if (left <= 0) { notes[i].Label.RemoveFromHierarchy(); notes.RemoveAt(i); continue; }
+                notes[i].Label.style.opacity = Mathf.Clamp01(left / NoteFadeSeconds);
+            }
         }
 
         private void UpdateBattery()

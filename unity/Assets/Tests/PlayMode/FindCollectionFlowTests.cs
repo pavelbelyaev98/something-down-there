@@ -14,6 +14,8 @@ namespace SomethingDownThere.Tests
         {
             var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
             player.Tuning.Gravity = 0; player.SelectAdminLevel(shaving ? EquipmentProgression.DrillLevel : 4);
+            // Cadence on its own: the cut lands on the press here (ShovelStrokeOnABuriedFindCutsOnceAtItsScoop covers the scoop).
+            player.Tuning.CutAtScoop = false;
             PlacePickupCutFixture(find, false); AimPickupCutFixture(find, 0);
             while (!player.Inventory.IsFull) player.Inventory.TryAdd(new InventoryItem("fill-" + player.Inventory.Count, "Carried", 1));
             int count = player.Inventory.Count, strokes = player.SuccessfulStrokes;
@@ -195,6 +197,27 @@ namespace SomethingDownThere.Tests
             Assert.That(proxy.GetComponent<Collider>(), Is.Null); Assert.That(proxy.GetComponent<Rigidbody>(), Is.Null);
             Assert.That(proxy.GetComponent<BuriedFind>(), Is.Null);
             Assert.That(proxy.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(find.GetComponent<MeshFilter>().sharedMesh));
+        }
+
+        // A shovel stroke aimed at a half-buried find cuts once, at its scoop, as on bare ground (user, 2026-10-10: it also
+        // cut on the press, two cuts per stroke).
+        [Test]
+        public void ShovelStrokeOnABuriedFindCutsOnceAtItsScoop()
+        {
+            var find = field.Finds.First(f => f.SaveContentId == "mineral_coal");
+            player.Tuning.Gravity = 0; player.SelectAdminLevel(4);
+            HalfCover(find); AimVisible(find);
+            Assert.That(find.Collectible, Is.False);
+            int strokes = player.SuccessfulStrokes, revision = terrain.Revision;
+            player.Tick(new FpsInputFrame { DigHeld = true, DigPressed = true }, .001f);
+            Assert.That(terrain.Revision, Is.EqualTo(revision), "The press starts the stroke; its dirt waits for the scoop.");
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes));
+            float scoop = ToolRigPresenter.ScoopDelay(player.LastDigInterval, player.LastDigMaterial);
+            player.Tick(new FpsInputFrame { DigHeld = true }, scoop);
+            Assert.That(terrain.Revision, Is.EqualTo(revision + 1), "The scoop cuts the soil over the find.");
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 1));
+            player.Tick(new FpsInputFrame { DigHeld = true }, (player.LastDigInterval - scoop) * .9f);
+            Assert.That(player.SuccessfulStrokes, Is.EqualTo(strokes + 1), "Nothing more is cut before the next stroke.");
         }
 
         [TestCase(false)] [TestCase(true)]

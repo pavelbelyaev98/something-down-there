@@ -198,7 +198,7 @@ namespace SomethingDownThere.Tests
         {
             target.AddComponent<ValidationDigTarget>();
             yield return null; yield return null;
-            var reticle = root.GetComponent<FpsHud>().View.Root.Q<Label>("Reticle");
+            var reticle = root.GetComponent<FpsHud>().View.Root.Q("Reticle");
             Vector2 center = reticle.worldBound.center;
             foreach (int fov in new[] { 55, 75, 90 })
             {
@@ -207,12 +207,12 @@ namespace SomethingDownThere.Tests
                 yield return null;
                 Assert.That(reticle.worldBound.center, Is.EqualTo(center));
                 Assert.That(reticle.resolvedStyle.scale.value, Is.EqualTo(Vector3.one));
-                Assert.That(reticle.resolvedStyle.color, Is.EqualTo(Color.white));
+                Assert.That(reticle.resolvedStyle.backgroundColor, Is.EqualTo(Color.white));
             }
             player.CameraSettings.SetSteadyCrosshair(false);
             yield return null;
             Assert.That(reticle.resolvedStyle.scale.value.x, Is.GreaterThan(1));
-            Assert.That(reticle.resolvedStyle.color, Is.Not.EqualTo(Color.white));
+            Assert.That(reticle.resolvedStyle.backgroundColor, Is.Not.EqualTo(Color.white));
             player.CameraSettings.SetSteadyCrosshair(true);
             devices.Press(keyboard.spaceKey, queueEventOnly: true);
             yield return new WaitForSecondsRealtime(0.4f);

@@ -282,7 +282,8 @@ namespace SomethingDownThere
             if (State == FindState.Extracting) return player.Crane != null ? player.Crane.Prompt : "Recovery in progress";
             if (Collected || !isActiveAndEnabled) return "";
             ObserveDiscovery();
-            if (!ExposureReady) return $"Uncover more  |  {Mathf.RoundToInt(Exposure * 100)}% / {Mathf.RoundToInt(RequiredExposure * 100)}% exposed";
+            // Still in the ground: no words, the player just keeps digging (user, 2026-10-10).
+            if (!ExposureReady) return "";
             if (RopeTarget) return $"{DisplayName}  |  Hold {player.InputSettings.Display(PlayerBinding.Interact)} to mark for excavation";
             string collect = player.Inventory.IsFull ? "Inventory full"
                 : handPicked ? $"{player.InputSettings.Display(PlayerBinding.Interact)} to take"
@@ -370,7 +371,7 @@ namespace SomethingDownThere
             player.AnimateCollection(visual, GetComponent<MeshFilter>());
             hitCollider.enabled = false;
             visual.enabled = false;
-            player.ShowFeedback($"Collected {Item.DisplayName}  |  Finds {player.Inventory.Count}/{player.Inventory.Capacity}");
+            player.ReportCollected(Item);
             gameObject.SetActive(false);
             return true;
         }

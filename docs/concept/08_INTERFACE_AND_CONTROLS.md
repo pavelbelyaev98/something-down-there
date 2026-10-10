@@ -11,6 +11,8 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Bag** | Count / capacity; turns a warning color when full |
 | **Money** | Current balance |
 | **Lamp kit** | Available reusable lamps |
+| **Reticle** | A small dot at the centre of the view |
+| **Pickup note** | "+Coal" above the bag for each find taken, fading after a moment |
 
 Only these (and the frozen detector) are shown: icons and numbers, no text readouts. Depth, tool stats
 and key hints are not on the HUD (user, 2026-10-10).
@@ -69,6 +71,8 @@ Rules:
 
 - Every pickup has visible, audible feedback; the player never wonders whether something was
  collected (the "apparently I collected it but didn't see it" failure is banned).
+- A find still in the ground shows no words: no exposure percentage or "uncover more" (user,
+ 2026-10-10); the player digs until it comes free and its pickup note appears.
 - Detector feedback has a visual channel; the game is fully playable muted.
 - Readability is never color-only: shapes, icons and labels back up every color cue.
 - Recovery marking previews directly on the eligible aimed surface, shows hold progress, and becomes a fixed checked mark when confirmed. It follows the moving find and obeys world occlusion; menus and equipment placement suppress the hover preview.

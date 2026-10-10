@@ -619,37 +619,26 @@ namespace SomethingDownThere
                 {
                     if (blockedPickup != find) ShowFeedback("Inventory full - keep digging; find left in place");
                     blockedPickup = find;
-                    if (digCooldown > 0f) return false;
-                    bool cut = TryDig();
-                    ScheduleNextDig();
-                    return cut;
+                    return StartStroke();
                 }
-                if (!find.Collectible)
-                {
-                    if (digCooldown > 0f) return false;
-                    bool uncovered = TryDig();
-                    ScheduleNextDig();
-                    if (uncovered && find.Collectible)
-                    {
-                        bool finishedPickup = find.TryCollect(this);
-                        blockedPickup = !finishedPickup && Inventory.IsFull ? find : null;
-                    }
-                    RefreshTargetPrompt();
-                    return uncovered;
-                }
+                // Soil over a find is dug by the same stroke as any ground: one cut, at the scoop (user, 2026-10-10: a cut on
+                // the press as well dug twice per stroke).
+                if (!find.Collectible) return StartStroke();
                 if (hit.distance > PickupReach(find)) return false;
                 bool collected = find.TryCollect(this);
                 blockedPickup = !collected && Inventory.IsFull ? find : null;
-                if (collected && continueDiggingAfterPickup && digCooldown <= 0f)
-                {
-                    // Re-resolve the world ray after collection removes the collider.
-                    // Pickup never consumes or restarts the normal cutting cadence.
-                    if (TryDig()) ScheduleNextDig();
-                }
+                // Re-resolve the world ray after collection removes the collider.
+                // Pickup never consumes or restarts the normal cutting cadence.
+                if (collected && continueDiggingAfterPickup) StartStroke();
                 RefreshTargetPrompt();
                 return collected;
             }
             blockedPickup = null;
+            return StartStroke();
+        }
+
+        private bool StartStroke()
+        {
             if (digCooldown > 0 || pendingScoop >= 0f) return false;
             if (!ShavingEnabled && tuning.CutAtScoop)
             {
@@ -671,12 +660,19 @@ namespace SomethingDownThere
             }
             bool dug = TryDig();
             ScheduleNextDig();
-            // The cut can reveal a different find on the same ray. Resolve it now,
+            // The cut can reveal a find on the same ray. Resolve it now,
             // then keep checking each held-input frame while the shovel recovers.
-            if (dug && TryGetTarget(MaximumPickupReach, out var newlyExposed)
-                && Contract<BuriedFind>(newlyExposed.collider) is BuriedFind revealed)
-                revealed.TryCollect(this);
+            if (dug) CollectRevealed();
             return dug;
+        }
+
+        // Takes the find a cut just bared under the aim. A full bag leaves it, and says so once while dig is held.
+        private void CollectRevealed()
+        {
+            if (TryGetTarget(MaximumPickupReach, out var exposed) && Contract<BuriedFind>(exposed.collider) is BuriedFind revealed
+                && revealed != blockedPickup && !revealed.TryCollect(this) && Inventory.IsFull && revealed.Collectible)
+                blockedPickup = revealed;
+            RefreshTargetPrompt();
         }
 
         private void ScheduleNextDig() => digCooldown = Mathf.Max(0.001f, digCooldown + scheduledDigInterval);
@@ -747,9 +743,7 @@ namespace SomethingDownThere
         private void CompletePendingScoop()
         {
             pendingScoop = -1f;
-            if (!TryDig(false)) return;
-            if (TryGetTarget(MaximumPickupReach, out var exposed) && Contract<BuriedFind>(exposed.collider) is BuriedFind revealed)
-                revealed.TryCollect(this);
+            if (TryDig(false)) CollectRevealed();
         }
 
         // What a cut here would hit, in what ground, and its cost; false (with feedback) when nothing can be dug.
@@ -1250,6 +1244,10 @@ namespace SomethingDownThere
             Feedback = message;
             feedbackUntil = Time.unscaledTime + 2.5f;
         }
+
+        // A find just taken into the bag; the HUD notes it ("+Coal").
+        public event Action<InventoryItem> Collected;
+        internal void ReportCollected(InventoryItem item) => Collected?.Invoke(item);
 
         public void OpenStation(StationTarget station)
         {

@@ -8,6 +8,8 @@ to preview every level.
 - Hold a find, place a lamp, mark a unique for recovery: the tool should get out of the way.
 - Start a shovel stroke and turn to another spot before the scoop: the dirt should come out where you look
   when the blade lifts, not where the stroke began.
+- Dig out a half-buried find with the shovel, aiming at the find itself: each stroke should take its dirt
+  once, as the blade lifts, never an extra bite at the start of the stroke.
 - Change the field of view in Settings; crouch into a tight tunnel and dig against its walls.
 - At a drill level, Developer admin (Ctrl+Shift+F10): **Drill position** starts at -6 cm and goes on to
   -12 cm a centimetre at a time (then -5 to 0); **Drill size** starts at 100% and steps 105, 110, 115, 120,

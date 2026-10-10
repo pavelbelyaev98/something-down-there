@@ -145,8 +145,7 @@ namespace SomethingDownThere.Tests
             Assert.That(find.Exposure, Is.GreaterThan(0f));
             if (find.Exposure < find.RequiredExposure)
             {
-                StringAssert.Contains("Uncover more", find.GetPrompt(player));
-                StringAssert.Contains(Mathf.RoundToInt(find.RequiredExposure * 100) + "% exposed", find.GetPrompt(player));
+                Assert.That(find.GetPrompt(player), Is.Empty, "A find still in the ground shows no words.");
                 Assert.That(find.TryCollect(player), Is.False);
             }
             else Assert.That(find.Collectible, Is.True, "A small find may resolve inside one bite.");
@@ -160,9 +159,11 @@ namespace SomethingDownThere.Tests
             Assert.That(player.TryInteract(), Is.False, "E is for stations, not discovery collection.");
             player.Battery.TrySpend(player.Battery.Charge);
             float energy = player.Battery.Charge;
+            InventoryItem noted = null;
+            player.Collected += item => noted = item;
             Assert.That(player.TryPrimaryAction(), Is.True);
             Assert.That(player.Inventory.Items.Single(), Is.SameAs(find.Item));
-            StringAssert.Contains("Collected " + find.Item.DisplayName, player.Feedback);
+            Assert.That(noted, Is.SameAs(find.Item), "The HUD is told what went into the bag.");
             Assert.That(find.gameObject.activeSelf, Is.False);
             Assert.That(find.GetComponent<Collider>().enabled, Is.False);
             Assert.That(find.TryCollect(player), Is.False);
@@ -181,6 +182,8 @@ namespace SomethingDownThere.Tests
         public void CapacityAndCoverKeepTheFindInTheWorldAndResetReburiesIt()
         {
             var find = field.Finds[1];
+            // Cadence on its own: the cut lands on the press here (FindCollectionFlowTests covers the scoop).
+            player.Tuning.CutAtScoop = false;
             Expose(find);
             // From below, the ray still meets untouched soil before the eligible object.
             Aim(find.transform.position + Vector3.down * 2, find.transform.position);

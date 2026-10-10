@@ -14,6 +14,8 @@ Game for the pause menu.
 - HUD while digging: coin and money top-left; the battery bar (bolt inside) with backpack and lamp bottom-left.
   Do the icons read as what they are? Dig the battery down and watch
   the bar turn orange, then red, with LOW BATTERY in the middle. Fill the bag: its count turns orange.
+- The crosshair is a small dot. Dig out a rock or coal: no words while it is still in the ground, then a
+  small "+Coal" above the bag as you take it (two quick ones read "+Coal ×2").
 - Computer with a few finds: one row per kind (Rock ×3) and only Sell all. Then buy an upgrade, a recharge
   and a lamp. Tab shows the bag the same way. Ctrl+Shift+F10: the developer admin in the same style.
 - Pause → New Game: it asks first; Cancel (or Esc) goes back to pause. Confirm on a game you don't mind losing
