@@ -199,16 +199,6 @@ namespace SomethingDownThere
         public float LastScoopVolume { get; private set; }
         public float ExcavatedVolume => excavationTerrain != null ? excavationTerrain.RemovedVolume : 0;
         public float Depth => excavationTerrain == null ? 0 : Mathf.Max(0, excavationTerrain.SurfaceHeight - transform.position.y);
-        // Standing on the site floor reads as its full depth (150 m, not 149.9).
-        public float DisplayDepth
-        {
-            get
-            {
-                if (excavationTerrain == null) return 0;
-                float floor = excavationTerrain.Dimensions.y * excavationTerrain.CellSize;
-                return Depth >= floor - .3f ? floor : Depth;
-            }
-        }
         public event Action MenuChanged;
 
         private void Awake()

@@ -2,18 +2,27 @@
     <ui:Style src="Theme.uss" />
     <ui:Style src="Hud.uss" />
     <ui:VisualElement name="hudRoot" class="hud-root" picking-mode="Ignore">
-        <ui:VisualElement class="hud-resources">
-            <ui:VisualElement name="batteryGroup" class="hud-battery">
-                <ui:Label name="Battery status" />
-                <ui:VisualElement class="hud-charge-track"><ui:VisualElement name="Charge" class="hud-charge" /></ui:VisualElement>
+        <ui:VisualElement name="WalletGroup" class="hud-wallet">
+            <ui:VisualElement name="MoneyIcon" class="hud-icon hud-money-icon" />
+            <ui:Label name="Wallet" class="hud-number hud-wallet-amount" />
+        </ui:VisualElement>
+        <ui:VisualElement class="hud-kit">
+            <ui:Label name="Return warning" class="hud-warning hidden" />
+            <ui:VisualElement class="hud-counters">
+                <ui:VisualElement name="BagGroup" class="hud-counter">
+                    <ui:VisualElement name="BagIcon" class="hud-icon hud-counter-icon" />
+                    <ui:Label name="Status" class="hud-number" />
+                </ui:VisualElement>
+                <ui:VisualElement name="LampGroup" class="hud-counter">
+                    <ui:VisualElement name="LampIcon" class="hud-icon hud-counter-icon" />
+                    <ui:Label name="Lamps" class="hud-number" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement class="hud-inventory">
-                <ui:Label name="Status" />
-                <ui:Label name="Wallet" class="hud-secondary" />
+            <ui:VisualElement name="batteryGroup" class="hud-battery">
+                <ui:VisualElement name="Charge" class="hud-charge" />
+                <ui:VisualElement name="BatteryIcon" class="hud-icon hud-bolt" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Label name="Shovel status" class="hud-equipment" />
-        <ui:Label name="Return warning" class="hud-warning" />
         <ui:Label name="Developer controls" class="hud-admin" />
         <ui:Label name="Reticle" text="+" class="hud-reticle" />
         <ui:VisualElement name="DetectorPanel" class="hud-detector hidden" picking-mode="Ignore">

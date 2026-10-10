@@ -8,6 +8,8 @@ Game for the pause menu.
 - Settings: every tab. Change values with the ◀ ▶ arrows, Left/Right, Enter and clicks on the value. Watch the
   right-hand panel follow the row you are on. Rebind a key. Change Window mode (Keep/Revert should still appear).
 - Esc out of settings, then press Esc in game for the pause menu: just the menu, no controls list.
+- HUD while digging: money top-left; bag, lamps and the battery bar bottom-left. Dig the battery down and watch
+  the bar turn amber, then red, with the banner in the middle. Fill the bag: its count turns amber.
 - Pause → New Game: it asks first; Cancel (or Esc) goes back to pause. Confirm on a game you don't mind losing
   (it is archived, not deleted): a fresh world starts straight away.
 

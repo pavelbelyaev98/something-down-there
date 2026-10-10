@@ -1,8 +1,9 @@
-# 117 — Menu Redesign: Title, Pause, Fullscreen Settings
+# 117 — Menu Redesign: Title, Pause, Fullscreen Settings, HUD
 
 **Status:** on trial: the title and pause stand on the world with a yellow sign-painted logo and a plain-word
 menu (pause: only the menu, with New Game); settings is a full-screen paper sheet with tabs, in-place ◀ value ▶
-selectors and a description panel; dialogs are a paper card. Lilita One and Barlow Condensed (OFL) set the type.
+selectors and a description panel; dialogs are a paper card. The HUD shows only money, bag, lamps and a battery
+bar coloured by the return estimate, as icons and numbers. Lilita One and Barlow Condensed (OFL) set the type.
 Awaiting the user's playtest.
 
 ## Objective
@@ -79,6 +80,25 @@ The user on the pause menu: "this is awful, dont show controls when i am in here
 new game". The controls card is gone (layout, styles, labels and their tests); pause gained New Game (above).
 Concept `08` §3 updated.
 
+## Iteration 2 (2026-10-10): HUD
+
+The user, with the old HUD (dark panel "BATTERY 44% | SAFE", "FINDS 2 / 10", "$0", then shovel level, cut, reach,
+depth and the lamp/mark key line) and two references (a banknote stack beside a bold "291"; a rounded battery bar
+with a bolt at the bottom-left): "hide the shovel and reach details. it is important only to show battery, money,
+inventory and lamps and i want it in a different way".
+
+- Money top-left: banknote icon and the balance in Lilita One, no "$". Bag (count/capacity, amber when full) and
+  lamps (available/owned, ∞ in the Ground Lab) bottom-left above the battery bar, so the "can I keep digging?"
+  readouts sit together.
+- Battery: a rounded bar with a bolt, no percentage or band text. The return estimate survives as the bar's colour
+  (teal, amber, red; blue when unlimited) and the existing centred LOW FUEL / FUEL CRITICAL / FUEL EMPTY banner.
+  "FUEL AT COMPUTER" stays as a small line above the counters, only near the computer.
+- Removed: the panel, shovel level and cut, reach, depth (and `FpsPlayer.DisplayDepth`, which only it used), the
+  lamp and mark key hints. The frozen detector, admin line, prompts, feedback and banners are unchanged.
+- Icons: no owned pack has UI icons, so `HudIcons` draws four flat vector glyphs (card `art/hud-icons`); a bought
+  icon set can replace them.
+- Concept `08` §1 updated. The battery test now checks the bar's classes and width instead of the label.
+
 ## Acceptance Criteria
 
 - Title: logo top-left, entries as plain capitals, Continue greyed without a save, Ground Lab only in development
@@ -89,4 +109,5 @@ Concept `08` §3 updated.
 - Pause shows only its heading and entries; New Game asks first, Cancel/Esc returns to pause, confirming starts a
   fresh world with the old one archived.
 - Pause and dialogs readable over bright and dark ground; focus loss shows the bare world.
+- HUD: only money, bag, lamps and the battery bar; the bar turns amber and red with the return estimate.
 - Station, inventory and admin unchanged.

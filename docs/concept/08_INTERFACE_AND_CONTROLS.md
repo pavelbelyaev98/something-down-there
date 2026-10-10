@@ -6,11 +6,14 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 
 | Element | Behavior |
 |---|---|
-| **Depth** | Current depth below the surface rim |
-| **Bag** | Count / capacity; turns a warning color as it fills |
-| **Battery** | Current charge; the shared dig + jetpack resource |
-| **Return warning** | Adaptive safe / risky / critical estimate based on depth and ascent energy |
-| **Lamp kit** | Available reusable lamps, with a compact placement shortcut |
+| **Battery** | Current charge as a bar; the shared dig + jetpack resource |
+| **Return warning** | Adaptive safe / risky / critical estimate based on depth and ascent energy, shown as the battery bar's colour plus a centred low-fuel banner |
+| **Bag** | Count / capacity; turns a warning color when full |
+| **Money** | Current balance |
+| **Lamp kit** | Available reusable lamps |
+
+Only these (and the frozen detector) are shown: icons and numbers, no text readouts. Depth, tool stats
+and key hints are not on the HUD (user, 2026-10-10).
 | **Detector** (frozen) | Kept as built until the detector-off playtest decides whether ground tells replace it ([Discoveries](05_DISCOVERIES.md#2-the-detector)). Separate compact HUD with three signal bars based on aim alignment: strongest when looking directly toward a nearby buried find. Hidden when looking away, out of range or once any part is uncovered. No direction/height hints; the aiming reticle stays independent. Silent by default; optional accessibility audio remains planned. |
 
 Not on the HUD: minimap, compass, ore counters, objective list, damage numbers, news ticker, or any

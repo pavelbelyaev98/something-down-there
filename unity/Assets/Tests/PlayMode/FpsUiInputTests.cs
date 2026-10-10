@@ -242,12 +242,13 @@ namespace SomethingDownThere.Tests
         [UnityTest]
         public IEnumerator ReturnWarningsShowReserveBandsAndFreezeAcrossInventoryInspection()
         {
-            var batteryLabel = root.GetComponent<FpsHud>().View.Root.Q<Label>("Battery status");
+            var battery = root.GetComponent<FpsHud>().View.Root.Q("batteryGroup");
+            var charge = root.GetComponent<FpsHud>().View.Root.Q("Charge");
             var warning = root.GetComponent<FpsHud>().View.Root.Q<Label>("Fuel warning");
-            StringAssert.Contains("SAFE", batteryLabel.text);
+            Assert.That(battery.ClassListContains("risky") || battery.ClassListContains("critical"), Is.False);
             player.Battery.TrySpend(65);
             yield return null;
-            StringAssert.Contains("RISKY", batteryLabel.text);
+            Assert.That(battery.ClassListContains("risky"), Is.True);
             Assert.That(warning.text, Is.EqualTo("LOW FUEL"));
             Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FFD45C"));
             devices.Press(keyboard.tabKey, queueEventOnly: true);
@@ -256,24 +257,24 @@ namespace SomethingDownThere.Tests
             Assert.That(root.GetComponent<FpsHud>().View.Root.ClassListContains("hidden"), Is.True);
             player.Battery.TrySpend(20); // Simulate an external state change while inspection is open.
             yield return null;
-            StringAssert.Contains("RISKY", batteryLabel.text, "A paused HUD does not cross warning bands.");
+            Assert.That(battery.ClassListContains("risky"), Is.True, "A paused HUD does not cross warning bands.");
             devices.Release(keyboard.tabKey, queueEventOnly: true);
             yield return null;
             devices.Press(keyboard.tabKey, queueEventOnly: true);
             yield return null;
             yield return null;
-            StringAssert.Contains("CRITICAL", batteryLabel.text);
-            StringAssert.Contains("15%", batteryLabel.text, "The displayed percentage must agree with the critical threshold.");
+            Assert.That(battery.ClassListContains("critical"), Is.True);
+            Assert.That(charge.style.width.value.value, Is.EqualTo(15).Within(0.5f), "The bar must agree with the critical threshold.");
             Assert.That(warning.text, Is.EqualTo("FUEL CRITICAL"));
             Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FF625C"));
             Assert.That(root.GetComponent<FpsHud>().View.Root.ClassListContains("hidden"), Is.False);
             player.Battery.TrySpend(15);
             yield return null;
-            StringAssert.Contains("EMPTY", batteryLabel.text);
+            Assert.That(charge.style.width.value.value, Is.Zero);
             Assert.That(warning.text, Is.EqualTo("FUEL EMPTY"));
             player.Battery.Recharge();
             yield return null;
-            StringAssert.Contains("SAFE", batteryLabel.text);
+            Assert.That(battery.ClassListContains("risky") || battery.ClassListContains("critical"), Is.False);
             Assert.That(warning.text, Is.Empty);
             Assert.That(warning.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
         }
