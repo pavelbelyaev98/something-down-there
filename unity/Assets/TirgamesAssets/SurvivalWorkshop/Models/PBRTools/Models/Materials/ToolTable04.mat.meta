@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f24c23ef16a441e40b494620aa830e74
+timeCreated: 1485583355
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRTools/Models/Materials/ToolTable04.mat
+  uploadId: 746303

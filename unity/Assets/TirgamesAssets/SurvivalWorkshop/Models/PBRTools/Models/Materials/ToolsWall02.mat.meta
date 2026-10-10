@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b62b59f8c59fa35488b0437c488a861b
+timeCreated: 1487240979
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRTools/Models/Materials/ToolsWall02.mat
+  uploadId: 746303

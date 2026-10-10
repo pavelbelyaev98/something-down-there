@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1b2424c9326089b468ed207ac568aba9
+timeCreated: 1484154898
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRTools/Models/Materials/WoodPodium02_Albedo.mat
+  uploadId: 746303

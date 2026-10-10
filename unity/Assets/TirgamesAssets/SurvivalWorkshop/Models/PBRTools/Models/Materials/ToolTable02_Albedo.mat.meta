@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2cf16dfb60850be479b5736805a529b3
+timeCreated: 1484117035
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRTools/Models/Materials/ToolTable02_Albedo.mat
+  uploadId: 746303

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 085b517ed4122ce45a1a3a93b1275b9c
+timeCreated: 1485588705
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRTools/Prefabs/ToolTable04.prefab
+  uploadId: 746303

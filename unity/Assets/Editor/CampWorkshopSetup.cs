@@ -32,6 +32,20 @@ namespace SomethingDownThere.Editor
             new Vector2(-9.4f, -3.8f), new Vector2(-9.4f, -1f), new Vector2(-9.4f, 1.8f),
         };
         private const string ConcreteDetail = "Assets/TowerCrane/Textures/concrete_Normal.png";
+        // The bought Survival Workshop Garage (Tirgames, art/survival-workshop-garage) on trial behind the workshop, its
+        // door end toward the camp centre, on the flattest clear ground near it (the yard and the crane's swing stay free).
+        private const string GarageVendor = "Assets/TirgamesAssets/SurvivalWorkshop/Models/";
+        private const string GarageFolder = "Assets/Content/Camp/Garage";
+        private static readonly Vector3 GarageSpot = new Vector3(-19, 0, -35);
+        // Floor half-extents of the shell (its long axis X, door end +X) and the demo scene's poses round its floor centre.
+        private static readonly Vector2 GarageHalf = new Vector2(6.47f, 3.95f);
+        private static readonly (string prefab, Vector3 position, float yaw)[] GarageDoors =
+        {
+            ("PBRGarage/Prefabs/GarageDoor01Animated", new Vector3(6.18f, 0, .03f), 270),
+            ("PBRGarage/Prefabs/GarageDoor02Animated", new Vector3(6.36f, 0, 3.18f), 90),
+        };
+        private static readonly float[] GarageLampX = { -4.64f, -1.6f, 1.5f, 4.6f }, GarageLampZ = { -1.86f, 1.87f };
+        private const float GarageLampY = 3.14f;
 
         [Serializable]
         private class WorkshopLayout
@@ -54,9 +68,12 @@ namespace SomethingDownThere.Editor
             var workshop = BuildWorkshop(surface);
             AddStash(workshop, surface.parent.GetComponentInChildren<DiscoveryField>());
             ClearGrass(scene, workshop);
+            var garage = BuildBoughtGarage(surface);
+            ClearGrass(scene, garage);
             SurfaceStationSetup.Configure();  // the computer moves in with the workshop
             EditorSceneManager.MarkSceneDirty(scene);
-            Debug.Log("Camp workshop configured at " + workshop.position + ", computer at " + surface.Find("ComputerStation").position);
+            Debug.Log("Camp workshop configured at " + workshop.position + ", computer at " + surface.Find("ComputerStation").position
+                + ", bought garage on trial at " + garage.position);
         }
 
         // Rim-layout ground positions of the crane's set-down spots in the workshop's yard.
@@ -137,6 +154,111 @@ namespace SomethingDownThere.Editor
             foreach (float z in new[] { -1.5f, 1.5f })
                 DownLight(lamps, "Batten light", new Vector3(0, l.plate_m + 1.0f - .21f, z), 150, 7.5f, 2.2f, new Color(.96f, .98f, 1f));
             return root;
+        }
+
+        // The bought garage, bare: its shell, the roller door rolled up and the side door shut (their legacy-input script,
+        // prompt canvas and animation dropped), the demo's eight ceiling lamps as fittings and four soft-shadowed down-lights
+        // like the workshop's battens, on Excavation Lit copies of its Built-in materials.
+        private static Transform BuildBoughtGarage(Transform surface)
+        {
+            var previous = surface.Find("BoughtGarage");
+            if (previous != null) UnityEngine.Object.DestroyImmediate(previous.gameObject);
+            if (!AssetDatabase.IsValidFolder(GarageFolder)) AssetDatabase.CreateFolder("Assets/Content/Camp", "Garage");
+            var away = GarageSpot - CampCentre; away.y = 0;
+            var rotation = Quaternion.LookRotation(away.normalized) * Quaternion.Euler(0, 90, 0);  // door end (+X) to the camp
+            var root = new GameObject("BoughtGarage").transform;
+            root.SetParent(surface, false);
+            // Its floor on the highest ground under it, so no terrain shows through.
+            root.SetPositionAndRotation(new Vector3(GarageSpot.x, HighestGround(GarageSpot, rotation, GarageHalf) + .02f, GarageSpot.z), rotation);
+            var materials = new Dictionary<Material, Material>();
+            GaragePart(root, "PBRGarage/Prefabs/Garage01", Vector3.zero, 0, materials);
+            foreach (var (prefab, position, yaw) in GarageDoors)
+            {
+                var door = GaragePart(root, prefab, position, yaw, materials);
+                PrefabUtility.UnpackPrefabInstance(door.gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                var animation = door.GetComponent<Animation>();
+                // The roller door takes its rolled-up pose; the side door keeps its prefab pose, which is shut (the pack's
+                // side-door clips are named the wrong way round: "Close" holds it open).
+                if (prefab.Contains("Door01")) animation.GetClip("Opened").SampleAnimation(door.gameObject, 0);
+                UnityEngine.Object.DestroyImmediate(door.GetComponent("GarageDoor"));
+                UnityEngine.Object.DestroyImmediate(animation);
+                foreach (var trigger in door.GetComponents<BoxCollider>().Where(c => c.isTrigger)) UnityEngine.Object.DestroyImmediate(trigger);
+                UnityEngine.Object.DestroyImmediate(door.Find("UI").gameObject);
+            }
+            var lamps = Group(root, "Lamps");
+            foreach (float x in GarageLampX)
+            {
+                foreach (float z in GarageLampZ)
+                {
+                    var lamp = GaragePart(lamps, "PBRIndustrialLights/Prefabs/CeilingLamp01On", new Vector3(x, GarageLampY, z), 0, materials);
+                    foreach (var light in lamp.GetComponentsInChildren<Light>()) light.enabled = false;
+                }
+                DownLight(lamps, "Down light", new Vector3(x, GarageLampY - .05f, 0), 150, 7.5f, 2.2f, new Color(1f, .97f, .9f));
+            }
+            return root;
+        }
+
+        private static Transform GaragePart(Transform parent, string prefab, Vector3 position, float yaw, Dictionary<Material, Material> materials)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(GarageVendor + prefab + ".prefab");
+            if (asset == null) throw new InvalidOperationException("Missing the bought garage's " + prefab);
+            var part = ((GameObject)PrefabUtility.InstantiatePrefab(asset, parent)).transform;
+            part.localPosition = position; part.localRotation = Quaternion.Euler(0, yaw, 0);
+            foreach (var renderer in part.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.sharedMaterials = renderer.sharedMaterials.Select(m =>
+                    m == null ? null : materials.TryGetValue(m, out var copy) ? copy : materials[m] = FromStandard(m)).ToArray();
+                renderer.shadowCastingMode = ShadowCastingMode.On; renderer.receiveShadows = true;
+            }
+            PrefabUtility.RecordPrefabInstancePropertyModifications(part.gameObject);
+            return part;
+        }
+
+        // An Excavation Lit copy of a Built-in Standard (metallic) material: same maps, its smoothness from the metallic
+        // map's alpha (scaled) or the plain value, emission only where the vendor's glows.
+        private static Material FromStandard(Material vendor)
+        {
+            if (vendor.shader.name != "Standard") throw new InvalidDataException("Expected a Standard material: " + vendor.name);
+            var material = MaterialAsset(GarageFolder, vendor.name);
+            void Keyword(string keyword, bool on) { if (on) material.EnableKeyword(keyword); else material.DisableKeyword(keyword); }
+            material.SetTexture("_BaseMap", vendor.GetTexture("_MainTex")); material.SetColor("_BaseColor", vendor.GetColor("_Color"));
+            material.SetTextureScale("_BaseMap", vendor.GetTextureScale("_MainTex")); material.SetTextureOffset("_BaseMap", vendor.GetTextureOffset("_MainTex"));
+            var normal = vendor.GetTexture("_BumpMap");
+            material.SetTexture("_BumpMap", normal); material.SetFloat("_BumpScale", vendor.GetFloat("_BumpScale")); Keyword("_NORMALMAP", normal != null);
+            var gloss = vendor.GetTexture("_MetallicGlossMap");
+            material.SetTexture("_MetallicGlossMap", gloss); Keyword("_METALLICSPECGLOSSMAP", gloss != null);
+            material.SetFloat("_Metallic", vendor.GetFloat("_Metallic"));
+            material.SetFloat("_Smoothness", gloss != null ? vendor.GetFloat("_GlossMapScale") : vendor.GetFloat("_Glossiness"));
+            bool albedoAlpha = vendor.GetFloat("_SmoothnessTextureChannel") > .5f;
+            material.SetFloat("_SmoothnessTextureChannel", albedoAlpha ? 1 : 0); Keyword("_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A", albedoAlpha);
+            var occlusion = vendor.GetTexture("_OcclusionMap");
+            material.SetTexture("_OcclusionMap", occlusion); material.SetFloat("_OcclusionStrength", vendor.GetFloat("_OcclusionStrength"));
+            Keyword("_OCCLUSIONMAP", occlusion != null);
+            var glow = vendor.GetColor("_EmissionColor");
+            bool glows = vendor.IsKeywordEnabled("_EMISSION") && glow.maxColorComponent > 0;
+            material.SetTexture("_EmissionMap", glows ? vendor.GetTexture("_EmissionMap") : null);
+            material.SetColor("_EmissionColor", glows ? glow : Color.black); Keyword("_EMISSION", glows);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        // Highest terrain under a rectangle (half-extents along the pose's X and Z).
+        private static float HighestGround(Vector3 centre, Quaternion rotation, Vector2 half)
+        {
+            float high = float.MinValue;
+            for (int i = -4; i <= 4; i++)
+                for (int j = -4; j <= 4; j++)
+                {
+                    var p = centre + rotation * new Vector3(half.x * i / 4, 0, half.y * j / 4);
+                    foreach (var terrain in Terrain.activeTerrains)
+                    {
+                        var corner = terrain.transform.position; var size = terrain.terrainData.size;
+                        if (p.x >= corner.x && p.z >= corner.z && p.x <= corner.x + size.x && p.z <= corner.z + size.z)
+                            high = Mathf.Max(high, terrain.SampleHeight(p) + corner.y);
+                    }
+                }
+            if (high == float.MinValue) throw new InvalidOperationException("No terrain under the bought garage.");
+            return high;
         }
 
         // One spot per carry unique (art/stash-uniques/catalog.json): where its base stands, turned its way, with a glowing

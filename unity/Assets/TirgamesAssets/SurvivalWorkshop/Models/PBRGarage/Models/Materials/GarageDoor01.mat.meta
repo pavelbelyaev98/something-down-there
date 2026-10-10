@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b96c1634ef16e9042adf364d3589504c
+timeCreated: 1487671726
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRGarage/Models/Materials/GarageDoor01.mat
+  uploadId: 746303

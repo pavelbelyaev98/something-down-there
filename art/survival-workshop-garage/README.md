@@ -1,0 +1,6 @@
+# Survival Workshop Garage
+- **Item:** Survival Workshop Garage v1.3 by Tirgames assets: a 12.9 × 7.9 m galvanised garage shell with a roller door and a side door, tool walls, work tables, cupboards, a wall shelf, two wooden podiums, machines, hand tools and ceiling lamps (106 prefabs, 1K–4K textures, Built-in Standard materials).
+- **Purpose:** on trial as the camp building against the original workshop (playtest 118); its shelf and podiums are candidates for the uniques' display.
+- **Source/License:** user-purchased on the Unity Asset Store ([page](https://assetstore.unity.com/packages/3d/environments/industrial/survival-workshop-garage-83891)), Standard Unity Asset Store EULA (Single Entity). Imported without its `com.unity.postprocessing` dependency (Built-in only; URP has its own post-processing).
+- **Unity path:** vendor files untouched in `Assets/TirgamesAssets/SurvivalWorkshop`; Excavation Lit copies of the used materials in `Assets/Content/Camp/Garage/Materials`; placed bare as `Surface/BoughtGarage` by **Configure Camp Workshop**.
+- **Status:** A/B trial behind the camp workshop. Its `GarageDoor` script reads legacy `Input`; the setup strips it, never add it to game objects.

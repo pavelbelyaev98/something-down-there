@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d85a26d0210a8ce45b161f306c82ca0c
+timeCreated: 1486817944
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 83891
+  packageName: Survival Workshop Garage
+  packageVersion: 1.3
+  assetPath: Assets/TirgamesAssets/SurvivalWorkshop/Models/PBRTools/Prefabs/Level01.prefab
+  uploadId: 746303
