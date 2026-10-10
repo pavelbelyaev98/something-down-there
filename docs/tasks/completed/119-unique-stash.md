@@ -1,7 +1,8 @@
 # 119 — Unique Stash in the Camp Workshop
 
-**Status:** on trial. Bag-sized uniques are taken with E (no slot, HUD trophy x/y) and set down with E at their own
-glowing spot in the workshop (racking shelves, workbench); crane loads land in the yard beside it.
+**Status:** on trial. Bag-sized uniques are taken with E (no slot, no HUD count) and set down with E at their own
+spot in the workshop (racking shelves, workbench), shown by a glowing see-through copy of the unique while it is
+carried; crane loads land in the yard beside it.
 
 ## Objective
 Give every unique a reason to come home and a place it belongs. A unique small enough for the bag is taken by hand
@@ -72,3 +73,10 @@ unique is solid and pushes them); a carried unique whose spot is missing (stays 
 - Rejected: the console on a bottom shelf. From standing eye height the middle shelf hides it, so it stands on the
   second bay's middle shelf beside the TV.
 - Taking a unique that had come loose from the soil clears its physics release, so a save while carrying validates.
+
+## Iteration (user, 2026-10-10)
+- The HUD secured/total counter and its trophy icon are gone: progress shows on the shelves, and a tally of what is
+  left would nag players who must complete.
+- Rejected: a chalk outline of the footprint as the spot's highlight. The spot now shows the unique itself, a
+  see-through glowing copy of its mesh (`Workshop_StashGhost`, Excavation Lit, transparent with depth write) posed
+  exactly as it will stand; the aim box fills that shape.

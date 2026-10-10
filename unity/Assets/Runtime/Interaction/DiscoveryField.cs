@@ -52,7 +52,7 @@ namespace SomethingDownThere
         internal void NotifyMotion() => MotionRevision++;
         // Carry uniques taken or set down (119); the workshop's stash spots follow it and the population revision.
         public long StashRevision { get; private set; }
-        internal void NotifyStash() { StashRevision++; tally = null; }
+        internal void NotifyStash() => StashRevision++;
 
         // The save's one unique of this kind (a Ground Lab copy in the lab).
         public BuriedFind FindUnique(string contentId)
@@ -62,23 +62,6 @@ namespace SomethingDownThere
             return null;
         }
 
-        // Uniques secured (taken, on the crane's rope or kept at camp) of all the save's uniques, for the HUD.
-        private (long population, long motion, long stash)? tally;
-        private (int secured, int total) tallied;
-        public (int secured, int total) UniqueTally()
-        {
-            var key = (PopulationRevision, MotionRevision, StashRevision);
-            if (tally == key) return tallied;
-            int secured = 0, total = 0;
-            foreach (var find in finds)
-            {
-                if (find == null || find.Kind != DiscoveryKind.Unique) continue;
-                total++;
-                if (find.State != FindState.World) secured++;
-            }
-            tally = key; tallied = (secured, total);
-            return tallied;
-        }
         public bool Initialized => initialized || (developmentContent && !FpsPlayer.AdminBuild);
         public void DeferGeneration() => generationDeferred = true;
         public BuriedFind Find(string id) => finds.Find(f => f.Item.InstanceId == id);

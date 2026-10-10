@@ -261,8 +261,8 @@ a gold bar never receives a depth bonus. “Rare” describes a payout, not anot
 ## 8. Recovered uniques at camp
 
 - **Every unique has a reason to come home and a place it belongs (119).** A unique small enough for the bag
-  is taken by hand once exposed: Interact, no slot, never sold, and the HUD counts it. Back at camp its own
-  spot in the workshop glows (a chalk outline of its footprint); Interact there sets it down for good. One
+  is taken by hand once exposed: Interact, no slot, never sold, and no count on the HUD. Back at camp its own
+  spot in the workshop shows a glowing see-through copy of the unique, standing as it will be set down; Interact there sets it down for good. One
   spot per unique, so the workshop fills as the run goes on; no free arranging, no sell-or-keep choice
   (user, 2026-10-10: "it is not a strategy game, it is more of a satisfaction game").
 - A unique too big for the bag is marked for the crane, which sets it down in the workshop's yard, where it

@@ -62,8 +62,9 @@ The emotional record of the run: every unique the player brought home, gathered 
 
 - **A few special exhibits:** ordinary and repeatable valuables sell; no first-copy exceptions.
 - **Inside the workshop (119):** each bag-sized unique has its own spot, on the racking, the workbench or the
- floor. While the player carries it, its spot glows (a chalk outline of its footprint); Interact there sets
- it down for good. One deliberate set-down, no free arranging; the HUD counts the uniques secured.
+ floor. While the player carries it, its spot shows a glowing see-through copy of the unique, standing as it will be set down (user, 2026-10-10: the
+ shape of the item, not a mark under it); Interact there sets it down for good. One deliberate set-down,
+ no free arranging; no count on the HUD, the shelves themselves show the collection.
 - **In the yard:** the crane sets each big unique down beside the workshop, lying as it landed, where it
  stays; a crystal trophy is set upright on its base. Recovery never sells either kind.
 - Each exhibit shows **name and depth found**. Never a price, condition or rarity label.

@@ -13,10 +13,11 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Lamp kit** | Available reusable lamps |
 | **Reticle** | A plain tiny, softened white dot at the centre of the view: no rim, glow or shape; visible without drawing the eye |
 | **Pickup note** | "+Coal" above the bag for each find taken, fading after a moment |
-| **Uniques** | A trophy with secured / total: the save's uniques taken, on the crane's rope or kept at camp (user, 2026-10-10) |
 
 Only these (and the frozen detector) are shown: icons and numbers, no text readouts. Depth, tool stats
-and key hints are not on the HUD (user, 2026-10-10).
+and key hints are not on the HUD (user, 2026-10-10). Nor is any count of uniques found or left: the
+workshop shelves show the collection, and a running tally would nag players who must complete
+(user, 2026-10-10).
 | **Detector** (frozen) | Kept as built until the detector-off playtest decides whether ground tells replace it ([Discoveries](05_DISCOVERIES.md#2-the-detector)). Separate compact HUD with three signal bars based on aim alignment: strongest when looking directly toward a nearby buried find. Hidden when looking away, out of range or once any part is uncovered. No direction/height hints; the aiming reticle stays independent. Silent by default; optional accessibility audio remains planned. |
 
 Not on the HUD: minimap, compass, ore counters, objective list, damage numbers, news ticker, or any

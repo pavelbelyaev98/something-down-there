@@ -31,8 +31,6 @@ namespace SomethingDownThere.Editor
             new Vector2(-6.6f, -5.2f), new Vector2(-6.6f, -2.4f), new Vector2(-6.6f, .4f), new Vector2(-6.6f, 3.2f),
             new Vector2(-9.4f, -3.8f), new Vector2(-9.4f, -1f), new Vector2(-9.4f, 1.8f),
         };
-        // Each stash spot's chalk outline stands this far round the unique's footprint, in bars this wide.
-        private const float OutlineMargin = .05f, OutlineBar = .022f;
         private const string ConcreteDetail = "Assets/TowerCrane/Textures/concrete_Normal.png";
 
         [Serializable]
@@ -141,71 +139,48 @@ namespace SomethingDownThere.Editor
             return root;
         }
 
-        // One spot per carry unique (art/stash-uniques/catalog.json): where its base stands, turned its way, with a chalk
-        // outline of its footprint and a thin aim box, both off until that unique is carried (StashSpot).
+        // One spot per carry unique (art/stash-uniques/catalog.json): where its base stands, turned its way, with a glowing
+        // see-through copy of the unique standing exactly as it will be set down, and an aim box filling that shape, both
+        // off until that unique is carried (StashSpot).
         private static void AddStash(Transform workshop, DiscoveryField field)
         {
             if (field == null) throw new InvalidOperationException("MainGame has no discovery field for the stash spots.");
-            string folder = WorkshopFolder + "/Stash";
-            if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder(WorkshopFolder, "Stash");
-            var chalk = MaterialAsset(WorkshopFolder, "Workshop_StashOutline");
-            chalk.SetColor("_BaseColor", new Color(.92f, .9f, .84f)); chalk.SetFloat("_Smoothness", .1f); chalk.SetFloat("_Metallic", 0);
-            chalk.SetColor("_EmissionColor", new Color(1f, .9f, .7f) * 1.4f); chalk.EnableKeyword("_EMISSION");
-            EditorUtility.SetDirty(chalk);
+            var ghost = Clear(WorkshopFolder, "Workshop_StashGhost", new Color(1f, .93f, .8f, .22f), .2f, null, 1, new Color(1f, .86f, .62f) * .9f);
+            ghost.SetFloat("_ZWrite", 1);  // only the nearest surface shows, so the copy reads as one solid shape
+            EditorUtility.SetDirty(ghost);
             var group = Group(workshop, "Stash");
             foreach (var unique in StashUniqueSetup.Load().uniques)
             {
                 string id = unique.find.content_id;
                 var prefab = StashUniqueSetup.Prefab(id);
-                var bounds = prefab.GetComponent<MeshFilter>().sharedMesh.bounds;
+                var mesh = prefab.GetComponent<MeshFilter>().sharedMesh;
                 var scale = prefab.transform.localScale;
-                var foot = new Vector2(bounds.size.x * Mathf.Abs(scale.x), bounds.size.z * Mathf.Abs(scale.z)) + Vector2.one * OutlineMargin * 2;
+                var size = Vector3.Scale(mesh.bounds.size, new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+                // BuriedFind.PlaceAt stands the unique's bounds on the spot, centred over it.
+                var stand = Vector3.up * (size.y / 2 + .002f);
                 var spot = new GameObject(unique.find.display_name + " spot").transform;
                 spot.SetParent(group, false);
                 spot.localPosition = unique.stash.position;
                 spot.localRotation = Quaternion.Euler(0, unique.stash.yaw, 0);
-                var outline = new GameObject("Outline", typeof(MeshFilter), typeof(MeshRenderer));
-                outline.transform.SetParent(spot, false);
-                outline.transform.localPosition = Vector3.up * .004f;
-                outline.GetComponent<MeshFilter>().sharedMesh = OutlineMesh(foot, folder + "/" + id + "_Outline.asset");
-                var renderer = outline.GetComponent<MeshRenderer>();
-                renderer.sharedMaterial = chalk; renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+                var copy = new GameObject("Ghost", typeof(MeshFilter), typeof(MeshRenderer));
+                copy.transform.SetParent(spot, false);
+                copy.transform.localPosition = stand - Vector3.Scale(mesh.bounds.center, scale);
+                copy.transform.localScale = scale;
+                copy.GetComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = copy.GetComponent<MeshRenderer>();
+                renderer.sharedMaterials = Enumerable.Repeat(ghost, mesh.subMeshCount).ToArray();
+                renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
                 renderer.enabled = false;
                 var aim = spot.gameObject.AddComponent<BoxCollider>();
-                aim.center = new Vector3(0, .015f, 0); aim.size = new Vector3(foot.x, .03f, foot.y); aim.enabled = false;
+                aim.center = stand; aim.size = size; aim.enabled = false;
                 var stash = spot.gameObject.AddComponent<StashSpot>();
                 using var data = new SerializedObject(stash);
                 data.FindProperty("contentId").stringValue = id;
                 data.FindProperty("discoveries").objectReferenceValue = field;
-                data.FindProperty("outline").objectReferenceValue = renderer;
+                data.FindProperty("ghost").objectReferenceValue = renderer;
                 data.FindProperty("aim").objectReferenceValue = aim;
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
-        }
-
-        // A flat rectangular frame of four bars round a footprint (x by z), facing up.
-        private static Mesh OutlineMesh(Vector2 foot, string path)
-        {
-            var vertices = new List<Vector3>();
-            var triangles = new List<int>();
-            float hx = foot.x / 2, hz = foot.y / 2, w = OutlineBar;
-            void Bar(float x0, float z0, float x1, float z1)
-            {
-                int i = vertices.Count;
-                vertices.Add(new Vector3(x0, 0, z0)); vertices.Add(new Vector3(x0, 0, z1)); vertices.Add(new Vector3(x1, 0, z1)); vertices.Add(new Vector3(x1, 0, z0));
-                triangles.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
-            }
-            Bar(-hx, -hz, hx, -hz + w); Bar(-hx, hz - w, hx, hz);
-            Bar(-hx, -hz + w, -hx + w, hz - w); Bar(hx - w, -hz + w, hx, hz - w);
-            var mesh = new Mesh { name = Path.GetFileNameWithoutExtension(path) };
-            mesh.SetVertices(vertices); mesh.SetTriangles(triangles, 0);
-            mesh.SetNormals(Enumerable.Repeat(Vector3.up, vertices.Count).ToList());
-            mesh.SetUVs(0, vertices.Select(v => new Vector2(v.x, v.z)).ToList());
-            mesh.RecalculateBounds();
-            var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (existing == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
-            EditorUtility.CopySerialized(mesh, existing); UnityEngine.Object.DestroyImmediate(mesh); EditorUtility.SetDirty(existing);
-            return existing;
         }
 
         // Imports the model, replaces any previous copy under Surface, poses it and assigns materials by part name.

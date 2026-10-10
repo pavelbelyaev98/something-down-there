@@ -5,10 +5,9 @@ works too (New Game: the three new uniques are buried; Ctrl+Shift+X X-ray helps 
 
 **Try:**
 - Ground Lab: the shallow stash trench is right in front of the spawn. Aim at each unique (wood-cased TV,
-  field terminal, operator console) and press E: it's taken, the bag count stays the same, and the trophy
-  counter bottom-left goes up.
-- Walk to the workshop: each carried unique's spot glows as a chalk outline (TV and console side by side on the
-  racking's middle shelves, terminal on the workbench). Aim at an outline and press E to set it down.
+  field terminal, operator console) and press E: it's taken and the bag count stays the same (no unique count on the HUD).
+- Walk to the workshop: each carried unique shows as a glowing see-through copy where it belongs (TV and console
+  side by side on the racking's middle shelves, terminal on the workbench). Aim at the copy and press E to set it down.
 - Aim at a placed unique: name, depth and its story line. Press E to read it again.
 - Real game: Save and quit while carrying one, Continue: still carried, its spot still glows.
 - Crane a computer or a crystal trophy: the crane now sets it down in the yard beside the workshop.
