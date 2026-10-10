@@ -1,8 +1,9 @@
 /* Menu screens: title, pause, settings and dialogs.
 
    Palette: worksite slate, bone and hi-vis orange (the crane's colour family). Title and pause
-   share one layout on the world: a left column with the stacked orange logo (or PAUSED) and the
-   menu centred under it; entries change colour on hover and never move. Settings is a
+   share one layout on the world: a left-aligned column, the stacked orange logo at the top and
+   the menu at the bottom (pause adds PAUSED over it); entries change colour on hover and never
+   move. Settings is a
    full-screen slate sheet: tabs along the top, rounded rows on the left
    (◀ value ▶ selectors with one pip per choice), the focused row's description on the right
    and the actions bottom right. Dialogs are a slate card. The station shop shares the palette
@@ -34,7 +35,7 @@
 #menuRoot .logo-line,
 #menuRoot.title-screen .startup-actions > .menu-button,
 #menuRoot.pause-menu .pause-actions > .menu-button,
-#menuRoot.pause-menu .title,
+#menuRoot .pause-heading,
 #menuRoot .settings-tab,
 #menuRoot.settings-menu .setting-section,
 #menuRoot .help-title,
@@ -61,16 +62,16 @@
 .menu-scrim { position: absolute; left: 0; top: 0; bottom: 0; width: 56%; display: none; -unity-background-scale-mode: stretch-to-fill; }
 #menuRoot.title-screen .menu-scrim, #menuRoot.pause-menu .menu-scrim { display: flex; }
 #menuRoot.title-screen { background-color: transparent; }
-#menuRoot.title-screen .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 380px; max-width: none; max-height: none; padding: 44px 0 50px; justify-content: space-between; align-items: center; background-color: transparent; }
-#menuRoot.title-screen .menu-header, #menuRoot.title-screen .subtitle { display: none; }
-.title-logo { align-items: center; flex-shrink: 0; }
-.logo-line { margin: 0; padding: 0; white-space: nowrap; -unity-text-align: middle-center; color: var(--orange); -unity-text-outline-color: var(--ink); -unity-text-outline-width: 3px; text-shadow: 0 5px 0 var(--ink); }
+#menuRoot.title-screen .menu-card, #menuRoot.pause-menu .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 420px; max-width: none; max-height: none; padding: 44px 0 50px; justify-content: space-between; align-items: flex-start; background-color: transparent; }
+#menuRoot.title-screen .menu-header, #menuRoot.title-screen .subtitle, #menuRoot.pause-menu .menu-header, #menuRoot.pause-menu .subtitle { display: none; }
+.title-logo { align-items: flex-start; flex-shrink: 0; }
+.logo-line { margin: 0; padding: 0; white-space: nowrap; -unity-text-align: middle-left; color: var(--orange); -unity-text-outline-color: var(--ink); -unity-text-outline-width: 3px; text-shadow: 0 5px 0 var(--ink); }
 .logo-small { font-size: 66px; letter-spacing: 1px; }
 .logo-large { font-size: 108px; margin-top: -30px; }
-#menuRoot.title-screen #startupPage { align-items: center; }
-.startup-note { margin: 10px 0 0; font-size: 16px; -unity-text-align: middle-center; color: rgba(243, 238, 228, 0.8); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
+#menuRoot.title-screen #startupPage, #menuRoot.pause-menu #pausePage { align-items: flex-start; }
+.startup-note { margin: 10px 0 0; font-size: 16px; -unity-text-align: middle-left; color: rgba(243, 238, 228, 0.8); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
 
-/* Title and pause entries: plain words on the world, centred, orange on hover; nothing moves. */
+/* Title and pause entries: plain words on the world, left-aligned, orange on hover; nothing moves. */
 #menuRoot.title-screen .startup-actions, #menuRoot.pause-menu .pause-actions { width: 380px; flex-shrink: 0; }
 #menuRoot.title-screen .startup-actions > .menu-button, #menuRoot.pause-menu .pause-actions > .menu-button {
     height: 44px; min-height: 0; margin: 0; padding: 0; border-width: 0; border-radius: 0;
@@ -78,7 +79,7 @@
     color: var(--bone); background-color: transparent;
     -unity-text-outline-width: 1px; -unity-text-outline-color: rgba(27, 38, 44, 0.8);
     text-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
-    -unity-text-align: middle-center;
+    -unity-text-align: middle-left;
     transition-property: color; transition-duration: 0.12s;
 }
 #menuRoot.title-screen .startup-actions > .menu-button:hover,
@@ -95,11 +96,8 @@
 
 /* ---------- pause ---------- */
 #menuRoot.pause-menu { background-color: rgba(10, 14, 16, 0.35); }
-#menuRoot.pause-menu .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 380px; max-width: none; max-height: none; padding: 0; justify-content: center; align-items: center; background-color: transparent; }
-#menuRoot.pause-menu .menu-header { margin-bottom: 26px; justify-content: center; }
-#menuRoot.pause-menu .title { flex-grow: 0; font-size: 84px; -unity-text-align: middle-center; color: var(--orange); -unity-text-outline-width: 3px; -unity-text-outline-color: var(--ink); text-shadow: 0 5px 0 var(--ink); }
-#menuRoot.pause-menu #pausePage { align-items: center; }
-#menuRoot.pause-menu .notice { -unity-text-align: middle-center; color: var(--bone); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
+.pause-heading { margin: 0 0 10px; padding: 0; font-size: 20px; letter-spacing: 5px; color: var(--bone-soft); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
+#menuRoot.pause-menu .notice { -unity-text-align: middle-left; color: var(--bone); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
 
 /* ---------- settings sheet ---------- */
 #menuRoot.settings-menu { background-color: var(--slate-800); }

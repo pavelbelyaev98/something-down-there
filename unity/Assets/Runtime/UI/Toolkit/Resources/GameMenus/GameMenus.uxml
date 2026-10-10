@@ -28,6 +28,7 @@
                 <ui:Label name="startupNote" class="caption startup-note" />
             </ui:VisualElement>
             <ui:VisualElement name="pausePage" class="hidden">
+                <ui:Label name="pauseHeading" text="PAUSED" class="pause-heading" />
                 <ui:VisualElement name="pauseActions" class="pause-actions" />
                 <ui:Label name="pauseSettingsError" class="notice hidden" text="Camera settings not saved. Retry in Accessibility." />
                 <ui:Label name="pauseInputError" class="notice hidden" text="Controls not saved. Retry in Settings." />

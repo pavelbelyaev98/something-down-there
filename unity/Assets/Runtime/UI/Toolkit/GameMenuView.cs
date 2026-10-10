@@ -178,7 +178,7 @@ namespace SomethingDownThere
             help.ClearHover();
             settingsTabs.Select((int)player.SettingsCategory);
             Show(startupPage, displayed == PlayerMenu.MainMenu);
-            Show(titleLogo, displayed == PlayerMenu.MainMenu);
+            Show(titleLogo, displayed == PlayerMenu.MainMenu || displayed == PlayerMenu.Pause);
             Show(contentPage, displayingPreview || (displayed != PlayerMenu.None && displayed != PlayerMenu.Pause && displayed != PlayerMenu.MainMenu && !player.IsSettingsOpen));
             Root.EnableInClassList("title-screen", displayed == PlayerMenu.MainMenu);
             Root.EnableInClassList("pause-menu", displayed == PlayerMenu.Pause);
@@ -252,7 +252,7 @@ namespace SomethingDownThere
             if (displayed == PlayerMenu.Pause)
             {
                 CurrentScreen = pausePage;
-                title.text = "PAUSED";
+                title.text = "";
                 subtitle.text = "";
                 pauseActions.Clear();
                 MenuItem(pauseActions, "Resume", player.CloseMenu);
@@ -370,9 +370,15 @@ namespace SomethingDownThere
             Show(tradeSummary, true);
             BuildStationHead();
             long revision = player.StationRevision;
-            // One list: the four equipment tracks, then the services (refill, lamp) in their own style.
-            var list = Element(scroll, "station-list");
-            for (int i = 0; i < station.CommandCount; i++) BuildUpgradeRow(list, station, i, revision);
+            // Upgrades (the four equipment tracks) and supplies (refill, lamp) in their own columns:
+            // supplies are bought again and again, upgrades once per level.
+            var columns = Element(scroll, "station-columns");
+            var upgrades = Element(columns, "station-column");
+            Text(upgrades, "Upgrades heading", "UPGRADES", "station-column-heading");
+            for (int i = 0; i < ComputerStation.RefillCommand; i++) BuildUpgradeRow(upgrades, station, i, revision);
+            var supplies = Element(columns, "station-column station-supplies");
+            Text(supplies, "Supplies heading", "SUPPLIES", "station-column-heading");
+            for (int i = ComputerStation.RefillCommand; i < station.CommandCount; i++) BuildUpgradeRow(supplies, station, i, revision);
         }
 
         // Header plate: the balance only. Close is ESC/B, and the machine itself says what
@@ -437,12 +443,12 @@ namespace SomethingDownThere
             }
         }
 
-        // The row's icon: the tool in hand (shovel, then the drill), the backpack, the fuel can,
-        // the jetpack, the pump for a refill and the work lamp.
+        // The row's icon: the tool in hand (shovel, then the drill), the backpack, the battery for
+        // the tank, the jetpack, the HUD bar's bolt for a refill and the work lamp.
         private static string StationIcon(int index, StationTrade.UpgradeOffer offer) =>
-            index == ComputerStation.RefillCommand ? "icon-fuel-pump" : index == ComputerStation.LampCommand ? "icon-lamp"
+            index == ComputerStation.RefillCommand ? "icon-bolt" : index == ComputerStation.LampCommand ? "icon-lamp"
             : offer.Kind == EquipmentKind.Shovel ? (EquipmentProgression.UsesDrill(offer.OwnedLevel) ? "icon-drill" : "icon-shovel")
-            : offer.Kind == EquipmentKind.Inventory ? "icon-backpack" : offer.Kind == EquipmentKind.Jetpack ? "icon-jetpack" : "icon-jerrycan";
+            : offer.Kind == EquipmentKind.Inventory ? "icon-backpack" : offer.Kind == EquipmentKind.Jetpack ? "icon-jetpack" : "icon-battery";
 
         // The headline is the one number the purchase changes, named in a word; every other
         // stat stays one hover away on the price button.

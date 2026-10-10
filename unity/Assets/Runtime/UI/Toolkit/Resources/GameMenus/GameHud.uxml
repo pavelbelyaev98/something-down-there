@@ -8,11 +8,9 @@
             <ui:Label name="Wallet" class="hud-number hud-wallet-amount" />
         </ui:VisualElement>
         <ui:VisualElement class="hud-kit">
-            <ui:VisualElement class="hud-battery-column">
-                <ui:VisualElement name="batteryGroup" class="hud-battery">
-                    <ui:VisualElement name="Charge" class="hud-charge" />
-                </ui:VisualElement>
-                <ui:VisualElement class="icon icon-fuel-pump hud-battery-icon" />
+            <ui:VisualElement name="batteryGroup" class="hud-battery">
+                <ui:VisualElement name="Charge" class="hud-charge" />
+                <ui:VisualElement class="icon icon-bolt-mark hud-bolt" />
             </ui:VisualElement>
             <ui:VisualElement class="hud-counters">
                 <ui:VisualElement name="BagGroup" class="hud-counter">

@@ -155,6 +155,21 @@ they are more accurate".
 - Shop: each row's icon on a bone tile at the left (the outlines vanish on slate); the tool row shows the shovel,
   then the drill from level 7. The workshop card grew to fit the six tiles without scrolling.
 
+## Iteration 6 (2026-10-10): hierarchy, left alignment, supplies column
+
+The user: the fuel pump under the bar is ugly and fights the other icons for attention ("liked it before with
+the lightning icon inside"); menus left-aligned on the title and pause; the refill and work lamp are not
+upgrades, so their own column; the pump is off-centre and maybe fuel should be an energy icon; the jetpack's
+flames are too small; the coin has a black ring. Then: "when paused, people should see the name of the game".
+
+- HUD: the pump is gone; a plain dark bolt (`bolt-mark`) sits at the bar's foot again. Counter icons shrank a
+  little so the bar leads.
+- Energy icons: Refill fuel shows the bolt (the HUD bar's symbol), Fuel tank a battery; the pump and jerrycan
+  are deleted. The words still say fuel; renaming them to battery is offered, not done.
+- Jetpack flames lengthened and widened; the coin's outline is dark gold instead of ink.
+- Title and pause: one left-aligned column; pause shows the logo at the top and a small PAUSED over its menu.
+- Shop: UPGRADES (four tracks) and SUPPLIES (refill, lamp) columns with small headings; card 940 x 512.
+
 ## Acceptance Criteria
 
 - Title: logo top-left, entries as plain capitals, Continue greyed without a save, Ground Lab only in development

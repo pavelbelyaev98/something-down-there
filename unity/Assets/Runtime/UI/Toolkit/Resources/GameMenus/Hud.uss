@@ -9,8 +9,9 @@
 }
 .hud-root .unity-text-element { padding: 0; }
 
-/* Resources: money top-left; the upright fuel bar bottom-left with bag and lamps beside it.
-   Each is an icon from the game's set (Icons.uss) and a number in the menus' display face. */
+/* Resources: money top-left; the upright fuel bar (its bolt inside) bottom-left with bag and
+   lamps beside it, smaller, so the bar leads. Icons from the game's set (Icons.uss); numbers in
+   the menus' display face. */
 .hud-number {
     -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf");
     -unity-font-definition: initial;
@@ -24,16 +25,15 @@
 .hud-root .hud-wallet-amount { font-size: 28px; }
 
 .hud-kit { position: absolute; left: 22px; bottom: 18px; flex-direction: row; align-items: flex-end; }
-.hud-battery-column { align-items: center; }
-.hud-battery-icon { width: 26px; height: 26px; margin-top: 4px; }
-.hud-counters { align-items: flex-start; margin-left: 12px; margin-bottom: 28px; }
+.hud-counters { align-items: flex-start; margin-left: 12px; }
 .hud-counter { flex-direction: row; align-items: center; margin-top: 4px; }
-.hud-counter-icon { width: 28px; height: 28px; margin-right: 8px; }
+.hud-counter-icon { width: 24px; height: 24px; margin-right: 7px; }
 .hud-counter.full .hud-number { color: #ff8a3d; }
 
-/* Fuel: an upright rounded case filled flat from the bottom (the case's corners clip it),
-   coloured by the return estimate: bone, then orange, then red. */
-.hud-battery { width: 20px; height: 130px; border-radius: 10px; overflow: hidden; background-color: rgba(20, 28, 32, 0.6); }
+/* Fuel: an upright rounded case filled flat from the bottom (the case's corners clip it), its
+   bolt at the foot, coloured by the return estimate: bone, then orange, then red. */
+.hud-battery { width: 22px; height: 130px; border-radius: 11px; overflow: hidden; background-color: rgba(20, 28, 32, 0.6); }
+.hud-bolt { position: absolute; left: 4px; bottom: 5px; width: 14px; height: 14px; }
 .hud-charge { position: absolute; left: 0; right: 0; bottom: 0; background-color: #ece5d6; }
 .hud-battery.risky .hud-charge { background-color: #ff8a3d; }
 .hud-battery.critical .hud-charge { background-color: #e8463a; }

@@ -1,6 +1,7 @@
 /* Station machines: one board in the menus' slate, bone and orange (Screens.uss). The header
-   carries only the balance. The workshop is one list of roomy tiles: the four equipment
-   tracks (name, a progress bar, the one number the purchase changes) and then the services.
+   carries only the balance. The workshop has two columns of roomy tiles: UPGRADES, the four
+   equipment tracks (name, a progress bar, the one number the purchase changes), and SUPPLIES,
+   the refill and the work lamp.
 
    Rows are decoration, never interactive: only the price button inside a row has
    hover, pressed and focus states, and only it can be clicked.
@@ -17,6 +18,7 @@
     background-color: rgba(10, 14, 16, 0.45);
 }
 #menuRoot.station-menu .station-cell-name,
+#menuRoot.station-menu .station-column-heading,
 #menuRoot.station-menu .trade-balance,
 #menuRoot.station-menu .station-price,
 #menuRoot.station-menu .station-sell-value,
@@ -34,7 +36,7 @@
 }
 
 .station-menu .menu-card { width: 600px; height: 380px; padding: 0; overflow: hidden; border-width: 0; border-radius: 12px; background-color: var(--slate-800); }
-.workshop-menu .menu-card { height: 648px; }
+.workshop-menu .menu-card { width: 940px; height: 512px; }
 .station-menu .menu-header { display: none; }
 .station-menu .subtitle { display: none; }
 .station-menu .content-page { flex-grow: 1; flex-shrink: 1; min-height: 0; }
@@ -48,8 +50,13 @@
 #menuRoot.station-menu .station-money-caption { margin: 4px 12px 0 0; font-size: 16px; letter-spacing: 4px; color: var(--bone-soft); }
 #menuRoot.station-menu .trade-balance { padding: 0; margin: 0; font-size: 30px; color: var(--bone); background-color: transparent; }
 
+/* ---------- columns ---------- */
+.station-columns { flex-direction: row; align-items: flex-start; padding: 18px 20px 10px; }
+.station-column { flex-direction: column; align-items: stretch; flex-grow: 3; flex-basis: 0; min-width: 0; }
+.station-supplies { flex-grow: 2; margin-left: 18px; }
+#menuRoot.station-menu .station-column-heading { margin: 0 0 10px 4px; padding: 0; font-size: 15px; letter-spacing: 4px; color: var(--bone-faint); }
+
 /* ---------- tiles: decoration only, no interaction states ---------- */
-.station-list { padding: 20px 20px 12px; }
 .station-row { flex-direction: row; align-items: center; margin: 0 0 8px; padding: 12px 16px 12px 12px; border-width: 0; border-radius: 10px; background-color: var(--slate-700); background-image: none; }
 .station-row-main { flex-direction: column; flex-grow: 1; flex-basis: 0; min-width: 0; }
 /* The icon sits on a bone tile: the set's dark outlines vanish on slate. */

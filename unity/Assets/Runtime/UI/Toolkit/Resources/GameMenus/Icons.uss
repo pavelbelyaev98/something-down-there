@@ -5,8 +5,9 @@
 .icon-coin { background-image: url("/Assets/Content/UI/Icons/coin.png"); }
 .icon-backpack { background-image: url("/Assets/Content/UI/Icons/backpack.png"); }
 .icon-lamp { background-image: url("/Assets/Content/UI/Icons/lamp.png"); }
-.icon-fuel-pump { background-image: url("/Assets/Content/UI/Icons/fuel-pump.png"); }
-.icon-jerrycan { background-image: url("/Assets/Content/UI/Icons/jerrycan.png"); }
+.icon-bolt { background-image: url("/Assets/Content/UI/Icons/bolt.png"); }
+.icon-bolt-mark { background-image: url("/Assets/Content/UI/Icons/bolt-mark.png"); }
+.icon-battery { background-image: url("/Assets/Content/UI/Icons/battery.png"); }
 .icon-shovel { background-image: url("/Assets/Content/UI/Icons/shovel.png"); }
 .icon-drill { background-image: url("/Assets/Content/UI/Icons/drill.png"); }
 .icon-jetpack { background-image: url("/Assets/Content/UI/Icons/jetpack.png"); }
