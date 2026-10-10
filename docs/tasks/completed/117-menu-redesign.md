@@ -193,9 +193,12 @@ every leftover of the old UI.
   buttons and settings rows, `Screens.uss`/`Station.uss` layouts only, `Hud.uss` on the same palette and type.
   The grey card, its variables, the inline document font, the dropdown leftovers, `Stat`, `shop-menu`,
   `startup-menu`, the per-item sell styles and the pause heading are deleted. The admin is a wide slate card.
-- FPS limit is a slider like Render resolution ("make fps limit a slider like the drawing resolution"). Its steps
-  rise (`GamePreferences.FrameLimitSteps`): Display takes the monitor's place among the numbers (replacing an
-  equal one), Unlimited is last; with VSync on it is disabled and reads VSync. Saved values are unchanged.
+- FPS limit is a slider like Render resolution ("make fps limit a slider like the drawing resolution"). It counts
+  single frames from 30 to 240 (or the monitor's rate, if higher), Unlimited one step past the top
+  (`GamePreferences.FrameLimitAt/FrameLimitPosition`); Left/Right move it by one frame. The monitor's own rate reads
+  and stores Display, so the limit still follows a new monitor. With VSync on it is disabled and reads VSync. A first
+  version slid over the old preset list (30, 60, 75 ... 240) and was rejected: "it JUMPS... I would expect more
+  control as precise fps". Any whole limit from 30 to 1000 is now a valid saved value.
 
 ## Acceptance Criteria
 

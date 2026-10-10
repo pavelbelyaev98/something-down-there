@@ -48,26 +48,16 @@ namespace SomethingDownThere
     public sealed class GamePreferences : IDisposable
     {
         // Zero follows the window's monitor; -1 is unlimited.
-        public const int DisplayFrameLimit = 0, FallbackFrameLimit = 144;
-        public static readonly int[] FrameLimits = { DisplayFrameLimit, 30, 60, 75, 90, 100, 120, 144, 165, 240, -1 };
+        public const int DisplayFrameLimit = 0, FallbackFrameLimit = 144, MinFrameLimit = 30, MaxFrameLimit = 1000;
 
-        // The limits in rising frame rate for a slider: Display stands where the monitor's rate falls (in place
-        // of an equal number), Unlimited last.
-        public static int[] FrameLimitSteps(int refreshRate)
-        {
-            int monitor = refreshRate > 0 ? refreshRate : FallbackFrameLimit;
-            var steps = new System.Collections.Generic.List<int>();
-            bool placed = false;
-            foreach (int limit in FrameLimits)
-            {
-                if (limit <= 0) continue;
-                if (!placed && limit >= monitor) { steps.Add(DisplayFrameLimit); placed = true; }
-                if (limit != monitor) steps.Add(limit);
-            }
-            if (!placed) steps.Add(DisplayFrameLimit);
-            steps.Add(-1);
-            return steps.ToArray();
-        }
+        // The FPS limit slider counts single frames from MinFrameLimit to 240 (or the monitor's rate, if higher);
+        // one step past the top is Unlimited. The monitor's own rate stores Display, so the limit follows the monitor.
+        public static int FrameLimitTop(int refreshRate) => Math.Max(240, Monitor(refreshRate));
+        public static int FrameLimitPosition(int limit, int refreshRate) => limit == DisplayFrameLimit ? Monitor(refreshRate)
+            : limit < 0 ? FrameLimitTop(refreshRate) + 1 : Math.Min(limit, FrameLimitTop(refreshRate));
+        public static int FrameLimitAt(int position, int refreshRate) => position > FrameLimitTop(refreshRate) ? -1
+            : position == Monitor(refreshRate) ? DisplayFrameLimit : position;
+        private static int Monitor(int refreshRate) => refreshRate > 0 ? refreshRate : FallbackFrameLimit;
         private readonly IDevicePreferencesStore store;
         private readonly IGameSettingsPlatform platform;
         private bool focused = true;
@@ -219,7 +209,8 @@ namespace SomethingDownThere
         {
             v.Version = 1; v.WindowMode = Mathf.Clamp(v.WindowMode, 0, 2);
             if (v.Width < 960 || v.Width > 16384 || v.Height < 540 || v.Height > 8640) v.Width = v.Height = 0;
-            if (Array.IndexOf(FrameLimits, v.FrameLimit) < 0) v.FrameLimit = DisplayFrameLimit;
+            if (v.FrameLimit != DisplayFrameLimit && v.FrameLimit != -1 && (v.FrameLimit < MinFrameLimit || v.FrameLimit > MaxFrameLimit))
+                v.FrameLimit = DisplayFrameLimit;
             if (v.AntiAliasing < GraphicsQuality.AntiAliasingOff || v.AntiAliasing > GraphicsQuality.Msaa8) v.AntiAliasing = GraphicsQuality.Msaa2;
             v.TextureLimit = Mathf.Clamp(v.TextureLimit, 0, 2); v.Filtering = Mathf.Clamp(v.Filtering, 0, 2);
             v.Shadows = Mathf.Clamp(v.Shadows, 0, 3);

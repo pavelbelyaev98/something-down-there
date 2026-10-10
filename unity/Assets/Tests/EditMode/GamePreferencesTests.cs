@@ -26,12 +26,19 @@ namespace SomethingDownThere.Tests
             public void Dispose() => Disposed = true;
         }
 
-        [TestCase(165, new[] { 30, 60, 75, 90, 100, 120, 144, 0, 240, -1 })]
-        [TestCase(170, new[] { 30, 60, 75, 90, 100, 120, 144, 165, 0, 240, -1 })]
-        [TestCase(0, new[] { 30, 60, 75, 90, 100, 120, 0, 165, 240, -1 })]
-        public void FrameLimitSliderRisesWithDisplayAtTheMonitorRate(int refreshRate, int[] expected)
+        [TestCase(165, 30, 30)]
+        [TestCase(165, 164, 164)]
+        [TestCase(165, 165, GamePreferences.DisplayFrameLimit)]
+        [TestCase(165, 240, 240)]
+        [TestCase(165, 241, -1)]
+        [TestCase(300, 241, 241)]
+        [TestCase(300, 300, GamePreferences.DisplayFrameLimit)]
+        [TestCase(300, 301, -1)]
+        [TestCase(0, 144, GamePreferences.DisplayFrameLimit)]
+        public void FrameLimitSliderCountsSingleFramesWithDisplayAtTheMonitorRate(int refreshRate, int position, int limit)
         {
-            Assert.That(GamePreferences.FrameLimitSteps(refreshRate), Is.EqualTo(expected));
+            Assert.That(GamePreferences.FrameLimitAt(position, refreshRate), Is.EqualTo(limit));
+            Assert.That(GamePreferences.FrameLimitPosition(limit, refreshRate), Is.EqualTo(position));
         }
 
         [TestCase(null)]

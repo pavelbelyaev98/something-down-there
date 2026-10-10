@@ -627,10 +627,9 @@ namespace SomethingDownThere.Tests
             view.Root.Q("vSync").Focus(); yield return Key(keyboard.leftArrowKey);
             Assert.That(player.GameSettings.Values.VSync, Is.False);
             Assert.That(view.Root.Q("fpsLimit").enabledInHierarchy, Is.True);
-            var limits = GamePreferences.FrameLimitSteps(player.GameSettings.RefreshRate);
             player.GameSettings.Edit(v => v.FrameLimit = 30);
             view.Root.Q("fpsLimit").Focus(); yield return Key(keyboard.rightArrowKey);
-            Assert.That(player.GameSettings.Values.FrameLimit, Is.EqualTo(limits[System.Array.IndexOf(limits, 30) + 1]), "Right steps the slider up one limit.");
+            Assert.That(player.GameSettings.Values.FrameLimit, Is.EqualTo(31), "Right raises the limit by a single frame.");
             var position = player.transform.position;
             var rotation = player.ViewCamera.transform.rotation;
             player.Tick(new FpsInputFrame { Move = Vector2.one, Look = Vector2.one * 100, DigHeld = true, JumpPressed = true }, 1);
@@ -640,7 +639,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.GameSettings.Values.MasterVolume, Is.EqualTo(35));
             MenuTestUI.Click(MenuTestUI.Button(player, "deviceReset"));
             Assert.That(player.GameSettings.Values.MasterVolume, Is.EqualTo(100));
-            Assert.That(player.GameSettings.Values.FrameLimit, Is.EqualTo(limits[System.Array.IndexOf(limits, 30) + 1]), "An audio reset leaves the display settings.");
+            Assert.That(player.GameSettings.Values.FrameLimit, Is.EqualTo(31), "An audio reset leaves the display settings.");
             yield return Key(keyboard.escapeKey);
             Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Pause)); Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Settings"));
         }
