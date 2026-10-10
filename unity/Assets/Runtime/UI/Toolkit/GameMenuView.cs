@@ -257,14 +257,14 @@ namespace SomethingDownThere
                 pauseActions.Clear();
                 MenuItem(pauseActions, "Resume", player.CloseMenu);
                 var comfort = MenuItem(pauseActions, "Settings", player.ShowSettings);
-                if (player.Persistence != null) MenuItem(pauseActions, "New Game", player.Persistence.RequestNewGame);
-                if (player.Persistence != null && player.Persistence.State == WorldSaveState.Lab)
+                if (player.Persistence != null)
                 {
-                    MenuItem(pauseActions, "Restart Ground Lab", player.Persistence.RestartGroundLab);
-                    MenuItem(pauseActions, "Leave Ground Lab", player.Persistence.LeaveGroundLab);
-                    MenuItem(pauseActions, "Quit", player.Persistence.RequestExit);
+                    bool lab = player.Persistence.State == WorldSaveState.Lab;
+                    MenuItem(pauseActions, "New Game", player.Persistence.RequestNewGame);
+                    if (lab) MenuItem(pauseActions, "Restart Ground Lab", player.Persistence.RestartGroundLab);
+                    MenuItem(pauseActions, "Main Menu", player.Persistence.RequestMainMenu);
+                    MenuItem(pauseActions, lab ? "Quit" : "Save and quit", player.Persistence.RequestExit);
                 }
-                else if (player.Persistence != null) MenuItem(pauseActions, "Save and quit", player.Persistence.RequestExit);
                 if (player.AdminAvailable) MenuItem(pauseActions, "Developer admin", player.ShowAdminMenu);
                 CameraChanged();
                 DeviceChanged();
@@ -370,24 +370,18 @@ namespace SomethingDownThere
             Show(tradeSummary, true);
             BuildStationHead();
             long revision = player.StationRevision;
-            // Categories live in their own column: equipment tracks left, services and
-            // consumables right, each with its own heading.
-            var columns = Element(scroll, "station-columns");
-            var upgrades = Element(columns, "station-column");
-            Text(upgrades, "Upgrades heading", "UPGRADES", "station-column-heading");
-            for (int i = 0; i < ComputerStation.RefillCommand; i++) BuildUpgradeRow(upgrades, station, i, revision);
-            var services = Element(columns, "station-column station-column-divided");
-            Text(services, "Services heading", "SERVICES", "station-column-heading");
-            for (int i = ComputerStation.RefillCommand; i < station.CommandCount; i++) BuildUpgradeRow(services, station, i, revision);
+            // One list: the four equipment tracks, then the services (refill, lamp) in their own style.
+            var list = Element(scroll, "station-list");
+            for (int i = 0; i < station.CommandCount; i++) BuildUpgradeRow(list, station, i, revision);
         }
 
-        // Header plate: money only, after the HUD's banknotes. Close is ESC/B, and the
-        // machine itself says what the menu is, so no title is printed.
+        // Header plate: the balance only. Close is ESC/B, and the machine itself says what
+        // the menu is, so no title is printed.
         private void BuildStationHead()
         {
             var bar = Element(tradeSummary, "station-bar-head");
             var wallet = Element(bar, "station-money");
-            HudIcons.Money(ToolkitStationRows.Block(wallet, "Money icon", "station-money-icon"));
+            ToolkitStationRows.Text(wallet, "Balance caption", "BALANCE", "station-money-caption");
             Text(wallet, "Trade balance", $"${player.Wallet.Balance}", "trade-balance");
         }
 
@@ -396,11 +390,12 @@ namespace SomethingDownThere
             bool refill = index == ComputerStation.RefillCommand, lamp = index == ComputerStation.LampCommand, serviceRow = refill || lamp;
             var offer = station.OfferAt(index);
             string track = refill ? "Refill fuel" : lamp ? "Work lamp" : EquipmentProgression.Name(offer.Kind);
-            // The row is decoration; only the price button is interactive.
+            // The row is decoration; only the price button is interactive. The bar shows how far
+            // the track has come, so the name carries no level.
             var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", serviceRow ? "station-row service" : "station-row");
             var main = ToolkitStationRows.Block(row, track + " main", "station-row-main");
-            string caption = serviceRow ? track : $"{track}  {offer.OwnedLevel}/{offer.LevelCount}";
-            ToolkitStationRows.Text(main, track + " name", caption, "station-cell-name");
+            ToolkitStationRows.Text(main, track + " name", track.ToUpperInvariant(), "station-cell-name");
+            if (!serviceRow) ToolkitStationRows.Progress(main, track + " progress", offer.OwnedLevel, offer.LevelCount);
             bool shortfall = false;
             bool maxed = false;
             string price;
@@ -427,12 +422,8 @@ namespace SomethingDownThere
                 () => ActivateUpgradeRow(station, index, revision, buy), "station-price", canBuy);
             buy.EnableInClassList("short", shortfall);
             buy.EnableInClassList("maxed", maxed);
-            // Under the name: progress, then the number this purchase changes. Services
-            // leave the progress cell empty so both columns still line up.
-            var bottom = ToolkitStationRows.Block(main, track + " bottom", "station-cell-bottom");
-            var progress = ToolkitStationRows.Block(bottom, track + " bar slot", "station-bar-slot");
-            if (!serviceRow) ToolkitStationRows.Segments(progress, track + " pips", offer.OwnedLevel, offer.LevelCount);
-            ToolkitStationRows.Text(bottom, track + " effect", refill ? RefillHeadline(station) : lamp ? LampHeadline(station)
+            // Under the bar: the one number this purchase changes.
+            ToolkitStationRows.Text(main, track + " effect", refill ? RefillHeadline(station) : lamp ? LampHeadline(station)
                 : UpgradeHeadline(offer), "station-cell-effect");
             // Everything else the purchase changes stays one hover away instead of
             // adding another column or sentence to the table.
@@ -444,25 +435,25 @@ namespace SomethingDownThere
             }
         }
 
-        // The headline carries the number the purchase changes; the detail line keeps
-        // every other stat visible without another interaction.
+        // The headline is the one number the purchase changes, named in a word; every other
+        // stat stays one hover away on the price button.
         private string UpgradeHeadline(StationTrade.UpgradeOffer offer)
         {
             if (offer.Kind == EquipmentKind.Shovel)
             {
-                var current = player.Shovel.Current;
+                string tool = EquipmentProgression.ToolName(offer.OwnedLevel);
+                string nextTool = EquipmentProgression.ToolName(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
+                if (tool != nextTool) return Compared(tool, nextTool, offer.Complete);
                 var next = player.Shovel.GetProfile(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
-                string motion = Compared(EquipmentProgression.ToolName(offer.OwnedLevel),
-                    EquipmentProgression.ToolName(offer.Complete ? offer.OwnedLevel : offer.NextLevel), offer.Complete);
-                return motion + "  |  " + Compared($"{current.Radius * 2:F2} m", $"{next.Radius * 2:F2} m", offer.Complete);
+                return "Cut " + Compared($"{player.Shovel.Current.Radius * 2:F2} m", $"{next.Radius * 2:F2} m", offer.Complete);
             }
             if (offer.Kind == EquipmentKind.Jetpack)
-                return Compared($"{player.Jetpack.Current.MaxAscentSpeed:0} m/s",
+                return "Lift " + Compared($"{player.Jetpack.Current.MaxAscentSpeed:0} m/s",
                     $"{EquipmentProgression.Jetpack(offer.Complete ? offer.OwnedLevel : offer.NextLevel).MaxAscentSpeed:0} m/s", offer.Complete);
             if (offer.Kind == EquipmentKind.Inventory)
-                return Compared($"{player.Inventory.Capacity}",
+                return "Holds " + Compared($"{player.Inventory.Capacity}",
                     $"{player.Inventory.Capacity + (offer.Complete ? 0 : EquipmentProgression.InventoryIncrease(offer.OwnedLevel))}", offer.Complete);
-            return Compared($"{player.Battery.Capacity:0.#}",
+            return "Fuel " + Compared($"{player.Battery.Capacity:0.#}",
                 $"{player.Battery.Capacity + (offer.Complete ? 0 : EquipmentProgression.FuelIncrease(offer.OwnedLevel)):0.#}", offer.Complete);
         }
 
@@ -492,14 +483,14 @@ namespace SomethingDownThere
             $"$1 per {EquipmentProgression.FuelPerCredit:0.#} fuel, rounded up";
 
         private static string LampHeadline(ComputerStation station) => station.Lamp.Full
-            ? $"{station.Lamp.Owned} owned" : $"{station.Lamp.Owned} → {station.Lamp.Owned + 1} owned";
+            ? $"Lamps {station.Lamp.Owned}" : $"Lamps {station.Lamp.Owned} → {station.Lamp.Owned + 1}";
 
         private string RefillHeadline(ComputerStation station)
         {
             var refill = station.Refill;
             return refill.Full || refill.Amount <= 0
-                ? $"{player.Battery.Charge:0.#} / {player.Battery.Capacity:0.#}"
-                : $"+{refill.Amount:0.#} \u2192 {refill.ChargeAfter:0.#}";
+                ? $"Fuel {player.Battery.Charge:0.#} / {player.Battery.Capacity:0.#}"
+                : $"Fuel {player.Battery.Charge:0.#} \u2192 {refill.ChargeAfter:0.#}";
         }
 
         private void ActivateUpgradeRow(ComputerStation station, int index, long revision, Button row)
@@ -700,7 +691,8 @@ namespace SomethingDownThere
                 : save.State == WorldSaveState.LoadFailed ? "Cannot load this excavation" : "Progress could not be saved";
             if (save.ExitRequested || save.State == WorldSaveState.Loading)
             {
-                Text(scroll, "Body", save.ExitRequested ? "Saving before closing..." : "Restoring your excavation...", "body");
+                Text(scroll, "Body", !save.ExitRequested ? "Restoring your excavation..."
+                    : save.ReturningToTitle ? "Saving before the main menu..." : "Saving before closing...", "body");
                 return;
             }
             if (save.State == WorldSaveState.Recovery)

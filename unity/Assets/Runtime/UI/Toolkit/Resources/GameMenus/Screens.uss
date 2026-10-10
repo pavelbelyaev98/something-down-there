@@ -1,8 +1,9 @@
 /* Menu screens: title, pause, settings and dialogs.
 
    Palette: worksite slate, bone and hi-vis orange (the crane's colour family). Title and pause
-   stand on the world: a stacked logo (bone over orange, slate outline) with the menu centred
-   under it. Settings is a full-screen slate sheet: tabs along the top, rounded rows on the left
+   share one layout on the world: a left column with the stacked orange logo (or PAUSED) and the
+   menu centred under it; entries change colour on hover and never move. Settings is a
+   full-screen slate sheet: tabs along the top, rounded rows on the left
    (◀ value ▶ selectors with one pip per choice), the focused row's description on the right
    and the actions bottom right. Dialogs are a slate card. The station shop shares the palette
    (Station.uss); inventory and admin keep the grey card from Theme.uss.
@@ -63,43 +64,42 @@
 #menuRoot.title-screen .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 380px; max-width: none; max-height: none; padding: 44px 0 50px; justify-content: space-between; align-items: center; background-color: transparent; }
 #menuRoot.title-screen .menu-header, #menuRoot.title-screen .subtitle { display: none; }
 .title-logo { align-items: center; flex-shrink: 0; }
-.logo-line { margin: 0; padding: 0; white-space: nowrap; -unity-text-align: middle-center; -unity-text-outline-color: var(--ink); }
-.logo-small { font-size: 40px; letter-spacing: 4px; color: var(--bone); -unity-text-outline-width: 2px; text-shadow: 0 3px 0 var(--ink); }
-.logo-large { font-size: 116px; margin-top: -34px; color: var(--orange); -unity-text-outline-width: 3px; text-shadow: 0 6px 0 var(--ink); }
+.logo-line { margin: 0; padding: 0; white-space: nowrap; -unity-text-align: middle-center; color: var(--orange); -unity-text-outline-color: var(--ink); -unity-text-outline-width: 3px; text-shadow: 0 5px 0 var(--ink); }
+.logo-small { font-size: 66px; letter-spacing: 1px; }
+.logo-large { font-size: 108px; margin-top: -30px; }
 #menuRoot.title-screen #startupPage { align-items: center; }
 .startup-note { margin: 10px 0 0; font-size: 16px; -unity-text-align: middle-center; color: rgba(243, 238, 228, 0.8); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
 
-/* Title and pause entries: plain words on the world, orange and a touch larger on hover. */
-#menuRoot.title-screen .startup-actions { width: 380px; flex-shrink: 0; }
-#menuRoot.pause-menu .pause-actions { width: 360px; flex-shrink: 0; }
+/* Title and pause entries: plain words on the world, centred, orange on hover; nothing moves. */
+#menuRoot.title-screen .startup-actions, #menuRoot.pause-menu .pause-actions { width: 380px; flex-shrink: 0; }
 #menuRoot.title-screen .startup-actions > .menu-button, #menuRoot.pause-menu .pause-actions > .menu-button {
     height: 44px; min-height: 0; margin: 0; padding: 0; border-width: 0; border-radius: 0;
     font-size: 27px; white-space: nowrap; letter-spacing: 1px;
     color: var(--bone); background-color: transparent;
     -unity-text-outline-width: 1px; -unity-text-outline-color: rgba(27, 38, 44, 0.8);
     text-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
-    transition-property: scale, translate, color; transition-duration: 0.12s;
+    -unity-text-align: middle-center;
+    transition-property: color; transition-duration: 0.12s;
 }
-#menuRoot.title-screen .startup-actions > .menu-button { -unity-text-align: middle-center; }
-#menuRoot.pause-menu .pause-actions > .menu-button { -unity-text-align: middle-left; }
 #menuRoot.title-screen .startup-actions > .menu-button:hover,
-#menuRoot.title-screen.keyboard-navigation .startup-actions > .menu-button:focus { color: var(--orange); background-color: transparent; scale: 1.08 1.08; }
+#menuRoot.title-screen.keyboard-navigation .startup-actions > .menu-button:focus,
 #menuRoot.pause-menu .pause-actions > .menu-button:hover,
-#menuRoot.pause-menu.keyboard-navigation .pause-actions > .menu-button:focus { color: var(--orange); background-color: transparent; translate: 10px 0; }
+#menuRoot.pause-menu.keyboard-navigation .pause-actions > .menu-button:focus { color: var(--orange); background-color: transparent; }
 #menuRoot.title-screen .startup-actions > .menu-button:active,
 #menuRoot.pause-menu .pause-actions > .menu-button:active { color: var(--orange-hover); background-color: transparent; }
 #menuRoot.title-screen .startup-actions > .menu-button:disabled,
-#menuRoot.pause-menu .pause-actions > .menu-button:disabled { color: rgba(243, 238, 228, 0.36); background-color: transparent; scale: 1 1; translate: 0 0; opacity: 1; }
+#menuRoot.pause-menu .pause-actions > .menu-button:disabled { color: rgba(243, 238, 228, 0.36); background-color: transparent; opacity: 1; }
 
 .menu-version { position: absolute; left: 0; right: 0; bottom: 4px; display: none; -unity-text-align: middle-center; font-size: 10px; color: rgba(243, 238, 228, 0.6); }
 #menuRoot.title-screen .menu-version, #menuRoot.settings-menu .menu-version { display: flex; }
 
 /* ---------- pause ---------- */
 #menuRoot.pause-menu { background-color: rgba(10, 14, 16, 0.35); }
-#menuRoot.pause-menu .menu-card { position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: none; padding: 0 60px; justify-content: center; background-color: transparent; }
-#menuRoot.pause-menu .menu-header { margin-bottom: 22px; }
-#menuRoot.pause-menu .title { flex-grow: 0; font-size: 64px; color: var(--orange); -unity-text-outline-width: 2px; -unity-text-outline-color: var(--ink); text-shadow: 0 5px 0 var(--ink); }
-#menuRoot.pause-menu .notice { color: var(--bone); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
+#menuRoot.pause-menu .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 380px; max-width: none; max-height: none; padding: 0; justify-content: center; align-items: center; background-color: transparent; }
+#menuRoot.pause-menu .menu-header { margin-bottom: 26px; justify-content: center; }
+#menuRoot.pause-menu .title { flex-grow: 0; font-size: 84px; -unity-text-align: middle-center; color: var(--orange); -unity-text-outline-width: 3px; -unity-text-outline-color: var(--ink); text-shadow: 0 5px 0 var(--ink); }
+#menuRoot.pause-menu #pausePage { align-items: center; }
+#menuRoot.pause-menu .notice { -unity-text-align: middle-center; color: var(--bone); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
 
 /* ---------- settings sheet ---------- */
 #menuRoot.settings-menu { background-color: var(--slate-800); }
@@ -163,8 +163,8 @@
 .help-title { margin: 4px 0 14px; padding: 0; font-size: 26px; letter-spacing: 5px; white-space: normal; color: var(--orange); }
 .help-text { margin: 0 0 18px; padding: 0; font-size: 17px; letter-spacing: 0.5px; white-space: normal; color: var(--bone-soft); }
 .help-options { align-items: flex-start; }
-.help-option { flex-direction: row; align-items: center; height: 32px; min-width: 210px; padding: 0 14px 0 12px; border-left-width: 3px; border-color: transparent; }
-.help-option-current { background-color: var(--slate-700); border-color: var(--orange); }
+.help-option { flex-direction: row; align-items: center; height: 32px; min-width: 210px; padding: 0 14px 0 14px; border-radius: 6px; }
+.help-option-current { background-color: var(--slate-700); }
 .help-bullet { width: 6px; height: 6px; margin-right: 12px; background-color: var(--bone-faint); }
 .help-option-current .help-bullet { background-color: var(--orange); }
 .help-option-text { margin: 0; padding: 0; font-size: 19px; color: var(--bone); }
@@ -186,7 +186,7 @@
 
 /* ---------- dialogs ---------- */
 #menuRoot.dialog-menu { background-color: rgba(10, 14, 16, 0.6); }
-#menuRoot.dialog-menu .menu-card { width: 500px; height: auto; padding: 28px 32px 26px; border-width: 0; border-top-width: 4px; border-radius: 12px; border-color: var(--orange); background-color: var(--slate-800); color: var(--bone); }
+#menuRoot.dialog-menu .menu-card { width: 500px; height: auto; padding: 28px 32px 26px; border-width: 0; border-radius: 12px; background-color: var(--slate-800); color: var(--bone); }
 #menuRoot.dialog-menu .menu-header { margin-bottom: 14px; }
 #menuRoot.dialog-menu .title { font-size: 32px; color: var(--bone); }
 #menuRoot.dialog-menu .subtitle { display: none; }

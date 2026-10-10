@@ -36,8 +36,6 @@ namespace SomethingDownThere
             inventoryWarning = Root.Q<Label>("Inventory warning");
             batteryGroup = Root.Q("batteryGroup");
             batteryFill = Root.Q("Charge");
-            HudIcons.Money(Root.Q("MoneyIcon")); HudIcons.Bag(Root.Q("BagIcon"));
-            HudIcons.Lamp(Root.Q("LampIcon")); HudIcons.Bolt(Root.Q("BatteryIcon"));
             Root.Query<VisualElement>().ForEach(element => element.pickingMode = PickingMode.Ignore);
         }
 
@@ -73,7 +71,7 @@ namespace SomethingDownThere
             {
                 shownStatus = statusKey;
                 status.text = statusKey.Item1 + "/" + statusKey.Item2;
-                walletStatus.text = statusKey.Item3.ToString();
+                walletStatus.text = "$" + statusKey.Item3;
                 bagGroup.EnableInClassList("full", player.Inventory.IsFull);
             }
             if (player.GameplayActive || displayedBattery != player.Battery)

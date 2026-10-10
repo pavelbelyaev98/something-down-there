@@ -154,11 +154,14 @@ the way.
 
 Menu screens (on trial, `117`): the game's own palette, worksite slate, bone and hi-vis orange (the
 crane's colour family), never a reference game's colours. The title shows the salvage crane over the
-fenced dig site with the cliffs softly blurred behind, a large stacked logo (bone over orange) and the
-menu centred under it; pause is the same plain-word menu on the world, no box. Settings is a
+fenced dig site with the cliffs softly blurred behind, a large stacked logo in one face and colour, and
+the menu centred under it; pause uses the same column (PAUSED over the same menu), no box. Menu words
+never move or grow on hover; only their colour changes. Borders go all the way round or not at all. Settings is a
 full-screen slate sheet: category tabs along the top, rounded rows whose values step in place (◀ value
 ▶ with a pip per choice), the focused option's description and choices on the right. Dialogs and the
-computer's shop are slate cards with orange actions. Type: a chunky rounded display face for logo,
+computer's shop are slate cards with orange actions; the shop is one list of roomy tiles (name, progress
+bar, the one number a purchase changes, price), never a level counter. Icons come from a bought or
+licensed icon set, never drawn in-house; until one is chosen, words stand in. Type: a chunky rounded display face for logo,
 menu, tabs, headings and prices; a condensed sans for rows and running text.
 
 ## 9. Photo-ready moments (by design, not by marketing)

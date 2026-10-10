@@ -2,25 +2,22 @@
     <ui:Style src="Theme.uss" />
     <ui:Style src="Hud.uss" />
     <ui:VisualElement name="hudRoot" class="hud-root" picking-mode="Ignore">
-        <ui:VisualElement name="WalletGroup" class="hud-wallet">
-            <ui:VisualElement name="MoneyIcon" class="hud-icon hud-money-icon" />
-            <ui:Label name="Wallet" class="hud-number hud-wallet-amount" />
-        </ui:VisualElement>
+        <ui:Label name="Wallet" class="hud-number hud-wallet" />
         <ui:VisualElement class="hud-kit">
-            <ui:VisualElement class="hud-kit-row">
+            <ui:VisualElement class="hud-battery-column">
                 <ui:VisualElement name="batteryGroup" class="hud-battery">
                     <ui:VisualElement name="Charge" class="hud-charge" />
-                    <ui:VisualElement name="BatteryIcon" class="hud-icon hud-bolt" />
                 </ui:VisualElement>
-                <ui:VisualElement class="hud-counters">
-                    <ui:VisualElement name="BagGroup" class="hud-counter">
-                        <ui:VisualElement name="BagIcon" class="hud-icon hud-counter-icon" />
-                        <ui:Label name="Status" class="hud-number" />
-                    </ui:VisualElement>
-                    <ui:VisualElement name="LampGroup" class="hud-counter">
-                        <ui:VisualElement name="LampIcon" class="hud-icon hud-counter-icon" />
-                        <ui:Label name="Lamps" class="hud-number" />
-                    </ui:VisualElement>
+                <ui:Label text="FUEL" class="hud-caption hud-battery-caption" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hud-counters">
+                <ui:VisualElement name="BagGroup" class="hud-counter">
+                    <ui:Label text="BAG" class="hud-caption hud-counter-caption" />
+                    <ui:Label name="Status" class="hud-number" />
+                </ui:VisualElement>
+                <ui:VisualElement name="LampGroup" class="hud-counter">
+                    <ui:Label text="LAMPS" class="hud-caption hud-counter-caption" />
+                    <ui:Label name="Lamps" class="hud-number" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

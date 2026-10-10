@@ -274,7 +274,7 @@ namespace SomethingDownThere.Tests
             {
                 for (int level = 1; level < last; level++)
                 {
-                    StringAssert.Contains($"{level}/{last}", Text(track + " name"));
+                    Assert.That(Progress(track), Is.EqualTo(100f * level / last).Within(0.01f));
                     if (track == "Tool" && level == 6)
                     {
                         StringAssert.Contains("Shovel → Drill", Text("Tool effect"));
@@ -288,12 +288,15 @@ namespace SomethingDownThere.Tests
                 }
                 var max = Button("Upgrade " + track);
                 Assert.That(max.text, Is.EqualTo("MAX")); Assert.That(max.enabledSelf, Is.False);
-                StringAssert.Contains($"{last}/{last}", Text(track + " name"));
+                Assert.That(Progress(track), Is.EqualTo(100f).Within(0.01f));
                 decimal balance = player.Wallet.Balance; MenuTestUI.Click(max);
                 Assert.That(player.Wallet.Balance, Is.EqualTo(balance));
             }
             Assert.That(player.Wallet.Balance, Is.Zero);
         }
+
+        private float Progress(string track) =>
+            MenuTestUI.View(player).Root.Q(track + " progress fill").style.width.value.value;
 
         private void Face(StationTarget station)
         {

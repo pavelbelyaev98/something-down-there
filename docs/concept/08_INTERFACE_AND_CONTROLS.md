@@ -35,8 +35,8 @@ permanent tutorial text.
 
 ## 3. Pause menu
 
-Direction (final layout later): Resume · Save & Load · Settings · New Game · Exit to Title, with save
-status visible. New Game is on the title screen and in the pause menu; replacing an occupied world
+Resume · Settings · New Game · Main Menu · Save and quit; Save & Load and save status visible come
+later. New Game is on the title screen and in the pause menu; replacing an occupied world
 needs a clear overwrite warning. The pause menu is only the menu: no controls list over the game
 (controls live in Settings).
 Correct back behavior is mandatory: ESC/B closes the current menu and never traps input. Settings

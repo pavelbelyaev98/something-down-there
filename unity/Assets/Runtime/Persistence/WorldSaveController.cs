@@ -23,6 +23,7 @@ namespace SomethingDownThere
         public bool ProfileInUse { get; private set; }
         public string LastSavedLabel { get; private set; } = "No checkpoint yet";
         public bool ExitRequested => exitRequested;
+        public bool ReturningToTitle => titleRequested;
         public long CompletedSequence { get; private set; }
         public double LastCaptureMilliseconds { get; private set; }
         public long LastCaptureAllocatedBytes { get; private set; }
@@ -46,7 +47,7 @@ namespace SomethingDownThere
         private long cachedTerrainRevision = -1, dirtyVersion, capturedVersion, savedVersion, nextSequence;
         private double dirtySince, requestedAt = -1, captureAt, writingDirtySince;
         private StateStamp observed;
-        private bool initialized, checkpointRequested, exitRequested, allowQuit, ownsSession;
+        private bool initialized, checkpointRequested, exitRequested, allowQuit, ownsSession, titleRequested;
 
         private struct StateStamp
         {
@@ -328,7 +329,22 @@ namespace SomethingDownThere
             Changed?.Invoke();
         }
 
-        public void CancelUnsavedExit() { if (State == WorldSaveState.ConfirmQuit) SetState(WorldSaveState.WriteFailed); }
+        // Main Menu from the pause menu: the same save-then-leave path as quitting, ending in the
+        // title (a scene reload) instead of closing the game. The Ground Lab saves nothing.
+        public void RequestMainMenu()
+        {
+            if (State == WorldSaveState.Lab) { LeaveGroundLab(); return; }
+            if (exitRequested || (State != WorldSaveState.Ready && State != WorldSaveState.Saving && State != WorldSaveState.WriteFailed)) return;
+            titleRequested = true;
+            RequestExit();
+        }
+
+        public void CancelUnsavedExit()
+        {
+            if (State != WorldSaveState.ConfirmQuit) return;
+            titleRequested = false;
+            SetState(WorldSaveState.WriteFailed);
+        }
         public void ConfirmUnsavedExit() { if (State == WorldSaveState.ConfirmQuit) QuitNow(); }
         private bool WantsToQuit()
         {
@@ -339,6 +355,13 @@ namespace SomethingDownThere
         }
         private void QuitNow()
         {
+            if (titleRequested)
+            {
+                titleRequested = false; initialized = false;
+                store?.Dispose(); store = null;
+                SceneManager.LoadScene(gameObject.scene.name);
+                return;
+            }
             allowQuit = true;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;

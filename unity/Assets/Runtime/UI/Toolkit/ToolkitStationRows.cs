@@ -36,16 +36,13 @@ namespace SomethingDownThere
             return label;
         }
 
-        // Owned/total segments. The shape carries the progress; the row tooltip
-        // carries the exact numbers.
-        public static void Segments(VisualElement parent, string name, int owned, int total)
+        // How far a track has come: one bar filled owned/total. The exact numbers stay in
+        // the price button's tooltip.
+        public static void Progress(VisualElement parent, string name, int owned, int total)
         {
-            var track = Block(parent, name, "station-bar");
-            for (int i = 0; i < total; i++)
-            {
-                var segment = Block(track, name + " " + i, "station-bar-segment");
-                segment.EnableInClassList("filled", i < owned);
-            }
+            var track = Block(parent, name, "station-progress");
+            var fill = Block(track, name + " fill", "station-progress-fill");
+            fill.style.width = Length.Percent(100f * owned / total);
         }
 
         private static string[] Tokens(string className) =>

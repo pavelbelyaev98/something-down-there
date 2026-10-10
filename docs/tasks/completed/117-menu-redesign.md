@@ -4,7 +4,8 @@
 (blurred cliffs) with a large stacked logo and the menu centred under it; pause is only its menu, with New Game;
 settings is a full-screen slate sheet with tabs, in-place ◀ value ▶ selectors and a description panel; dialogs
 and the shop are slate cards with orange actions. The HUD shows only money, bag, lamps and an upright battery bar
-coloured by the return estimate. Lilita One and Barlow Condensed (OFL) set the type. Awaiting the user's playtest.
+coloured by the return estimate. Pause has Main Menu. No icons until the user picks an icon pack. Lilita One and Barlow Condensed (OFL) set the
+type. Awaiting the user's playtest.
 
 ## Objective
 
@@ -116,6 +117,27 @@ cave or the river?".
   progress pips and orange price buttons; sell rows as tiles, Sell all orange. Structure, names and behaviour
   unchanged.
 - The description panel shows the hovered row, falling back to the focused row when the pointer leaves.
+
+## Iteration 4 (2026-10-10): consistency, shop list, no homemade icons
+
+The user: the logo's mixed faces and colours "feel off"; the dialog's orange top edge is awkward (full border or
+none); title centred but pause left-aligned; the shop has too much text and cramped padding (names pressed to
+the tile edge, "Tool 1/12"); the money icon is ugly and "never create your own icons", recommend icon packs
+first; the battery outline is too strong; hover must not move words; add a button to the main menu. Reference:
+the *Chopping Trees* shop (icon tiles, name, bar, one stat change, big price, no level shown).
+
+- Logo: SOMETHING / DOWN / THERE all orange Lilita with the slate outline; only the first line is smaller.
+- Borders: the orange top edge is gone from dialogs and the shop; the help panel's current choice is a plain
+  tile (no left stripe).
+- Pause uses the title's column: PAUSED over the centred entries. Hover only recolours (no scale or slide).
+- Shop: one list (tracks, then services) of roomy tiles: NAME, a progress bar (owned/levels, in place of the
+  level counter and pips), one short stat ("Cut 0.46 m → 0.51 m", "Holds 10 → 15", "Fuel 100 → 150",
+  "Lift 8 m/s → 9 m/s", "Fuel 55 → 100", "Lamps 4 → 5"; "Shovel → Drill" at the milestone), large orange price.
+  Header: BALANCE $n. Column headings removed.
+- `HudIcons` and its card are deleted. The HUD shows "$n", BAG and LAMPS captions with numbers and a FUEL
+  caption under the bar, which lost its outline.
+- Pause Main Menu: `WorldSaveController.RequestMainMenu` saves as quitting does (the same unsaved-exit prompt
+  after a write failure), then reloads the scene to the title; in the Ground Lab it leaves the lab.
 
 ## Acceptance Criteria
 
