@@ -1,0 +1,21 @@
+{
+ "sheet_atlas_m": 13.735489522761295,
+ "sheet_in_atlas_m": 13.735489522761295,
+ "skylight_atlas_m": 6.659115905061022,
+ "rib_pitch_m": 0.076,
+ "width_m": 8.0,
+ "depth_m": 6.0,
+ "slab_m": 0.15,
+ "plate_m": 2.9499999999999997,
+ "door_half_m": 2.3,
+ "door_top_m": 2.85,
+ "ridge_m": 4.5830858211045875,
+ "pitch": 0.35,
+ "eave_overhang_m": 0.25,
+ "gable_overhang_m": 0.25,
+ "atlas_m": {
+  "Timber": 17.83873372422998,
+  "Concrete": 13.731690952408478,
+  "Metal": 9.705416610918622
+ }
+}
