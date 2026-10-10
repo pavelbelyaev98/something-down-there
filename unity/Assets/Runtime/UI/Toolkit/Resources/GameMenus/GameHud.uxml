@@ -8,19 +8,21 @@
         </ui:VisualElement>
         <ui:VisualElement class="hud-kit">
             <ui:Label name="Return warning" class="hud-warning hidden" />
-            <ui:VisualElement class="hud-counters">
-                <ui:VisualElement name="BagGroup" class="hud-counter">
-                    <ui:VisualElement name="BagIcon" class="hud-icon hud-counter-icon" />
-                    <ui:Label name="Status" class="hud-number" />
+            <ui:VisualElement class="hud-kit-row">
+                <ui:VisualElement name="batteryGroup" class="hud-battery">
+                    <ui:VisualElement name="Charge" class="hud-charge" />
+                    <ui:VisualElement name="BatteryIcon" class="hud-icon hud-bolt" />
                 </ui:VisualElement>
-                <ui:VisualElement name="LampGroup" class="hud-counter">
-                    <ui:VisualElement name="LampIcon" class="hud-icon hud-counter-icon" />
-                    <ui:Label name="Lamps" class="hud-number" />
+                <ui:VisualElement class="hud-counters">
+                    <ui:VisualElement name="BagGroup" class="hud-counter">
+                        <ui:VisualElement name="BagIcon" class="hud-icon hud-counter-icon" />
+                        <ui:Label name="Status" class="hud-number" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="LampGroup" class="hud-counter">
+                        <ui:VisualElement name="LampIcon" class="hud-icon hud-counter-icon" />
+                        <ui:Label name="Lamps" class="hud-number" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement name="batteryGroup" class="hud-battery">
-                <ui:VisualElement name="Charge" class="hud-charge" />
-                <ui:VisualElement name="BatteryIcon" class="hud-icon hud-bolt" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:Label name="Developer controls" class="hud-admin" />

@@ -264,13 +264,13 @@ namespace SomethingDownThere.Tests
             yield return null;
             yield return null;
             Assert.That(battery.ClassListContains("critical"), Is.True);
-            Assert.That(charge.style.width.value.value, Is.EqualTo(15).Within(0.5f), "The bar must agree with the critical threshold.");
+            Assert.That(charge.style.height.value.value, Is.EqualTo(15).Within(0.5f), "The bar must agree with the critical threshold.");
             Assert.That(warning.text, Is.EqualTo("FUEL CRITICAL"));
             Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FF625C"));
             Assert.That(root.GetComponent<FpsHud>().View.Root.ClassListContains("hidden"), Is.False);
             player.Battery.TrySpend(15);
             yield return null;
-            Assert.That(charge.style.width.value.value, Is.Zero);
+            Assert.That(charge.style.height.value.value, Is.Zero);
             Assert.That(warning.text, Is.EqualTo("FUEL EMPTY"));
             player.Battery.Recharge();
             yield return null;

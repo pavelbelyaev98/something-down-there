@@ -97,7 +97,9 @@ inventory and lamps and i want it in a different way".
   lamp and mark key hints. The frozen detector, admin line, prompts, feedback and banners are unchanged.
 - Icons: no owned pack has UI icons, so `HudIcons` draws four flat vector glyphs (card `art/hud-icons`); a bought
   icon set can replace them.
-- Concept `08` §1 updated. The battery test now checks the bar's classes and width instead of the label.
+- Concept `08` §1 updated. The battery test now checks the bar's classes and fill instead of the label.
+- Then, the user: "make the bar vertical". The bar stands upright (filling from the bottom, bolt at its foot) with
+  the bag and lamp counters stacked beside it.
 
 ## Acceptance Criteria
 
