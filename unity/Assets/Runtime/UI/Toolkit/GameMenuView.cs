@@ -26,7 +26,6 @@ namespace SomethingDownThere
         private readonly ToolkitTabs settingsTabs;
         private readonly VisualElement titleLogo, settingsHelp;
         private readonly Texture2D scrim;
-        private readonly Label controlMove, controlCrouch, controlSprint, controlDig, controlDigDescription, controlJump, controlInteract, controlPause;
         private PlayerMenu displayed;
         private bool pending = true;
         private WorldSaveController persistence;
@@ -70,10 +69,6 @@ namespace SomethingDownThere
             Root.Q("menuScrim").style.backgroundImage = new StyleBackground(scrim);
             settingsNavigation = Root.Q("settingsNavigation");
             settingsTabs = new ToolkitTabs(settingsNavigation, index => player.ShowSettingsCategory((SettingsCategory)index));
-            controlMove = Root.Q<Label>("controlMove"); controlCrouch = Root.Q<Label>("controlCrouch");
-            controlSprint = Root.Q<Label>("controlSprint");
-            controlDig = Root.Q<Label>("controlDig"); controlDigDescription = Root.Q<Label>("controlDigDescription");
-            controlJump = Root.Q<Label>("controlJump"); controlInteract = Root.Q<Label>("controlInteract"); controlPause = Root.Q<Label>("controlPause");
             Root.RegisterCallback<NavigationSubmitEvent>(e => { if (CapturingInput) e.StopImmediatePropagation(); }, TrickleDown.TrickleDown);
             Root.RegisterCallback<PointerUpEvent>(e => { if (CapturingInput) e.StopImmediatePropagation(); }, TrickleDown.TrickleDown);
             Root.RegisterCallback<NavigationMoveEvent>(Navigate, TrickleDown.TrickleDown);
@@ -114,20 +109,7 @@ namespace SomethingDownThere
             return texture;
         }
 
-        private void ControlsChanged()
-        {
-            var settings = player.InputSettings;
-            controlMove.text = settings.Display(PlayerBinding.Forward) + " / " + settings.Display(PlayerBinding.Backward)
-                + " / " + settings.Display(PlayerBinding.Left) + " / " + settings.Display(PlayerBinding.Right);
-            controlCrouch.text = settings.Display(PlayerBinding.Crouch);
-            controlSprint.text = settings.Display(PlayerBinding.Sprint);
-            controlDig.text = settings.Display(PlayerBinding.Dig);
-            controlDigDescription.text = settings.ToggleDig ? "Toggle dig / collect" : "Dig / collect";
-            controlJump.text = settings.Display(PlayerBinding.Jump);
-            controlInteract.text = settings.Display(PlayerBinding.Interact) + " / " + settings.Display(PlayerBinding.Inventory);
-            controlPause.text = settings.Display(PlayerBinding.Pause);
-            Show(Root.Q("pauseInputError"), settings.WriteFailed);
-        }
+        private void ControlsChanged() => Show(Root.Q("pauseInputError"), player.InputSettings.WriteFailed);
 
         public void Tick()
         {
@@ -273,6 +255,7 @@ namespace SomethingDownThere
                 pauseActions.Clear();
                 MenuItem(pauseActions, "Resume", player.CloseMenu);
                 var comfort = MenuItem(pauseActions, "Settings", player.ShowSettings);
+                if (player.Persistence != null) MenuItem(pauseActions, "New Game", player.Persistence.RequestNewGame);
                 if (player.Persistence != null && player.Persistence.State == WorldSaveState.Lab)
                 {
                     MenuItem(pauseActions, "Restart Ground Lab", player.Persistence.RestartGroundLab);

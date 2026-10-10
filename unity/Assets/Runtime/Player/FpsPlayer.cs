@@ -450,6 +450,7 @@ namespace SomethingDownThere
                 if (Menu == PlayerMenu.DeviceSettings) BackFromSettings();
                 else if (Menu == PlayerMenu.InputSettings) BackFromInputSettings();
                 else if (Menu == PlayerMenu.CameraComfort) BackFromCameraComfort();
+                else if (Menu == PlayerMenu.ConfirmNewGame) Persistence?.CancelNewGame();
                 else if (IsMenuOpen) CloseMenu(); else OpenMenu(PlayerMenu.Pause);
                 return;
             }

@@ -185,6 +185,22 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
+        public IEnumerator PauseNewGameAsksBeforeReplacingAndCancelReturnsToPause()
+        {
+            yield return CreateProgress();
+            player.OpenMenu(PlayerMenu.Pause);
+            yield return null; yield return null;
+            MenuTestUI.Click(MenuTestUI.Button(player, "New Game"));
+            yield return null; yield return null;
+            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.ConfirmNewGame));
+            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Cancel"));
+            MenuTestUI.Click(MenuTestUI.Button(player, "Cancel"));
+            yield return null; yield return null;
+            Assert.That(player.Menu, Is.EqualTo(PlayerMenu.Pause));
+            Assert.That(save.State, Is.EqualTo(WorldSaveState.Ready).Or.EqualTo(WorldSaveState.Saving), "The running game is untouched.");
+        }
+
+        [UnityTest]
         public IEnumerator ConfirmedNewGameResetsWorldProgressAndKeepsSettingsAndArchive()
         {
             yield return CreateProgress();

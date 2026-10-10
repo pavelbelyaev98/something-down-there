@@ -37,7 +37,6 @@
 #menuRoot.title-screen .startup-actions > .menu-button,
 #menuRoot.pause-menu .pause-actions > .menu-button,
 #menuRoot.pause-menu .title,
-#menuRoot.pause-menu .section-title,
 #menuRoot .settings-tab,
 #menuRoot.settings-menu .setting-section,
 #menuRoot .help-title,
@@ -54,8 +53,7 @@
 #menuRoot .selector-value,
 #menuRoot.settings-menu .range-value,
 #menuRoot.settings-menu .setting-binding,
-#menuRoot .help-option-text,
-#menuRoot.pause-menu .key {
+#menuRoot .help-option-text {
     -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf");
     -unity-font-definition: initial;
     -unity-font-style: normal;
@@ -101,13 +99,6 @@
 #menuRoot.pause-menu .menu-card { position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: none; padding: 0 44px; justify-content: center; background-color: transparent; }
 #menuRoot.pause-menu .menu-header { margin-bottom: 24px; }
 #menuRoot.pause-menu .title { flex-grow: 0; font-size: 60px; color: var(--sign-yellow); -unity-text-outline-width: 2px; -unity-text-outline-color: var(--sign-ink); text-shadow: 0 4px 0 var(--sign-ink); rotate: -3deg; transform-origin: 0% 100%; }
-.pause-columns { flex-direction: row; align-items: flex-start; }
-#menuRoot.pause-menu .pause-actions { margin-right: 48px; }
-.controls-card { width: 330px; padding: 18px 22px 10px; border-radius: 18px; background-color: rgba(248, 236, 210, 0.95); }
-#menuRoot.pause-menu .section-title { font-size: 20px; letter-spacing: 3px; color: var(--sheet-ink); margin-bottom: 12px; }
-.control-line { flex-direction: row; align-items: center; margin-bottom: 8px; }
-.key { width: 118px; flex-shrink: 0; margin: 0 14px 0 0; padding: 2px 8px; border-radius: 6px; background-color: var(--sheet-key); color: var(--sheet-ink); font-size: 15px; -unity-text-align: middle-center; white-space: normal; }
-.control-description { flex-grow: 1; flex-basis: 0; min-width: 0; font-size: 16px; color: var(--sheet-soft); white-space: normal; }
 #menuRoot.pause-menu .notice { color: var(--cream); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
 
 /* ---------- settings sheet ---------- */

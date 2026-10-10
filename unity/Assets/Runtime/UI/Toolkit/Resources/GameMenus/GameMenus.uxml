@@ -26,20 +26,7 @@
                 <ui:Label name="startupNote" class="caption startup-note" />
             </ui:VisualElement>
             <ui:VisualElement name="pausePage" class="hidden">
-                <ui:VisualElement class="pause-columns">
-                    <ui:VisualElement name="pauseActions" class="pause-actions" />
-                    <ui:VisualElement class="controls-card">
-                        <ui:Label text="CONTROLS" class="section-title" />
-                        <ui:VisualElement class="control-line"><ui:Label name="controlMove" class="key" /><ui:Label text="Move" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label name="controlSprint" class="key" /><ui:Label text="Sprint (hold)" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label name="controlCrouch" class="key" /><ui:Label text="Crouch (hold)" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label text="MOUSE" class="key" /><ui:Label text="Look" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label name="controlDig" class="key" /><ui:Label name="controlDigDescription" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label name="controlJump" class="key" /><ui:Label text="Jump / jetpack" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label name="controlInteract" class="key" /><ui:Label text="Interact / inventory" class="control-description" /></ui:VisualElement>
-                        <ui:VisualElement class="control-line"><ui:Label name="controlPause" class="key" /><ui:Label text="Pause" class="control-description" /></ui:VisualElement>
-                    </ui:VisualElement>
-                </ui:VisualElement>
+                <ui:VisualElement name="pauseActions" class="pause-actions" />
                 <ui:Label name="pauseSettingsError" class="notice hidden" text="Camera settings not saved. Retry in Accessibility." />
                 <ui:Label name="pauseInputError" class="notice hidden" text="Controls not saved. Retry in Settings." />
                 <ui:Label name="pauseDeviceError" class="notice hidden" text="Settings not saved. Retry in Settings." />

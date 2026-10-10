@@ -441,10 +441,6 @@ namespace SomethingDownThere.Tests
             Assert.That(dig.HitsRemaining, Is.EqualTo(2));
             player.OpenMenu(PlayerMenu.Pause);
             yield return null;
-            Assert.That(MenuTestUI.View(player).Root.Query<Label>().ToList()
-                .Any(label => label.text == "Crouch (hold)"), Is.True);
-            Assert.That(MenuTestUI.View(player).Root.Query<Label>().ToList()
-                .Any(label => label.text == player.InputSettings.Display(PlayerBinding.Crouch)), Is.True);
             devices.Press(keyboard.spaceKey, queueEventOnly: true);
             yield return null;
             float charge = player.Battery.Charge;
@@ -499,8 +495,6 @@ namespace SomethingDownThere.Tests
             yield return null; yield return null;
             player.BackFromInputSettings(); yield return null; yield return null;
             Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Settings"));
-            Assert.That(MenuTestUI.Text(player, "controlDig"), Is.EqualTo(player.InputSettings.Display(PlayerBinding.Dig)));
-            Assert.That(MenuTestUI.Text(player, "controlDigDescription"), Is.EqualTo("Toggle dig / collect"));
             Assert.That(new InputPreferences(inputPreferences).ToggleDig, Is.True);
             player.CloseMenu(); yield return null; yield return null;
             yield return new WaitForSecondsRealtime(0.4f); Assert.That(dig.HitsRemaining, Is.EqualTo(3));

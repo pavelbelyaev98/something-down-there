@@ -186,6 +186,7 @@ namespace SomethingDownThere
         private void LateUpdate()
         {
             ResumeRestartedLab();
+            ResumeRequestedNewGame();
             if (!initialized) return;
             var current = Observe();
             if (!current.Same(observed))

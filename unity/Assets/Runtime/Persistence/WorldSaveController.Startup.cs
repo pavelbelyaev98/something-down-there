@@ -38,8 +38,14 @@ namespace SomethingDownThere
             StartCoroutine(Load());
         }
 
+        // New Game from the pause menu: confirmed over the running game, then the scene reloads and its
+        // title starts the new game at once, as the Ground Lab restart does. The old world is archived there.
+        private static bool newGameAfterReload;
+        private bool InSession => !exitRequested && (State == WorldSaveState.Ready || State == WorldSaveState.Saving || State == WorldSaveState.Lab);
+
         public void RequestNewGame()
         {
+            if (InSession && player.Menu == PlayerMenu.Pause) { player.ShowSessionMenu(PlayerMenu.ConfirmNewGame); return; }
             if (State != WorldSaveState.Startup || player.Menu != PlayerMenu.MainMenu) return;
             HasSavedGame = WorldSaveStore.HasCheckpoint(SaveDirectory);
             replaceExisting = false;
@@ -98,11 +104,38 @@ namespace SomethingDownThere
         public void CancelNewGame()
         {
             if (State == WorldSaveState.ConfirmNewGame) RefreshStartup();
+            else if (InSession && player.Menu == PlayerMenu.ConfirmNewGame) player.ShowSessionMenu(PlayerMenu.Pause);
         }
 
         public void ConfirmNewGame()
         {
-            if (State != WorldSaveState.ConfirmNewGame || player.Menu != PlayerMenu.ConfirmNewGame) return;
+            if (player.Menu != PlayerMenu.ConfirmNewGame) return;
+            if (InSession) { StartCoroutine(ReloadForNewGame()); return; }
+            if (State != WorldSaveState.ConfirmNewGame) return;
+            replaceExisting = true;
+            StartCoroutine(CreateNewGame());
+        }
+
+        // No further checkpoints of the world being replaced; a write already running finishes and the
+        // profile is released before the scene reloads, so the new title can take it over.
+        private IEnumerator ReloadForNewGame()
+        {
+            initialized = false;
+            SetState(WorldSaveState.Creating);
+            player.ShowPersistenceMenu();
+            while (write != null && !write.IsCompleted) yield return null;
+            write = null;
+            writing = null;
+            store?.Dispose();
+            store = null;
+            newGameAfterReload = true;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(gameObject.scene.name);
+        }
+
+        private void ResumeRequestedNewGame()
+        {
+            if (!newGameAfterReload || State != WorldSaveState.Startup || player.Menu != PlayerMenu.MainMenu || player.GraphicsTuner.Running) return;
+            newGameAfterReload = false;
             replaceExisting = true;
             StartCoroutine(CreateNewGame());
         }
