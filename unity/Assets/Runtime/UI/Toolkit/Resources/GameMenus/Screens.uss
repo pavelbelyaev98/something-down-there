@@ -1,85 +1,34 @@
-/* Menu screens: title, pause, settings and dialogs.
+/* Screen layouts: title, pause, settings and dialogs (palette and type in Theme.uss, buttons
+   and rows in Controls.uss).
 
-   Palette: worksite slate, bone and hi-vis orange (the crane's colour family). Title and pause
-   share one layout on the world: a left-aligned column, the stacked orange logo at the top and
-   the menu at the bottom (pause adds PAUSED over it); entries change colour on hover and never
-   move. Settings is a
-   full-screen slate sheet: tabs along the top, rounded rows on the left
-   (◀ value ▶ selectors with one pip per choice), the focused row's description on the right
-   and the actions bottom right. Dialogs are a slate card. The station shop shares the palette
-   (Station.uss); inventory and admin keep the grey card from Theme.uss.
+   Title and pause share one layout on the world: a left-aligned column, the stacked orange
+   logo at the top and the menu a short way under it; the entries are plain words that only
+   change colour on hover. Settings is a full-screen slate sheet: tabs along the top, rows on
+   the left, the focused row's description on the right, actions bottom right. Dialogs are
+   the slate card at a fixed width. */
 
-   Lilita One is the display face (logo, menu entries, tabs, headings, buttons); Barlow
-   Condensed carries rows and running text. Sizes are in the panel's 1280 x 720 space. */
-
-#menuRoot {
-    --orange: #ff7b22;
-    --orange-hover: #ff8f45;
-    --ink: #1b262c;
-    --bone: #f3eee4;
-    --bone-soft: #c3ccd0;
-    --bone-faint: #8b9aa1;
-    --slate-900: #172026;
-    --slate-800: #1f2a30;
-    --slate-700: #283439;
-    --slate-600: #313f46;
-    --slate-500: #3d4c54;
-    --slate-line: #4b5b63;
-}
-
-/* ---------- type ---------- */
-#menuRoot.title-screen, #menuRoot.pause-menu, #menuRoot.settings-menu, #menuRoot.dialog-menu {
-    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-Medium.ttf");
-    -unity-font-definition: initial;
-}
-#menuRoot .logo-line,
-#menuRoot.title-screen .startup-actions > .menu-button,
-#menuRoot.pause-menu .pause-actions > .menu-button,
-#menuRoot .pause-heading,
-#menuRoot .settings-tab,
-#menuRoot.settings-menu .setting-section,
-#menuRoot .help-title,
-#menuRoot .settings-footer > .menu-button,
-#menuRoot.settings-menu .settings-error .menu-button,
-#menuRoot.settings-menu .binding-conflict > .menu-button,
-#menuRoot.dialog-menu .title,
-#menuRoot.dialog-menu .footer > .menu-button {
-    -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf");
-    -unity-font-definition: initial;
-    -unity-font-style: normal;
-}
-#menuRoot.settings-menu .preference-label,
-#menuRoot .selector-value,
-#menuRoot.settings-menu .range-value,
-#menuRoot.settings-menu .setting-binding,
-#menuRoot .help-option-text {
-    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf");
-    -unity-font-definition: initial;
-    -unity-font-style: normal;
-}
-
-/* ---------- title ---------- */
+/* ---------- title and pause ---------- */
 .menu-scrim { position: absolute; left: 0; top: 0; bottom: 0; width: 56%; display: none; -unity-background-scale-mode: stretch-to-fill; }
 #menuRoot.title-screen .menu-scrim, #menuRoot.pause-menu .menu-scrim { display: flex; }
 #menuRoot.title-screen { background-color: transparent; }
-#menuRoot.title-screen .menu-card, #menuRoot.pause-menu .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 420px; max-width: none; max-height: none; padding: 44px 0 50px; justify-content: space-between; align-items: flex-start; background-color: transparent; }
+#menuRoot.pause-menu { background-color: rgba(10, 14, 16, 0.35); }
+#menuRoot.title-screen .menu-card, #menuRoot.pause-menu .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 420px; max-width: none; max-height: none; padding: 44px 0 0; border-radius: 0; justify-content: flex-start; align-items: flex-start; background-color: transparent; }
 #menuRoot.title-screen .menu-header, #menuRoot.title-screen .subtitle, #menuRoot.pause-menu .menu-header, #menuRoot.pause-menu .subtitle { display: none; }
 .title-logo { align-items: flex-start; flex-shrink: 0; }
 .logo-line { margin: 0; padding: 0; white-space: nowrap; -unity-text-align: middle-left; color: var(--orange); -unity-text-outline-color: var(--ink); -unity-text-outline-width: 3px; text-shadow: 0 5px 0 var(--ink); }
 .logo-small { font-size: 66px; letter-spacing: 1px; }
 .logo-large { font-size: 108px; margin-top: -30px; }
-#menuRoot.title-screen #startupPage, #menuRoot.pause-menu #pausePage { align-items: flex-start; }
+#menuRoot.title-screen #startupPage, #menuRoot.pause-menu #pausePage { align-items: flex-start; margin-top: 48px; }
 .startup-note { margin: 10px 0 0; font-size: 16px; -unity-text-align: middle-left; color: rgba(243, 238, 228, 0.8); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
+#menuRoot.pause-menu .notice { -unity-text-align: middle-left; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
 
-/* Title and pause entries: plain words on the world, left-aligned, orange on hover; nothing moves. */
 #menuRoot.title-screen .startup-actions, #menuRoot.pause-menu .pause-actions { width: 380px; flex-shrink: 0; }
 #menuRoot.title-screen .startup-actions > .menu-button, #menuRoot.pause-menu .pause-actions > .menu-button {
-    height: 44px; min-height: 0; margin: 0; padding: 0; border-width: 0; border-radius: 0;
-    font-size: 27px; white-space: nowrap; letter-spacing: 1px;
+    height: 44px; margin: 0; padding: 0; border-width: 0; border-radius: 0;
+    font-size: 27px; -unity-text-align: middle-left;
     color: var(--bone); background-color: transparent;
     -unity-text-outline-width: 1px; -unity-text-outline-color: rgba(27, 38, 44, 0.8);
     text-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
-    -unity-text-align: middle-left;
     transition-property: color; transition-duration: 0.12s;
 }
 #menuRoot.title-screen .startup-actions > .menu-button:hover,
@@ -94,108 +43,35 @@
 .menu-version { position: absolute; left: 0; right: 0; bottom: 4px; display: none; -unity-text-align: middle-center; font-size: 10px; color: rgba(243, 238, 228, 0.6); }
 #menuRoot.title-screen .menu-version, #menuRoot.settings-menu .menu-version { display: flex; }
 
-/* ---------- pause ---------- */
-#menuRoot.pause-menu { background-color: rgba(10, 14, 16, 0.35); }
-.pause-heading { margin: 0 0 10px; padding: 0; font-size: 20px; letter-spacing: 5px; color: var(--bone-soft); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
-#menuRoot.pause-menu .notice { -unity-text-align: middle-left; color: var(--bone); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
-
 /* ---------- settings sheet ---------- */
 #menuRoot.settings-menu { background-color: var(--slate-800); }
-#menuRoot.settings-menu .menu-card { position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; height: auto; max-width: none; max-height: none; padding: 0; background-color: var(--slate-800); color: var(--bone); }
+#menuRoot.settings-menu .menu-card { position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; height: auto; max-width: none; max-height: none; padding: 0; border-radius: 0; }
 #menuRoot.settings-menu .menu-header, #menuRoot.settings-menu .subtitle { display: none; }
 
-.settings-tabs { flex-direction: row; justify-content: center; align-items: center; flex-shrink: 0; height: 56px; padding: 0 24px; background-color: var(--slate-900); border-bottom-width: 2px; border-bottom-color: var(--orange); }
-#menuRoot .settings-tab { height: 36px; min-height: 0; min-width: 96px; margin: 0 4px; padding: 0 20px; border-width: 2px; border-radius: 8px; border-color: transparent; background-color: var(--slate-700); color: var(--bone-soft); font-size: 16px; letter-spacing: 4px; }
-#menuRoot .settings-tab:hover { background-color: var(--slate-600); border-color: transparent; color: var(--bone); }
-#menuRoot .settings-tab:active { background-color: var(--slate-500); }
-#menuRoot .settings-tab.selected-tab { background-color: var(--orange); border-color: var(--orange); color: var(--ink); }
-#menuRoot.keyboard-navigation .settings-tab:focus { border-color: var(--bone); }
-#menuRoot .settings-tab:disabled { background-color: var(--slate-700); border-color: transparent; color: var(--bone-faint); opacity: 0.7; }
+.settings-tabs { flex-direction: row; justify-content: center; align-items: center; flex-shrink: 0; height: 56px; padding: 0 24px; background-color: var(--slate-900); }
+.settings-tab { height: 36px; min-width: 96px; margin: 0 4px; padding: 0 20px; font-size: 16px; letter-spacing: 4px; }
+#menuRoot .settings-tab { color: var(--bone-soft); }
+#menuRoot .settings-tab.selected-tab { color: var(--on-primary); }
 
 #menuRoot.settings-menu .settings-page { position: absolute; left: 44px; top: 62px; bottom: 60px; width: 54%; }
 .settings-help { position: absolute; left: 61%; right: 44px; top: 84px; bottom: 70px; }
 .settings-footer { position: absolute; right: 22px; bottom: 16px; flex-direction: row; align-items: center; }
+.settings-footer > .menu-button { min-width: 116px; margin: 0 0 0 10px; padding: 0 22px; font-size: 17px; letter-spacing: 3px; }
 
-#menuRoot.settings-menu .settings-scroll .unity-scroll-view__content-container { padding-right: 22px; }
-#menuRoot.settings-menu .unity-scroller--vertical .unity-base-slider__tracker { left: 2px; width: 4px; border-radius: 2px; background-color: var(--slate-600); }
-#menuRoot.settings-menu .unity-scroller--vertical .unity-base-slider__dragger { left: 1px; width: 6px; border-radius: 3px; background-color: var(--bone-faint); }
-
-#menuRoot.settings-menu .setting-section { margin: 16px 0 12px 6px; font-size: 26px; letter-spacing: 6px; color: var(--bone); }
-
-#menuRoot.settings-menu .preference-row { height: 44px; min-height: 44px; padding: 0 14px 0 26px; margin-bottom: 8px; border-width: 2px; border-radius: 10px; border-color: transparent; background-color: var(--slate-700); }
-#menuRoot.settings-menu .preference-row:hover { background-color: var(--slate-600); }
-#menuRoot.settings-menu .focused-row { border-color: var(--orange); }
-#menuRoot.settings-menu .preference-label { margin-right: 16px; font-size: 18px; letter-spacing: 3px; color: var(--bone); }
-#menuRoot.settings-menu .disabled-row .preference-label { color: var(--bone-faint); }
-
-/* ◀ value ▶ with pips beneath */
-.setting-selector { flex-direction: row; align-items: center; width: 264px; height: 40px; flex-shrink: 0; }
-.selector-arrow { width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; color: var(--bone); }
-.selector-arrow:hover { background-color: rgba(243, 238, 228, 0.12); }
-.selector-arrow:active { background-color: rgba(255, 123, 34, 0.3); }
-.setting-selector:disabled .selector-arrow { opacity: 0.25; }
-.selector-middle { flex-grow: 1; height: 100%; align-items: center; justify-content: center; }
-.selector-value { margin: 0; padding: 0; font-size: 19px; letter-spacing: 1px; white-space: nowrap; -unity-text-align: middle-center; color: var(--bone); }
-.setting-selector:disabled .selector-value { color: var(--bone-faint); }
-.selector-pips { flex-direction: row; justify-content: center; width: 150px; height: 4px; margin-top: 5px; }
-.selector-pip { flex-grow: 1; max-width: 26px; height: 4px; margin: 0 2px; background-color: var(--slate-line); }
-.selector-pip-on { background-color: var(--orange); }
-.selector-track { background-color: var(--slate-line); }
-.selector-marker { position: absolute; top: 0; bottom: 0; background-color: var(--orange); }
-.setting-selector:disabled .selector-pip-on, .setting-selector:disabled .selector-marker { background-color: var(--bone-faint); }
-
-#menuRoot.settings-menu .setting-binding { width: 264px; height: 32px; min-height: 0; margin: 0; padding: 0 12px; border-width: 2px; border-radius: 6px; border-color: var(--slate-line); background-color: var(--slate-800); color: var(--bone); font-size: 18px; letter-spacing: 1px; -unity-text-align: middle-center; }
-#menuRoot.settings-menu .setting-binding:hover { background-color: var(--slate-900); border-color: var(--bone-faint); color: var(--bone); }
-#menuRoot.settings-menu .setting-binding:active { border-color: var(--orange); }
-#menuRoot.settings-menu .setting-binding:disabled { background-color: var(--slate-800); border-color: var(--slate-600); color: var(--bone-faint); opacity: 1; }
-#menuRoot.settings-menu .setting-binding.binding-selected, #menuRoot.settings-menu .setting-binding.binding-selected:disabled { background-color: var(--slate-900); border-color: var(--orange); color: var(--orange); }
-
-#menuRoot.settings-menu .setting-range { width: 264px; height: 40px; min-height: 0; justify-content: center; color: var(--bone); }
-#menuRoot.settings-menu .range-value { width: 66px; height: 30px; margin: 0 12px 0 0; font-size: 19px; color: var(--bone); -unity-text-align: middle-right; }
-#menuRoot.settings-menu .setting-slider { width: 170px; }
-#menuRoot.settings-menu .setting-slider .unity-base-slider__tracker { top: 12px; height: 6px; border-radius: 3px; background-color: var(--slate-line); }
-#menuRoot.settings-menu .setting-slider .unity-base-slider__dragger { top: 6px; width: 18px; height: 18px; border-radius: 9px; background-color: var(--orange); }
-#menuRoot.settings-menu .setting-slider:enabled:hover .unity-base-slider__tracker { background-color: var(--bone-faint); }
-
-/* description of the focused row */
+/* the focused row's description */
 .help-title { margin: 4px 0 14px; padding: 0; font-size: 26px; letter-spacing: 5px; white-space: normal; color: var(--orange); }
 .help-text { margin: 0 0 18px; padding: 0; font-size: 17px; letter-spacing: 0.5px; white-space: normal; color: var(--bone-soft); }
 .help-options { align-items: flex-start; }
-.help-option { flex-direction: row; align-items: center; height: 32px; min-width: 210px; padding: 0 14px 0 14px; border-radius: 6px; }
+.help-option { flex-direction: row; align-items: center; height: 32px; min-width: 210px; padding: 0 14px; border-radius: 6px; }
 .help-option-current { background-color: var(--slate-700); }
 .help-bullet { width: 6px; height: 6px; margin-right: 12px; background-color: var(--bone-faint); }
 .help-option-current .help-bullet { background-color: var(--orange); }
 .help-option-text { margin: 0; padding: 0; font-size: 19px; color: var(--bone); }
 
-#menuRoot .settings-footer > .menu-button { height: 38px; min-height: 0; min-width: 116px; margin: 0 0 0 10px; padding: 0 22px; border-width: 2px; border-radius: 8px; border-color: transparent; background-color: var(--slate-700); color: var(--bone); font-size: 17px; letter-spacing: 3px; }
-#menuRoot .settings-footer > .menu-button:hover { background-color: var(--slate-600); border-color: transparent; color: var(--bone); }
-#menuRoot .settings-footer > .menu-button:active { background-color: var(--slate-500); }
-#menuRoot.keyboard-navigation .settings-footer > .menu-button:focus { border-color: var(--orange); }
-#menuRoot .settings-footer > .menu-button:disabled { background-color: var(--slate-700); border-color: transparent; color: var(--bone-faint); opacity: 0.7; }
-#menuRoot .settings-footer > #settingsBack { background-color: var(--orange); color: var(--ink); }
-#menuRoot .settings-footer > #settingsBack:hover { background-color: var(--orange-hover); }
-
-#menuRoot.settings-menu .caption, #menuRoot.settings-menu .notice { font-size: 17px; color: var(--bone-soft); }
-#menuRoot.settings-menu .settings-error .menu-button, #menuRoot.settings-menu .binding-conflict > .menu-button { width: auto; height: 34px; min-height: 0; padding: 0 18px; border-width: 2px; border-radius: 8px; border-color: transparent; background-color: var(--slate-700); color: var(--bone); font-size: 16px; letter-spacing: 2px; }
-#menuRoot.settings-menu .settings-error .menu-button:hover, #menuRoot.settings-menu .binding-conflict > .menu-button:hover { background-color: var(--slate-600); border-color: transparent; }
-#menuRoot.settings-menu .binding-conflict > .primary { background-color: var(--orange); color: var(--ink); }
-#menuRoot.settings-menu .binding-conflict > .primary:hover { background-color: var(--orange-hover); }
-#menuRoot.settings-menu.keyboard-navigation .settings-error .menu-button:focus, #menuRoot.settings-menu.keyboard-navigation .binding-conflict > .menu-button:focus { border-color: var(--bone); }
-
 /* ---------- dialogs ---------- */
-#menuRoot.dialog-menu { background-color: rgba(10, 14, 16, 0.6); }
-#menuRoot.dialog-menu .menu-card { width: 500px; height: auto; padding: 28px 32px 26px; border-width: 0; border-radius: 12px; background-color: var(--slate-800); color: var(--bone); }
-#menuRoot.dialog-menu .menu-header { margin-bottom: 14px; }
-#menuRoot.dialog-menu .title { font-size: 32px; color: var(--bone); }
+#menuRoot.dialog-menu .menu-card { width: 500px; height: auto; }
 #menuRoot.dialog-menu .subtitle { display: none; }
-#menuRoot.dialog-menu .body { font-size: 19px; color: var(--bone-soft); }
 #menuRoot.dialog-menu .content-scroll { max-height: 300px; }
-#menuRoot.dialog-menu .footer { margin-top: 20px; }
-#menuRoot.dialog-menu .footer > .menu-button { height: 40px; min-height: 0; padding: 0 22px; border-width: 2px; border-radius: 8px; border-color: transparent; background-color: var(--slate-700); color: var(--bone); font-size: 18px; letter-spacing: 1px; }
-#menuRoot.dialog-menu .footer > .menu-button:hover { background-color: var(--slate-600); border-color: transparent; color: var(--bone); }
-#menuRoot.dialog-menu .footer > .primary { background-color: var(--orange); color: var(--ink); }
-#menuRoot.dialog-menu .footer > .primary:hover { background-color: var(--orange-hover); color: var(--ink); }
-#menuRoot.dialog-menu.keyboard-navigation .footer > .menu-button:focus { border-color: var(--bone); }
 
 /* Window lost focus: nothing drawn over the paused world (see Theme.uss). */
 #menuRoot.focus-pause { background-color: transparent; }

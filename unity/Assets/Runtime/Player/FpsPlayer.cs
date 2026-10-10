@@ -1226,7 +1226,7 @@ namespace SomethingDownThere
             transitionFrame = Time.frameCount;
             TargetPrompt = "";
             int count = receipt.LostItems.Count;
-            ShowFeedback($"Fuel empty — rescued  |  {count} {(count == 1 ? "find" : "finds")} lost  |  -${receipt.Fee:0}");
+            ShowFeedback($"Battery empty — rescued  |  {count} {(count == 1 ? "find" : "finds")} lost  |  -${receipt.Fee:0}");
             Persistence?.RequestCheckpoint();
             return true;
         }

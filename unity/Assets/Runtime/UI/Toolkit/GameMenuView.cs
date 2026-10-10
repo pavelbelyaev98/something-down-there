@@ -182,13 +182,11 @@ namespace SomethingDownThere
             Show(contentPage, displayingPreview || (displayed != PlayerMenu.None && displayed != PlayerMenu.Pause && displayed != PlayerMenu.MainMenu && !player.IsSettingsOpen));
             Root.EnableInClassList("title-screen", displayed == PlayerMenu.MainMenu);
             Root.EnableInClassList("pause-menu", displayed == PlayerMenu.Pause);
+            Root.EnableInClassList("admin-menu", displayed == PlayerMenu.DeveloperAdmin);
             bool stationShop = displayed == PlayerMenu.Station && player.Station is ComputerStation;
-            Root.EnableInClassList("shop-menu", stationShop);
             Root.EnableInClassList("workshop-menu", displayed == PlayerMenu.Station && player.Station is ComputerStation { Selling: false });
             Root.EnableInClassList("station-menu", stationShop);
             Root.EnableInClassList("settings-menu", settingsVisible);
-            Root.EnableInClassList("startup-menu", player.Persistence != null && (player.Persistence.AwaitingGameChoice
-                || player.Persistence.State == WorldSaveState.Creating || player.Persistence.State == WorldSaveState.NewGameFailed));
             if (!player.IsMenuOpen) { CurrentScreen = null; return; }
             if (displayingPreview)
             {
@@ -314,12 +312,7 @@ namespace SomethingDownThere
             subtitle.text = $"Carried finds: {player.Inventory.Count} / {player.Inventory.Capacity}";
             if (displayed == PlayerMenu.Station && player.Station != null) Text(scroll, "Body", player.Station.Description(player), "body");
             if (player.Inventory.Count == 0) Text(scroll, "Empty bag", "No carried finds", "empty");
-            foreach (var item in player.Inventory.Items)
-            {
-                var row = Element(scroll, "item-row");
-                Text(row, "Find name", item.DisplayName, "item-name");
-                Text(row, "Sale value", "$" + item.SaleValue, "item-value");
-            }
+            ItemRows(scroll, player.Inventory.Items);
             if (displayed == PlayerMenu.Station && player.Station != null)
                 for (int i = 0; i < player.Station.CommandCount; i++)
                 {
@@ -344,23 +337,28 @@ namespace SomethingDownThere
             Show(tradeSummary, true);
             BuildStationHead();
             long revision = player.StationRevision;
-            var table = Element(scroll, "station-table");
-            if (station.Items.Count == 0) Text(table, "Empty bag", "Your bag is empty", "station-empty");
-            for (int i = 0; i < station.Items.Count; i++)
+            ItemRows(Element(scroll, "station-table"), station.Items);
+            Button(actions, "Sell all", () => player.ExecuteStationCommand(ComputerStation.SellAllCommand, revision),
+                station.CanExecute(ComputerStation.SellAllCommand, player), "primary", station.CommandLabel(ComputerStation.SellAllCommand, player));
+        }
+
+        // Carried finds, one row per kind in the order first carried: name, how many, their value.
+        private static void ItemRows(VisualElement parent, IReadOnlyList<InventoryItem> items)
+        {
+            var kinds = new List<(string Name, int Count, long Value)>();
+            foreach (var item in items)
             {
-                int command = ComputerStation.SellAllCommand + i + 1;
-                var item = station.Items[i];
-                var row = ToolkitStationRows.Block(table, "Sell " + item.InstanceId + " row", "station-sell-row");
-                ToolkitStationRows.Text(row, "Find name", item.DisplayName, "station-sell-name");
-                StationButton(row, "Sell " + item.InstanceId, $"Sell  +${item.SaleValue}",
-                    () => player.ExecuteStationCommand(command, revision), "station-sell-value", station.CanExecute(command, player));
+                int index = kinds.FindIndex(kind => kind.Name == item.DisplayName);
+                if (index < 0) kinds.Add((item.DisplayName, 1, item.SaleValue));
+                else kinds[index] = (item.DisplayName, kinds[index].Count + 1, kinds[index].Value + item.SaleValue);
             }
-            var sellAll = Button(actions, "Sell all", () => player.ExecuteStationCommand(ComputerStation.SellAllCommand, revision),
-                station.CanExecute(ComputerStation.SellAllCommand, player), "sell-all", station.CommandLabel(ComputerStation.SellAllCommand, player));
-            // Styled inline: the shared menu-button rules outrank class selectors here.
-            sellAll.style.backgroundImage = StyleKeyword.None;
-            sellAll.style.backgroundColor = new Color(1f, 0.482f, 0.133f, 1f);
-            sellAll.style.color = new Color(0.106f, 0.149f, 0.173f, 1f);
+            foreach (var kind in kinds)
+            {
+                var row = Element(parent, "item-row");
+                Text(row, "Find name", kind.Name, "item-name");
+                Text(row, "Find count", "\u00d7" + kind.Count, "item-count");
+                Text(row, "Sale value", "$" + kind.Value, "item-value");
+            }
         }
 
         private void BuildUpgrade(ComputerStation station)
@@ -395,7 +393,7 @@ namespace SomethingDownThere
         {
             bool refill = index == ComputerStation.RefillCommand, lamp = index == ComputerStation.LampCommand, serviceRow = refill || lamp;
             var offer = station.OfferAt(index);
-            string track = refill ? "Refill fuel" : lamp ? "Work lamp" : EquipmentProgression.Name(offer.Kind);
+            string track = refill ? "Recharge" : lamp ? "Work lamp" : EquipmentProgression.Name(offer.Kind);
             // The row is decoration; only the price button is interactive. The bar shows how far
             // the track has come, so the name carries no level.
             var row = ToolkitStationRows.Block(parent, "Upgrade " + track + " row", serviceRow ? "station-row service" : "station-row");
@@ -468,7 +466,7 @@ namespace SomethingDownThere
             if (offer.Kind == EquipmentKind.Inventory)
                 return "Holds " + Compared($"{player.Inventory.Capacity}",
                     $"{player.Inventory.Capacity + (offer.Complete ? 0 : EquipmentProgression.InventoryIncrease(offer.OwnedLevel))}", offer.Complete);
-            return "Fuel " + Compared($"{player.Battery.Capacity:0.#}",
+            return "Capacity " + Compared($"{player.Battery.Capacity:0.#}",
                 $"{player.Battery.Capacity + (offer.Complete ? 0 : EquipmentProgression.FuelIncrease(offer.OwnedLevel)):0.#}", offer.Complete);
         }
 
@@ -488,14 +486,14 @@ namespace SomethingDownThere
             if (offer.Kind == EquipmentKind.Jetpack)
             {
                 var next = EquipmentProgression.Jetpack(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
-                return "Fuel per metre climbed " + Compared($"{player.Jetpack.Current.EnergyPerMetre:0.00}", $"{next.EnergyPerMetre:0.00}", offer.Complete)
+                return "Charge per metre climbed " + Compared($"{player.Jetpack.Current.EnergyPerMetre:0.00}", $"{next.EnergyPerMetre:0.00}", offer.Complete)
                     + (next.HoverHold ? "  |  Hover hold in the air" : "");
             }
-            return offer.Kind == EquipmentKind.Fuel ? "Refill sold separately" : "";
+            return offer.Kind == EquipmentKind.Fuel ? "Recharge sold separately" : "";
         }
 
         private static string RefillDetail(ComputerStation station) =>
-            $"$1 per {EquipmentProgression.FuelPerCredit:0.#} fuel, rounded up";
+            $"$1 per {EquipmentProgression.FuelPerCredit:0.#} charge, rounded up";
 
         private static string LampHeadline(ComputerStation station) => station.Lamp.Full
             ? $"Lamps {station.Lamp.Owned}" : $"Lamps {station.Lamp.Owned} → {station.Lamp.Owned + 1}";
@@ -504,8 +502,8 @@ namespace SomethingDownThere
         {
             var refill = station.Refill;
             return refill.Full || refill.Amount <= 0
-                ? $"Fuel {player.Battery.Charge:0.#} / {player.Battery.Capacity:0.#}"
-                : $"Fuel {player.Battery.Charge:0.#} \u2192 {refill.ChargeAfter:0.#}";
+                ? $"Charge {player.Battery.Charge:0.#} / {player.Battery.Capacity:0.#}"
+                : $"Charge {player.Battery.Charge:0.#} \u2192 {refill.ChargeAfter:0.#}";
         }
 
         private void ActivateUpgradeRow(ComputerStation station, int index, long revision, Button row)
@@ -744,14 +742,6 @@ namespace SomethingDownThere
         // Title and pause entries: named as before, shown in capitals like the logo.
         private Button MenuItem(VisualElement parent, string name, Action action, bool enabled = true) =>
             Button(parent, name, action, enabled, "", name.ToUpperInvariant());
-
-        private static void Stat(VisualElement parent, string name, string current, string next, bool complete)
-        {
-            var row = Element(parent, "stat-row");
-            Text(row, name, name, "stat-name");
-            Text(row, name + " value", current, "stat-value");
-            if (!complete) Text(row, name + " next", next, "stat-value next-value");
-        }
 
         private static VisualElement Element(VisualElement parent, string style)
         {

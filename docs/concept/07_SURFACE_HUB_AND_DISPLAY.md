@@ -36,14 +36,14 @@ Contextual action prompts and the optional controls reference are allowed:
 ## 3. Selling at the computer
 
 - One press processes everything sellable in the bag.
-- With finds in the bag, interaction opens the selling table. After Sell All or the final
- individual sale, the same open computer immediately shows upgrades and the updated balance.
+- With finds in the bag, interaction opens the selling table: one row per kind of find (how
+ many, their value) and a single Sell All. After Sell All, the same open computer immediately
+ shows upgrades and the updated balance.
 - With nothing to sell, interaction opens upgrades directly. No automatic sale on approach
  or interaction, no second machine, and no waiting for a physical hopper animation.
-- No manual depositing; individual selling is available as a secondary option at the machine.
+- No manual depositing and no selling finds one at a time (user, 2026-10-10).
 - Uniques and components are never sellable and are never at risk of being included.
-- Closing the computer before selling preserves the haul. Individual sales stay on the selling
- screen while any sellable finds remain.
+- Closing the computer before selling preserves the haul.
 
 ## 4. Upgrades at the same computer
 

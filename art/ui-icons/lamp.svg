@@ -1,17 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <g stroke="#1b262c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-    <circle cx="32" cy="8.5" r="4.2" fill="none"/>
-    <path d="M17.5 39 V29 Q17.5 13 32 13 Q46.5 13 46.5 29 V39 Z" fill="#ffd96a"/>
+    <path d="M22 16 Q22 4 32 4 Q42 4 42 16" fill="none"/>
+    <rect x="21" y="19" width="22" height="27" rx="3" fill="#ffd96a"/>
   </g>
-  <ellipse cx="32" cy="29" rx="9.5" ry="11" fill="#fff6d6"/>
-  <ellipse cx="32" cy="28" rx="5" ry="6" fill="#ffffff"/>
-  <g fill="none" stroke="#3d4c54" stroke-width="2.2" stroke-linecap="round">
-    <path d="M25 39 V28.5 Q25 16.5 32 13.6"/>
-    <path d="M39 39 V28.5 Q39 16.5 32 13.6"/>
-  </g>
+  <rect x="25" y="22" width="14" height="21" rx="3" fill="#fff3c4"/>
+  <ellipse cx="32" cy="32.5" rx="4.5" ry="6.5" fill="#ffffff"/>
   <g stroke="#1b262c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M14.5 39 H49.5 L46.5 50 H17.5 Z" fill="#f2b632"/>
-    <rect x="20" y="50" width="24" height="7" rx="2" fill="#2a3439"/>
+    <path d="M17 19 Q17 12 24 12 H40 Q47 12 47 19 Z" fill="#ff7b22"/>
+    <path d="M21 19.5 V45.5 M43 19.5 V45.5" fill="none" stroke-width="3.4"/>
+    <rect x="16" y="45.5" width="32" height="10" rx="3" fill="#ff7b22"/>
   </g>
-  <path d="M41 42.5 L40 47" fill="none" stroke="#c98d17" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M20.5 49 H43.5" fill="none" stroke="#d95c1c" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M22 15.5 H33" fill="none" stroke="#ffb27a" stroke-width="2.4" stroke-linecap="round"/>
 </svg>

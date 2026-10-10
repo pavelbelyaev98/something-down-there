@@ -17,14 +17,14 @@ namespace SomethingDownThere
             public IReadOnlyList<InventoryItem> Items { get; }
             public long Value { get; }
 
-            internal SaleOffer(StationTrade owner, string id)
+            internal SaleOffer(StationTrade owner)
             {
                 Owner = owner;
                 InventoryRevision = owner.inventory.Revision;
                 WalletRevision = owner.wallet.Revision;
                 var selected = new List<InventoryItem>();
                 foreach (var item in owner.inventory.Items)
-                    if (item.Sellable && (id == null || item.InstanceId == id)) { selected.Add(item); Value += item.SaleValue; }
+                    if (item.Sellable) { selected.Add(item); Value += item.SaleValue; }
                 Items = selected.AsReadOnly();
             }
         }
@@ -125,7 +125,7 @@ namespace SomethingDownThere
             this.lamps = lamps;
         }
 
-        public SaleOffer OfferSale(string instanceId = null) => new SaleOffer(this, instanceId);
+        public SaleOffer OfferSale() => new SaleOffer(this);
         public UpgradeOffer OfferUpgrade(EquipmentKind kind = EquipmentKind.Shovel)
         {
             if (kind < EquipmentKind.Shovel || kind > EquipmentKind.Jetpack) throw new ArgumentOutOfRangeException(nameof(kind));

@@ -249,7 +249,7 @@ namespace SomethingDownThere.Tests
             player.Battery.TrySpend(65);
             yield return null;
             Assert.That(battery.ClassListContains("risky"), Is.True);
-            Assert.That(warning.text, Is.EqualTo("LOW FUEL"));
+            Assert.That(warning.text, Is.EqualTo("LOW BATTERY"));
             Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FFD45C"));
             devices.Press(keyboard.tabKey, queueEventOnly: true);
             yield return null;
@@ -265,13 +265,13 @@ namespace SomethingDownThere.Tests
             yield return null;
             Assert.That(battery.ClassListContains("critical"), Is.True);
             Assert.That(charge.style.height.value.value, Is.EqualTo(15).Within(0.5f), "The bar must agree with the critical threshold.");
-            Assert.That(warning.text, Is.EqualTo("FUEL CRITICAL"));
+            Assert.That(warning.text, Is.EqualTo("BATTERY CRITICAL"));
             Assert.That(ColorUtility.ToHtmlStringRGB(warning.resolvedStyle.color), Is.EqualTo("FF625C"));
             Assert.That(root.GetComponent<FpsHud>().View.Root.ClassListContains("hidden"), Is.False);
             player.Battery.TrySpend(15);
             yield return null;
             Assert.That(charge.style.height.value.value, Is.Zero);
-            Assert.That(warning.text, Is.EqualTo("FUEL EMPTY"));
+            Assert.That(warning.text, Is.EqualTo("BATTERY EMPTY"));
             player.Battery.Recharge();
             yield return null;
             Assert.That(battery.ClassListContains("risky") || battery.ClassListContains("critical"), Is.False);
@@ -321,12 +321,10 @@ namespace SomethingDownThere.Tests
             var view = MenuTestUI.View(player);
             StringAssert.Contains("Carried finds: 10 / 10", MenuTestUI.Text(player, "menuSubtitle"));
             var rows = view.CurrentScreen.Query(className: "item-row").ToList();
-            Assert.That(rows.Count, Is.EqualTo(10));
-            for (int i = 0; i < carried.Length; i++)
-            {
-                Assert.That(rows[i].Q<Label>("Find name").text, Is.EqualTo("Coin"));
-                Assert.That(rows[i].Q<Label>("Sale value").text, Is.EqualTo("$" + carried[i].SaleValue));
-            }
+            Assert.That(rows.Count, Is.EqualTo(1), "Finds of one kind share a row.");
+            Assert.That(rows[0].Q<Label>("Find name").text, Is.EqualTo("Coin"));
+            Assert.That(rows[0].Q<Label>("Find count").text, Is.EqualTo("\u00d710"));
+            Assert.That(rows[0].Q<Label>("Sale value").text, Is.EqualTo("$" + carried.Sum(item => item.SaleValue)));
             Assert.That(view.CurrentScreen.Query<UnityEngine.UIElements.Button>().ToList().Select(b => b.name), Is.EqualTo(new[] { "Close" }));
             devices.Press(keyboard.eKey, queueEventOnly: true);
             yield return null;

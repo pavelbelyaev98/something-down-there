@@ -155,14 +155,17 @@ the way.
 Menu screens (on trial, `117`): the game's own palette, worksite slate, bone and hi-vis orange (the
 crane's colour family), never a reference game's colours. The title shows the salvage crane over the
 fenced dig site with the cliffs softly blurred behind, a large stacked logo in one face and colour, and
-the menu under it, all left-aligned; pause uses the same column, the game's name included, with a
-small PAUSED over the menu, no box. Menu words
+the menu a short way under it, all left-aligned; pause uses the same column, the game's name
+included, no box and no "paused" label. Menu words
 never move or grow on hover; only their colour changes. Borders go all the way round or not at all. Settings is a
 full-screen slate sheet: category tabs along the top, rounded rows whose values step in place (◀ value
 ▶ with a pip per choice), the focused option's description and choices on the right. Dialogs and the
-computer's shop are slate cards with orange actions; the shop's roomy tiles (name, the one number a
+computer's shop are slate cards; primary actions are a deeper orange with white type (never orange
+with dark type), everything else a slate tile; the shop's roomy tiles (name, the one number a
 purchase changes, price; upgrades add a progress bar, never a level counter) sit in two columns,
-UPGRADES and SUPPLIES (refill, work lamp). The fuel bar's bolt and the refill's bolt are one symbol. Icons are the game's own set, each
+UPGRADES and SUPPLIES (recharge, work lamp); finds for sale list one row per kind with a single
+Sell all. Energy is electric throughout: battery, charge, recharge, the bolt on the HUD bar and the
+recharge, an electric jetpack. Icons are the game's own set, each
 drawn the way real icon sets draw the object (flat colours, one dark outline), on bone tiles where
 the background is slate. Type: a chunky rounded display face for logo,
 menu, tabs, headings and prices; a condensed sans for rows and running text.

@@ -116,8 +116,8 @@ namespace SomethingDownThere
             batteryGroup.EnableInClassList("critical", !unlimited && risk == ReturnRisk.Critical);
             batteryFill.style.height = Length.Percent((unlimited ? 1f : fraction) * 100);
             bool low = !unlimited && risk != ReturnRisk.Safe;
-            fuelWarning.text = !low ? "" : fraction <= 0 ? "FUEL EMPTY"
-                : risk == ReturnRisk.Critical ? "FUEL CRITICAL" : "LOW FUEL";
+            fuelWarning.text = !low ? "" : fraction <= 0 ? "BATTERY EMPTY"
+                : risk == ReturnRisk.Critical ? "BATTERY CRITICAL" : "LOW BATTERY";
             fuelWarning.EnableInClassList("critical", low && risk == ReturnRisk.Critical);
             GameMenuView.Show(fuelWarning, low);
         }

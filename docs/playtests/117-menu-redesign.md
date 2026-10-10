@@ -11,10 +11,11 @@ Game for the pause menu.
 - Esc out of settings, then press Esc in game for the pause menu: the game's name and the menu, laid out like
   the title, everything left-aligned.
   Main Menu saves and brings you back to the title; Continue picks up where you left.
-- HUD while digging: coin and money top-left; the fuel bar (bolt inside) with backpack and lamp bottom-left.
+- HUD while digging: coin and money top-left; the battery bar (bolt inside) with backpack and lamp bottom-left.
   Do the icons read as what they are? Dig the battery down and watch
-  the bar turn orange, then red, with the banner in the middle. Fill the bag: its count turns orange.
-- Shop at the computer: buy an upgrade, refill, sell a find.
+  the bar turn orange, then red, with LOW BATTERY in the middle. Fill the bag: its count turns orange.
+- Computer with a few finds: one row per kind (Rock ×3) and only Sell all. Then buy an upgrade, a recharge
+  and a lamp. Tab shows the bag the same way. Ctrl+Shift+F10: the developer admin in the same style.
 - Pause → New Game: it asks first; Cancel (or Esc) goes back to pause. Confirm on a game you don't mind losing
   (it is archived, not deleted): a fresh world starts straight away.
 

@@ -23,7 +23,7 @@ namespace SomethingDownThere
         {
             player = GetComponent<FpsPlayer>();
             BuildInput();
-            document = new GameUiDocument(transform, Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+            document = new GameUiDocument(transform);
             Menus = new GameMenuView(document.Root, player);
             View = new GameHudView(document.Root, player);
             title = new TitleView(transform, player);

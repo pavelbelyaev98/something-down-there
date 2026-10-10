@@ -138,6 +138,6 @@ namespace SomethingDownThere
         private static int UpgradeIndex(int ownedLevel) => ownedLevel >= 1 && ownedLevel < LevelCount
             ? ownedLevel - 1 : throw new System.ArgumentOutOfRangeException(nameof(ownedLevel));
         public static string Name(EquipmentKind kind) => kind == EquipmentKind.Inventory ? "Backpack"
-            : kind == EquipmentKind.Fuel ? "Fuel tank" : kind == EquipmentKind.Jetpack ? "Jetpack" : "Tool";
+            : kind == EquipmentKind.Fuel ? "Battery" : kind == EquipmentKind.Jetpack ? "Jetpack" : "Tool";
     }
 }

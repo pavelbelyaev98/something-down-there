@@ -62,7 +62,7 @@ namespace SomethingDownThere.Tests
         }
 
         [UnityTest]
-        public IEnumerator RealStationInputSellsSelectedIdentitiesAndRejectsOldButtons()
+        public IEnumerator RealStationInputSellsEverythingInOneActionAndRejectsOldButtons()
         {
             var first = new InventoryItem("first", "Coin", 5);
             var second = new InventoryItem("second", "Coin", 17);
@@ -80,16 +80,14 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Station, Is.SameAs(computer));
             Assert.That(player.Wallet.Balance, Is.Zero);
             Assert.That(player.Inventory.Count, Is.EqualTo(2));
-            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Sell first"), "The list itself is the focus route.");
-            var oldClick = Button("Sell second");
+            Assert.That(MenuTestUI.Focused(player), Is.EqualTo("Sell all"), "Selling is one action.");
+            var rows = MenuTestUI.View(player).CurrentScreen.Query(className: "item-row").ToList();
+            Assert.That(rows.Count, Is.EqualTo(1), "Finds of one kind share a row.");
+            Assert.That(rows[0].Q<Label>("Find count").text, Is.EqualTo("\u00d72"));
+            Assert.That(rows[0].Q<Label>("Sale value").text, Is.EqualTo("$22"));
+            var oldClick = Button("Sell all");
             MenuTestUI.Click(oldClick);
-            MenuTestUI.Click(oldClick);
-            yield return null;
-            Assert.That(player.Inventory.Items, Is.EqualTo(new[] { first }));
-            Assert.That(player.Wallet.Balance, Is.EqualTo(17));
-            MenuTestUI.Click(oldClick); // The displayed row has since been replaced.
-            Assert.That(player.Inventory.Items, Is.EqualTo(new[] { first }));
-            MenuTestUI.Click(Button("Sell all"));
+            MenuTestUI.Click(oldClick); // A second submission of the same quote sells nothing more.
             yield return null;
             Assert.That(player.Inventory.Count, Is.Zero);
             Assert.That(player.Wallet.Balance, Is.EqualTo(22));
@@ -171,7 +169,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Wallet.Balance, Is.EqualTo(2 * EquipmentProgression.Price(1) + 1));
             // Pointing at another card must never re-target the purchase: the card
             // that is clicked is the card that buys.
-            devices.Set(mouse.position, MenuTestUI.ScreenPoint(player, Button("Upgrade Fuel tank")), queueEventOnly: true);
+            devices.Set(mouse.position, MenuTestUI.ScreenPoint(player, Button("Upgrade Battery")), queueEventOnly: true);
             yield return new WaitForSecondsRealtime(.1f);
             var backpack = Button("Upgrade Backpack");
             devices.Set(mouse.position, MenuTestUI.ScreenPoint(player, backpack), queueEventOnly: true);
@@ -182,19 +180,19 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Battery.Capacity, Is.EqualTo(100));
             Assert.That(player.Wallet.Balance, Is.EqualTo(EquipmentProgression.Price(1) + 1));
             StringAssert.Contains("15 \u2192 20", Text("Backpack effect"));
-            MenuTestUI.Click(Button("Upgrade Fuel tank"));
+            MenuTestUI.Click(Button("Upgrade Battery"));
             yield return null; yield return null;
             Assert.That(player.Battery.Capacity, Is.EqualTo(150));
             Assert.That(player.Battery.Charge, Is.EqualTo(1));
             Assert.That(player.Wallet.Balance, Is.EqualTo(1));
-            StringAssert.Contains("$1 per 100 fuel", Button("Upgrade Refill fuel").tooltip);
-            Assert.That(Button("Upgrade Refill fuel").text, Is.EqualTo("$1"));
-            MenuTestUI.Click(Button("Upgrade Refill fuel"));
+            StringAssert.Contains("$1 per 100 charge", Button("Upgrade Recharge").tooltip);
+            Assert.That(Button("Upgrade Recharge").text, Is.EqualTo("$1"));
+            MenuTestUI.Click(Button("Upgrade Recharge"));
             yield return null; yield return null;
             Assert.That(player.Battery.Charge, Is.EqualTo(101));
             Assert.That(player.Wallet.Balance, Is.Zero);
-            Assert.That(Button("Upgrade Refill fuel").ClassListContains("short"), Is.True);
-            MenuTestUI.Click(Button("Upgrade Refill fuel"));
+            Assert.That(Button("Upgrade Recharge").ClassListContains("short"), Is.True);
+            MenuTestUI.Click(Button("Upgrade Recharge"));
             Assert.That(player.Wallet.Balance, Is.Zero);
             Assert.That(player.Battery.Charge, Is.EqualTo(101));
             Assert.That(player.Inventory.Count, Is.Zero);
@@ -270,7 +268,7 @@ namespace SomethingDownThere.Tests
             player.Wallet.TryCredit(3 * Enumerable.Range(1, last - 1).Sum(EquipmentProgression.Price));
             Face(computer); Assert.That(player.TryInteract(), Is.True);
             yield return null; yield return null;
-            foreach (string track in new[] { "Tool", "Backpack", "Fuel tank" })
+            foreach (string track in new[] { "Tool", "Backpack", "Battery" })
             {
                 for (int level = 1; level < last; level++)
                 {

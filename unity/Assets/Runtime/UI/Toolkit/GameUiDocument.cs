@@ -12,7 +12,7 @@ namespace SomethingDownThere
         private readonly PanelTextSettings textSettings;
         public VisualElement Root { get; }
 
-        public GameUiDocument(Transform parent, Font font)
+        public GameUiDocument(Transform parent)
         {
             textSettings = ScriptableObject.CreateInstance<PanelTextSettings>();
             textSettings.hideFlags = HideFlags.DontSave;
@@ -25,7 +25,6 @@ namespace SomethingDownThere
             document.panelSettings = panel;
             Root = document.rootVisualElement;
             Root.pickingMode = PickingMode.Ignore;
-            Root.style.unityFont = font;
             Resources.Load<VisualTreeAsset>("GameMenus/GameHud").CloneTree(Root);
             Resources.Load<VisualTreeAsset>("GameMenus/GameMenus").CloneTree(Root);
         }

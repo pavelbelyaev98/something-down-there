@@ -1,40 +1,74 @@
-.menu-button { min-height: 36px; padding: 7px 14px; margin: 0 0 8px; border-width: 1px; border-radius: 3px; font-size: 18px; -unity-text-align: middle-center; white-space: normal; }
-#menuRoot .menu-button { color: var(--muted); background-color: transparent; border-color: transparent; background-image: none; }
-#menuRoot .menu-button:hover { color: var(--paper); background-color: #303030; border-color: transparent; background-image: none; }
-#menuRoot .menu-button:active { color: var(--paper); background-color: #3b3b3b; border-color: transparent; background-image: none; }
-#menuRoot .primary, #menuRoot .primary:focus { color: var(--paper); background-color: var(--raised); }
-#menuRoot .primary:hover { background-color: #3b3b3b; }
-#menuRoot .primary:active { background-color: #202020; }
-#menuRoot .menu-button:disabled, #menuRoot .menu-button:disabled:hover { color: #707070; background-color: transparent; border-color: transparent; opacity: 0.6; }
-#menuRoot .primary:disabled, #menuRoot .primary:disabled:hover { background-color: #202020; }
-#menuRoot.keyboard-navigation .menu-button:focus { border-color: #bfbfbf; }
+/* Buttons and settings controls shared by every menu (Theme.uss holds the palette and type).
+   A button is a slate tile; a primary action (and the selected settings tab) is a deeper
+   orange with white type and a darker lower edge. Hover, press and focus change colour or
+   border only, never size or position. */
+
+.menu-button { height: 40px; min-height: 0; padding: 0 20px; margin: 0 0 8px; border-width: 2px; border-radius: 8px; font-size: 18px; letter-spacing: 1px; -unity-text-align: middle-center; white-space: nowrap; }
+#menuRoot .menu-button { color: var(--bone); background-color: var(--slate-700); border-color: transparent; background-image: none; }
+#menuRoot .menu-button:hover { color: var(--bone); background-color: var(--slate-600); }
+#menuRoot .menu-button:active { background-color: var(--slate-500); }
+#menuRoot .primary, #menuRoot .selected-tab { color: var(--on-primary); background-color: var(--primary); border-bottom-color: var(--primary-edge); }
+#menuRoot .primary:hover, #menuRoot .selected-tab:hover { color: var(--on-primary); background-color: var(--primary-hover); }
+#menuRoot .primary:active, #menuRoot .selected-tab:active { background-color: var(--primary-press); }
+#menuRoot .menu-button:disabled, #menuRoot .menu-button:disabled:hover { color: var(--bone-faint); background-color: var(--slate-700); border-color: transparent; opacity: 0.6; }
+#menuRoot.keyboard-navigation .menu-button:focus { border-color: var(--bone); }
 #menuRoot .menu-button:disabled:focus { border-color: transparent; }
-.text-button { font-size: 14px; margin: 0; padding: 6px 0; min-height: 32px; }
-.preference-row { flex-direction: row; align-items: center; min-height: 44px; padding: 4px 12px; margin-bottom: 4px; flex-shrink: 0; background-color: var(--raised); border-width: 1px; border-color: transparent; }
-.keyboard-navigation .focused-row { border-color: #bfbfbf; }
-.preference-label { flex-grow: 1; flex-basis: 0; min-width: 0; font-size: 18px; white-space: normal; margin-right: 24px; }
-.disabled-row { color: var(--muted); }
-.setting-range { flex-direction: row; align-items: center; width: 260px; height: 34px; min-height: 34px; flex-shrink: 0; margin: 0; padding: 0; color: var(--paper); }
-.range-value { width: 64px; height: 30px; margin: 0 12px 0 0; font-size: 18px; -unity-text-align: middle-right; }
-.setting-slider { width: 184px; height: 30px; min-width: 0; margin: 0; padding: 0; }
+
+/* ---------- settings rows (settings sheet and developer admin) ---------- */
+.preference-row { flex-direction: row; align-items: center; height: 44px; min-height: 44px; padding: 0 14px 0 26px; margin-bottom: 8px; flex-shrink: 0; border-width: 2px; border-radius: 10px; border-color: transparent; background-color: var(--slate-700); }
+.preference-row:hover { background-color: var(--slate-600); }
+.focused-row { border-color: var(--orange); }
+.preference-label { flex-grow: 1; flex-basis: 0; min-width: 0; margin-right: 16px; font-size: 18px; letter-spacing: 3px; white-space: normal; color: var(--bone); }
+.disabled-row .preference-label { color: var(--bone-faint); }
+.setting-section { margin: 16px 0 12px 6px; font-size: 26px; letter-spacing: 6px; color: var(--bone); }
+
+/* ◀ value ▶ with one pip per choice beneath (a track when there are many) */
+.setting-selector { flex-direction: row; align-items: center; width: 264px; height: 40px; flex-shrink: 0; }
+.selector-arrow { width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; color: var(--bone); }
+.selector-arrow:hover { background-color: rgba(243, 238, 228, 0.12); }
+.selector-arrow:active { background-color: rgba(255, 123, 34, 0.3); }
+.setting-selector:disabled .selector-arrow { opacity: 0.25; }
+.selector-middle { flex-grow: 1; height: 100%; align-items: center; justify-content: center; }
+.selector-value { margin: 0; padding: 0; font-size: 19px; letter-spacing: 1px; white-space: nowrap; -unity-text-align: middle-center; color: var(--bone); }
+.setting-selector:disabled .selector-value { color: var(--bone-faint); }
+.selector-pips { flex-direction: row; justify-content: center; width: 150px; height: 4px; margin-top: 5px; }
+.selector-pip { flex-grow: 1; max-width: 26px; height: 4px; margin: 0 2px; background-color: var(--slate-line); }
+.selector-pip-on { background-color: var(--orange); }
+.selector-track { background-color: var(--slate-line); }
+.selector-marker { position: absolute; top: 0; bottom: 0; background-color: var(--orange); }
+.setting-selector:disabled .selector-pip-on, .setting-selector:disabled .selector-marker { background-color: var(--bone-faint); }
+
+/* a binding is a key cap */
+#menuRoot .setting-binding { width: 264px; height: 32px; min-height: 0; margin: 0; padding: 0 12px; border-width: 2px; border-radius: 6px; border-color: var(--slate-line); background-color: var(--slate-800); color: var(--bone); font-size: 18px; letter-spacing: 1px; -unity-text-align: middle-center; }
+#menuRoot .setting-binding:hover { background-color: var(--slate-900); border-color: var(--bone-faint); color: var(--bone); }
+#menuRoot .setting-binding:active { border-color: var(--orange); }
+#menuRoot .setting-binding:disabled { background-color: var(--slate-800); border-color: var(--slate-600); color: var(--bone-faint); opacity: 1; }
+#menuRoot .setting-binding.binding-selected, #menuRoot .setting-binding.binding-selected:disabled { background-color: var(--slate-900); border-color: var(--orange); color: var(--orange); }
+
+/* a slider: its value, then the track with an orange handle */
+.setting-range { flex-direction: row; align-items: center; justify-content: center; width: 264px; height: 40px; flex-shrink: 0; margin: 0; padding: 0; color: var(--bone); }
+.range-value { width: 66px; height: 30px; margin: 0 12px 0 0; font-size: 19px; color: var(--bone); -unity-text-align: middle-right; }
+.setting-slider { width: 170px; height: 30px; min-width: 0; margin: 0; padding: 0; }
 #menuRoot .setting-slider > .unity-base-field__input { height: 30px; margin: 0; padding: 0; align-items: center; }
 #menuRoot .setting-slider .unity-base-slider__drag-container { flex-grow: 1; height: 30px; margin: 0; }
-#menuRoot .setting-slider .unity-base-slider__tracker { position: absolute; left: 0; right: 0; top: 13px; height: 4px; margin: 0; border-width: 0; background-image: none; background-color: #858585; border-radius: 2px; }
-#menuRoot .setting-slider .unity-base-slider__dragger { position: absolute; top: 7px; width: 12px; height: 16px; margin: 0; background-image: none; background-color: var(--paper); border-width: 0; border-radius: 2px; }
+#menuRoot .setting-slider .unity-base-slider__tracker { position: absolute; left: 0; right: 0; top: 12px; height: 6px; margin: 0; border-width: 0; border-radius: 3px; background-image: none; background-color: var(--slate-line); }
+#menuRoot .setting-slider .unity-base-slider__dragger { position: absolute; top: 6px; width: 18px; height: 18px; margin: 0; border-width: 0; border-radius: 9px; background-image: none; background-color: var(--orange); }
 #menuRoot .setting-slider .unity-base-slider__dragger-border { display: none; }
-#menuRoot .setting-slider:enabled:hover .unity-base-slider__tracker { background-color: #929292; }
+#menuRoot .setting-slider:enabled:hover .unity-base-slider__tracker { background-color: var(--bone-faint); }
 .setting-slider:disabled { opacity: 0.45; }
-.setting-section { color: var(--muted); font-size: 14px; margin: 14px 12px 8px; }
+
 .binding-notice { margin-top: 12px; }
 .binding-conflict { flex-direction: row; justify-content: flex-end; margin-top: 12px; }
 .binding-conflict > .menu-button { margin: 0 0 0 12px; }
+
+/* ---------- scroll bars: a thin slate track with a bone handle ---------- */
 .unity-scroller--vertical { width: 8px; margin-left: 10px; }
 .unity-scroller--vertical .unity-slider { flex-grow: 1; }
 .unity-scroller--vertical .unity-base-field__input { flex-grow: 1; }
 .unity-scroller--vertical .unity-base-slider__drag-container { flex-grow: 1; width: 8px; }
-.unity-scroller--vertical .unity-base-slider__tracker { position: absolute; left: 2px; top: 0; bottom: 0; width: 3px; background-color: var(--raised); border-radius: 0; }
-.unity-scroller--vertical .unity-base-slider__dragger { position: absolute; left: 0; width: 6px; min-height: 24px; background-color: var(--muted); border-radius: 0; }
+.unity-scroller--vertical .unity-base-slider__tracker { position: absolute; left: 2px; top: 0; bottom: 0; width: 4px; border-radius: 2px; background-color: var(--slate-600); }
+.unity-scroller--vertical .unity-base-slider__dragger { position: absolute; left: 1px; width: 6px; min-height: 24px; border-radius: 3px; background-color: var(--bone-faint); }
 .unity-scroller--vertical .unity-base-slider__dragger-border { display: none; }
 .unity-scroller__low-button, .unity-scroller__high-button { display: none; }
-.settings-scroll .unity-scroll-view__content-container { padding-right: 18px; }
+.settings-scroll .unity-scroll-view__content-container { padding-right: 22px; }
 .settings-scroll .unity-scroller--vertical { position: absolute; right: 0; top: 0; bottom: 0; margin-left: 0; }

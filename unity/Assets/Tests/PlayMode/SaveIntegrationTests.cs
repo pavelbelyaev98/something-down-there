@@ -599,7 +599,7 @@ namespace SomethingDownThere.Tests
                 Assert.That(find.TryCollect(player), Is.False, "Never duplicate a mineral.");
                 Assert.That(player.Inventory.Items.Last().SaleValue, Is.EqualTo(prices[i]));
                 collected.Add(find.Item.InstanceId);
-                if (i == 0) Assert.That(player.Trade.TrySell(player.Trade.OfferSale(find.Item.InstanceId)), Is.True);
+                if (i == 0) Assert.That(player.Trade.TrySell(player.Trade.OfferSale()), Is.True); // The bag holds only this find.
             }
             Assert.That(player.Inventory.Count, Is.EqualTo(7));
             Assert.That(player.Wallet.Balance, Is.EqualTo(prices[0]));

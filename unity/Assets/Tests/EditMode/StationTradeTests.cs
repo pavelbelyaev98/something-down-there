@@ -48,21 +48,17 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void SellOneUsesSelectedIdentityAndEveryOfferCommitsAtMostOnce()
+        public void SellingTakesEveryFindOnceAndAnEarlierQuoteCannotSellAgain()
         {
-            var first = bag.Items[0];
-            var one = trade.OfferSale("second");
             var all = trade.OfferSale();
+            var earlier = trade.OfferSale();
             Assert.That(wallet.Balance, Is.Zero);
             Assert.That(bag.Count, Is.EqualTo(2));
-            Assert.That(trade.TrySell(one), Is.True);
-            Assert.That(bag.Items, Is.EqualTo(new[] { first }));
-            Assert.That(wallet.Balance, Is.EqualTo(17));
-            Assert.That(trade.TrySell(one), Is.False);
-            Assert.That(trade.TrySell(all), Is.False, "An earlier Sell All cannot silently change its contents.");
-            Assert.That(trade.TrySell(trade.OfferSale()), Is.True);
-            Assert.That(wallet.Balance, Is.EqualTo(22));
+            Assert.That(trade.TrySell(all), Is.True);
             Assert.That(bag.Count, Is.Zero);
+            Assert.That(wallet.Balance, Is.EqualTo(22));
+            Assert.That(trade.TrySell(all), Is.False, "An offer commits at most once.");
+            Assert.That(trade.TrySell(earlier), Is.False, "An earlier quote cannot sell what is no longer carried.");
             Assert.That(trade.Check(trade.OfferSale()), Is.EqualTo(TradeResult.Empty));
         }
 
@@ -95,9 +91,8 @@ namespace SomethingDownThere.Tests
             Assert.That(trade.TrySell(quote), Is.False);
             Assert.That(bag.Count, Is.EqualTo(2));
             Assert.That(wallet.Balance, Is.EqualTo(int.MaxValue - 10));
-            Assert.That(trade.TrySell(trade.OfferSale("missing")), Is.False);
             var other = new StationTrade(bag, wallet, shovel);
-            Assert.That(other.TrySell(trade.OfferSale("first")), Is.False);
+            Assert.That(other.TrySell(trade.OfferSale()), Is.False);
             Assert.That(other.TryUpgrade(trade.OfferUpgrade()), Is.False);
         }
 

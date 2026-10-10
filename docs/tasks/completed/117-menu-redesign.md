@@ -170,6 +170,27 @@ flames are too small; the coin has a black ring. Then: "when paused, people shou
 - Title and pause: one left-aligned column; pause shows the logo at the top and a small PAUSED over its menu.
 - Shop: UPGRADES (four tracks) and SUPPLIES (refill, lamp) columns with small headings; card 940 x 512.
 
+## Iteration 7 (2026-10-10): primary colour, one Sell all, electric theme, one style everywhere
+
+The user: orange buttons with black type are bad UI; the sale list should group finds ("Rock ×3") with only a
+Sell all; "fuel tank" with a battery icon is inconsistent ("make the jetpack electric or better fuel icons");
+redesign the work lamp; no PAUSED label; the menus sit too low; the developer admin in the new style; remove
+every leftover of the old UI.
+
+- Primary actions (dialog confirms, Close, Resume digging, settings Back, the selected tab, Sell all, prices):
+  a deeper orange `#d95c1c` with white type and a darker lower edge. Other buttons are slate tiles.
+- Selling: one row per kind of find (name, ×count, total) and one Sell all. `ComputerStation` keeps only the
+  Sell all command and `StationTrade.OfferSale` lost its single-item form; the inventory (Tab) groups the same
+  way. Concept `07` §3 updated.
+- Electric throughout: the Fuel tank track is Battery, Refill fuel is Recharge, the banners read LOW BATTERY /
+  BATTERY CRITICAL / BATTERY EMPTY, the rescue says "Battery empty", stats read Capacity and Charge. The
+  jetpack icon is electric (cyan exhaust, a bolt on the pack); the work lamp is a camping lantern.
+- Title and pause: no PAUSED; the menu sits 48 px under the logo instead of at the column's foot.
+- One style: `Theme.uss` is the base (palette, type, slate card, find rows, admin grid), `Controls.uss` the
+  buttons and settings rows, `Screens.uss`/`Station.uss` layouts only, `Hud.uss` on the same palette and type.
+  The grey card, its variables, the inline document font, the dropdown leftovers, `Stat`, `shop-menu`,
+  `startup-menu`, the per-item sell styles and the pause heading are deleted. The admin is a wide slate card.
+
 ## Acceptance Criteria
 
 - Title: logo top-left, entries as plain capitals, Continue greyed without a save, Ground Lab only in development

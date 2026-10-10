@@ -1,66 +1,91 @@
+/* The base of every screen: the game's palette, its type and the slate card that dialogs,
+   the inventory and the developer admin use. Controls.uss styles buttons and settings rows,
+   Screens.uss lays out the title, pause and settings, Station.uss the shop, Hud.uss the HUD.
+   Sizes are in the panel's 1280 x 720 space.
+
+   Palette: worksite slate, bone and hi-vis orange (the crane's colour family). Orange is the
+   accent (logo, hover text, focus, progress); primary actions are a deeper orange with white
+   type. Type: Lilita One for display (titles, buttons, numbers), Barlow Condensed for text. */
+
 :root {
-    --paper: #ffffff;
-    --muted: #b8bec3;
-    --accent: #ffffff;
-    --ink: #171b1e;
-    --line: #748087;
-    --surface: rgba(19, 23, 26, 0.97);
-    --raised: #292e32;
-    --hover: #373e43;
-    --focus: #373e43;
-    --disabled: #868e94;
-    --danger: #ffb3a7;
-    --warning: #ffce80;
-    --positive: #96ddcd;
-    --space-xs: 4px;
-    --space-sm: 12px;
-    --space-md: 20px;
-    --space-lg: 28px;
-    --control-height: 40px;
-    --control-font: 18px;
+    --orange: #ff7b22;
+    --orange-hover: #ff8f45;
+    --primary: #d95c1c;
+    --primary-hover: #e66a29;
+    --primary-press: #c14f15;
+    --primary-edge: #8f3a10;
+    --on-primary: #ffffff;
+    --ink: #1b262c;
+    --bone: #f3eee4;
+    --bone-soft: #c3ccd0;
+    --bone-faint: #8b9aa1;
+    --slate-900: #172026;
+    --slate-800: #1f2a30;
+    --slate-700: #283439;
+    --slate-600: #313f46;
+    --slate-500: #3d4c54;
+    --slate-line: #4b5b63;
+    --warning: #ffd45c;
+    --danger: #ff625c;
 }
-.menu-root { --paper: #ffffff; --muted: #bfbfbf; --ink: #181818; --surface: rgba(24, 24, 24, 0.97); --raised: #2b2b2b; --hover: #3b3b3b; --focus: #bfbfbf; --disabled: #707070; position: absolute; left: 0; right: 0; top: 0; bottom: 0; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.65); color: var(--paper); font-size: var(--control-font); }
-.menu-card { width: 780px; max-width: 94%; max-height: 94%; padding: var(--space-lg); background-color: var(--surface); }
-.menu-header { flex-direction: row; align-items: center; margin-bottom: var(--space-md); flex-shrink: 0; }
-.title { font-size: 30px; -unity-font-style: bold; white-space: normal; margin: 0; flex-grow: 1; }
-.subtitle { color: var(--muted); font-size: 16px; margin-bottom: var(--space-md); white-space: normal; }
+
+/* ---------- type ---------- */
+.menu-root, .hud-root, .fps-readout {
+    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-Medium.ttf");
+    -unity-font-definition: initial;
+}
+.title, .menu-button, .logo-line, .setting-section, .help-title, .item-count, .item-value,
+.station-cell-name, .station-column-heading, .trade-balance, .hud-number, .hud-resource-warning {
+    -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf");
+    -unity-font-definition: initial;
+    -unity-font-style: normal;
+}
+.preference-label, .selector-value, .range-value, .setting-binding, .help-option-text, .item-name,
+.station-cell-effect, .station-money-caption {
+    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf");
+    -unity-font-definition: initial;
+    -unity-font-style: normal;
+}
+
+/* ---------- the menu root and the slate card ---------- */
+.menu-root { position: absolute; left: 0; right: 0; top: 0; bottom: 0; align-items: center; justify-content: center; background-color: rgba(10, 14, 16, 0.6); color: var(--bone); font-size: 18px; }
+.menu-card { width: 780px; max-width: 94%; max-height: 94%; padding: 28px 32px 26px; border-radius: 12px; background-color: var(--slate-800); }
+.menu-header { flex-direction: row; align-items: center; margin-bottom: 14px; flex-shrink: 0; }
+.title { margin: 0; flex-grow: 1; font-size: 32px; white-space: normal; color: var(--bone); }
+.subtitle { margin-bottom: 16px; font-size: 17px; white-space: normal; color: var(--bone-soft); }
 .hidden { display: none; }
 /* Window lost focus: the game stays paused but is not dimmed or covered, so external
    screenshot tools capture the game instead of the pause screen. */
 .focus-pause { background-color: transparent; }
 .focus-pause .menu-card { display: none; }
-.row { flex-direction: row; align-items: center; }
-.grow { flex-grow: 1; }
-.muted { color: var(--muted); }
-.caption { font-size: 16px; color: var(--muted); white-space: normal; }
-.body { white-space: normal; font-size: 18px; margin: 0 0 12px; }
-.section-title { font-size: 18px; -unity-font-style: bold; margin-bottom: 16px; }
+.caption { font-size: 17px; white-space: normal; color: var(--bone-soft); }
+.body { margin: 0 0 12px; font-size: 19px; white-space: normal; color: var(--bone-soft); }
+.notice { margin-top: 12px; font-size: 17px; white-space: normal; color: var(--bone); }
 .content-page { flex-shrink: 1; min-height: 0; }
 .content-scroll { max-height: 340px; min-height: 0; flex-shrink: 1; }
 .content-scroll > .unity-scroll-view__content-and-vertical-scroll-container { flex-direction: row; flex-grow: 1; flex-shrink: 1; }
 .unity-scroll-view__content-viewport { overflow: hidden; flex-grow: 1; flex-shrink: 1; min-width: 0; }
 .unity-scroll-view__content-container { flex-shrink: 0; padding-right: 2px; }
-.footer { flex-direction: row; justify-content: flex-end; margin-top: var(--space-md); flex-shrink: 0; }
-.footer > .menu-button { flex-grow: 0; flex-shrink: 1; min-width: 88px; max-width: 280px; margin: 0 0 0 12px; }
+.footer { flex-direction: row; justify-content: flex-end; margin-top: 20px; flex-shrink: 0; }
+.footer > .menu-button { flex-grow: 0; flex-shrink: 1; min-width: 110px; max-width: 300px; margin: 0 0 0 12px; }
 .footer > .first-action { margin-left: 0; }
-.notice { white-space: normal; color: var(--paper); font-size: 16px; margin-top: 12px; }
 .settings-page { flex-grow: 1; flex-shrink: 1; min-height: 0; }
 .settings-scroll { flex-grow: 1; max-height: none; min-height: 0; }
 .settings-error { flex-direction: row; align-items: center; margin-top: 12px; flex-shrink: 0; }
 .settings-error .caption { flex-grow: 1; flex-basis: 0; }
-.settings-error .menu-button { width: 104px; margin: 0 0 0 16px; }
+.settings-error .menu-button { margin: 0 0 0 16px; }
 .trade-summary { flex-shrink: 0; }
-.item-row { flex-direction: row; align-items: center; padding: 12px 16px; margin-bottom: 4px; background-color: var(--raised); }
-.item-name { flex-grow: 1; flex-basis: 0; min-width: 0; white-space: normal; margin-right: 16px; -unity-text-align: middle-left; }
-.item-value { color: var(--accent); font-size: 18px; -unity-text-align: middle-right; }
-.empty { padding: 28px 16px; -unity-text-align: middle-center; color: var(--muted); white-space: normal; }
-.trade-balance { color: var(--accent); font-size: 18px; padding: 12px 16px; margin-bottom: 16px; background-color: var(--raised); }
-.stat-row { flex-direction: row; align-items: center; padding: 12px 16px; margin-bottom: 4px; background-color: var(--raised); }
-.stat-name { flex-grow: 1; color: var(--muted); }
-.stat-value { width: 150px; font-size: 18px; -unity-text-align: middle-right; }
-.next-value { color: var(--accent); }
-.shop-menu { --accent: #96ddcd; }
-.station-menu .trade-balance { background-color: transparent; padding: 0; margin: 0; font-size: 28px; }
-.admin-actions { flex-direction: row; flex-wrap: wrap; }
-.admin-actions > .menu-button { width: 48%; margin-right: 2%; font-size: 16px; }
-.fps-readout { position: absolute; top: 12px; right: 16px; font-size: 14px; color: var(--paper); background-color: var(--surface); padding: 5px 8px; }
+
+/* ---------- carried finds: one row per kind (inventory, sale, other stations) ---------- */
+.item-row { flex-direction: row; align-items: center; min-height: 52px; padding: 0 20px; margin-bottom: 8px; border-radius: 10px; background-color: var(--slate-700); }
+.item-name { flex-grow: 1; flex-basis: 0; min-width: 0; margin: 0 16px 0 0; font-size: 19px; white-space: normal; color: var(--bone); -unity-text-align: middle-left; }
+.item-count { width: 56px; margin: 0 16px 0 0; font-size: 18px; color: var(--bone-soft); -unity-text-align: middle-right; }
+.item-value { width: 80px; margin: 0; font-size: 19px; color: var(--bone); -unity-text-align: middle-right; }
+.empty { padding: 28px 16px; font-size: 19px; -unity-text-align: middle-center; white-space: normal; color: var(--bone-soft); }
+
+/* ---------- developer admin: a wide card of slate buttons, settings rows and notes ---------- */
+#menuRoot.admin-menu .menu-card { width: 880px; }
+.admin-actions { flex-direction: row; flex-wrap: wrap; justify-content: space-between; margin-bottom: 8px; }
+.admin-actions > .menu-button { width: 49.4%; height: auto; min-height: 36px; padding: 6px 12px; margin: 0 0 8px; font-size: 16px; white-space: normal; }
+
+.fps-readout { position: absolute; top: 12px; right: 16px; padding: 4px 8px; border-radius: 6px; font-size: 14px; color: var(--bone); background-color: rgba(23, 32, 38, 0.85); }

@@ -1,20 +1,17 @@
+/* The HUD, on the menus' palette and type (Theme.uss). */
 .hud-root {
     position: absolute;
     left: 0; right: 0; top: 0; bottom: 0;
-}
-.hud-root {
-    color: var(--paper);
+    color: var(--bone);
     font-size: 18px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 .hud-root .unity-text-element { padding: 0; }
 
-/* Resources: money top-left; the upright fuel bar (its bolt inside) bottom-left with bag and
+/* Resources: money top-left; the upright battery bar (its bolt inside) bottom-left with bag and
    lamps beside it, smaller, so the bar leads. Icons from the game's set (Icons.uss); numbers in
-   the menus' display face. */
+   the display face. */
 .hud-number {
-    -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf");
-    -unity-font-definition: initial;
     font-size: 20px; color: #ffffff; margin: 0;
     -unity-text-outline-width: 1px; -unity-text-outline-color: rgba(20, 14, 8, 0.55);
     text-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
@@ -28,18 +25,18 @@
 .hud-counters { align-items: flex-start; margin-left: 12px; }
 .hud-counter { flex-direction: row; align-items: center; margin-top: 4px; }
 .hud-counter-icon { width: 24px; height: 24px; margin-right: 7px; }
-.hud-counter.full .hud-number { color: #ff8a3d; }
+.hud-counter.full .hud-number { color: var(--orange-hover); }
 
-/* Fuel: an upright rounded case filled flat from the bottom (the case's corners clip it), its
+/* Battery: an upright rounded case filled flat from the bottom (the case's corners clip it), its
    bolt at the foot, coloured by the return estimate: bone, then orange, then red. */
 .hud-battery { width: 22px; height: 130px; border-radius: 11px; overflow: hidden; background-color: rgba(20, 28, 32, 0.6); }
 .hud-bolt { position: absolute; left: 4px; bottom: 5px; width: 14px; height: 14px; }
 .hud-charge { position: absolute; left: 0; right: 0; bottom: 0; background-color: #ece5d6; }
-.hud-battery.risky .hud-charge { background-color: #ff8a3d; }
+.hud-battery.risky .hud-charge { background-color: var(--orange-hover); }
 .hud-battery.critical .hud-charge { background-color: #e8463a; }
 .hud-battery.unlimited .hud-charge { background-color: #9fd3ea; }
 
-.hud-admin { position: absolute; right: 24px; top: 24px; max-width: 38%; font-size: 15px; color: var(--muted); -unity-text-align: upper-right; white-space: normal; }
+.hud-admin { position: absolute; right: 24px; top: 24px; max-width: 38%; font-size: 15px; color: var(--bone-soft); -unity-text-align: upper-right; white-space: normal; }
 .hud-reticle {
     position: absolute;
     left: 50%; top: 50%;
@@ -48,17 +45,17 @@
     font-size: 24px; color: white;
     -unity-text-align: middle-center;
 }
-.hud-detector { position: absolute; right: 24px; bottom: 24px; width: 116px; padding: 10px 12px; background-color: rgba(19, 25, 31, 0.9); border-radius: 3px; border-bottom-width: 1px; border-bottom-color: var(--line); }
-.hud-detector-title { font-size: 12px; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+.hud-detector { position: absolute; right: 24px; bottom: 24px; width: 116px; padding: 10px 12px; border-radius: 8px; background-color: rgba(31, 42, 48, 0.9); }
+.hud-detector-title { margin-bottom: 6px; font-size: 12px; letter-spacing: 1px; color: var(--bone-soft); }
 .hud-detector-strength { flex-direction: row; align-items: flex-end; height: 18px; }
-.hud-detector-bar { flex-grow: 1; margin-right: 4px; background-color: #3e4851; }
+.hud-detector-bar { flex-grow: 1; margin-right: 4px; background-color: var(--slate-line); }
 .hud-detector-weak { height: 6px; }
 .hud-detector-medium { height: 12px; }
 .hud-detector-strong { height: 18px; margin-right: 0; }
-.hud-detector-bar.active { background-color: var(--paper); }
-.hud-target { position: absolute; left: 15%; right: 15%; top: 50%; margin-top: 32px; font-size: 19px; -unity-text-align: middle-center; white-space: normal; }
-.hud-feedback { position: absolute; left: 15%; right: 15%; bottom: 78px; -unity-text-align: middle-center; white-space: normal; }
+.hud-detector-bar.active { background-color: var(--bone); }
+.hud-target { position: absolute; left: 15%; right: 15%; top: 50%; margin-top: 32px; font-size: 20px; -unity-text-align: middle-center; white-space: normal; }
+.hud-feedback { position: absolute; left: 15%; right: 15%; bottom: 78px; font-size: 19px; -unity-text-align: middle-center; white-space: normal; }
 .hud-resource-warning-anchor { position: absolute; left: 15%; right: 15%; bottom: 24px; align-items: center; }
-.hud-root .hud-resource-warning { padding: 7px 18px; margin: 4px 0 0; max-width: 100%; font-size: 21px; -unity-font-style: bold; letter-spacing: 1px; -unity-text-align: middle-center; white-space: normal; color: #ffd45c; background-color: rgba(19, 23, 26, 0.9); border-radius: 3px; }
-.hud-root .hud-resource-warning.critical { color: #ff625c; }
+.hud-root .hud-resource-warning { padding: 7px 18px; margin: 4px 0 0; max-width: 100%; font-size: 21px; letter-spacing: 1px; -unity-text-align: middle-center; white-space: normal; color: var(--warning); background-color: rgba(31, 42, 48, 0.92); border-radius: 8px; }
+.hud-root .hud-resource-warning.critical { color: var(--danger); }
 .stacked-warnings .hud-feedback { bottom: 128px; }

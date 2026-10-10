@@ -86,7 +86,7 @@ namespace SomethingDownThere.Tests
             Assert.That(player.Shovel.Level, Is.EqualTo(2));
             Assert.That(terrain.Revision, Is.EqualTo(revision));
             Assert.That(terrain.RemovedVolume, Is.EqualTo(volume));
-            StringAssert.Contains("Fuel empty", player.Feedback);
+            StringAssert.Contains("Battery empty", player.Feedback);
             yield return new WaitForSecondsRealtime(0.1f);
             Assert.That(player.Wallet.Balance, Is.EqualTo(15));
             Assert.That(find.Collected && !find.gameObject.activeSelf, Is.True);
