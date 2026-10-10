@@ -11,7 +11,7 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Bag** | Count / capacity; turns a warning color when full |
 | **Money** | Current balance |
 | **Lamp kit** | Available reusable lamps |
-| **Reticle** | A small dot at the centre of the view |
+| **Reticle** | A plain small white dot at the centre of the view: no rim, glow or shape |
 | **Pickup note** | "+Coal" above the bag for each find taken, fading after a moment |
 
 Only these (and the frozen detector) are shown: icons and numbers, no text readouts. Depth, tool stats
