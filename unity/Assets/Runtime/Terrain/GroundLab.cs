@@ -179,11 +179,26 @@ namespace SomethingDownThere
             return TerrainMaterialSnapshot.CopyFrom(ids);
         }
 
-        // The lab's air (grid-local metres): the crane scenes' pockets, pits, shafts and tunnels, and the great cave's shaft.
+        // The stash trench (119): a shallow trench just north of the spawn, the carry uniques lying bare in it, one every
+        // 1.5 m, ready to take with Interact; their spots in the camp workshop glow while they are carried.
+        private static readonly Vector3 StashTrenchFrom = new Vector3(-4.2f, -.35f, -11.1f), StashTrenchTo = new Vector3(.6f, .6f, -10.1f);
+
+        // World pose of the trench's slot-th unique: standing on the trench floor, its front toward the spawn.
+        public static (Vector3 position, Quaternion rotation) StashFind(int slot, BuriedFind prefab)
+        {
+            var mesh = prefab.GetComponent<MeshFilter>().sharedMesh.bounds;
+            float half = mesh.extents.y * Mathf.Abs(prefab.transform.localScale.y);
+            float x = StashTrenchFrom.x + .7f + slot * 1.5f;
+            return (new Vector3(x, StashTrenchFrom.y + half + .01f, (StashTrenchFrom.z + StashTrenchTo.z) / 2), Quaternion.Euler(0, 180, 0));
+        }
+
+        // The lab's air (grid-local metres): the crane scenes' pockets, pits, shafts and tunnels, the stash trench and the
+        // great cave's shaft.
         public static List<ExcavationGrid.LabCarve> Cavities()
         {
             var carves = new List<ExcavationGrid.LabCarve>();
             AddCraneCarves(carves);
+            carves.Add(ExcavationGrid.LabCarve.Box(Local(StashTrenchFrom), Local(StashTrenchTo)));
             carves.Add(ExcavationGrid.LabCarve.Tube(Local(GreatShaft.top + Vector3.up), Local(GreatShaft.bottom), GreatShaftRadius));
             return carves;
         }
@@ -206,6 +221,8 @@ namespace SomethingDownThere
         {
             var crane = DescribeCrane(world);
             if (crane != null) return crane;
+            if (world.x > StashTrenchFrom.x - 1 && world.x < StashTrenchTo.x + 1 && world.z > StashTrenchFrom.z - 1 && world.z < StashTrenchTo.z + 1)
+                return "Stash trench: take each unique with E (no bag slot); its spot in the camp workshop glows until you set it down";
             int bay = BayAt(world.x, world.z, out _, out _);
             string ground = "hitting " + EquipmentProgression.GroundName(hit).ToLowerInvariant();
             var local = Local(world);

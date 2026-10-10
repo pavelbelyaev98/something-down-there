@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2249557691649999797
+--- !u!1 &3243315763997857830
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,27 +8,27 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4147658429998872253}
-  - component: {fileID: 3935500831186312746}
-  - component: {fileID: 7123242075895598421}
-  - component: {fileID: 3868654908825066934}
-  - component: {fileID: 5462586004108511246}
-  - component: {fileID: 7864941974147000433}
-  - component: {fileID: 1685352097061982423}
+  - component: {fileID: 840923690101256536}
+  - component: {fileID: 4475792690467643185}
+  - component: {fileID: 3178548792441087331}
+  - component: {fileID: 7914451122396473664}
+  - component: {fileID: 3547659943531111189}
+  - component: {fileID: 6746718451859382898}
+  - component: {fileID: 6736806131086767242}
   m_Layer: 0
-  m_Name: junk_tv_wood
+  m_Name: unique_tv_wood
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4147658429998872253
+--- !u!4 &840923690101256536
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
+  m_GameObject: {fileID: 3243315763997857830}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -37,21 +37,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &3935500831186312746
+--- !u!33 &4475792690467643185
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
-  m_Mesh: {fileID: 4300000, guid: 976ec57590c1bca4b813eeba82947a89, type: 2}
---- !u!23 &7123242075895598421
+  m_GameObject: {fileID: 3243315763997857830}
+  m_Mesh: {fileID: 4300000, guid: 1311beadd7bbc7248b13bca9938877a0, type: 2}
+--- !u!23 &3178548792441087331
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
+  m_GameObject: {fileID: 3243315763997857830}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -94,14 +94,14 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3868654908825066934
+--- !u!64 &7914451122396473664
 MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
-  m_Material: {fileID: 13400000, guid: 17f7516ba10908747bf84898125dbaec, type: 2}
+  m_GameObject: {fileID: 3243315763997857830}
+  m_Material: {fileID: 13400000, guid: cb7255d8e169f9d4faa4b731eec1c9e9, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -115,14 +115,14 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: e50b30db97d074e4cbfcdca4dc1beaf8, type: 2}
---- !u!54 &5462586004108511246
+  m_Mesh: {fileID: 4300000, guid: 7a3ad679c1b241f4f9bf0f251d719068, type: 2}
+--- !u!54 &3547659943531111189
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
+  m_GameObject: {fileID: 3243315763997857830}
   serializedVersion: 5
   m_Mass: 14
   m_LinearDamping: 0.4
@@ -143,23 +143,23 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 3
---- !u!114 &7864941974147000433
+--- !u!114 &6746718451859382898
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
+  m_GameObject: {fileID: 3243315763997857830}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6e635afdcd251a4882e8a2043e955b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SomethingDownThere.Runtime::SomethingDownThere.BuriedFind
-  saveContentId: junk_tv_wood
+  saveContentId: unique_tv_wood
   displayName: Wood-cased TV
-  minor: 1
-  detectorEligible: 0
-  saleValue: 70
+  minor: 0
+  detectorEligible: 1
+  saleValue: 0
   collectionThreshold: 0.6
   exposureSamples:
   - {x: 0.19333157, y: 0.007238388, z: -0.04622925}
@@ -418,18 +418,18 @@ MonoBehaviour:
   - {x: 0.15544632, y: 0.1467915, z: 0.1311306}
   - {x: 0.030177623, y: -0.13448593, z: 0.13113062}
   - {x: 0.21059692, y: -0.13351622, z: 0.13113062}
-  kind: 0
-  recovery: 0
-  lore: 
+  kind: 1
+  recovery: 2
+  lore: Tuned to a channel nobody here ever broadcast.
   handPicked: 0
   standsUpright: 0
---- !u!114 &1685352097061982423
+--- !u!114 &6736806131086767242
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2249557691649999797}
+  m_GameObject: {fileID: 3243315763997857830}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 706455c16cb2ca84ca1861a61aef59da, type: 3}

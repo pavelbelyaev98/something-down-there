@@ -25,13 +25,12 @@ namespace SomethingDownThere.Editor
         public const string VariantPath = Folder + "/SalvageCrane.prefab";
         // The pack's smallest crane (user choice). Its mast stands south-east of the plot beside the
         // camp, where its 27 m trolley reaches about three quarters of the plot, every authored unique
-        // and the set-down spots east of the camp. Its jib rests over those spots, so the swing out to
+        // and the set-down spots in the workshop's yard. Its jib rests over those spots, so the swing out to
         // a hole is seen from the dig.
         public static readonly Vector3 Mast = new Vector3(15, 0, -14);
-        // Seven: one for every unique, the computers' three and the great caves' four crystal trophies (116), round the
-        // first three on open permanent ground near the opening, each over 3 m from the next.
-        public static readonly Vector3[] SetDownSpots = { new Vector3(6.2f, 0, -12.6f), new Vector3(8.4f, 0, -15.2f), new Vector3(6.6f, 0, -17.8f),
-            new Vector3(10.8f, 0, -18.4f), new Vector3(5f, 0, -21.4f), new Vector3(3.2f, 0, -18f), new Vector3(10.4f, 0, -11.4f) };
+        // Seven: one for every crane-recovered unique, the computers' three and the great caves' four crystal trophies (116),
+        // in the camp workshop's yard (119), so every unique gathers at the workshop: bag-sized ones inside, these beside it.
+        public static Vector3[] SetDownSpots => CampWorkshopSetup.YardSpots();
         // The base footing sits slightly into the lakebed, whose ground dips under its edges.
         private const float BaseSink = .25f;
         // The trolley stops this far short of the pack's physical stop colliders.

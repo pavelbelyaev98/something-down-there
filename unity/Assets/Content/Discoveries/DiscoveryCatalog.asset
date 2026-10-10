@@ -293,36 +293,13 @@ MonoBehaviour:
     CaveTrophy: 0
     HostGrounds: 
     HostWeights: []
-  - ItemId: junk_tv_wood
-    AuthoredPlacement: 0
-    AuthoredPosition: {x: 0, y: 0, z: 0}
-    AuthoredEuler: {x: 0, y: 0, z: 0}
-    Prefab: {fileID: 7864941974147000433, guid: 0cb777f594558ab4d881d59761a0f15c, type: 3}
-    AppearanceVariants: []
-    Count: 3
-    ShallowCount: 0
-    ShallowMinCover: 0
-    ShallowMaxCover: 0
-    MinDepth: 6
-    MaxDepth: 36
-    CoreMinDepth: 0
-    CoreMaxDepth: 0
-    CoreShare: 0
-    LayOnSide: 0
-    RandomOrientation: 0
-    Geode: 0
-    Cave: 0
-    CaveTrophy: 0
-    HostGrounds: 00y
-    HostWeights:
-    - 2
   - ItemId: junk_tv_crt
     AuthoredPlacement: 0
     AuthoredPosition: {x: 0, y: 0, z: 0}
     AuthoredEuler: {x: 0, y: 0, z: 0}
     Prefab: {fileID: 1954727524220898531, guid: 1a6c17d3e0bb9ed43b44083c3c79c6c6, type: 3}
     AppearanceVariants: []
-    Count: 3
+    Count: 6
     ShallowCount: 0
     ShallowMinCover: 0
     ShallowMaxCover: 0
@@ -613,6 +590,72 @@ MonoBehaviour:
     RandomOrientation: 0
     Geode: 0
     Cave: 1
+    CaveTrophy: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_tv_wood
+    AuthoredPlacement: 1
+    AuthoredPosition: {x: 17.5, y: 144.5, z: 8.5}
+    AuthoredEuler: {x: 4, y: 35, z: -3}
+    Prefab: {fileID: 6746718451859382898, guid: 23da0c1c0ffe6744e981ac1dac55b100, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 0
+    MaxDepth: 0
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
+    CaveTrophy: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_field_terminal
+    AuthoredPlacement: 1
+    AuthoredPosition: {x: 33.5, y: 139.5, z: 9}
+    AuthoredEuler: {x: 0, y: 200, z: 6}
+    Prefab: {fileID: 7618042017502532070, guid: 4459f2a144710144e83ee33990f1f432, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 0
+    MaxDepth: 0
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
+    CaveTrophy: 0
+    HostGrounds: 
+    HostWeights: []
+  - ItemId: unique_operator_console
+    AuthoredPlacement: 1
+    AuthoredPosition: {x: 12, y: 133, z: 15}
+    AuthoredEuler: {x: -5, y: 120, z: 0}
+    Prefab: {fileID: 5495320489879294707, guid: 92bed67226df9d44d870684beef37749, type: 3}
+    AppearanceVariants: []
+    Count: 1
+    ShallowCount: 0
+    ShallowMinCover: 0
+    ShallowMaxCover: 0
+    MinDepth: 0
+    MaxDepth: 0
+    CoreMinDepth: 0
+    CoreMaxDepth: 0
+    CoreShare: 0
+    LayOnSide: 0
+    RandomOrientation: 0
+    Geode: 0
+    Cave: 0
     CaveTrophy: 0
     HostGrounds: 
     HostWeights: []

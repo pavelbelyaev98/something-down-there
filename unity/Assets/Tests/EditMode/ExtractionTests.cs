@@ -127,6 +127,7 @@ namespace SomethingDownThere.Tests
 
         [TestCase(FindState.World)]
         [TestCase(FindState.Stored)]
+        [TestCase(FindState.Carried)]
         public void WorldAndCampKeepTheirIdentityOnRepeatedLoads(FindState lifecycle)
         {
             var state = Snapshot();

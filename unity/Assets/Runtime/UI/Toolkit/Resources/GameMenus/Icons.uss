@@ -5,6 +5,7 @@
 .icon-coin { background-image: url("/Assets/Content/UI/Icons/coin.png"); }
 .icon-backpack { background-image: url("/Assets/Content/UI/Icons/backpack.png"); }
 .icon-lamp { background-image: url("/Assets/Content/UI/Icons/lamp.png"); }
+.icon-trophy { background-image: url("/Assets/Content/UI/Icons/trophy.png"); }
 .icon-bolt { background-image: url("/Assets/Content/UI/Icons/bolt.png"); }
 .icon-bolt-mark { background-image: url("/Assets/Content/UI/Icons/bolt-mark.png"); }
 .icon-battery { background-image: url("/Assets/Content/UI/Icons/battery.png"); }

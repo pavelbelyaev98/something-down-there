@@ -73,6 +73,7 @@ namespace SomethingDownThere.Editor
             MineralSetup.AppendToCatalog(entries);
             RetroComputerSetup.AppendToCatalog(entries);
             PropFindSetup.AppendToCatalog(entries);
+            StashUniqueSetup.AppendToCatalog(entries);
             CrystalTrophySetup.AppendToCatalog(entries);
             catalog.Entries = entries.ToArray();
             ChestSetup.Configure(catalog);
@@ -284,7 +285,7 @@ namespace SomethingDownThere.Editor
                 data.FindProperty("minor").boolValue = entry.tier == "common";
                 data.FindProperty("detectorEligible").boolValue = entry.detector_eligible;
                 data.FindProperty("kind").enumValueIndex = (int)(entry.tier == "unique" ? DiscoveryKind.Unique : DiscoveryKind.Common);
-                data.FindProperty("recovery").enumValueIndex = (int)(entry.recovery == "rope" ? RecoveryMethod.Rope : RecoveryMethod.Bag);
+                data.FindProperty("recovery").enumValueIndex = (int)(entry.recovery == "rope" ? RecoveryMethod.Rope : entry.recovery == "carry" ? RecoveryMethod.Carry : RecoveryMethod.Bag);
                 data.FindProperty("lore").stringValue = entry.lore ?? "";
                 data.FindProperty("handPicked").boolValue = entry.hand_picked;
                 data.FindProperty("collectionThreshold").floatValue = entry.required_exposure;

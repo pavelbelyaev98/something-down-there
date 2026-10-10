@@ -120,7 +120,8 @@ namespace SomethingDownThere
                         || e.CoreMaxDepth <= e.CoreMinDepth)))
                     throw new InvalidDataException("Invalid discovery core band.");
                 if (e.Prefab.Kind == DiscoveryKind.Unique && (e.AuthoredPlacement == e.CaveTrophy || e.Count != 1 || e.ShallowCount != 0
-                    || e.Prefab.Recovery != RecoveryMethod.Rope || e.Prefab.SaleValue != 0 || !e.Prefab.DetectorEligible || !e.Prefab.HasLore))
+                    || e.Prefab.Recovery == RecoveryMethod.Bag || e.Prefab.Recovery == RecoveryMethod.Carry && !e.AuthoredPlacement
+                    || e.Prefab.SaleValue != 0 || !e.Prefab.DetectorEligible || !e.Prefab.HasLore))
                     throw new InvalidDataException("Invalid unique discovery policy.");
                 if (e.AuthoredPlacement && (e.Count != 1 || e.ShallowCount != 0 || !WorldSnapshot.Valid(e.AuthoredPosition) || !WorldSnapshot.Valid(e.AuthoredEuler)))
                     throw new InvalidDataException("Invalid authored discovery placement.");

@@ -21,6 +21,10 @@
                     <ui:VisualElement class="icon icon-lamp hud-counter-icon" />
                     <ui:Label name="Lamps" class="hud-number" />
                 </ui:VisualElement>
+                <ui:VisualElement name="UniqueGroup" class="hud-counter">
+                    <ui:VisualElement class="icon icon-trophy hud-counter-icon" />
+                    <ui:Label name="Uniques" class="hud-number" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="PickupNotes" class="hud-pickups" />

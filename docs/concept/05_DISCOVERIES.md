@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|
 | **Common** | 20–30 types | Always silent | Sell only | Reliable income, worthwhile at any depth | 1 slot |
 | **Distinctive** | 30–50 types | Noteworthy ones signal; some stay silent by design | Sell only; no first-copy/duplicate routing | Good money | 1–2 slots |
-| **Unique** | Small set (a few) | Signals | Kept on the display forever; unsellable; one-sentence story; no mechanical perk | No sale | **0 slots** (never crowds bag) |
+| **Unique** | Small set (a few) | Signals | Kept at the camp workshop forever: a bag-sized one on its own spot inside, a crane load in the yard beside it; unsellable; one-sentence story; no mechanical perk | No sale | **0 slots** (never crowds bag) |
 | **Ending parts / keys** | 3–4 finale components; other keys by content | Required parts have a discoverable trail | Unsellable; automatically available when needed | No sale | **0 slots** (never crowds bag) |
 | **Oversized Salvage** | Handful of set pieces | Signals | Crane set-down spot at camp | Huge payday | **0 slots** (claimed via tag/clamp) |
 
@@ -41,8 +41,8 @@ unsellable. No keep/sell sorting. Ordinary hauls pay, and special finds get thei
 - **Geodes** hold crystals on their inner walls, seen in the lamp's light before they are collected
   ([geodes](03_WORLD_AND_SITE.md#5-geodes)).
 - **Buried on purpose:** a backfill pit holds what someone buried, a stash in an old chest; rubbish
-  such as old TVs (a CRT and a wood-cased set; user, 2026-10-07: no portable, flat-screen or big old
-  TV), and whatever sank or was lost, lies scattered like any find
+  such as old CRT TVs (user, 2026-10-07: no portable, flat-screen or big old TV; the wood-cased set is a unique,
+  119), and whatever sank or was lost, lies scattered like any find
   ([disturbed ground](03_WORLD_AND_SITE.md#disturbed-ground-backfill)).
 
 **Constant rate, rising value.** A metre of descent keeps meeting finds at a roughly constant rate
@@ -260,8 +260,13 @@ a gold bar never receives a depth bonus. “Rare” describes a payout, not anot
 
 ## 8. Recovered uniques at camp
 
-- The crane sets each recovered unique down at its own spot beside the camp, where it stays. No
- stands, shelves or placement step; no carrying task underground.
+- **Every unique has a reason to come home and a place it belongs (119).** A unique small enough for the bag
+  is taken by hand once exposed: Interact, no slot, never sold, and the HUD counts it. Back at camp its own
+  spot in the workshop glows (a chalk outline of its footprint); Interact there sets it down for good. One
+  spot per unique, so the workshop fills as the run goes on; no free arranging, no sell-or-keep choice
+  (user, 2026-10-10: "it is not a strategy game, it is more of a satisfaction game").
+- A unique too big for the bag is marked for the crane, which sets it down in the workshop's yard, where it
+  stays. No carrying task underground for either kind.
 - Each records name + depth found. No prices, no condition, no rarity labels.
 - Recovered uniques support story inspection and rereading where they stand. Completion follows the
  recovered collection.

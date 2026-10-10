@@ -7,8 +7,8 @@ namespace SomethingDownThere
     public sealed class GameHudView
     {
         private readonly FpsPlayer player;
-        private readonly Label status, walletStatus, lampStatus, prompt, feedback, adminHint, fuelWarning, inventoryWarning;
-        private readonly VisualElement reticle, batteryGroup, batteryFill, bagGroup, lampGroup, pickupNotes;
+        private readonly Label status, walletStatus, lampStatus, uniqueStatus, prompt, feedback, adminHint, fuelWarning, inventoryWarning;
+        private readonly VisualElement reticle, batteryGroup, batteryFill, bagGroup, lampGroup, uniqueGroup, pickupNotes;
         private readonly VisualElement detectorPanel;
         private readonly VisualElement[] detectorBars;
         private Battery displayedBattery;
@@ -32,6 +32,8 @@ namespace SomethingDownThere
             lampStatus = Root.Q<Label>("Lamps");
             bagGroup = Root.Q("BagGroup");
             lampGroup = Root.Q("LampGroup");
+            uniqueGroup = Root.Q("UniqueGroup");
+            uniqueStatus = Root.Q<Label>("Uniques");
             prompt = Root.Q<Label>("Target");
             feedback = Root.Q<Label>("Feedback");
             adminHint = Root.Q<Label>("Developer controls");
@@ -44,6 +46,7 @@ namespace SomethingDownThere
 
         private (int, int, int) shownStatus = (-1, -1, -1);
         private (int, int, bool) shownLamps = (-1, -1, false);
+        private (int, int) shownUniques = (-1, -1);
         private (bool, bool, bool, bool, bool) shownAdmin = (true, true, true, true, true);
 
         public void Tick()
@@ -91,6 +94,14 @@ namespace SomethingDownThere
                 shownLamps = lampKey;
                 lampStatus.text = lampKey.Item3 ? "\u221e" : lampKey.Item1 + "/" + lampKey.Item2;
                 lampStatus.EnableInClassList("unlimited", lampKey.Item3);
+            }
+            // Uniques secured (taken, on the crane's rope or kept at camp) of the save's uniques (119).
+            (int secured, int total) uniqueKey = player.Discoveries != null ? player.Discoveries.UniqueTally() : (0, 0);
+            GameMenuView.Show(uniqueGroup, uniqueKey.total > 0);
+            if (uniqueKey != shownUniques)
+            {
+                shownUniques = uniqueKey;
+                uniqueStatus.text = uniqueKey.secured + "/" + uniqueKey.total;
             }
 
             var adminKey = (player.AdminAvailable && gameplay, player.HasAdminOverrides, player.UnlimitedBattery, player.AdminXray, player.AdminGroundXray);

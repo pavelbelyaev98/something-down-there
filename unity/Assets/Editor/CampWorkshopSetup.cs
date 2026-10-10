@@ -24,6 +24,15 @@ namespace SomethingDownThere.Editor
         public static readonly Vector3 CampCentre = new Vector3(0, 0, -13);
         // The surface computer on the slab at the back right, clear of the racking, its screen toward the door.
         private static readonly Vector2 ComputerOnSlab = new Vector2(2.6f, 2.3f);
+        // The crane's set-down spots (119): a yard beside the workshop (local x, z), most on its side toward the mast (-X),
+        // clear of the walk from the camp to the door, each about 2.8 m from the next.
+        private static readonly Vector2[] YardLocal =
+        {
+            new Vector2(-6.6f, -5.2f), new Vector2(-6.6f, -2.4f), new Vector2(-6.6f, .4f), new Vector2(-6.6f, 3.2f),
+            new Vector2(-9.4f, -3.8f), new Vector2(-9.4f, -1f), new Vector2(-9.4f, 1.8f),
+        };
+        // Each stash spot's chalk outline stands this far round the unique's footprint, in bars this wide.
+        private const float OutlineMargin = .05f, OutlineBar = .022f;
         private const string ConcreteDetail = "Assets/TowerCrane/Textures/concrete_Normal.png";
 
         [Serializable]
@@ -45,10 +54,19 @@ namespace SomethingDownThere.Editor
                 throw new InvalidOperationException("Open MainGame outside Play Mode to configure the camp workshop.");
             var surface = scene.GetRootGameObjects().Single(o => o.name == "MainGameRoot").transform.Find("Surface");
             var workshop = BuildWorkshop(surface);
+            AddStash(workshop, surface.parent.GetComponentInChildren<DiscoveryField>());
             ClearGrass(scene, workshop);
             SurfaceStationSetup.Configure();  // the computer moves in with the workshop
             EditorSceneManager.MarkSceneDirty(scene);
             Debug.Log("Camp workshop configured at " + workshop.position + ", computer at " + surface.Find("ComputerStation").position);
+        }
+
+        // Rim-layout ground positions of the crane's set-down spots in the workshop's yard.
+        public static Vector3[] YardSpots()
+        {
+            var workshop = WorkshopPose();
+            return YardLocal.Select(p => workshop.position + workshop.rotation * new Vector3(p.x, 0, p.y))
+                .Select(w => new Vector3(w.x, 0, w.z)).ToArray();
         }
 
         // Where the surface computer stands: inside the workshop, on its slab, facing the door.
@@ -105,13 +123,89 @@ namespace SomethingDownThere.Editor
             foreach (float s in new[] { -1f, 1f })
                 Box(c, "Roof", new Vector3(s * run / 2, l.ridge_m - run / 2 * l.pitch - .05f, 0), new Vector3(slope, .1f, l.depth_m + 2 * l.gable_overhang_m), 0, -s * roll);
             Box(c, "Workbench", new Vector3(-(hw - .5f), l.slab_m + .46f, -1.2f), new Vector3(.8f, .92f, 2.05f));
-            Box(c, "Racking", new Vector3(-1.25f, l.slab_m + 1.05f, hd - .32f), new Vector3(4.2f, 2.1f, .5f));
+            // Racking as its boards and uprights (workshop_geometry.py), so finds on a shelf can be aimed at and set down.
+            foreach (var (x0, x1) in new[] { (-3.3f, -1.3f), (-1.2f, .8f) })
+            {
+                float z0 = hd - .55f, z1 = hd - .1f;
+                foreach (float x in new[] { x0, x1 })
+                    foreach (float z in new[] { z0, z1 })
+                        Box(c, "Rack upright", new Vector3(x, l.slab_m + 1.05f, z), new Vector3(.04f, 2.1f, .04f));
+                foreach (float top in new[] { .168f, .768f, 1.368f, 1.968f })
+                    Box(c, "Rack shelf", new Vector3((x0 + x1) / 2, l.slab_m + top - .029f, (z0 + z1) / 2), new Vector3(x1 - x0 + .04f, .058f, z1 - z0 + .05f));
+            }
 
             // Two fluorescent battens under the collar ties, cool white.
             var lamps = Group(root, "Lamps");
             foreach (float z in new[] { -1.5f, 1.5f })
                 DownLight(lamps, "Batten light", new Vector3(0, l.plate_m + 1.0f - .21f, z), 150, 7.5f, 2.2f, new Color(.96f, .98f, 1f));
             return root;
+        }
+
+        // One spot per carry unique (art/stash-uniques/catalog.json): where its base stands, turned its way, with a chalk
+        // outline of its footprint and a thin aim box, both off until that unique is carried (StashSpot).
+        private static void AddStash(Transform workshop, DiscoveryField field)
+        {
+            if (field == null) throw new InvalidOperationException("MainGame has no discovery field for the stash spots.");
+            string folder = WorkshopFolder + "/Stash";
+            if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder(WorkshopFolder, "Stash");
+            var chalk = MaterialAsset(WorkshopFolder, "Workshop_StashOutline");
+            chalk.SetColor("_BaseColor", new Color(.92f, .9f, .84f)); chalk.SetFloat("_Smoothness", .1f); chalk.SetFloat("_Metallic", 0);
+            chalk.SetColor("_EmissionColor", new Color(1f, .9f, .7f) * 1.4f); chalk.EnableKeyword("_EMISSION");
+            EditorUtility.SetDirty(chalk);
+            var group = Group(workshop, "Stash");
+            foreach (var unique in StashUniqueSetup.Load().uniques)
+            {
+                string id = unique.find.content_id;
+                var prefab = StashUniqueSetup.Prefab(id);
+                var bounds = prefab.GetComponent<MeshFilter>().sharedMesh.bounds;
+                var scale = prefab.transform.localScale;
+                var foot = new Vector2(bounds.size.x * Mathf.Abs(scale.x), bounds.size.z * Mathf.Abs(scale.z)) + Vector2.one * OutlineMargin * 2;
+                var spot = new GameObject(unique.find.display_name + " spot").transform;
+                spot.SetParent(group, false);
+                spot.localPosition = unique.stash.position;
+                spot.localRotation = Quaternion.Euler(0, unique.stash.yaw, 0);
+                var outline = new GameObject("Outline", typeof(MeshFilter), typeof(MeshRenderer));
+                outline.transform.SetParent(spot, false);
+                outline.transform.localPosition = Vector3.up * .004f;
+                outline.GetComponent<MeshFilter>().sharedMesh = OutlineMesh(foot, folder + "/" + id + "_Outline.asset");
+                var renderer = outline.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = chalk; renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+                renderer.enabled = false;
+                var aim = spot.gameObject.AddComponent<BoxCollider>();
+                aim.center = new Vector3(0, .015f, 0); aim.size = new Vector3(foot.x, .03f, foot.y); aim.enabled = false;
+                var stash = spot.gameObject.AddComponent<StashSpot>();
+                using var data = new SerializedObject(stash);
+                data.FindProperty("contentId").stringValue = id;
+                data.FindProperty("discoveries").objectReferenceValue = field;
+                data.FindProperty("outline").objectReferenceValue = renderer;
+                data.FindProperty("aim").objectReferenceValue = aim;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        // A flat rectangular frame of four bars round a footprint (x by z), facing up.
+        private static Mesh OutlineMesh(Vector2 foot, string path)
+        {
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            float hx = foot.x / 2, hz = foot.y / 2, w = OutlineBar;
+            void Bar(float x0, float z0, float x1, float z1)
+            {
+                int i = vertices.Count;
+                vertices.Add(new Vector3(x0, 0, z0)); vertices.Add(new Vector3(x0, 0, z1)); vertices.Add(new Vector3(x1, 0, z1)); vertices.Add(new Vector3(x1, 0, z0));
+                triangles.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
+            }
+            Bar(-hx, -hz, hx, -hz + w); Bar(-hx, hz - w, hx, hz);
+            Bar(-hx, -hz + w, -hx + w, hz - w); Bar(hx - w, -hz + w, hx, hz - w);
+            var mesh = new Mesh { name = Path.GetFileNameWithoutExtension(path) };
+            mesh.SetVertices(vertices); mesh.SetTriangles(triangles, 0);
+            mesh.SetNormals(Enumerable.Repeat(Vector3.up, vertices.Count).ToList());
+            mesh.SetUVs(0, vertices.Select(v => new Vector2(v.x, v.z)).ToList());
+            mesh.RecalculateBounds();
+            var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (existing == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
+            EditorUtility.CopySerialized(mesh, existing); UnityEngine.Object.DestroyImmediate(mesh); EditorUtility.SetDirty(existing);
+            return existing;
         }
 
         // Imports the model, replaces any previous copy under Surface, poses it and assigns materials by part name.

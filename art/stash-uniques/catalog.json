@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "uniques": [
+    {
+      "prefab": "Assets/Content/BuriedProps/TVSet/TV_80.prefab",
+      "mass_kg": 14,
+      "position": {
+        "x": 17.5,
+        "y": 144.5,
+        "z": 8.5
+      },
+      "euler": {
+        "x": 4,
+        "y": 35,
+        "z": -3
+      },
+      "stash": {
+        "position": {
+          "x": -2.3,
+          "y": 0.918,
+          "z": 2.675
+        },
+        "yaw": 180
+      },
+      "find": {
+        "content_id": "unique_tv_wood",
+        "display_name": "Wood-cased TV",
+        "tier": "unique",
+        "recovery": "carry",
+        "instances": 1,
+        "shallow_instances": 0,
+        "sale_value": 0,
+        "slots": 0,
+        "detector_eligible": true,
+        "required_exposure": 0.6,
+        "model_scale": 1.5,
+        "lore": "Tuned to a channel nobody here ever broadcast."
+      }
+    },
+    {
+      "prefab": "Assets/Cosmic_Retro_Computer_1_FREE/Prefabs/Cosmic_Retro_Computer_14.prefab",
+      "mass_kg": 9,
+      "position": {
+        "x": 33.5,
+        "y": 139.5,
+        "z": 9.0
+      },
+      "euler": {
+        "x": 0,
+        "y": 200,
+        "z": 6
+      },
+      "stash": {
+        "position": {
+          "x": -3.5,
+          "y": 1.07,
+          "z": -0.75
+        },
+        "yaw": 90
+      },
+      "find": {
+        "content_id": "unique_field_terminal",
+        "display_name": "Field terminal",
+        "tier": "unique",
+        "recovery": "carry",
+        "instances": 1,
+        "shallow_instances": 0,
+        "sale_value": 0,
+        "slots": 0,
+        "detector_eligible": true,
+        "required_exposure": 0.6,
+        "model_scale": 1.0,
+        "lore": "It still asks for a password, politely."
+      }
+    },
+    {
+      "prefab": "Assets/Cosmic_Retro_Computer_1_FREE/Prefabs/Cosmic_Retro_Computer_15.prefab",
+      "mass_kg": 12,
+      "position": {
+        "x": 12.0,
+        "y": 133.0,
+        "z": 15.0
+      },
+      "euler": {
+        "x": -5,
+        "y": 120,
+        "z": 0
+      },
+      "stash": {
+        "position": {
+          "x": -0.2,
+          "y": 0.918,
+          "z": 2.675
+        },
+        "yaw": 180
+      },
+      "find": {
+        "content_id": "unique_operator_console",
+        "display_name": "Operator console",
+        "tier": "unique",
+        "recovery": "carry",
+        "instances": 1,
+        "shallow_instances": 0,
+        "sale_value": 0,
+        "slots": 0,
+        "detector_eligible": true,
+        "required_exposure": 0.6,
+        "model_scale": 1.0,
+        "lore": "Someone labelled every key, and then the lake labelled them again."
+      }
+    }
+  ]
+}

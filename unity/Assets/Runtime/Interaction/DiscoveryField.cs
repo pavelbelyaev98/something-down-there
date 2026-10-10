@@ -50,6 +50,35 @@ namespace SomethingDownThere
         public long PopulationRevision { get; private set; }
         public Collider PlayerCollider { get; private set; }
         internal void NotifyMotion() => MotionRevision++;
+        // Carry uniques taken or set down (119); the workshop's stash spots follow it and the population revision.
+        public long StashRevision { get; private set; }
+        internal void NotifyStash() { StashRevision++; tally = null; }
+
+        // The save's one unique of this kind (a Ground Lab copy in the lab).
+        public BuriedFind FindUnique(string contentId)
+        {
+            foreach (var find in finds)
+                if (find != null && find.Kind == DiscoveryKind.Unique && find.SaveContentId == contentId) return find;
+            return null;
+        }
+
+        // Uniques secured (taken, on the crane's rope or kept at camp) of all the save's uniques, for the HUD.
+        private (long population, long motion, long stash)? tally;
+        private (int secured, int total) tallied;
+        public (int secured, int total) UniqueTally()
+        {
+            var key = (PopulationRevision, MotionRevision, StashRevision);
+            if (tally == key) return tallied;
+            int secured = 0, total = 0;
+            foreach (var find in finds)
+            {
+                if (find == null || find.Kind != DiscoveryKind.Unique) continue;
+                total++;
+                if (find.State != FindState.World) secured++;
+            }
+            tally = key; tallied = (secured, total);
+            return tallied;
+        }
         public bool Initialized => initialized || (developmentContent && !FpsPlayer.AdminBuild);
         public void DeferGeneration() => generationDeferred = true;
         public BuriedFind Find(string id) => finds.Find(f => f.Item.InstanceId == id);
@@ -184,13 +213,24 @@ namespace SomethingDownThere
             foreach (var find in finds) { find.gameObject.SetActive(false); Destroy(find.gameObject); }
             finds.Clear();
             ClearChests();
-            var computers = Array.FindAll(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Unique && e.AuthoredPlacement);
+            var computers = Array.FindAll(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Unique && e.AuthoredPlacement && e.Prefab.RopeTarget);
             var rock = Array.Find(catalog.Entries, e => e.Prefab.Kind == DiscoveryKind.Common);
             int computer = 0;
             foreach (var (isComputer, position, rotation) in GroundLab.CraneFinds())
             {
                 var source = isComputer ? computers[computer++ % computers.Length].Prefab : rock.Prefab;
                 var find = Instantiate(source, position, rotation, transform);
+                find.Initialize(terrain, $"ground-lab-{finds.Count:D2}", this);
+                find.name = find.Item.DisplayName + " (lab " + finds.Count + ")";
+                finds.Add(find);
+            }
+            // The stash trench (119): one of each carry unique, lying bare to take with Interact.
+            var carried = Array.FindAll(catalog.Entries, e => e.Prefab.Recovery == RecoveryMethod.Carry);
+            int slot = 0;
+            foreach (var entry in carried)
+            {
+                var (position, rotation) = GroundLab.StashFind(slot++, entry.Prefab);
+                var find = Instantiate(entry.Prefab, position, rotation, transform);
                 find.Initialize(terrain, $"ground-lab-{finds.Count:D2}", this);
                 find.name = find.Item.DisplayName + " (lab " + finds.Count + ")";
                 finds.Add(find);
@@ -359,7 +399,7 @@ namespace SomethingDownThere
             for (int i = finds.Count - 1; i >= 0; i--)
             {
                 var find = finds[i];
-                if (find.State != FindState.Stored) continue;
+                if (find.State != FindState.Stored || find.CarryTarget) continue;
                 if (!storedSince.TryGetValue(find, out float since)) { storedSince[find] = Time.time; continue; }
                 if (Time.time - since < LabStoredSeconds) continue;
                 storedSince.Remove(find);

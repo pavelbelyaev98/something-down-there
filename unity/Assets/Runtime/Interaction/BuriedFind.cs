@@ -34,6 +34,7 @@ namespace SomethingDownThere
         public RecoveryMethod Recovery => recovery;
         public bool HasLore => !string.IsNullOrWhiteSpace(lore);
         public bool RopeTarget => recovery == RecoveryMethod.Rope;
+        public bool CarryTarget => recovery == RecoveryMethod.Carry;
         public FindState State { get; private set; }
         public bool DepthRecorded { get; private set; }
         public float DiscoveryDepth { get; private set; }
@@ -47,12 +48,14 @@ namespace SomethingDownThere
         private readonly RaycastHit[] coveringHits = new RaycastHit[32];
         public InventoryItem Item { get; private set; }
         public float Exposure { get; private set; }
-        public bool Collected => State == FindState.Collected || State == FindState.Stored;
+        public bool Collected => State == FindState.Collected || State == FindState.Stored || State == FindState.Carried;
+        // Away from where it lay and not standing anywhere: in the bag, or a carry unique in hand.
+        private bool Absent => State == FindState.Collected || State == FindState.Carried;
         // Visibility/range are checked against the actual collider when collecting.
         public float RequiredExposure => Mathf.Clamp(collectionThreshold, 0.1f, 1f);
         public bool IsReleased => physical != null && physical.Released;
         public bool ExposureReady => Item != null && State == FindState.World && Exposure >= RequiredExposure;
-        public bool Collectible => !RopeTarget && ExposureReady;
+        public bool Collectible => recovery == RecoveryMethod.Bag && ExposureReady;
         public bool CanMark => RopeTarget && ExposureReady;
         // Holding Interact on an exposed unique bolts the crane's lifting eye on where the player aims (concept 05 §3).
         public bool CanHold(FpsPlayer player) => isActiveAndEnabled && CanMark && player.Crane != null && player.Crane.Configured && !player.Crane.Busy;
@@ -216,7 +219,7 @@ namespace SomethingDownThere
             State = state.State;
             DepthRecorded = state.DepthRecorded; DiscoveryDepth = state.DiscoveryDepth;
             if (physical != null) physical.Restore(state.PhysicsReleased);
-            bool present = State != FindState.Collected;
+            bool present = !Absent;
             visual.enabled = hitCollider.enabled = present;
             gameObject.SetActive(present);
             RefreshExposure();
@@ -225,7 +228,7 @@ namespace SomethingDownThere
         public void RefreshExposure(bool terrainChanged = true)
         {
             using var profile = ExposureMarker.Auto();
-            if (terrain == null || State == FindState.Collected) return;
+            if (terrain == null || Absent) return;
             if (State != FindState.World) { visual.enabled = hitCollider.enabled = true; return; }
             // Sample the local density neighbourhood in one compiled batch;
             // no per-find native allocation or full-world density copy.
@@ -250,7 +253,7 @@ namespace SomethingDownThere
             RefreshVisibility();
         }
 
-        private void RefreshVisibility() => visual.enabled = State != FindState.Collected
+        private void RefreshVisibility() => visual.enabled = !Absent
             && (State != FindState.World || xrayVisible || Exposure > 0 || terrain.MayExpose(SoilVisibilityBounds));
 
         internal bool HasSoilAttachment(float surfaceTolerance = .005f)
@@ -284,8 +287,9 @@ namespace SomethingDownThere
             ObserveDiscovery();
             // A find the dig takes shows no words, buried or free: the player just keeps digging and its pickup note says
             // what they got (user, 2026-10-10). Only finds taken another way say how.
-            if (!ExposureReady || !RopeTarget && !handPicked) return "";
+            if (!ExposureReady || !RopeTarget && !CarryTarget && !handPicked) return "";
             if (RopeTarget) return $"{DisplayName}  |  Hold {player.InputSettings.Display(PlayerBinding.Interact)} to mark for excavation";
+            if (CarryTarget) return $"{DisplayName}  |  {player.InputSettings.Display(PlayerBinding.Interact)} to take";
             string take = player.Inventory.IsFull ? "Inventory full" : $"{player.InputSettings.Display(PlayerBinding.Interact)} to take";
             return $"{Item.DisplayName}  |  {take}";
         }
@@ -377,7 +381,7 @@ namespace SomethingDownThere
 
         internal void ObserveDiscovery()
         {
-            if (!RopeTarget || DepthRecorded || State != FindState.World) return;
+            if (kind != DiscoveryKind.Unique || DepthRecorded || State != FindState.World) return;
             DepthRecorded = true; DiscoveryDepth = Mathf.Max(0, terrain.SurfaceHeight - transform.position.y);
             field?.NotifyMotion();
         }
@@ -403,7 +407,46 @@ namespace SomethingDownThere
         {
             if (player == null || !player.GameplayActive) return false;
             if (State == FindState.Stored) { player.ShowFeedback(LoreCard); return true; }
+            if (CarryTarget) return TryCarry(player);
             return handPicked && TryTakeAimed(player);
+        }
+
+        // A carry unique (119) goes with the player: no bag slot, never sold; its stash spot in the workshop waits for it.
+        private bool TryCarry(FpsPlayer player)
+        {
+            if (player.IsMenuOpen || !player.HasGameplayFocus || player.Persistence != null && player.Persistence.BlocksPlay
+                || !isActiveAndEnabled || !ExposureReady || terrain == null || terrain.IsRestoring
+                || terrain.IsSolid(player.ViewCamera.transform.position)
+                || !player.TryGetTarget(player.PickupReach(this), out var hit) || hit.collider != hitCollider) return false;
+            ObserveDiscovery();
+            State = FindState.Carried;
+            // A carried unique is never dynamic (WorldSnapshot), even when it had come loose from the soil.
+            if (physical != null) physical.Restore(false);
+            player.AnimateCollection(visual, GetComponent<MeshFilter>());
+            hitCollider.enabled = false;
+            visual.enabled = false;
+            gameObject.SetActive(false);
+            field?.NotifyMotion();
+            field?.NotifyStash();
+            player.ReportCollected(Item);
+            return true;
+        }
+
+        // Set down for good at its stash spot: standing on the spot's surface, turned its way, kinematic and solid.
+        internal bool PlaceAt(Vector3 surface, Quaternion rotation)
+        {
+            if (!CarryTarget || State != FindState.Carried) return false;
+            gameObject.SetActive(true);
+            var mesh = GetComponent<MeshFilter>().sharedMesh.bounds;
+            Vector3 scale = transform.lossyScale;
+            Vector3 centre = Vector3.Scale(mesh.center, scale);
+            transform.SetPositionAndRotation(surface - rotation * centre + Vector3.up * (mesh.extents.y * Mathf.Abs(scale.y) + .002f), rotation);
+            State = FindState.Stored;
+            visual.enabled = hitCollider.enabled = true;
+            if (physical != null) physical.Restore(false);
+            field?.NotifyMotion();
+            field?.NotifyStash();
+            return true;
         }
     }
 }

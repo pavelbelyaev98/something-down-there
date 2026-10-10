@@ -13,6 +13,7 @@ Minimal by design. The HUD answers exactly one question: *can I keep digging?*
 | **Lamp kit** | Available reusable lamps |
 | **Reticle** | A plain tiny, softened white dot at the centre of the view: no rim, glow or shape; visible without drawing the eye |
 | **Pickup note** | "+Coal" above the bag for each find taken, fading after a moment |
+| **Uniques** | A trophy with secured / total: the save's uniques taken, on the crane's rope or kept at camp (user, 2026-10-10) |
 
 Only these (and the frozen detector) are shown: icons and numbers, no text readouts. Depth, tool stats
 and key hints are not on the HUD (user, 2026-10-10).
