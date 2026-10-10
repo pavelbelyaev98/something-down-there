@@ -486,8 +486,7 @@ namespace SomethingDownThere
             if (offer.Kind == EquipmentKind.Jetpack)
             {
                 var next = EquipmentProgression.Jetpack(offer.Complete ? offer.OwnedLevel : offer.NextLevel);
-                return "Charge per metre climbed " + Compared($"{player.Jetpack.Current.EnergyPerMetre:0.00}", $"{next.EnergyPerMetre:0.00}", offer.Complete)
-                    + (next.HoverHold ? "  |  Hover hold in the air" : "");
+                return "Charge per metre climbed " + Compared($"{player.Jetpack.Current.EnergyPerMetre:0.00}", $"{next.EnergyPerMetre:0.00}", offer.Complete);
             }
             return offer.Kind == EquipmentKind.Fuel ? "Recharge sold separately" : "";
         }
@@ -552,7 +551,6 @@ namespace SomethingDownThere
                 + $"This site: {player.SuccessfulStrokes} strokes, {player.ExcavatedVolume:F1} m³ removed."
                 + DensityLine(), "body");
             var grid = Element(scroll, "admin-actions");
-            Button(grid, "Hover: " + player.AdminHoverLabel, player.ToggleAdminHover);
             foreach (FpsPlayer.DrillDial dial in Enum.GetValues(typeof(FpsPlayer.DrillDial)))
                 Button(grid, $"Drill {dial.ToString().ToLowerInvariant()}: {player.AdminDrillLabel(dial)}", () => player.CycleAdminDrill(dial));
             for (int i = 1; i <= player.Shovel.LevelCount; i++)

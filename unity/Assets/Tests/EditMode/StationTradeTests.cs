@@ -167,8 +167,8 @@ namespace SomethingDownThere.Tests
             var jetpack = new JetpackState();
             trade = new StationTrade(bag, wallet, shovel, new Battery(100), jetpack);
             var starter = jetpack.Current;
-            Assert.That((starter.MaxAscentSpeed, starter.Acceleration, starter.EnergyPerSecond, starter.HoverHold),
-                Is.EqualTo((8f, 30f, 8f, false)), "Level 1 is the starter jetpack.");
+            Assert.That((starter.MaxAscentSpeed, starter.Acceleration, starter.EnergyPerSecond),
+                Is.EqualTo((8f, 30f, 8f)), "Level 1 is the starter jetpack.");
             wallet.TryCredit(Enumerable.Range(1, EquipmentProgression.LevelCount - 1).Sum(EquipmentProgression.Price));
             for (int level = 2; level <= EquipmentProgression.LevelCount; level++)
             {
@@ -181,7 +181,6 @@ namespace SomethingDownThere.Tests
                 Assert.That(next.MaxAscentSpeed, Is.GreaterThan(previous.MaxAscentSpeed));
                 Assert.That(next.Acceleration, Is.GreaterThan(previous.Acceleration));
                 Assert.That(next.EnergyPerMetre, Is.LessThan(previous.EnergyPerMetre));
-                Assert.That(next.HoverHold, Is.True);
             }
             Assert.That(jetpack.Current.EnergyPerMetre, Is.EqualTo(.5f).Within(.001f));
             Assert.That(trade.Check(trade.OfferUpgrade(EquipmentKind.Jetpack)), Is.EqualTo(TradeResult.Complete));

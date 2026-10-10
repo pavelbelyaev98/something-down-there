@@ -69,7 +69,9 @@ each purchase noticeably improves the next outing and applies without a blocking
 ## 5. Jetpack
 
 - Starts simple and **stable**; never deliberately hard to control.
-- Each upgrade improves speed, fuel efficiency and assists (hover hold, softer landings).
+- Each upgrade improves speed and battery efficiency.
+- Flight is Space alone: hold to climb, let go to fall. No hover of any kind, neither while digging
+ nor on release (user, 2026-10-10).
  Control quality never degrades; useful ascent is never gated by an upgrade-locked altitude ceiling.
 - Simple input (Space; controller equivalent); full rebinding still applies.
 - Works in narrow player-made shafts without wall bumps dealing damage or knocking the player around.

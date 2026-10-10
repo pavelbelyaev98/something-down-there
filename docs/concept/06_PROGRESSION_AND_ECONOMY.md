@@ -19,7 +19,7 @@
 |---|---|---|
 | **Tool** | Power, bite size, adaptation quality | New head/attachment, dramatically faster digging, much faster excavation of previously tough ground |
 | **Battery** | Capacity and efficiency of the shared dig+jetpack battery | Longer expeditions; efficiency that makes old trips trivial |
-| **Jetpack** | Speed, efficiency, assists | Sustained ascent, steering assists, hover hold |
+| **Jetpack** | Speed, efficiency | Faster, cheaper sustained ascent; Space alone flies, no hover |
 | **Bag capacity** | Bag capacity | Strong steps; a full trip becomes a real haul |
 
 **Every track has twelve levels**, including its starter level, with eleven sequential purchases. Every purchase must noticeably

@@ -114,27 +114,19 @@ namespace SomethingDownThere.Tests
             Assert.That(player.DigIntervalAtLevel(7), Is.LessThan(player.DigIntervalAtLevel(6)));
         }
 
+        // Flight is Space alone (user, 2026-10-10): letting go falls whatever else is held; there is no hover.
         [Test]
-        public void HoverOnReleaseComparisonHoldsUntilCrouchAndStaysSessionOnly()
+        public void LettingGoOfSpaceFallsEvenWhileDiggingOrCrouching()
         {
             player.Tuning.Gravity = -20;
             Assert.That(player.Jetpack.TryUpgradeTo(2), Is.True);
-            Assert.That(player.HoverOnRelease, Is.False, "Hover while digging is the default.");
-            player.ToggleAdminHover();
-            Assert.That(player.HoverOnRelease && player.HasAdminOverrides, Is.True);
-            for (int i = 0; i < 48; i++) player.Tick(new FpsInputFrame { JetpackHeld = true }, 1f / 60f);
-            for (int i = 0; i < 30; i++) player.Tick(default, 1f / 60f);
-            Assert.That(player.IsHovering, Is.True);
-            float held = player.transform.position.y;
-            for (int i = 0; i < 60; i++) player.Tick(default, 1f / 60f);
-            Assert.That(player.transform.position.y, Is.EqualTo(held).Within(.03f));
-            for (int i = 0; i < 15; i++) player.Tick(new FpsInputFrame { CrouchHeld = true }, 1f / 60f);
-            Assert.That(player.IsHovering, Is.False, "Crouch drops.");
-            Assert.That(player.VerticalSpeed, Is.LessThan(0));
-            var saved = new WorldSnapshot(); player.Capture(saved);
-            Assert.That(saved.JetpackLevel, Is.EqualTo(2));
-            player.RestoreAdminOverrides();
-            Assert.That(player.HoverOnRelease, Is.False);
+            foreach (var held in new[] { new FpsInputFrame { DigHeld = true }, new FpsInputFrame { CrouchHeld = true }, default })
+            {
+                for (int i = 0; i < 48; i++) player.Tick(new FpsInputFrame { JetpackHeld = true }, 1f / 60f);
+                for (int i = 0; i < 60; i++) player.Tick(held, 1f / 60f);
+                Assert.That(player.VerticalSpeed, Is.LessThan(0));
+                for (int i = 0; i < 240; i++) player.Tick(default, 1f / 60f);
+            }
         }
 
         // Ground thinner than the contact search (an overhang about a cell thick) still takes a drill cut (user,

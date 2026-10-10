@@ -1,6 +1,6 @@
 # 022 — Jetpack Hover Hold & Speed Progression
 
-**Status:** complete. The jetpack is a ten-level shop track (`EquipmentProgression.Jetpack`) that climbs faster and cheaper per metre every level; from level 2 hover hold keeps the player's height, and its trigger (while digging or on release) is an open A/B in the [playtest note](../../playtests/022-jetpack-hover-hold-speed-progression.md).
+**Status:** complete. The jetpack is a shop track (`EquipmentProgression.Jetpack`) that climbs faster and cheaper per metre every level; flight is Space alone (hold to climb, let go to fall) and there is no hover.
 
 ## Objective
 
@@ -90,3 +90,10 @@ of a mid tank) and the hover; lateral walking through a player's own tunnels add
 - PlayMode: each level reaches its top speed at its energy rate; level 2 hover holds within 3 cm
   and drains 4.05/s; level 1 never hovers; no hover under half a metre above a floor or on an empty
   battery; "on release" holds until crouch and resets with Restore normal rules.
+
+## Iteration (2026-10-10): hover removed
+
+The user, shown the hover A/B (hold height while digging, or whenever Space is released with crouch to drop):
+"neither is needed... I want to control the flight ONLY with space... just hold space to fly". Hover hold,
+both triggers, the Developer admin **Hover** switch, the profile's `HoverHold` and the hover constants are
+removed; letting go of Space falls whatever else is held (`LettingGoOfSpaceFallsEvenWhileDiggingOrCrouching`).

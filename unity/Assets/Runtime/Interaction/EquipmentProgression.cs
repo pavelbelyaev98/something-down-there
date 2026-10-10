@@ -14,9 +14,8 @@ namespace SomethingDownThere
     public readonly struct JetpackProfile
     {
         public readonly float MaxAscentSpeed, Acceleration, EnergyPerSecond;
-        public readonly bool HoverHold;
-        public JetpackProfile(float maxAscentSpeed, float acceleration, float energyPerSecond, bool hoverHold)
-        { MaxAscentSpeed = maxAscentSpeed; Acceleration = acceleration; EnergyPerSecond = energyPerSecond; HoverHold = hoverHold; }
+        public JetpackProfile(float maxAscentSpeed, float acceleration, float energyPerSecond)
+        { MaxAscentSpeed = maxAscentSpeed; Acceleration = acceleration; EnergyPerSecond = energyPerSecond; }
         public float EnergyPerMetre => EnergyPerSecond / MaxAscentSpeed;
     }
 
@@ -123,12 +122,10 @@ namespace SomethingDownThere
         }
         // Jetpack (concept 04 section 5): every level climbs faster and cheaper per metre (1.00 -> 0.50
         // energy/m); level 1 is the starter pack. Hover hold arrives with the first purchase.
-        public const int HoverLevel = 2;
-        public const float HoverEnergyScale = .5f, HoverBrake = 45f, HoverGroundClearance = .5f;
         private static readonly float[] AscentSpeeds = { 8, 8.8f, 9.6f, 10.5f, 11.3f, 12.1f, 12.9f, 13.7f, 14.5f, 15.4f, 16.2f, 17 };
         private static readonly float[] AscentEnergy = { 8, 8.05f, 8.1f, 8.15f, 8.2f, 8.25f, 8.3f, 8.35f, 8.4f, 8.45f, 8.48f, 8.5f };
         public static JetpackProfile Jetpack(int level) => level >= 1 && level <= LevelCount
-            ? new JetpackProfile(AscentSpeeds[level - 1], 30f + 18f * (level - 1) / (LevelCount - 1), AscentEnergy[level - 1], level >= HoverLevel)
+            ? new JetpackProfile(AscentSpeeds[level - 1], 30f + 18f * (level - 1) / (LevelCount - 1), AscentEnergy[level - 1])
             : throw new System.ArgumentOutOfRangeException(nameof(level));
         public static bool UsesDrill(int level) => level >= DrillLevel;
         public static string ToolName(int level) => UsesDrill(level) ? "Drill" : "Shovel";

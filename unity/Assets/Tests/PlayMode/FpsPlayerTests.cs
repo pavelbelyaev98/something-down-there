@@ -255,56 +255,6 @@ namespace SomethingDownThere.Tests
         }
 
         [Test]
-        public void HoverHoldsHeightWhileDiggingFromTheFirstJetpackPurchase()
-        {
-            player.Tick(default, 0.02f);
-            for (int i = 0; i < 72; i++) player.Tick(new FpsInputFrame { JetpackHeld = true }, 1f / 60f);
-            Assert.That(player.transform.position.y, Is.GreaterThan(2f));
-            for (int i = 0; i < 200; i++)
-            {
-                player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
-                Assert.That(player.IsHovering, Is.False, "The starter jetpack has no hover hold.");
-            }
-            Assert.That(player.GetComponent<CharacterController>().isGrounded, Is.True);
-
-            Assert.That(player.Jetpack.TryUpgradeTo(2), Is.True);
-            for (int i = 0; i < 72; i++) player.Tick(new FpsInputFrame { JetpackHeld = true }, 1f / 60f);
-            for (int i = 0; i < 30; i++) player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
-            Assert.That(player.IsHovering, Is.True);
-            float held = player.transform.position.y, charge = player.Battery.Charge;
-            Assert.That(held, Is.GreaterThan(2f));
-            for (int i = 0; i < 120; i++)
-            {
-                player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
-                Assert.That(player.transform.position.y, Is.EqualTo(held).Within(.03f));
-            }
-            Assert.That(charge - player.Battery.Charge, Is.EqualTo(2f * EquipmentProgression.Jetpack(2).EnergyPerSecond * EquipmentProgression.HoverEnergyScale).Within(.05f));
-            for (int i = 0; i < 20; i++) player.Tick(default, 1f / 60f);
-            Assert.That(player.IsHovering, Is.False, "Letting go of dig drops as before.");
-            Assert.That(player.VerticalSpeed, Is.LessThan(0));
-        }
-
-        [Test]
-        public void HoverNeverHoldsJustAboveTheFloorOrOnAnEmptyBattery()
-        {
-            Assert.That(player.Jetpack.TryUpgradeTo(2), Is.True);
-            player.Tick(default, 0.02f);
-            for (int i = 0; i < 17; i++) player.Tick(new FpsInputFrame { JetpackHeld = true }, 1f / 60f);
-            for (int i = 0; i < 90; i++)
-            {
-                player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
-                Assert.That(player.IsHovering, Is.False);
-            }
-            Assert.That(player.GetComponent<CharacterController>().isGrounded, Is.True, "Arriving near a floor lands.");
-            for (int i = 0; i < 48; i++) player.Tick(new FpsInputFrame { JetpackHeld = true }, 1f / 60f);
-            player.Battery.TrySpend(player.Battery.Charge);
-            player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
-            Assert.That(player.IsHovering, Is.False);
-            for (int i = 0; i < 200; i++) player.Tick(new FpsInputFrame { DigHeld = true }, 1f / 60f);
-            Assert.That(player.GetComponent<CharacterController>().isGrounded, Is.True);
-        }
-
-        [Test]
         public void FullOrUnexposedFindStaysInWorldAndCannotBeCollectedTwice()
         {
             var find = Box("Find", new Vector3(0, 1.6f, 2), Vector3.one * 0.4f).AddComponent<ValidationFind>();

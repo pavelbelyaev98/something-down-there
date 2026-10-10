@@ -85,7 +85,6 @@ namespace SomethingDownThere
         private bool adminXray;
         // Detector-off playtest (099): session admin switch, or -noDetector for the whole run.
         private bool adminDetectorOff;
-        private bool adminHoverOnRelease;
         private bool adminGroundXray;
         // Break-in A/B (109): breaking into a chest's pocket caves part of it in (default) or only drops crumbs and dust.
         // Drill look comparison (playtest 001): the step picked on each DrillDial.
@@ -136,8 +135,6 @@ namespace SomethingDownThere
         public float CrouchAmount => crouch?.Amount ?? 0f;
         public bool StandBlocked => crouch != null && crouch.StandBlocked;
         public bool IsJetpackActive { get; private set; }
-        // Hover hold (jetpack level 2+): powered, but holding height rather than climbing.
-        public bool IsHovering { get; private set; }
         public ShovelState Shovel { get; private set; }
         public JetpackState Jetpack { get; private set; }
         public LampKit LampKit { get; private set; }
@@ -147,11 +144,8 @@ namespace SomethingDownThere
         public bool ExcavationAvailable => excavationTerrain != null;
         public bool AdminAvailable => AdminBuild && ExcavationAvailable && surfaceReturn != null;
         public bool HasAdminOverrides => AdminAvailable && (adminLevel > 0 || unlimitedBattery || adminXray || adminDetectorOff
-            || adminHoverOnRelease || adminGroundXray || adminContactShading || TerrainVolume.HasLookOverrides || zoneFeel != 0
+            || adminGroundXray || adminContactShading || TerrainVolume.HasLookOverrides || zoneFeel != 0
             || TerrainGround.DeepGround != TerrainMaterialId.Soil);
-        // Hover A/B (022): hold height while digging (default) or whenever Space is released.
-        public bool HoverOnRelease => AdminAvailable && adminHoverOnRelease;
-        public string AdminHoverLabel => HoverOnRelease ? "on release" : "while digging";
         // The first-person drill's look (ToolRigPresenter), dialled per session in developer admin; each dial's first
         // step is the default. Size scales the drill (1 = the purchased model); Position moves it along the tool (metres,
         // + away from the eye).
@@ -336,7 +330,7 @@ namespace SomethingDownThere
             Trade = new StationTrade(Inventory, Wallet, Shovel, Battery, Jetpack, LampKit);
             Rescue = new RescueController(Inventory, Wallet, maximumRescueFee);
             adminLevel = 0;
-            unlimitedBattery = adminXray = jetpackReadyInAir = adminHoverOnRelease = adminGroundXray = false;
+            unlimitedBattery = adminXray = jetpackReadyInAir = adminGroundXray = false;
             excavationTerrain?.SetGroundXray(false, null);
             discoveries?.SetXray(false, null);
             motor.enabled = false;
@@ -464,7 +458,7 @@ namespace SomethingDownThere
 
             ApplyLook(frame.Look);
             Vector3 previousFeet = FeetPosition;
-            Move(frame.Move, frame.JumpPressed, frame.JetpackHeld, frame.CrouchHeld, frame.SprintHeld, frame.DigHeld, deltaTime);
+            Move(frame.Move, frame.JumpPressed, frame.JetpackHeld, frame.CrouchHeld, frame.SprintHeld, deltaTime);
             if (TryAutomaticRescue()) return;
             // Preserve the fractional frame remainder while holding, but never bank
             // more than one cut or run a burst of terrain rebuilds after a hitch.
@@ -509,7 +503,7 @@ namespace SomethingDownThere
             return true;
         }
 
-        private void Move(Vector2 direction, bool jumpPressed, bool spaceHeld, bool crouchHeld, bool sprintHeld, bool digHeld, float deltaTime)
+        private void Move(Vector2 direction, bool jumpPressed, bool spaceHeld, bool crouchHeld, bool sprintHeld, float deltaTime)
         {
             direction = Vector2.ClampMagnitude(direction, 1f);
             // Resizing a CharacterController refreshes its native shape. Retain
@@ -522,7 +516,6 @@ namespace SomethingDownThere
             if (grounded && verticalSpeed < 0f) verticalSpeed = -2f;
             if (jumpPressed && grounded)
                 verticalSpeed = Mathf.Sqrt(2f * Mathf.Max(0f, tuning.JumpHeight) * Mathf.Max(0f, -tuning.Gravity));
-            float unpoweredSpeed = verticalSpeed;
             verticalSpeed += tuning.Gravity * deltaTime;
             var jet = Jetpack.Current;
 
@@ -542,22 +535,13 @@ namespace SomethingDownThere
                 cost = Battery.Charge;
                 thrustTime = cost / energyRate;
             }
+            // Flight is Space alone: holding it climbs, letting go falls. There is no hover.
             IsJetpackActive = thrustTime > 0f && SpendEnergy(cost);
-            IsHovering = false;
             if (IsJetpackActive)
             {
                 jetpackReadyInAir = true;
                 verticalSpeed = Mathf.Min(jet.MaxAscentSpeed, Mathf.Max(0f, verticalSpeed)
                     + jet.Acceleration * thrustTime);
-            }
-            else if (jet.HoverHold && jetpackReadyInAir && !grounded && !spaceHeld
-                && (HoverOnRelease ? !crouchHeld : digHeld) && (UnlimitedBattery || Battery.Charge > 0f) && !NearGroundBelow()
-                && SpendEnergy(Mathf.Min(UnlimitedBattery ? float.MaxValue : Battery.Charge,
-                    jet.EnergyPerSecond * EquipmentProgression.HoverEnergyScale * deltaTime)))
-            {
-                // Brake to a standstill and hold; never within a stride of the floor, so arriving lands.
-                IsHovering = true;
-                verticalSpeed = Mathf.MoveTowards(unpoweredSpeed, 0f, EquipmentProgression.HoverBrake * deltaTime);
             }
             float speedMultiplier = crouch.IsPrecision ? crouch.SpeedMultiplier
                 : sprintHeld ? Mathf.Clamp(tuning.SprintSpeedMultiplier, 1f, 1.5f) : 1f;
@@ -570,13 +554,6 @@ namespace SomethingDownThere
             if ((collisions & CollisionFlags.Above) != 0 && verticalSpeed > 0f) verticalSpeed = 0f;
             if ((collisions & CollisionFlags.Below) != 0 && verticalSpeed < 0f) verticalSpeed = -2f;
             loadRide.Track();
-        }
-
-        private bool NearGroundBelow()
-        {
-            float radius = motor.radius * .9f;
-            return Physics.SphereCast(FeetPosition + Vector3.up * (radius + .05f), radius, Vector3.down, out _,
-                EquipmentProgression.HoverGroundClearance + .05f, worldMask, QueryTriggerInteraction.Ignore);
         }
 
         public bool TryGetTarget(float reach, out RaycastHit hit)
@@ -828,7 +805,6 @@ namespace SomethingDownThere
             unlimitedBattery = false;
             adminXray = false;
             adminDetectorOff = false;
-            adminHoverOnRelease = false;
             adminGroundXray = false;
             if (adminContactShading) { adminContactShading = false; ContactShading.Restore(); }
             excavationTerrain?.RestoreLooks();
@@ -857,15 +833,6 @@ namespace SomethingDownThere
             input?.SuppressDig();
             holdInteraction?.Reset();
         }
-
-        public void ToggleAdminHover()
-        {
-            if (!focused || !AdminAvailable || (IsMenuOpen && Menu != PlayerMenu.DeveloperAdmin)) return;
-            adminHoverOnRelease = !adminHoverOnRelease;
-            ShowFeedback("Hover " + AdminHoverLabel + (HoverOnRelease ? "; hold crouch to drop" : ""));
-            MenuChanged?.Invoke();
-        }
-
 
         public void CycleAdminDrill(DrillDial dial)
         {
@@ -1425,7 +1392,7 @@ namespace SomethingDownThere
         private void ResetJetpackHold()
         {
             jetpackHoldTime = 0f;
-            IsJetpackActive = IsHovering = false;
+            IsJetpackActive = false;
         }
 
         private void OnDisable()
