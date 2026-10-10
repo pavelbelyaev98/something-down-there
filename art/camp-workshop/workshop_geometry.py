@@ -412,7 +412,7 @@ def build(collection):
         tr.box((x - .02, -WIN_HALF, (WIN_LOW + WIN_HIGH) / 2 - .02), (x + .02, WIN_HALF, (WIN_LOW + WIN_HIGH) / 2 + .02))
         gl.box((x - .003, -WIN_HALF, WIN_LOW), (x + .003, WIN_HALF, WIN_HIGH))
 
-    # ------------------------------------------------------------ fittings: bench, vice, racking, lamps
+    # ------------------------------------------------------------ fittings: bench, racking, lamps
     f = g['Fittings']
     t.kind = 2  # the bench: planed, oiled and stained
     bx, by0, by1 = -HW + .1, -2.2, -.2
@@ -424,17 +424,6 @@ def build(collection):
     t.box((bx + .05, by0 + .03, SLAB + .7), (bx + .72, by0 + .1, SLAB + .78))
     t.box((bx + .05, by1 - .1, SLAB + .7), (bx + .72, by1 - .03, SLAB + .78))
     t.kind = 0
-    # Bench vice at the front corner: body, fixed and moving jaws, screw and tommy bar.
-    vx, vy, vz = bx + .78, by0 + .35, SLAB + .92
-    pv = g['Rack']  # painted steel shares the racking finish
-    pv.box((vx - .2, vy - .09, vz), (vx - .02, vy + .09, vz + .1), bevel=.008)
-    pv.box((vx - .05, vy - .1, vz + .02), (vx + .02, vy + .1, vz + .2), bevel=.006)
-    pv.box((vx + .06, vy - .1, vz + .03), (vx + .13, vy + .1, vz + .2), bevel=.006)
-    pv.box((vx + .02, vy - .05, vz + .05), (vx + .06, vy + .05, vz + .1))
-    f.kind = 2
-    f.tube((vx + .13, vy, vz + .09), (vx + .3, vy, vz + .09), .012)
-    f.tube((vx + .29, vy - .16, vz + .09), (vx + .29, vy + .16, vz + .09), .008)
-    f.kind = 0
     # Slotted-angle racking along the back wall: two bays, four shelves each.
     rk = g['Rack']
     for x0, x1 in ((-3.3, -1.3), (-1.2, .8)):
