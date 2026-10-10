@@ -37,14 +37,15 @@
 .hud-battery.unlimited .hud-charge { background-color: #9fd3ea; }
 
 .hud-admin { position: absolute; right: 24px; top: 24px; max-width: 38%; font-size: 15px; color: var(--bone-soft); -unity-text-align: upper-right; white-space: normal; }
-/* The reticle: a plain small white dot. */
+/* The reticle: a plain tiny white dot, softened so it never shouts. */
 .hud-reticle {
     position: absolute;
     left: 50%; top: 50%;
-    width: 4px; height: 4px;
-    margin-left: -2px; margin-top: -2px;
-    border-radius: 2px;
+    width: 3px; height: 3px;
+    margin-left: -1.5px; margin-top: -1.5px;
+    border-radius: 1.5px;
     background-color: white;
+    opacity: 0.65;
 }
 /* Pickup notes ("+Coal") stack above the bag they went into, newest lowest, and fade. */
 .hud-pickups { position: absolute; left: 22px; bottom: 166px; align-items: flex-start; }
