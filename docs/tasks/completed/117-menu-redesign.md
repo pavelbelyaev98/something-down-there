@@ -178,7 +178,8 @@ redesign the work lamp; no PAUSED label; the menus sit too low; the developer ad
 every leftover of the old UI.
 
 - Primary actions (dialog confirms, Close, Resume digging, settings Back, the selected tab, Sell all, prices):
-  a deeper orange `#d95c1c` with white type and a darker lower edge. Other buttons are slate tiles.
+  a deeper orange `#d95c1c` with white type. Other buttons are slate tiles. A darker lower edge on primaries
+  was tried and removed ("don't make UI complex"); the pause backdrop was darkened to 62 %.
 - Selling: one row per kind of find (name, ×count, total) and one Sell all. `ComputerStation` keeps only the
   Sell all command and `StationTrade.OfferSale` lost its single-item form; the inventory (Tab) groups the same
   way. Concept `07` §3 updated.

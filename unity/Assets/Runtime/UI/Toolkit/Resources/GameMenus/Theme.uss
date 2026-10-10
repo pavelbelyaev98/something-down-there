@@ -13,7 +13,6 @@
     --primary: #d95c1c;
     --primary-hover: #e66a29;
     --primary-press: #c14f15;
-    --primary-edge: #8f3a10;
     --on-primary: #ffffff;
     --ink: #1b262c;
     --bone: #f3eee4;

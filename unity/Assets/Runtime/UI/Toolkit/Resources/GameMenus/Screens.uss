@@ -11,7 +11,7 @@
 .menu-scrim { position: absolute; left: 0; top: 0; bottom: 0; width: 56%; display: none; -unity-background-scale-mode: stretch-to-fill; }
 #menuRoot.title-screen .menu-scrim, #menuRoot.pause-menu .menu-scrim { display: flex; }
 #menuRoot.title-screen { background-color: transparent; }
-#menuRoot.pause-menu { background-color: rgba(10, 14, 16, 0.35); }
+#menuRoot.pause-menu { background-color: rgba(10, 14, 16, 0.62); }
 #menuRoot.title-screen .menu-card, #menuRoot.pause-menu .menu-card { position: absolute; left: 60px; top: 0; bottom: 0; width: 420px; max-width: none; max-height: none; padding: 44px 0 0; border-radius: 0; justify-content: flex-start; align-items: flex-start; background-color: transparent; }
 #menuRoot.title-screen .menu-header, #menuRoot.title-screen .subtitle, #menuRoot.pause-menu .menu-header, #menuRoot.pause-menu .subtitle { display: none; }
 .title-logo { align-items: flex-start; flex-shrink: 0; }

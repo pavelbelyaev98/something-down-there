@@ -1,13 +1,13 @@
 /* Buttons and settings controls shared by every menu (Theme.uss holds the palette and type).
    A button is a slate tile; a primary action (and the selected settings tab) is a deeper
-   orange with white type and a darker lower edge. Hover, press and focus change colour or
+   orange with white type, flat like every other button. Hover, press and focus change colour or
    border only, never size or position. */
 
 .menu-button { height: 40px; min-height: 0; padding: 0 20px; margin: 0 0 8px; border-width: 2px; border-radius: 8px; font-size: 18px; letter-spacing: 1px; -unity-text-align: middle-center; white-space: nowrap; }
 #menuRoot .menu-button { color: var(--bone); background-color: var(--slate-700); border-color: transparent; background-image: none; }
 #menuRoot .menu-button:hover { color: var(--bone); background-color: var(--slate-600); }
 #menuRoot .menu-button:active { background-color: var(--slate-500); }
-#menuRoot .primary, #menuRoot .selected-tab { color: var(--on-primary); background-color: var(--primary); border-bottom-color: var(--primary-edge); }
+#menuRoot .primary, #menuRoot .selected-tab { color: var(--on-primary); background-color: var(--primary); }
 #menuRoot .primary:hover, #menuRoot .selected-tab:hover { color: var(--on-primary); background-color: var(--primary-hover); }
 #menuRoot .primary:active, #menuRoot .selected-tab:active { background-color: var(--primary-press); }
 #menuRoot .menu-button:disabled, #menuRoot .menu-button:disabled:hover { color: var(--bone-faint); background-color: var(--slate-700); border-color: transparent; opacity: 0.6; }
