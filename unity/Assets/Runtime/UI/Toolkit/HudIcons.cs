@@ -12,14 +12,14 @@ namespace SomethingDownThere
 
         public static void Bolt(VisualElement element) => Draw(element, (painter, box) =>
         {
-            painter.fillColor = new Color(0.96f, 1f, 0.98f);
+            painter.fillColor = new Color(0.16f, 0.21f, 0.24f);
             Polygon(painter, box, false, (0.62f, 0f), (0.1f, 0.58f), (0.47f, 0.58f), (0.36f, 1f), (0.9f, 0.4f), (0.53f, 0.4f));
         });
 
-        // Three bills fanned up and to the right, the front one held by a paper band.
+        // Three sage bills fanned up and to the right, the front one held by an orange band.
         public static void Money(VisualElement element) => Draw(element, (painter, box) =>
         {
-            var colors = new[] { new Color(0.25f, 0.45f, 0.22f), new Color(0.33f, 0.56f, 0.28f), new Color(0.44f, 0.68f, 0.35f) };
+            var colors = new[] { new Color(0.3f, 0.43f, 0.38f), new Color(0.4f, 0.55f, 0.48f), new Color(0.53f, 0.68f, 0.6f) };
             for (int i = 0; i < 3; i++)
             {
                 float offset = (2 - i) * 0.07f;
@@ -28,10 +28,10 @@ namespace SomethingDownThere
                 RoundRect(painter, bill, bill.height * 0.14f, true);
             }
             var front = Rect(box, 0.02f, 0.30f, 0.84f, 0.62f);
-            painter.strokeColor = new Color(0.78f, 0.9f, 0.68f, 0.7f); painter.lineWidth = 1f;
+            painter.strokeColor = new Color(0.86f, 0.93f, 0.88f, 0.7f); painter.lineWidth = 1f;
             var inner = new Rect(front.x + front.width * 0.08f, front.y + front.height * 0.18f, front.width * 0.84f, front.height * 0.64f);
             painter.BeginPath(); RoundRectPath(painter, inner, inner.height * 0.12f); painter.Stroke();
-            painter.fillColor = new Color(0.95f, 0.79f, 0.3f); painter.strokeColor = Ink; painter.lineWidth = 1.2f;
+            painter.fillColor = new Color(1f, 0.48f, 0.13f); painter.strokeColor = Ink; painter.lineWidth = 1.2f;
             var band = new Rect(front.x + front.width * 0.4f, front.y - 1f, front.width * 0.17f, front.height + 2f);
             painter.BeginPath(); RoundRectPath(painter, band, 1.5f); painter.Fill(); painter.Stroke();
         });

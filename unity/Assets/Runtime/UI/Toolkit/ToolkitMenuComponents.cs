@@ -107,21 +107,26 @@ namespace SomethingDownThere
         }
     }
 
-    // The settings screen's right-hand panel: what the row under focus or the pointer
-    // does, and every choice it offers with the current one marked.
+    // The settings screen's right-hand panel: what the row under the pointer does (or, with
+    // the pointer elsewhere, the focused row), and every choice it offers with the current
+    // one marked.
     internal sealed class ToolkitSettingsHelp
     {
         private readonly Label title, text;
         private readonly VisualElement options;
-        private Action shown;
+        private Action focused, hovered;
 
         public ToolkitSettingsHelp(VisualElement root)
         {
             title = root.Q<Label>("settingsHelpTitle"); text = root.Q<Label>("settingsHelpText"); options = root.Q("settingsHelpOptions");
         }
 
-        public void Describe(Action describe) { shown = describe; describe?.Invoke(); }
-        public void Refresh() => shown?.Invoke();
+        public void Focus(Action describe) { focused = describe; Refresh(); }
+        public void Hover(Action describe) { hovered = describe; Refresh(); }
+        public void Leave(Action describe) { if (hovered == describe) { hovered = null; Refresh(); } }
+        // A rebuilt page may remove the hovered row without a pointer-leave.
+        public void ClearHover() => hovered = null;
+        public void Refresh() => (hovered ?? focused)?.Invoke();
 
         public void Show(string heading, string description, IReadOnlyList<string> choices = null, int selected = -1)
         {

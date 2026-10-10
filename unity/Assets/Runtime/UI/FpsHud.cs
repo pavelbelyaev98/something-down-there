@@ -13,6 +13,7 @@ namespace SomethingDownThere
         private FpsPlayer player;
         private GameObject eventRoot;
         private GameUiDocument document;
+        private TitleView title;
         private InputActionAsset uiActions;
         private readonly List<InputActionReference> uiReferences = new List<InputActionReference>();
         public GameMenuView Menus { get; private set; }
@@ -25,6 +26,7 @@ namespace SomethingDownThere
             document = new GameUiDocument(transform, Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
             Menus = new GameMenuView(document.Root, player);
             View = new GameHudView(document.Root, player);
+            title = new TitleView(transform, player);
             Menus.Tick();
             View.Tick();
         }
@@ -34,6 +36,7 @@ namespace SomethingDownThere
             if (player == null || player.Battery == null) return;
             Menus.Tick();
             View.Tick();
+            title.Tick();
             // The EventSystem's panel object is registered after Start. An element
             // can already have focus while its panel still has no keyboard route.
             var events = EventSystem.current;
@@ -79,6 +82,7 @@ namespace SomethingDownThere
         private void OnDestroy()
         {
             Menus?.Dispose();
+            title?.Dispose();
             document?.Dispose();
             if (eventRoot != null) Destroy(eventRoot);
             foreach (var reference in uiReferences) if (reference != null) Destroy(reference);

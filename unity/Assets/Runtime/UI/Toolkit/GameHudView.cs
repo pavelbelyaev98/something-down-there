@@ -6,7 +6,7 @@ namespace SomethingDownThere
     public sealed class GameHudView
     {
         private readonly FpsPlayer player;
-        private readonly Label reticle, status, walletStatus, lampStatus, prompt, feedback, adminHint, returnWarning, fuelWarning, inventoryWarning;
+        private readonly Label reticle, status, walletStatus, lampStatus, prompt, feedback, adminHint, fuelWarning, inventoryWarning;
         private readonly VisualElement batteryGroup, batteryFill, bagGroup, lampGroup;
         private readonly VisualElement detectorPanel;
         private readonly VisualElement[] detectorBars;
@@ -32,7 +32,6 @@ namespace SomethingDownThere
             prompt = Root.Q<Label>("Target");
             feedback = Root.Q<Label>("Feedback");
             adminHint = Root.Q<Label>("Developer controls");
-            returnWarning = Root.Q<Label>("Return warning");
             fuelWarning = Root.Q<Label>("Fuel warning");
             inventoryWarning = Root.Q<Label>("Inventory warning");
             batteryGroup = Root.Q("batteryGroup");
@@ -123,10 +122,6 @@ namespace SomethingDownThere
                 : risk == ReturnRisk.Critical ? "FUEL CRITICAL" : "LOW FUEL";
             fuelWarning.EnableInClassList("critical", low && risk == ReturnRisk.Critical);
             GameMenuView.Show(fuelWarning, low);
-            var recharge = player.SurfaceRecharge;
-            returnWarning.text = !unlimited && recharge != null
-                && (recharge.IsPlayerInZone || (fraction < 1f && recharge.IsNearby)) ? "FUEL AT COMPUTER" : "";
-            GameMenuView.Show(returnWarning, returnWarning.text.Length > 0);
         }
 
     }

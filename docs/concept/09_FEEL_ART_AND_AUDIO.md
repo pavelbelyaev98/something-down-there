@@ -152,12 +152,14 @@ Comfort-safe effects:
 Clear, readable, high contrast, scale-friendly. UI never competes with the world; it stays out of
 the way.
 
-Menu screens (on trial, `117`): the title and pause stand on the world itself, with a chunky
-sign-painted yellow logo and a large plain-word menu, no box. Settings is a full-screen warm paper
-sheet: category tabs along the top, rounded rows whose values step in place (◀ value ▶ with a pip per
-choice), the focused option's description and choices on the right. Dialogs are the same paper as a
-card. Type: a chunky rounded display face for logo, menu, tabs and headings; a condensed sans for rows
-and running text. The HUD stays minimal and separate from this treatment.
+Menu screens (on trial, `117`): the game's own palette, worksite slate, bone and hi-vis orange (the
+crane's colour family), never a reference game's colours. The title shows the salvage crane over the
+fenced dig site with the cliffs softly blurred behind, a large stacked logo (bone over orange) and the
+menu centred under it; pause is the same plain-word menu on the world, no box. Settings is a
+full-screen slate sheet: category tabs along the top, rounded rows whose values step in place (◀ value
+▶ with a pip per choice), the focused option's description and choices on the right. Dialogs and the
+computer's shop are slate cards with orange actions. Type: a chunky rounded display face for logo,
+menu, tabs, headings and prices; a condensed sans for rows and running text.
 
 ## 9. Photo-ready moments (by design, not by marketing)
 

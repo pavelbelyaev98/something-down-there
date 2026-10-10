@@ -7,7 +7,6 @@
             <ui:Label name="Wallet" class="hud-number hud-wallet-amount" />
         </ui:VisualElement>
         <ui:VisualElement class="hud-kit">
-            <ui:Label name="Return warning" class="hud-warning hidden" />
             <ui:VisualElement class="hud-kit-row">
                 <ui:VisualElement name="batteryGroup" class="hud-battery">
                     <ui:VisualElement name="Charge" class="hud-charge" />

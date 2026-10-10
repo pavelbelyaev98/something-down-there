@@ -24,20 +24,19 @@
 .hud-wallet-amount { font-size: 28px; }
 
 .hud-kit { position: absolute; left: 24px; bottom: 22px; align-items: flex-start; }
-.hud-warning { margin-bottom: 6px; font-size: 15px; color: #a9f0e4; -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf"); -unity-font-definition: initial; letter-spacing: 1px; }
 .hud-kit-row { flex-direction: row; align-items: flex-end; }
 .hud-counters { align-items: flex-start; margin-left: 10px; }
 .hud-counter { flex-direction: row; align-items: center; margin-top: 6px; }
 .hud-counter-icon { width: 22px; height: 22px; margin-right: 6px; }
-.hud-counter.full .hud-number { color: #ffd45c; }
+.hud-counter.full .hud-number { color: #ff8a3d; }
 
-/* Battery: an upright rounded bar filling from the bottom, a bolt at its foot, coloured by the
-   return estimate. */
-.hud-battery { width: 20px; height: 130px; border-radius: 10px; overflow: hidden; background-color: rgba(12, 22, 26, 0.5); border-width: 1px; border-color: rgba(255, 255, 255, 0.16); }
-.hud-charge { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 10px; background-color: #6cc0b2; }
-.hud-battery.risky .hud-charge { background-color: #f2bf45; }
-.hud-battery.critical .hud-charge { background-color: #f0605a; }
-.hud-battery.unlimited .hud-charge { background-color: #8ce0ff; }
+/* Battery: an upright rounded case filled flat from the bottom (the case's corners clip it), a
+   bolt at its foot, coloured by the return estimate: bone, then orange, then red. */
+.hud-battery { width: 20px; height: 130px; border-radius: 10px; overflow: hidden; background-color: rgba(20, 28, 32, 0.55); border-width: 1px; border-color: rgba(243, 238, 228, 0.22); }
+.hud-charge { position: absolute; left: 0; right: 0; bottom: 0; background-color: #ece5d6; }
+.hud-battery.risky .hud-charge { background-color: #ff8a3d; }
+.hud-battery.critical .hud-charge { background-color: #e8463a; }
+.hud-battery.unlimited .hud-charge { background-color: #9fd3ea; }
 .hud-bolt { position: absolute; left: 4px; bottom: 4px; width: 10px; height: 13px; }
 
 .hud-admin { position: absolute; right: 24px; top: 24px; max-width: 38%; font-size: 15px; color: var(--muted); -unity-text-align: upper-right; white-space: normal; }

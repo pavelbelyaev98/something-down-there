@@ -1,10 +1,10 @@
-# 117 — Menu Redesign: Title, Pause, Fullscreen Settings, HUD
+# 117 — Menu Redesign: Title, Pause, Fullscreen Settings, HUD, Shop
 
-**Status:** on trial: the title and pause stand on the world with a yellow sign-painted logo and a plain-word
-menu (pause: only the menu, with New Game); settings is a full-screen paper sheet with tabs, in-place ◀ value ▶
-selectors and a description panel; dialogs are a paper card. The HUD shows only money, bag, lamps and a battery
-bar coloured by the return estimate, as icons and numbers. Lilita One and Barlow Condensed (OFL) set the type.
-Awaiting the user's playtest.
+**Status:** on trial: the game's own slate, bone and orange palette. The title shows the crane over the dig site
+(blurred cliffs) with a large stacked logo and the menu centred under it; pause is only its menu, with New Game;
+settings is a full-screen slate sheet with tabs, in-place ◀ value ▶ selectors and a description panel; dialogs
+and the shop are slate cards with orange actions. The HUD shows only money, bag, lamps and an upright battery bar
+coloured by the return estimate. Lilita One and Barlow Condensed (OFL) set the type. Awaiting the user's playtest.
 
 ## Objective
 
@@ -56,12 +56,6 @@ References, as read from the screenshots:
   graphics help paragraph is split into the rows' descriptions.
 - Tabs, footer and title entries are capitalised in code (USS has no text-transform); element names are unchanged.
 
-## Not done (offered)
-
-- **Hero shot on the title:** the reference's main image is a prop close-up (axe in stump) over a blurred scene.
-  Ours keeps the spawn view, mostly dirt foreground. A title-only shot (e.g. the shovel stuck in a spoil heap by the
-  plot, depth-of-field background) would need its own camera pose and must not move the graphics test's view.
-
 ## Changes
 
 - `ToolkitMenuComponents.cs`: `SettingSelector`, `ToolkitSettingsHelp`.
@@ -100,6 +94,28 @@ inventory and lamps and i want it in a different way".
 - Concept `08` §1 updated. The battery test now checks the bar's classes and fill instead of the label.
 - Then, the user: "make the bar vertical". The bar stands upright (filling from the bottom, bolt at its foot) with
   the bag and lamp counters stacked beside it.
+
+## Iteration 3 (2026-10-10): own palette, title backdrop, shop
+
+The user: the bar's fill is "too rounded, like a bar inside the bar"; "don't copy the colours 1 to 1"; remove
+"FUEL AT COMPUTER"; redesign the shop; the title wastes space (compare *A Game About Digging A Hole*: big logo,
+menu under it) and the reference works because the axe is the subject, "in our case people look at mud ... a
+cave or the river?".
+
+- Palette: worksite slate, bone and hi-vis orange throughout (logo, menus, settings, dialogs, shop, HUD), in place
+  of the reference's beige, yellow and teal. Battery fill is flat (the rounded case clips it): bone, then orange,
+  then red; the money icon is sage bills with an orange band.
+- "FUEL AT COMPUTER" and `SurfaceRecharge.IsNearby`, which only it used, are gone.
+- Title: logo stacked SOMETHING / DOWN / THERE (bone over large orange), menu centred under it at the bottom of
+  the left column, as the Digging-a-Hole title fills its side.
+- Backdrop: the salvage crane over the fenced dig site, jib across the sky, cliffs behind, framed in the right two
+  thirds (`TitleView`: pose swapped onto the view camera only while it renders, field of view 50, Gaussian depth
+  of field from 60 m). Rejected: a cave (none exists before a game is made; the title shows a fresh site), the
+  waterfalls (rock walls block every low view of them), the lake (pretty but no subject).
+- Shop: slate card with an orange top edge, header with the banknote icon and balance, rows as tiles with orange
+  progress pips and orange price buttons; sell rows as tiles, Sell all orange. Structure, names and behaviour
+  unchanged.
+- The description panel shows the hovered row, falling back to the focused row when the pointer leaves.
 
 ## Acceptance Criteria
 

@@ -90,9 +90,10 @@ namespace SomethingDownThere
         {
             controls.Add(control); if (adjust != null) adjustments[control] = adjust;
             if (help == null) describe = null;
-            control.RegisterCallback<FocusInEvent>(_ => { row.AddToClassList("focused-row"); scroll?.ScrollTo(row); help?.Describe(describe); });
+            control.RegisterCallback<FocusInEvent>(_ => { row.AddToClassList("focused-row"); scroll?.ScrollTo(row); help?.Focus(describe); });
             control.RegisterCallback<FocusOutEvent>(_ => row.RemoveFromClassList("focused-row"));
-            row.RegisterCallback<PointerEnterEvent>(_ => help?.Describe(describe));
+            row.RegisterCallback<PointerEnterEvent>(_ => help?.Hover(describe));
+            row.RegisterCallback<PointerLeaveEvent>(_ => help?.Leave(describe));
         }
         public void AddNavigation(List<VisualElement> list) { foreach (var control in controls) if (control.enabledInHierarchy) list.Add(control); }
         public bool Adjust(VisualElement focused, NavigationMoveEvent.Direction direction)

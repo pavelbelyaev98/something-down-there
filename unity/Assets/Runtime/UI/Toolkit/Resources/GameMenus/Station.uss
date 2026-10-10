@@ -1,6 +1,6 @@
-/* Station machines: one fixed-size parts board. The header carries only the money.
-   Categories are separate columns — UPGRADES is the wide, dominant column and
-   SERVICES is the narrow one beside it.
+/* Station machines: one fixed-size board in the menus' slate, bone and orange (Screens.uss).
+   The header carries only the money. Categories are separate columns — UPGRADES is the wide,
+   dominant column and SERVICES is the narrow one beside it.
 
    Rows are decoration, never interactive: only the price button inside a row has
    hover, pressed and focus states, and only it can be clicked.
@@ -10,72 +10,90 @@
      line 2: progress ..... value ..... what the value means
 */
 
-.station-menu .menu-card { width: 560px; height: 300px; padding: 0; background-color: rgba(18, 24, 28, 0.96); }
-.workshop-menu .menu-card { width: 820px; height: 336px; }
+#menuRoot.station-menu {
+    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-Medium.ttf");
+    -unity-font-definition: initial;
+    background-color: rgba(10, 14, 16, 0.45);
+}
+#menuRoot.station-menu .station-cell-name,
+#menuRoot.station-menu .station-column-heading,
+#menuRoot.station-menu .trade-balance,
+#menuRoot.station-menu .station-price,
+#menuRoot.station-menu .station-sell-value,
+#menuRoot.station-menu .footer > .menu-button {
+    -unity-font: url("/Assets/Content/UI/Fonts/LilitaOne-Regular.ttf");
+    -unity-font-definition: initial;
+    -unity-font-style: normal;
+}
+#menuRoot.station-menu .station-cell-effect,
+#menuRoot.station-menu .station-sell-name {
+    -unity-font: url("/Assets/Content/UI/Fonts/BarlowCondensed-SemiBold.ttf");
+    -unity-font-definition: initial;
+    -unity-font-style: normal;
+}
+
+.station-menu .menu-card { width: 600px; height: 340px; padding: 0; overflow: hidden; border-top-width: 4px; border-color: var(--orange); border-radius: 12px; background-color: var(--slate-800); }
+.workshop-menu .menu-card { width: 880px; height: 392px; }
 .station-menu .menu-header { display: none; }
 .station-menu .subtitle { display: none; }
 .station-menu .content-page { flex-grow: 1; flex-shrink: 1; min-height: 0; }
 .station-menu .trade-summary { flex-shrink: 0; }
 .station-menu .content-scroll { max-height: none; flex-grow: 1; min-height: 0; }
-.station-menu .footer { margin: 0; padding: 0 22px 14px; }
-.station-menu .trade-balance { background-color: transparent; padding: 0; margin: 0; font-size: 18px; -unity-font-style: bold; }
+.station-menu .footer { margin: 0; padding: 4px 22px 18px; }
 
-/* ---------- header plate ---------- */
-.station-bar-head { flex-direction: row; align-items: center; height: 44px; padding: 0 22px; background-color: #2f6472; }
+/* ---------- header plate: the money ---------- */
+.station-bar-head { flex-direction: row; align-items: center; height: 54px; padding: 0 24px; background-color: var(--slate-900); }
 .station-money { flex-direction: row; align-items: center; }
-.station-money-caption { font-size: 18px; -unity-font-style: bold; margin-right: 6px; color: #ffffff; }
-.station-money .trade-balance { color: #ffffff; }
+.station-money-icon { width: 34px; height: 25px; margin-right: 10px; }
+#menuRoot.station-menu .trade-balance { padding: 0; margin: 0; font-size: 26px; color: var(--bone); background-color: transparent; }
 
 /* ---------- columns ---------- */
-.station-columns { flex-direction: row; align-items: flex-start; padding: 14px 22px 0; }
+.station-columns { flex-direction: row; align-items: flex-start; padding: 16px 22px 0; }
 .station-column { flex-direction: column; align-items: stretch; flex-grow: 3; flex-basis: 0; min-width: 0; }
-.station-column-divided { flex-grow: 2; margin-left: 22px; padding-left: 22px; border-left-width: 1px; border-left-color: rgba(255, 255, 255, 0.16); }
-.station-column-heading { font-size: 11px; letter-spacing: 1.6px; color: rgba(255, 255, 255, 0.55); margin-bottom: 4px; }
+.station-column-divided { flex-grow: 2; margin-left: 18px; }
+#menuRoot.station-menu .station-column-heading { font-size: 15px; letter-spacing: 4px; color: var(--orange); margin: 0 0 8px 2px; }
 
-/* ---------- rows: decoration only, no interaction states ---------- */
-.station-row { flex-direction: row; align-items: center; height: 56px; margin: 0; padding: 0; border-width: 0; border-bottom-width: 1px; border-bottom-color: rgba(255, 255, 255, 0.12); border-radius: 0; background-color: transparent; background-image: none; }
+/* ---------- rows: tiles, decoration only, no interaction states ---------- */
+.station-row { flex-direction: row; align-items: center; height: 58px; margin: 0 0 6px; padding: 0 12px 0 14px; border-width: 0; border-radius: 8px; background-color: var(--slate-700); background-image: none; }
 .station-row-main { flex-direction: column; flex-grow: 1; flex-basis: 0; min-width: 0; }
-.station-cell-name { flex-grow: 1; flex-basis: 0; min-width: 0; font-size: 16px; -unity-font-style: bold; color: #ffffff; white-space: nowrap; -unity-text-align: middle-left; }
-.station-cell-bottom { flex-direction: row; align-items: center; margin-top: 7px; }
+#menuRoot.station-menu .station-cell-name { flex-grow: 1; flex-basis: 0; min-width: 0; font-size: 18px; color: var(--bone); white-space: nowrap; -unity-text-align: middle-left; }
+.station-cell-bottom { flex-direction: row; align-items: center; margin-top: 4px; }
 .station-bar-slot { width: 84px; flex-shrink: 0; margin-right: 10px; }
-.station-bar { flex-direction: row; align-items: center; height: 7px; }
-.station-bar-segment { flex-grow: 1; flex-basis: 0; height: 7px; margin-right: 2px; border-radius: 1px; background-color: rgba(255, 255, 255, 0.18); }
-.station-bar-segment.filled { background-color: #8fae4a; }
-.station-cell-effect { font-size: 14px; -unity-font-style: bold; color: #ffffff; white-space: nowrap; -unity-text-align: middle-left; }
+.station-bar { flex-direction: row; align-items: center; height: 6px; }
+.station-bar-segment { flex-grow: 1; flex-basis: 0; height: 6px; margin-right: 2px; background-color: var(--slate-line); }
+.station-bar-segment.filled { background-color: var(--orange); }
+#menuRoot.station-menu .station-cell-effect { font-size: 16px; color: var(--bone-soft); white-space: nowrap; -unity-text-align: middle-left; }
 
-/* ---------- the only clickable thing: the price button (hover only) ---------- */
-.station-price { width: 68px; min-width: 68px; height: 28px; flex-shrink: 0; margin-left: 14px; padding: 0; font-size: 15px; -unity-font-style: bold; -unity-text-align: middle-center; border-width: 0; border-radius: 3px; background-color: #8fae4a; background-image: none; color: #ffffff; }
-#menuRoot .station-price:hover { background-color: #9cbb54; }
-#menuRoot.keyboard-navigation .station-price:focus { border-width: 1px; border-color: var(--paper); }
-.station-price.just-bought { background-color: #96ddcd; color: #16302c; }
+/* ---------- the only clickable thing: the price button ---------- */
+#menuRoot .station-price { width: 74px; min-width: 74px; height: 32px; min-height: 0; flex-shrink: 0; margin: 0 0 0 14px; padding: 0; font-size: 17px; -unity-text-align: middle-center; border-width: 2px; border-color: transparent; border-radius: 6px; background-color: var(--orange); background-image: none; color: var(--ink); }
+#menuRoot .station-price:hover { background-color: var(--orange-hover); color: var(--ink); }
+#menuRoot .station-price:active { background-color: var(--bone); }
+#menuRoot.keyboard-navigation .station-price:focus { border-color: var(--bone); }
+#menuRoot .station-price.just-bought { background-color: var(--bone); color: var(--ink); }
 
 /* cannot buy (out of reach, finished track, full tank): reads as disabled and has
    no hover or pressed reaction at all */
-.station-price.short, .station-price.maxed, .station-price:disabled,
+#menuRoot .station-price.short, #menuRoot .station-price.maxed, #menuRoot .station-price:disabled,
 #menuRoot .station-price.short:hover, #menuRoot .station-price.maxed:hover, #menuRoot .station-price:disabled:hover {
-    background-color: #2b3439; color: rgba(255, 255, 255, 0.34); border-color: transparent;
+    background-color: var(--slate-600); color: var(--bone-faint); border-color: transparent; opacity: 1;
 }
 
 /* ---------- services: same cell, smaller than the upgrades ---------- */
-.station-row.service { height: 46px; }
-.station-row.service .station-cell-name { font-size: 15px; color: rgba(255, 255, 255, 0.92); }
-.station-row.service .station-cell-bottom { margin-top: 5px; }
-.station-row.service .station-bar-slot { width: 84px; }
-.station-row.service .station-cell-effect { font-size: 13px; color: rgba(255, 255, 255, 0.9); }
-.station-row.service .station-price { width: 60px; min-width: 60px; height: 24px; font-size: 14px; background-color: #4b8f9a; }
-#menuRoot .station-row.service .station-price:hover { background-color: #57a0ac; }
-#menuRoot .station-row.service .station-price:disabled, #menuRoot .station-row.service .station-price:disabled:hover {
-    background-color: #2b3439; color: rgba(255, 255, 255, 0.34);
-}
+.station-row.service { height: 50px; }
+#menuRoot.station-menu .station-row.service .station-cell-name { font-size: 16px; }
+.station-row.service .station-cell-bottom { margin-top: 2px; }
+#menuRoot.station-menu .station-row.service .station-cell-effect { font-size: 15px; }
+#menuRoot .station-row.service .station-price { width: 64px; min-width: 64px; height: 28px; font-size: 16px; }
 
 /* ---------- sell rows: one line, name left and payout button right ---------- */
-.station-table { flex-direction: column; padding: 14px 22px 0; }
-.station-sell-row { flex-direction: row; align-items: center; height: 44px; padding: 0; border-width: 0; border-bottom-width: 1px; border-bottom-color: rgba(255, 255, 255, 0.12); background-color: transparent; background-image: none; }
-.station-sell-name { flex-grow: 1; flex-basis: 0; min-width: 0; font-size: 16px; -unity-font-style: bold; color: #ffffff; white-space: nowrap; -unity-text-align: middle-left; }
-.station-sell-value { min-width: 108px; height: 30px; flex-shrink: 0; margin-left: 16px; padding: 0 6px; font-size: 15px; -unity-font-style: bold; -unity-text-align: middle-right; border-width: 0; border-radius: 3px; background-color: transparent; background-image: none; color: #ffffff; }
-#menuRoot .station-sell-value:hover { background-color: rgba(255, 255, 255, 0.12); }
-#menuRoot .station-sell-value:disabled, #menuRoot .station-sell-value:disabled:hover { background-color: transparent; color: rgba(255, 255, 255, 0.32); }
-#menuRoot.keyboard-navigation .station-sell-value:focus { border-width: 1px; border-color: var(--paper); }
-.station-empty { padding: 24px 0; -unity-text-align: middle-center; white-space: normal; color: rgba(255, 255, 255, 0.7); }
+.station-table { flex-direction: column; padding: 16px 22px 0; }
+.station-sell-row { flex-direction: row; align-items: center; height: 44px; margin: 0 0 6px; padding: 0 8px 0 14px; border-width: 0; border-radius: 8px; background-color: var(--slate-700); background-image: none; }
+#menuRoot.station-menu .station-sell-name { flex-grow: 1; flex-basis: 0; min-width: 0; font-size: 18px; color: var(--bone); white-space: nowrap; -unity-text-align: middle-left; }
+#menuRoot .station-sell-value { min-width: 108px; height: 30px; min-height: 0; flex-shrink: 0; margin: 0 0 0 16px; padding: 0 10px; font-size: 16px; -unity-text-align: middle-center; border-width: 2px; border-color: transparent; border-radius: 6px; background-color: var(--slate-600); background-image: none; color: var(--bone); }
+#menuRoot .station-sell-value:hover { background-color: var(--orange); color: var(--ink); }
+#menuRoot .station-sell-value:disabled, #menuRoot .station-sell-value:disabled:hover { background-color: var(--slate-600); color: var(--bone-faint); opacity: 1; }
+#menuRoot.keyboard-navigation .station-sell-value:focus { border-color: var(--bone); }
+#menuRoot.station-menu .station-empty { padding: 24px 0; -unity-text-align: middle-center; white-space: normal; font-size: 18px; color: var(--bone-soft); }
 
-.station-menu .footer > .menu-button { flex-grow: 1; flex-basis: 0; max-width: none; min-height: 38px; margin: 0; font-size: 18px; -unity-font-style: bold; }
+#menuRoot.station-menu .footer > .menu-button { flex-grow: 1; flex-basis: 0; max-width: none; height: 40px; min-height: 0; margin: 0; border-width: 2px; border-radius: 8px; font-size: 19px; letter-spacing: 1px; }
+#menuRoot.station-menu.keyboard-navigation .footer > .menu-button:focus { border-color: var(--bone); }

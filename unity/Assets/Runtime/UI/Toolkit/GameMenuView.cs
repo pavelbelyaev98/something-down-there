@@ -25,6 +25,7 @@ namespace SomethingDownThere
         private bool displayingPreview;
         private readonly ToolkitTabs settingsTabs;
         private readonly VisualElement titleLogo, settingsHelp;
+        private readonly ToolkitSettingsHelp help;
         private readonly Texture2D scrim;
         private PlayerMenu displayed;
         private bool pending = true;
@@ -58,7 +59,7 @@ namespace SomethingDownThere
             settingsBack.clicked += player.BackFromSettings;
             titleLogo = Root.Q("titleLogo");
             settingsHelp = Root.Q("settingsHelp");
-            var help = new ToolkitSettingsHelp(settingsHelp);
+            help = new ToolkitSettingsHelp(settingsHelp);
             camera = new ToolkitCameraSettings(cameraPage, player, help);
             inputPage = Root.Q("inputPage");
             input = new ToolkitInputSettings(inputPage, player, help);
@@ -174,6 +175,7 @@ namespace SomethingDownThere
             Show(devicePage, displayed == PlayerMenu.DeviceSettings && !displayingPreview);
             Show(settingsNavigation, settingsVisible);
             Show(settingsHelp, settingsVisible);
+            help.ClearHover();
             settingsTabs.Select((int)player.SettingsCategory);
             Show(startupPage, displayed == PlayerMenu.MainMenu);
             Show(titleLogo, displayed == PlayerMenu.MainMenu);
@@ -357,8 +359,8 @@ namespace SomethingDownThere
                 station.CanExecute(ComputerStation.SellAllCommand, player), "sell-all", station.CommandLabel(ComputerStation.SellAllCommand, player));
             // Styled inline: the shared menu-button rules outrank class selectors here.
             sellAll.style.backgroundImage = StyleKeyword.None;
-            sellAll.style.backgroundColor = new Color(0.561f, 0.682f, 0.290f, 1f);
-            sellAll.style.color = Color.white;
+            sellAll.style.backgroundColor = new Color(1f, 0.482f, 0.133f, 1f);
+            sellAll.style.color = new Color(0.106f, 0.149f, 0.173f, 1f);
         }
 
         private void BuildUpgrade(ComputerStation station)
@@ -379,13 +381,13 @@ namespace SomethingDownThere
             for (int i = ComputerStation.RefillCommand; i < station.CommandCount; i++) BuildUpgradeRow(services, station, i, revision);
         }
 
-        // Header plate: money only. Close is ESC/B, and the machine itself says what
-        // the menu is, so no title is printed.
+        // Header plate: money only, after the HUD's banknotes. Close is ESC/B, and the
+        // machine itself says what the menu is, so no title is printed.
         private void BuildStationHead()
         {
             var bar = Element(tradeSummary, "station-bar-head");
             var wallet = Element(bar, "station-money");
-            ToolkitStationRows.Text(wallet, "Money caption", "Money:", "station-money-caption");
+            HudIcons.Money(ToolkitStationRows.Block(wallet, "Money icon", "station-money-icon"));
             Text(wallet, "Trade balance", $"${player.Wallet.Balance}", "trade-balance");
         }
 

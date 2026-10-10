@@ -61,8 +61,6 @@ namespace SomethingDownThere.Tests
             Place(recharge.transform.position + Vector3.up * .1f);
             yield return null; yield return null;
             Assert.That(recharge.IsPlayerInZone, Is.True);
-            Assert.That(UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Label>(player.GetComponent<FpsHud>().View.Root, "Return warning").text,
-                Is.EqualTo("FUEL AT COMPUTER"));
             player.OpenMenu(PlayerMenu.Inventory);
             yield return null;
             player.CloseMenu();

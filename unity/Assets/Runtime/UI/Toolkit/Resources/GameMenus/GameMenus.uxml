@@ -11,7 +11,8 @@
             </ui:VisualElement>
             <ui:VisualElement name="titleLogo" class="title-logo hidden" picking-mode="Ignore">
                 <ui:Label text="SOMETHING" class="logo-line logo-small" picking-mode="Ignore" />
-                <ui:Label text="DOWN THERE" class="logo-line logo-large" picking-mode="Ignore" />
+                <ui:Label text="DOWN" class="logo-line logo-large" picking-mode="Ignore" />
+                <ui:Label text="THERE" class="logo-line logo-large" picking-mode="Ignore" />
             </ui:VisualElement>
             <ui:Label name="menuSubtitle" class="subtitle" />
             <ui:VisualElement name="settingsNavigation" class="settings-tabs hidden">

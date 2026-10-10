@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SomethingDownThere
 {
-    // Surface landmark for HUD orientation. Fuel is purchased explicitly at the computer.
+    // The surface spot beside the computer. Fuel is purchased explicitly at the computer.
     [DisallowMultipleComponent, DefaultExecutionOrder(100)]
     public sealed class SurfaceRecharge : MonoBehaviour
     {
@@ -15,18 +15,6 @@ namespace SomethingDownThere
         public TerrainVolume Terrain => terrain;
         public Vector2 Footprint => footprint;
         public bool IsPlayerInZone => player != null && ContainsFeet(player.FeetPosition);
-        public bool IsNearby
-        {
-            get
-            {
-                if (!isActiveAndEnabled || player == null || terrain == null) return false;
-                Vector3 feet = player.FeetPosition;
-                float height = feet.y - terrain.SurfaceHeight;
-                Vector3 local = transform.InverseTransformPoint(feet);
-                return height >= 0f && height <= 1.8f
-                    && new Vector2(local.x, local.z).sqrMagnitude <= 36f;
-            }
-        }
 
         public void Configure(FpsPlayer owner, TerrainVolume excavation)
         {
