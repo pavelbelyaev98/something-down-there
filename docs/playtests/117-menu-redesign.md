@@ -7,7 +7,8 @@ Game for the pause menu.
 - Title: the crane over the dig site behind a big stacked logo. Hover the entries and move through them with
   the arrow keys; open Settings and come back.
 - Settings: every tab. Change values with the ◀ ▶ arrows, Left/Right, Enter and clicks on the value. Watch the
-  right-hand panel follow the row you are on. Rebind a key. Change Window mode (Keep/Revert should still appear).
+  right-hand panel follow the row you are on. Rebind a key. Change Window mode (Keep/Revert should still appear). Drag the FPS limit slider: 30 up to
+  Unlimited, with Display at your monitor's rate.
 - Esc out of settings, then press Esc in game for the pause menu: the game's name and the menu, laid out like
   the title, everything left-aligned.
   Main Menu saves and brings you back to the title; Continue picks up where you left.

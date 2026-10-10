@@ -50,7 +50,7 @@ References, as read from the screenshots:
 - **Selectors replace dropdowns and toggles** (`SettingSelector`, `INotifyValueChanged<int>`): arrows and
   Left/Right step, Enter or a click on the value advances. Choices wrap as before; on/off rows treat ◀ as Off and
   ▶ as On (as the keys did) and a click on the value flips it. One pip per choice up to eight, else one track with
-  a marker (resolution, FPS limit). With no popup list, the dropdown Escape handling (`DismissDropdown`, the
+  a marker (resolution). With no popup list, the dropdown Escape handling (`DismissDropdown`, the
   `menuDropdown` styling) is gone.
 - **Description panel** (`ToolkitSettingsHelp`): follows focus and pointer hover; shows the row's name, a short
   description and its choices with the current one marked (a slider shows its range, a binding its key). The old
@@ -193,6 +193,9 @@ every leftover of the old UI.
   buttons and settings rows, `Screens.uss`/`Station.uss` layouts only, `Hud.uss` on the same palette and type.
   The grey card, its variables, the inline document font, the dropdown leftovers, `Stat`, `shop-menu`,
   `startup-menu`, the per-item sell styles and the pause heading are deleted. The admin is a wide slate card.
+- FPS limit is a slider like Render resolution ("make fps limit a slider like the drawing resolution"). Its steps
+  rise (`GamePreferences.FrameLimitSteps`): Display takes the monitor's place among the numbers (replacing an
+  equal one), Unlimited is last; with VSync on it is disabled and reads VSync. Saved values are unchanged.
 
 ## Acceptance Criteria
 

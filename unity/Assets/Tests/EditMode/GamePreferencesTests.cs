@@ -26,6 +26,14 @@ namespace SomethingDownThere.Tests
             public void Dispose() => Disposed = true;
         }
 
+        [TestCase(165, new[] { 30, 60, 75, 90, 100, 120, 144, 0, 240, -1 })]
+        [TestCase(170, new[] { 30, 60, 75, 90, 100, 120, 144, 165, 0, 240, -1 })]
+        [TestCase(0, new[] { 30, 60, 75, 90, 100, 120, 0, 165, 240, -1 })]
+        public void FrameLimitSliderRisesWithDisplayAtTheMonitorRate(int refreshRate, int[] expected)
+        {
+            Assert.That(GamePreferences.FrameLimitSteps(refreshRate), Is.EqualTo(expected));
+        }
+
         [TestCase(null)]
         [TestCase("broken")]
         [TestCase("{\"Version\":2,\"FrameLimit\":999,\"Muted\":true}")]

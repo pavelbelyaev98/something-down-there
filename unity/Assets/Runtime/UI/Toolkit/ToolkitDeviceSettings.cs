@@ -57,11 +57,15 @@ namespace SomethingDownThere
                 description: "The output resolution in Fullscreen and Windowed modes. Borderless always uses the desktop resolution.");
             rows.Toggle("vSync", "VSync", () => settings.Values.VSync, value => settings.Edit(v => v.VSync = value),
                 "Matches each frame to the monitor's refresh so the picture never tears. While it is on, it sets the frame rate instead of the FPS limit.");
-            rows.Choice("fpsLimit", "FPS limit", GamePreferences.FrameLimits.Select(v => v == GamePreferences.DisplayFrameLimit
-                ? "Display (" + settings.RefreshRate + ")" : v < 0 ? "Unlimited" : v.ToString()).ToArray(),
-                () => Array.IndexOf(GamePreferences.FrameLimits, settings.Values.FrameLimit), index =>
-                settings.Edit(v => v.FrameLimit = GamePreferences.FrameLimits[index]), () => !settings.Values.VSync, "Automatic",
-                description: "The highest frame rate the game draws. A lower limit keeps the graphics card cooler and quieter. Unavailable while VSync is on.");
+            // A slider over the limits in rising order; Display (the monitor's own rate) sits where that rate falls.
+            int[] limits = GamePreferences.FrameLimitSteps(settings.RefreshRate);
+            rows.Slider("fpsLimit", "FPS limit", 0, limits.Length - 1,
+                () => Math.Max(0, Array.IndexOf(limits, settings.Values.FrameLimit)),
+                step => settings.Edit(v => v.FrameLimit = limits[step]),
+                step => limits[step] == GamePreferences.DisplayFrameLimit ? "Display" : limits[step] < 0 ? "Unlimited" : limits[step].ToString(),
+                () => !settings.Values.VSync, description: "The highest frame rate the game draws. Display matches your monitor ("
+                    + settings.RefreshRate + " Hz). A lower limit keeps the graphics card cooler and quieter. Unavailable while VSync is on.",
+                disabledValue: "VSync");
             rows.Toggle("showFps", "Show FPS", () => settings.Values.ShowFps, value => settings.Edit(v => v.ShowFps = value),
                 "Shows the frame rate in the top-right corner.");
         }

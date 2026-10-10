@@ -50,6 +50,24 @@ namespace SomethingDownThere
         // Zero follows the window's monitor; -1 is unlimited.
         public const int DisplayFrameLimit = 0, FallbackFrameLimit = 144;
         public static readonly int[] FrameLimits = { DisplayFrameLimit, 30, 60, 75, 90, 100, 120, 144, 165, 240, -1 };
+
+        // The limits in rising frame rate for a slider: Display stands where the monitor's rate falls (in place
+        // of an equal number), Unlimited last.
+        public static int[] FrameLimitSteps(int refreshRate)
+        {
+            int monitor = refreshRate > 0 ? refreshRate : FallbackFrameLimit;
+            var steps = new System.Collections.Generic.List<int>();
+            bool placed = false;
+            foreach (int limit in FrameLimits)
+            {
+                if (limit <= 0) continue;
+                if (!placed && limit >= monitor) { steps.Add(DisplayFrameLimit); placed = true; }
+                if (limit != monitor) steps.Add(limit);
+            }
+            if (!placed) steps.Add(DisplayFrameLimit);
+            steps.Add(-1);
+            return steps.ToArray();
+        }
         private readonly IDevicePreferencesStore store;
         private readonly IGameSettingsPlatform platform;
         private bool focused = true;

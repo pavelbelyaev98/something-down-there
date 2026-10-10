@@ -43,8 +43,8 @@
 
 /* a slider: its value, then the track with an orange handle */
 .setting-range { flex-direction: row; align-items: center; justify-content: center; width: 264px; height: 40px; flex-shrink: 0; margin: 0; padding: 0; color: var(--bone); }
-.range-value { width: 66px; height: 30px; margin: 0 12px 0 0; font-size: 19px; color: var(--bone); -unity-text-align: middle-right; }
-.setting-slider { width: 170px; height: 30px; min-width: 0; margin: 0; padding: 0; }
+.range-value { width: 78px; height: 30px; margin: 0 12px 0 0; font-size: 19px; color: var(--bone); -unity-text-align: middle-right; }
+.setting-slider { width: 160px; height: 30px; min-width: 0; margin: 0; padding: 0; }
 #menuRoot .setting-slider > .unity-base-field__input { height: 30px; margin: 0; padding: 0; align-items: center; }
 #menuRoot .setting-slider .unity-base-slider__drag-container { flex-grow: 1; height: 30px; margin: 0; }
 #menuRoot .setting-slider .unity-base-slider__tracker { position: absolute; left: 0; right: 0; top: 12px; height: 6px; margin: 0; border-width: 0; border-radius: 3px; background-image: none; background-color: var(--slate-line); }

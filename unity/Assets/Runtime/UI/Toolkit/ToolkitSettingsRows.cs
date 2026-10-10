@@ -62,7 +62,7 @@ namespace SomethingDownThere
         }
 
         public SliderInt Slider(string name, string label, int minimum, int maximum, Func<int> value, Action<int> change, Func<int, string> format,
-            Func<bool> enabled = null, string valueName = null, string description = null)
+            Func<bool> enabled = null, string valueName = null, string description = null, string disabledValue = "Unavailable")
         {
             var row = Row(label);
             var wrap = new VisualElement(); wrap.AddToClassList("setting-range");
@@ -72,7 +72,7 @@ namespace SomethingDownThere
             wrap.Add(text); wrap.Add(slider); row.Add(wrap);
             Register(slider, row, delta => change(Mathf.Clamp(value() + delta, minimum, maximum)),
                 () => help.Show(label, description, new[] { format(minimum) + "  to  " + format(maximum) }, -1));
-            refresh.Add(() => { bool available = enabled == null || enabled(); slider.SetEnabled(available); slider.SetValueWithoutNotify(value()); text.text = available ? format(value()) : "Unavailable"; });
+            refresh.Add(() => { bool available = enabled == null || enabled(); slider.SetEnabled(available); slider.SetValueWithoutNotify(value()); text.text = available ? format(value()) : disabledValue; });
             return slider;
         }
 
