@@ -666,33 +666,6 @@ namespace SomethingDownThere.Tests
             }
         }
 
-        private static void AssertReadableNeutralText(TextElement text)
-        {
-            Assert.That(text, Is.Not.Null);
-            Color background = Color.white;
-            var parents = new System.Collections.Generic.List<VisualElement>();
-            for (var element = (VisualElement)text; element != null; element = element.parent) parents.Add(element);
-            parents.Reverse();
-            foreach (var element in parents)
-            {
-                Color color = element.resolvedStyle.backgroundColor;
-                background = Color.Lerp(background, new Color(color.r, color.g, color.b, 1), color.a);
-            }
-            Color foreground = text.resolvedStyle.color;
-            Assert.That(foreground.r, Is.EqualTo(foreground.g).Within(0.001));
-            Assert.That(foreground.g, Is.EqualTo(foreground.b).Within(0.001));
-            Assert.That(background.r, Is.EqualTo(background.g).Within(0.001));
-            Assert.That(background.g, Is.EqualTo(background.b).Within(0.001));
-            float a = ContrastLuminance(foreground), b = ContrastLuminance(background);
-            Assert.That((Mathf.Max(a,b)+0.05f)/(Mathf.Min(a,b)+0.05f), Is.GreaterThanOrEqualTo(4.5f), text.text);
-        }
-
-        private static float ContrastLuminance(Color color)
-        {
-            float Linear(float v) => v <= 0.04045f ? v / 12.92f : Mathf.Pow((v + 0.055f) / 1.055f, 2.4f);
-            return 0.2126f * Linear(color.r) + 0.7152f * Linear(color.g) + 0.0722f * Linear(color.b);
-        }
-
         [UnityTest]
         public IEnumerator SelectorsStepInPlaceAndDescribeTheFocusedRow()
         {
