@@ -71,8 +71,9 @@ Rules:
 
 - Every pickup has visible, audible feedback; the player never wonders whether something was
  collected (the "apparently I collected it but didn't see it" failure is banned).
-- A find still in the ground shows no words: no exposure percentage or "uncover more" (user,
- 2026-10-10); the player digs until it comes free and its pickup note appears.
+- A find the dig takes shows no words, buried or free: no exposure percentage, "uncover more" or
+ "hold to collect" (user, 2026-10-10); the player digs until it comes free and its pickup note
+ appears. Only finds taken another way prompt: "E to take" in a chest, "hold to mark" on a unique.
 - Detector feedback has a visual channel; the game is fully playable muted.
 - Readability is never color-only: shapes, icons and labels back up every color cue.
 - Recovery marking previews directly on the eligible aimed surface, shows hold progress, and becomes a fixed checked mark when confirmed. It follows the moving find and obeys world occlusion; menus and equipment placement suppress the hover preview.

@@ -154,8 +154,7 @@ namespace SomethingDownThere.Tests
             Assert.That(find.TryCollect(player), Is.False, "Collection keeps its separate 3 m reach.");
             Aim(find.transform.position + Vector3.up * 1.5f, find.transform.position);
             player.RefreshTargetPrompt();
-            StringAssert.Contains(find.Item.DisplayName, player.TargetPrompt);
-            StringAssert.Contains("Hold " + player.InputSettings.Display(PlayerBinding.Dig) + " to collect", player.TargetPrompt);
+            Assert.That(player.TargetPrompt, Is.Empty, "A find the dig takes shows no words, even once it is free.");
             Assert.That(player.TryInteract(), Is.False, "E is for stations, not discovery collection.");
             player.Battery.TrySpend(player.Battery.Charge);
             float energy = player.Battery.Charge;
@@ -247,8 +246,6 @@ namespace SomethingDownThere.Tests
             Aim(position + Vector3.up * 4.5f, position);
             Assert.That(find.TryCollect(player), Is.False, "An anchored find keeps the existing close interaction reach.");
             find.GetComponent<FindPhysics>().Restore(true);
-            player.RefreshTargetPrompt();
-            StringAssert.Contains(find.DisplayName, player.TargetPrompt);
             Assert.That(player.TryPrimaryAction(), Is.True, "An exposed released find should be collectable from the rim.");
             Assert.That(find.Collected, Is.True);
         }

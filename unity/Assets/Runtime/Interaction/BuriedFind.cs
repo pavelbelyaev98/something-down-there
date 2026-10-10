@@ -282,13 +282,12 @@ namespace SomethingDownThere
             if (State == FindState.Extracting) return player.Crane != null ? player.Crane.Prompt : "Recovery in progress";
             if (Collected || !isActiveAndEnabled) return "";
             ObserveDiscovery();
-            // Still in the ground: no words, the player just keeps digging (user, 2026-10-10).
-            if (!ExposureReady) return "";
+            // A find the dig takes shows no words, buried or free: the player just keeps digging and its pickup note says
+            // what they got (user, 2026-10-10). Only finds taken another way say how.
+            if (!ExposureReady || !RopeTarget && !handPicked) return "";
             if (RopeTarget) return $"{DisplayName}  |  Hold {player.InputSettings.Display(PlayerBinding.Interact)} to mark for excavation";
-            string collect = player.Inventory.IsFull ? "Inventory full"
-                : handPicked ? $"{player.InputSettings.Display(PlayerBinding.Interact)} to take"
-                : $"{(player.InputSettings.ToggleDig ? "Toggle" : "Hold")} {player.InputSettings.Display(PlayerBinding.Dig)} to collect";
-            return $"{Item.DisplayName}  |  {collect}";
+            string take = player.Inventory.IsFull ? "Inventory full" : $"{player.InputSettings.Display(PlayerBinding.Interact)} to take";
+            return $"{Item.DisplayName}  |  {take}";
         }
 
         // A stroke aimed at a find still in the ground digs the soil covering it, seen from the eye. A common's: the nearest
